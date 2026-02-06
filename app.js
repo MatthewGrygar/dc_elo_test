@@ -1,5 +1,4 @@
 import { openModal, setModalContent, setModalHeaderMeta } from "./modal.js";
-import { openNewsModal } from "./aktuality.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
@@ -537,7 +536,10 @@ requestUploadBtn.addEventListener("click", () => {
 });
 
 newsBtn && newsBtn.addEventListener("click", () => {
-  openNewsModal();
+  // Aktuality jsou v samostatném souboru aktuality.js
+  // (pro jistotu přes window, ať to funguje i když se soubory načítají odděleně)
+  const fn = window.openNewsModal;
+  if (typeof fn === "function") fn();
 });
 
 refreshBtn.addEventListener("click", loadAll);

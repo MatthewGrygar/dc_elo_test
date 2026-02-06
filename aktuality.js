@@ -27,3 +27,6 @@ export function openNewsModal(){
     `
   });
 }
+
+// zpřístupnění pro app.js (který může běžet samostatně jako modul)
+window.openNewsModal = openNewsModal;
