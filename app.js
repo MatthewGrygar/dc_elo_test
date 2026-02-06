@@ -552,5 +552,19 @@ tbody.addEventListener("click", (e) => {
   loadPlayerDetail(btn._playerObj);
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+
+    const newsBtn = document.getElementById("newsBtn");
+
+    if (newsBtn) {
+        newsBtn.addEventListener("click", () => {
+            if (window.openNewsModal) {
+                window.openNewsModal();
+            }
+        });
+    }
+
+});
+
 /* Init */
 loadAll();
