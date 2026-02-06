@@ -1,4 +1,5 @@
-import { openModal, setModalContent, setModalHeaderMeta } from "./modal.js";
+import { openModal, setModalActions, setModalContent, setModalHeaderMeta } from "./modal.js";
+import { openOpponentsModal } from "./opponents.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
@@ -37,6 +38,9 @@ let allRows = [];
 let lastTournamentText = "";
 let playerCardsCache = null;
 let playerSummaryCache = null;
+
+// posledně otevřený detail hráče (pro Protihráče / návrat)
+let currentPlayerDetail = null;
 
 function escapeHtml(str){
   return (str ?? "").toString()
@@ -451,6 +455,8 @@ function buildTournamentTable(rows){
 
 async function loadPlayerDetail(playerObj){
   setModalHeaderMeta({ title: playerObj.player, subtitle: "Detail hráče" });
+  // Akce v horní liště nastavujeme až po načtení dat
+  setModalActions("");
   setModalContent(`<div class="muted">Načítám…</div>`);
 
   try{
@@ -459,10 +465,33 @@ async function loadPlayerDetail(playerObj){
     const cards = allCards.filter(r => r.player.trim() === wanted);
 
     if (!cards.length){
+      currentPlayerDetail = null;
+      setModalActions("");
       setModalContent(buildHero(playerObj, summary) +
         `<div class="bigError"><div class="icon">❌</div> Podrobná data hráče nenalezena</div>`);
       return;
     }
+
+    // Uložíme pro Protihráče
+    currentPlayerDetail = { playerObj, cards };
+
+    // Tlačítko "Protihráči" v horní liště (vedle Zavřít)
+    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">PROTIHRÁČI</button>`);
+    queueMicrotask(() => {
+      const btn = document.getElementById("oppBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        // Otevře "stránku" Protihráči v rámci stejného modalu
+        openOpponentsModal({
+          playerName: playerObj.player,
+          cards,
+          onBack: () => {
+            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+            loadPlayerDetail(playerObj);
+          }
+        });
+      });
+    });
 
     const sortedAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
 
@@ -499,6 +528,8 @@ async function loadPlayerDetail(playerObj){
     }
 
   } catch (e){
+    currentPlayerDetail = null;
+    setModalActions("");
     setModalContent(`<div class="bigError"><div class="icon">❌</div> Chyba při načítání: ${escapeHtml(String(e?.message || e))}</div>`);
   }
 }
@@ -550,20 +581,6 @@ tbody.addEventListener("click", (e) => {
   if (!btn) return;
   openModal({ title: btn._playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
   loadPlayerDetail(btn._playerObj);
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    const newsBtn = document.getElementById("newsBtn");
-
-    if (newsBtn) {
-        newsBtn.addEventListener("click", () => {
-            if (window.openNewsModal) {
-                window.openNewsModal();
-            }
-        });
-    }
-
 });
 
 /* Init */

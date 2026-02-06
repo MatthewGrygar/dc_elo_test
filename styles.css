@@ -283,6 +283,25 @@ footer{
   padding:10px 14px;
 }
 
+.modalActions{ display:flex; gap:10px; align-items:center; }
+
+/* zelené tlačítko v detailu hráče */
+.btnOpponents{
+  border:1px solid rgba(60, 200, 120, .35);
+  background:rgba(60, 200, 120, .16);
+  color:rgba(170, 255, 210, .95);
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  padding:10px 14px;
+  border-radius:14px;
+}
+html[data-theme="light"] .btnOpponents{
+  border:1px solid rgba(20, 140, 70, .35);
+  background:rgba(20, 140, 70, .10);
+  color:rgba(0, 90, 40, .95);
+}
+
 /* Player hero */
 .heroGrid{
   display:grid;
