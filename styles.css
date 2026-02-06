@@ -104,6 +104,8 @@ h1{ margin:0 0 4px; font-size:26px; letter-spacing:.2px; }
 .headerRight{ display:flex; flex-direction:column; gap:10px; align-items:flex-end; width:auto; }
 .headerRightTop{ display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
 
+.headerActions{ display:flex; gap:10px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+
 .badge{
   font-size:12px; padding:7px 10px; border-radius:999px;
   border:1px solid var(--border); background:var(--chip); white-space:nowrap;
@@ -491,17 +493,19 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .container{ padding:0 12px; }
   .infoBar{
     grid-template-columns:1fr;
-    gap:6px;
-    padding:8px;
-    border-radius:14px;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:16px;
   }
   .infoItem{
-    padding:6px 10px;
-    min-height:38px;
-    border-radius:12px;
+    padding:10px 10px;
+    min-height:auto;
+    border-radius:14px;
   }
   .infoItem b{ font-size:10px; }
   .infoItem span{ font-size:13px; }
+
+  .headerActions{ width:100%; justify-content:flex-end; gap:8px; }
 
   main{ padding:12px; }
 

@@ -1,4 +1,5 @@
 import { openModal, setModalContent, setModalHeaderMeta } from "./modal.js";
+import { openNewsModal } from "./aktuality.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
@@ -26,6 +27,7 @@ const avgWinrateEl = document.getElementById("avgWinrate");
 const totalGamesEl = document.getElementById("totalGames");
 const lastTournamentEl = document.getElementById("lastTournament");
 const requestUploadBtn = document.getElementById("requestUploadBtn");
+const newsBtn = document.getElementById("newsBtn");
 
 const logoImg = document.getElementById("logoImg");
 const htmlEl = document.documentElement;
@@ -533,6 +535,11 @@ themeToggle.addEventListener("click", () => {
 requestUploadBtn.addEventListener("click", () => {
   window.location.href = "https://forms.gle/Y7aHApF5NLFLw6MP9";
 });
+
+newsBtn && newsBtn.addEventListener("click", () => {
+  openNewsModal();
+});
+
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 
