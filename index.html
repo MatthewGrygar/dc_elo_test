@@ -25,17 +25,33 @@
     </div>
 
     <div class="headerRight">
+      
       <div class="headerRightTop">
         <div class="badge" id="lastDataBadge">načteno: načítám…</div>
-        <div class="themeToggle" id="themeToggle" title="Přepnout režim">
-          <span class="dot"></span>
-          <span id="themeLabel">☀️ Světlý</span>
+
+        <button class="btnIcon" id="menuBtn" type="button" aria-label="Menu" title="Menu">
+          ☰
+        </button>
+
+        <div class="menuPanel" id="menuPanel" aria-hidden="true">
+          <button class="menuItem" id="requestUploadBtn" type="button">NAHRÁNÍ DAT</button>
+          <button class="menuItem" id="newsBtn" type="button">AKTUALITY</button>
+          <a class="menuItem" href="tituly.html">TITULY</a>
+          <a class="menuItem" href="kontakt.html">KONTAKT</a>
+          <a class="menuItem" href="rekordy.html">REKORDY</a>
+
+          <div class="menuDivider"></div>
+
+          <div class="menuToggleRow">
+            <div class="menuToggleLabel">Režim</div>
+            <div class="themeToggle" id="themeToggle" title="Přepnout režim">
+              <span class="dot"></span>
+              <span id="themeLabel">☀️ Světlý</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="headerActions">
-        <button class="btnPrimary" id="requestUploadBtn" type="button">ZAŽÁDAT O NAHRÁNÍ DAT</button>
-        <button class="btnPrimary" id="newsBtn" type="button">AKTUALITY</button>
-      </div>
+
     </div>
   </div>
 </header>
@@ -87,7 +103,10 @@
   </div>
 </main>
 
-<script type="module" src="aktuality.js"></script>
+<script src="modal.js"></script>
+<script src="common.js"></script>
+<script src="aktuality.js"></script>
+<script src="opponents.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

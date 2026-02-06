@@ -332,7 +332,7 @@ function buildSvgLineChartEqualX(points){
   const dots = clean.map((p,i) => `<circle cx="${X(i)}" cy="${Y(p.elo)}" r="3.2" fill="var(--chartDot)" />`).join("");
 
   return `
-    <svg viewBox="0 0 ${w} ${h}" width="100%" height="280" role="img" aria-label="ELO chart">
+    <svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" role="img" aria-label="ELO chart">
       ${grid}
       <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="var(--chartAxis)" />
       <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="var(--chartAxis)" />
@@ -562,17 +562,6 @@ themeToggle.addEventListener("click", () => {
 });
 
 /* Events */
-requestUploadBtn.addEventListener("click", () => {
-  window.location.href = "https://forms.gle/Y7aHApF5NLFLw6MP9";
-});
-
-newsBtn && newsBtn.addEventListener("click", () => {
-  // Aktuality jsou v samostatném souboru aktuality.js
-  // (pro jistotu přes window, ať to funguje i když se soubory načítají odděleně)
-  const fn = window.openNewsModal;
-  if (typeof fn === "function") fn();
-});
-
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 
