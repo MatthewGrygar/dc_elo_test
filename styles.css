@@ -388,7 +388,7 @@ html[data-theme="light"] .btnOpponents{
 /* Player hero */
 .heroGrid{
   display:grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: 340px 1fr;
   gap:10px;
   margin-bottom:12px;
   align-items:stretch;
@@ -399,24 +399,24 @@ html[data-theme="light"] .btnOpponents{
   background:var(--panel);
   overflow:hidden;
 }
-.boxPad{ padding:12px; }
+.boxPad{ padding:10px 12px; }
 
 .leftPanel{
   display:flex;
   flex-direction:column;
-  min-height: 420px;
+  min-height: 0;
 }
 .leftTop{ flex: 1 1 auto; }
 .leftBottom{ margin-top:auto; }
 
 .heroName{
-  font-size:38px;
+  font-size:34px;
   font-weight:950;
   margin:0 0 10px;
   line-height:1.03;
   letter-spacing:.2px;
 }
-.rankLine{ margin-top:8px; }
+.rankLine{ margin-top:4px; }
 .rankLine .muted{ font-size:13px; }
 
 .rankPill{
@@ -444,13 +444,13 @@ html[data-theme="light"] .btnOpponents{
 .stat{
   border:1px solid var(--border2);
   border-radius:16px;
-  padding:12px;
+  padding:10px 12px;
   background:var(--panel2);
   min-width:0;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  min-height:76px;
+  min-height:62px;
 }
 .stat b{
   display:block;
@@ -461,7 +461,7 @@ html[data-theme="light"] .btnOpponents{
 }
 .stat span{
   display:block;
-  margin-top:8px;
+  margin-top:4px;
   font-size:18px;
   font-weight:900;
   align-self:flex-start;
@@ -689,7 +689,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .tournamentFilter{
   display:flex;
   justify-content:flex-end;
-  margin-top:8px;
+  margin-top:4px;
 }
 .tournamentFilter .filterInner{
   display:flex;
@@ -709,12 +709,26 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 }
 .tournamentFilter select{
   border:1px solid var(--border2);
-  background:transparent;
+  background:var(--panel);
   color:var(--text);
   padding:8px 10px;
   border-radius:12px;
   font-weight:800;
   min-width:220px;
+}
+
+.tournamentFilter select:focus{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(255,255,255,.06);
+}
+.tournamentFilter select option{
+  background:var(--panel);
+  color:var(--text);
+}
+.tournamentFilterRow{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:12px;
 }
 
 /* Opponents search */

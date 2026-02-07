@@ -395,7 +395,7 @@ function buildHero(playerObj, summary){
           <div class="stat statWin"><b>longest win streak</b><span>${winStreak} 🔥</span></div>
           <div class="stat statLoss"><b>longest loss streak</b><span>${lossStreak}</span></div>
         </div>
-        <div id="tournamentFilterSlot" class="tournamentFilter"></div>
+        
       </div>
     </div>
   `;
@@ -540,50 +540,17 @@ async function loadPlayerDetail(playerObj){
       groups.get(key).push(r);
     }
 
+    
     let currentTournament = "ALL";
 
-    const renderForTournament = (tournamentKey) => {
+    // Filtr turnaje ovlivňuje POUZE spodní tabulky (graf + horní statistiky zůstávají vždy ze všech dat)
+    const renderTournamentTables = (tournamentKey) => {
       currentTournament = tournamentKey;
 
       const filteredCards = (tournamentKey === "ALL")
         ? sortedAll.slice()
         : (groups.get(tournamentKey) ? groups.get(tournamentKey).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0)) : []);
 
-      // Přepočet základních statistik pro levou část (games/winrate/win/loss/draw)
-      const wld = computeWLD(filteredCards);
-      const winrate = wld.games ? Math.round((wld.w / wld.games) * 100) : 0;
-
-      // Přepočet meta statistik
-      const avgOpp = computeAvgOpponent(filteredCards);
-      const peakElo = filteredCards.map(r => r.elo).filter(Number.isFinite);
-      const peak = peakElo.length ? Math.max(...peakElo) : NaN;
-      const streaks = computeStreaks(filteredCards);
-
-      // Pokud filtr není ALL, dáme do "aktuální rating" poslední ELO z vybraného turnaje (dává větší smysl)
-      const lastElo = (() => {
-        const pts = filteredCards.filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo));
-        return pts.length ? pts[pts.length-1].elo : NaN;
-      })();
-
-      const playerObjForView = {
-        ...playerObj,
-        games: wld.games,
-        win: wld.w,
-        loss: wld.l,
-        draw: wld.d,
-        winrate: wld.games ? `${winrate}%` : "—",
-        rating: (tournamentKey === "ALL" || !Number.isFinite(lastElo)) ? playerObj.rating : lastElo
-      };
-
-      const summaryForView = summary ? { ...summary } : null;
-      if (summaryForView){
-        if (Number.isFinite(peak)) summaryForView.peak = peak;
-        summaryForView.avgOpp = avgOpp;
-        summaryForView.winStreak = streaks.bestWin;
-        summaryForView.lossStreak = streaks.bestLoss;
-      }
-
-      // Sekce tabulek
       let sectionsHtml = "";
       if (tournamentKey === "ALL"){
         sectionsHtml = order.map(key => {
@@ -594,53 +561,66 @@ async function loadPlayerDetail(playerObj){
         sectionsHtml = `<div class="sectionTitle">${escapeHtml(tournamentKey)}</div>${buildTournamentTable(filteredCards)}`;
       }
 
-      setModalContent(buildHero(playerObjForView, summaryForView) + sectionsHtml);
-
-      // Vykresli filtr (do pravé části pod metrikami)
-      const slot = document.getElementById("tournamentFilterSlot");
-      if (slot){
-        const options = [`<option value="ALL">Všechny turnaje</option>`]
-          .concat(order.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`));
-        slot.innerHTML = `
-          <div class="filterInner">
-            <label for="tournamentSelect">Filtr turnaje</label>
-            <select id="tournamentSelect">${options.join("")}</select>
-          </div>
-        `;
-        const sel = document.getElementById("tournamentSelect");
-        if (sel){
-          sel.value = tournamentKey;
-          sel.addEventListener("change", (e) => {
-            const val = e.target.value || "ALL";
-            renderForTournament(val);
-          }, { once:false });
-        }
-      }
-
-      // Graf
-      const chartEl = document.getElementById("eloChart");
-      const chartMeta = document.getElementById("chartMeta");
-      const points = filteredCards
-        .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
-        .map(r => ({ matchId:r.matchId, elo:r.elo }));
-
-      if (chartEl){
-        chartEl.innerHTML = buildSvgLineChartEqualX(points);
-      }
-
-      if (chartMeta){
-        if (points.length){
-          const last = points[points.length - 1];
-          chartMeta.textContent = `zápasů: ${points.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
-        } else {
-          chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
-          if (chartEl) chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit (chybí Match ID/ELO v datech hráče).</div>`;
-        }
-      }
+      const tablesEl = document.getElementById("tournamentTables");
+      if (tablesEl) tablesEl.innerHTML = sectionsHtml;
     };
 
+    // Postav obsah modalu: hero (ALL data) + filtr (níže) + tabulky
+    setModalContent(
+      buildHero(playerObj, summary)
+      + `
+        <div class="tournamentFilterRow">
+          <div id="tournamentFilterSlot" class="tournamentFilter"></div>
+        </div>
+        <div id="tournamentTables"></div>
+      `
+    );
+
+    // Graf (vždy ze všech dat)
+    const chartEl = document.getElementById("eloChart");
+    const chartMeta = document.getElementById("chartMeta");
+    const allPoints = sortedAll
+      .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
+      .map(r => ({ matchId:r.matchId, elo:r.elo }));
+
+    if (chartEl){
+      chartEl.innerHTML = buildSvgLineChartEqualX(allPoints);
+    }
+
+    if (chartMeta){
+      if (allPoints.length){
+        const last = allPoints[allPoints.length - 1];
+        chartMeta.textContent = `zápasů: ${allPoints.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
+      } else {
+        chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
+        if (chartEl) chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit.</div>`;
+      }
+    }
+
+
+    // Vykresli filtr (nižší pozice, aby nenarušoval layout karty)
+    const slot = document.getElementById("tournamentFilterSlot");
+    if (slot){
+      const options = [`<option value="ALL">Všechny turnaje</option>`]
+        .concat(order.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`));
+      slot.innerHTML = `
+        <div class="filterInner">
+          <label for="tournamentSelect">Filtr turnaje</label>
+          <select id="tournamentSelect">${options.join("")}</select>
+        </div>
+      `;
+      const sel = document.getElementById("tournamentSelect");
+      if (sel){
+        sel.value = "ALL";
+        sel.addEventListener("change", (e) => {
+          const val = e.target.value || "ALL";
+          renderTournamentTables(val);
+        });
+      }
+    }
+
     // Výchozí stav: všechny turnaje
-    renderForTournament("ALL");
+    renderTournamentTables("ALL");
 
   } catch (e){
     currentPlayerDetail = null;
