@@ -346,13 +346,15 @@ function buildHero(playerObj, summary){
   const lossStreak = summary && Number.isFinite(summary.lossStreak) ? summary.lossStreak.toFixed(0) : "—";
   const peakText = Number.isFinite(playerObj.peak) ? playerObj.peak.toFixed(0) : "—";
 
+  const rankNum = Number.isFinite(toNumber(playerObj.rank)) ? Math.trunc(toNumber(playerObj.rank)) : NaN;
+  const rankText = Number.isFinite(rankNum) ? String(rankNum) : "—";
+  const rankClass = (rankNum === 1) ? "rankGold" : (rankNum === 2) ? "rankSilver" : (rankNum === 3) ? "rankBronze" : "rankDefault";
+
   return `
     <div class="heroGrid">
       <div class="box boxPad leftPanel">
         <div class="leftTop">
-          <div class="heroName">${escapeHtml(playerObj.player)} <span class="heroRankTag ${rankClass}">#${escapeHtml(rankText || "—")}</span></div>
-            <span class="rankPill">${rankCellHtml(playerObj.rank)}</span>
-          </div>
+          <div class="heroName">${escapeHtml(playerObj.player)} <span class="heroRankTag ${rankClass}">#${escapeHtml(rankText)}</span></div>
           <div style="margin-top:10px;">
             <div class="heroEloLabel">aktuální rating</div>
             <div class="heroElo">${Number.isFinite(playerObj.rating) ? playerObj.rating.toFixed(0) : ""}</div>

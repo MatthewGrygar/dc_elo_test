@@ -314,33 +314,20 @@ footer{
   display:flex;
   align-items:baseline;
   gap:10px;
-  flex-wrap:wrap;
 }
 
 .heroRankTag{
-  font-size:16px;
-  font-weight:850;
-  letter-spacing:.02em;
-  color:var(--muted);
-  opacity:.85;
+  font-size:18px;
+  font-weight:800;
+  opacity:.65;
+  letter-spacing:.2px;
   white-space:nowrap;
 }
 
-.heroRankTag.rank1{
-  color: rgba(245,215,110,1);
-  opacity:1;
-}
-.heroRankTag.rank2{
-  color: rgba(230,230,230,1);
-  opacity:1;
-}
-html[data-theme="light"] .heroRankTag.rank2{
-  color:#6b6f77;
-}
-.heroRankTag.rank3{
-  color: rgba(255,200,150,1);
-  opacity:1;
-}
+.rankDefault{ color: var(--muted); }
+.rankGold{ color: #f5c542; opacity:.9; }
+.rankSilver{ color: #c0c0c0; opacity:.9; }
+.rankBronze{ color: #cd7f32; opacity:.9; }
 .rankLine{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
 .rankLine .muted{ font-size:13px; }
 
