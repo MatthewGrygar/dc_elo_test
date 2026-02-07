@@ -444,13 +444,17 @@ html[data-theme="light"] .btnOpponents{
   color: rgba(255,200,150,1);
 }
 .rankPill{
-  display:inline-flex; align-items:center; gap:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   border:1px solid var(--border);
   background:var(--chip);
-  padding:6px 10px;
-  border-radius:999px;
+  padding:3px 8px;
+  border-radius:8px;
   font-size:12px;
-  white-space:nowrap;
+  line-height:1;
+  min-width:28px;
+  height:22px;
 }
 
 .heroEloLabel{ color:var(--muted); font-size:12px; }
@@ -462,7 +466,7 @@ html[data-theme="light"] .btnOpponents{
   letter-spacing:.4px;
 }
 
-.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
 .statsGridRow2{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:10px; }
 
 .stat{
@@ -793,3 +797,46 @@ html[data-theme="light"] .tournamentFilter select{ color-scheme: light; }
 }
 .oppHeaderRow input::placeholder{ color: rgba(180,180,180,.65); }
 html[data-theme="light"] .oppHeaderRow input::placeholder{ color: rgba(0,0,0,.45); }
+
+
+/* Tournament filter - ensure option list readable in dark mode */
+.tournamentFilter select{
+  appearance:auto;
+}
+
+html[data-theme="dark"] .tournamentFilter select{
+  background: #12151a;
+  color: rgba(240,245,255,0.95);
+  border-color: rgba(255,255,255,0.14);
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .tournamentFilter select option{
+  background: #12151a;
+  color: rgba(240,245,255,0.95);
+}
+
+html[data-theme="light"] .tournamentFilter select option{
+  background: #ffffff;
+  color: #0b0e12;
+}
+
+/* Inline header for tournament section title + filter */
+.sectionHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:6px;
+  margin-bottom:10px;
+}
+.sectionHeader .sectionTitle{
+  margin:0;
+}
+.tournamentFilterInline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.filterLabel{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.72; }

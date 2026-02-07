@@ -556,27 +556,49 @@ async function loadPlayerDetail(playerObj){
         ? sortedAll.slice()
         : (groups.get(tournamentKey) ? groups.get(tournamentKey).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0)) : []);
 
+      const filterOptions = [`<option value="ALL">Všechny turnaje</option>`]
+        .concat(order.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`));
+
+      const filterHtml = `
+        <div class="tournamentFilterInline">
+          <div class="filterLabel">FILTR TURNAJE</div>
+          <div class="tournamentFilter">
+            <select id="tournamentSelect">${filterOptions.join("")}</select>
+          </div>
+        </div>
+      `;
+
       let sectionsHtml = "";
       if (tournamentKey === "ALL"){
-        sectionsHtml = order.map(key => {
+        sectionsHtml = order.map((key, i) => {
           const rows = groups.get(key).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0));
+          if (i === 0){
+            return `<div class="sectionHeader"><div class="sectionTitle">${escapeHtml(key)}</div>${filterHtml}</div>${buildTournamentTable(rows)}`;
+          }
           return `<div class="sectionTitle">${escapeHtml(key)}</div>${buildTournamentTable(rows)}`;
         }).join("");
       } else {
-        sectionsHtml = `<div class="sectionTitle">${escapeHtml(tournamentKey)}</div>${buildTournamentTable(filteredCards)}`;
+        sectionsHtml = `<div class="sectionHeader"><div class="sectionTitle">${escapeHtml(tournamentKey)}</div>${filterHtml}</div>${buildTournamentTable(filteredCards)}`;
       }
 
       const tablesEl = document.getElementById("tournamentTables");
       if (tablesEl) tablesEl.innerHTML = sectionsHtml;
+
+      // nastav vybranou hodnotu + handler (po každém re-renderu)
+      const sel = document.getElementById("tournamentSelect");
+      if (sel){
+        sel.value = currentTournament || "ALL";
+        sel.onchange = (e) => {
+          const val = e.target.value || "ALL";
+          renderTournamentTables(val);
+        };
+      }
     };
 
     // Postav obsah modalu: hero (ALL data) + filtr (níže) + tabulky
     setModalContent(
       buildHero(playerObj, summary)
       + `
-        <div class="tournamentFilterRow">
-          <div id="tournamentFilterSlot" class="tournamentFilter"></div>
-        </div>
         <div id="tournamentTables"></div>
       `
     );
@@ -602,27 +624,6 @@ async function loadPlayerDetail(playerObj){
       }
     }
 
-
-    // Vykresli filtr (nižší pozice, aby nenarušoval layout karty)
-    const slot = document.getElementById("tournamentFilterSlot");
-    if (slot){
-      const options = [`<option value="ALL">Všechny turnaje</option>`]
-        .concat(order.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`));
-      slot.innerHTML = `
-        <div class="filterInner">
-          <label for="tournamentSelect">Filtr turnaje</label>
-          <select id="tournamentSelect">${options.join("")}</select>
-        </div>
-      `;
-      const sel = document.getElementById("tournamentSelect");
-      if (sel){
-        sel.value = "ALL";
-        sel.addEventListener("change", (e) => {
-          const val = e.target.value || "ALL";
-          renderTournamentTables(val);
-        });
-      }
-    }
 
     // Výchozí stav: všechny turnaje
     renderTournamentTables("ALL");

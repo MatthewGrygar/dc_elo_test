@@ -86,7 +86,7 @@ if (menuBtn && menuPanel){
 }
 
 function openFullscreenPage({ title, subtitle, html }){
-  openModal({ title, subtitle, html, fullscreen: true });
+  openModal({ title, subtitle, html });
 }
 
 // NAHRÁNÍ DAT
@@ -111,7 +111,7 @@ if (uploadBtn){
 if (newsBtn){
   newsBtn.addEventListener("click", () => {
     closeMenu();
-    openNewsModal({ fullscreen: true });
+    openNewsModal({ });
   });
 }
 
