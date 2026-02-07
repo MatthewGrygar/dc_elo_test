@@ -416,6 +416,45 @@ html[data-theme="light"] .btnOpponents{
   line-height:1.03;
   letter-spacing:.2px;
 }
+
+/* Rank badge přímo za jménem hráče (např. "Dung Nguyen #1") */
+.heroRank{
+  display:inline-flex;
+  align-items:center;
+  margin-left:10px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.04em;
+  vertical-align:middle;
+  border:1px solid var(--border);
+  background:var(--chip);
+  transition: all .2s ease;
+}
+
+.heroRank.rank1{
+  background:linear-gradient(135deg, rgba(212,175,55,.25), rgba(255,215,0,.18));
+  border-color:rgba(212,175,55,.55);
+  color:#ffd54a;
+  box-shadow:0 0 12px rgba(255,215,0,.25);
+}
+
+.heroRank.rank2{
+  background:linear-gradient(135deg, rgba(192,192,192,.25), rgba(230,230,230,.18));
+  border-color:rgba(192,192,192,.55);
+  color:#d8d8d8;
+}
+
+html[data-theme="light"] .heroRank.rank2{
+  color:#6b6f77;
+}
+
+.heroRank.rank3{
+  background:linear-gradient(135deg, rgba(205,127,50,.25), rgba(255,200,150,.18));
+  border-color:rgba(205,127,50,.55);
+  color:#d29a6a;
+}
 .rankLine{
   margin-top:4px;
   display:flex;

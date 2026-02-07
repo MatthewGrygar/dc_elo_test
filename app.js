@@ -360,10 +360,9 @@ function buildHero(playerObj, summary){
     <div class="heroGrid">
       <div class="box boxPad leftPanel">
         <div class="leftTop">
-          <div class="heroName">${escapeHtml(playerObj.player)}</div>
-          <div class="rankLine">
-            <span class="muted">Pořadí hráče</span>
-            <span class="rankPill ${rankClass}">${escapeHtml(rankText || "—")}</span>
+          <div class="heroName">
+            ${escapeHtml(playerObj.player)}
+            ${Number.isFinite(rankNum) ? `<span class="heroRank ${rankClass}">#${rankNum}</span>` : ""}
           </div>
           <div style="margin-top:10px;">
             <div class="heroEloLabel">aktuální rating</div>
