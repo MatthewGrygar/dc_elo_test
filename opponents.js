@@ -111,8 +111,10 @@ export function openOpponentsModal({ playerName, cards, onBack }) {
 
   setModalContent(`
     <div class="box boxPad">
-      <div class="sectionTitle">Soupeři hráče: ${escapeHtml(playerName || "")}</div>
-      <div class="oppSearchRow"><input id="oppSearchInput" type="text" placeholder="Hledat soupeře…" autocomplete="off" /></div>
+      <div class="oppHeaderRow">
+        <div class="sectionTitle">Soupeři hráče: ${escapeHtml(playerName || "")}</div>
+        <input id="oppSearchInput" type="text" placeholder="Hledat soupeře…" autocomplete="off" />
+      </div>
       ${renderOpponentsTable(stats)}
     </div>
   `);

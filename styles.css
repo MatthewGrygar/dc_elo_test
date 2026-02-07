@@ -416,8 +416,17 @@ html[data-theme="light"] .btnOpponents{
   line-height:1.03;
   letter-spacing:.2px;
 }
-.rankLine{ margin-top:4px; }
+.rankLine{
+  margin-top:4px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .rankLine .muted{ font-size:13px; }
+.rankInline{
+  font-weight:950;
+  letter-spacing:.2px;
+}
 
 .rankPill{
   display:inline-flex; align-items:center; gap:8px;
@@ -717,6 +726,19 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   min-width:220px;
 }
 
+/* Lepší čitelnost rozbalovacího seznamu v tmavém režimu (nativní dropdown) */
+html[data-theme="dark"] .tournamentFilter select{
+  background:#0f1115;
+  color:#eef2ff;
+  color-scheme: dark;
+}
+html[data-theme="dark"] .tournamentFilter select option,
+html[data-theme="dark"] .tournamentFilter select optgroup{
+  background:#0f1115;
+  color:#eef2ff;
+}
+html[data-theme="light"] .tournamentFilter select{ color-scheme: light; }
+
 .tournamentFilter select:focus{
   outline:none;
   box-shadow:0 0 0 3px rgba(255,255,255,.06);
@@ -731,17 +753,23 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   margin-top:12px;
 }
 
-/* Opponents search */
-.oppSearchRow{
+/* Opponents header row (title + search in one line) */
+.oppHeaderRow{
   display:flex;
-  justify-content:flex-end;
-  margin:10px 0 12px;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 12px;
+  flex-wrap:wrap;
 }
-.oppSearchRow input{
-  width:min(420px, 100%);
+.oppHeaderRow .sectionTitle{ margin:0; }
+.oppHeaderRow input{
+  width:min(360px, 100%);
   border:1px solid var(--border2);
   background:transparent;
   color:var(--text);
   padding:10px 12px;
   border-radius:14px;
 }
+.oppHeaderRow input::placeholder{ color: rgba(180,180,180,.65); }
+html[data-theme="light"] .oppHeaderRow input::placeholder{ color: rgba(0,0,0,.45); }

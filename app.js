@@ -350,6 +350,7 @@ function buildHero(playerObj, summary){
   const winStreak = summary && Number.isFinite(summary.winStreak) ? summary.winStreak.toFixed(0) : "—";
   const lossStreak = summary && Number.isFinite(summary.lossStreak) ? summary.lossStreak.toFixed(0) : "—";
   const peakText = Number.isFinite(playerObj.peak) ? playerObj.peak.toFixed(0) : "—";
+  const rankText = (playerObj.rank ?? "").toString().trim();
 
   return `
     <div class="heroGrid">
@@ -357,8 +358,8 @@ function buildHero(playerObj, summary){
         <div class="leftTop">
           <div class="heroName">${escapeHtml(playerObj.player)}</div>
           <div class="rankLine">
-            <div class="muted">Pořadí v žebříčku</div>
-            <span class="rankPill">${rankCellHtml(playerObj.rank)}</span>
+            <span class="muted">Pořadí hráče</span>
+            <span class="rankInline">(${escapeHtml(rankText || "—")})</span>
           </div>
           <div style="margin-top:10px;">
             <div class="heroEloLabel">aktuální rating</div>
