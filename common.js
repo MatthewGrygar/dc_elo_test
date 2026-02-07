@@ -85,16 +85,15 @@ if (menuBtn && menuPanel){
   });
 }
 
-// Otevírá obsah jako standardní modal ve stejném formátu jako detail hráče
-function openMenuPage({ title, subtitle, html }){
-  openModal({ title, subtitle, html });
+function openFullscreenPage({ title, subtitle, html }){
+  openModal({ title, subtitle, html, fullscreen: true });
 }
 
 // NAHRÁNÍ DAT
 if (uploadBtn){
   uploadBtn.addEventListener("click", () => {
     closeMenu();
-    openMenuPage({
+    openFullscreenPage({
       title: "Nahrání dat",
       subtitle: "Formulář",
       html: `
@@ -112,7 +111,7 @@ if (uploadBtn){
 if (newsBtn){
   newsBtn.addEventListener("click", () => {
     closeMenu();
-    openNewsModal();
+    openNewsModal({ fullscreen: true });
   });
 }
 
@@ -120,7 +119,7 @@ if (newsBtn){
 if (titlesBtn){
   titlesBtn.addEventListener("click", () => {
     closeMenu();
-    openMenuPage({
+    openFullscreenPage({
       title: "Tituly",
       subtitle: "Přehled",
       html: `
@@ -137,7 +136,7 @@ if (titlesBtn){
 if (contactBtn){
   contactBtn.addEventListener("click", () => {
     closeMenu();
-    openMenuPage({
+    openFullscreenPage({
       title: "Kontakt",
       subtitle: "Info",
       html: `
@@ -154,7 +153,7 @@ if (contactBtn){
 if (recordsBtn){
   recordsBtn.addEventListener("click", () => {
     closeMenu();
-    openMenuPage({
+    openFullscreenPage({
       title: "Rekordy",
       subtitle: "Přehled",
       html: `

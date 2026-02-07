@@ -217,7 +217,7 @@ html[data-theme="light"] .menuPanel{
 main{ max-width:1150px; margin:0 auto; padding:16px; }
 
 .infoBar{
-  margin:12px 0 8px;
+  margin:12px 0 4px;
   padding:10px 12px;
   border:1px solid var(--border);
   border-radius:16px;
@@ -256,7 +256,7 @@ html[data-theme="light"] .infoItem{ background:rgba(255,255,255,.50); }
 }
 
 .card{
-  margin-top:10px;
+  margin-top:6px;
   border:1px solid var(--border);
   border-radius:20px;
   overflow:hidden;
@@ -388,9 +388,9 @@ html[data-theme="light"] .btnOpponents{
 /* Player hero */
 .heroGrid{
   display:grid;
-  grid-template-columns: 380px 1fr;
-  gap:12px;
-  margin-bottom:14px;
+  grid-template-columns: 360px 1fr;
+  gap:10px;
+  margin-bottom:12px;
   align-items:stretch;
 }
 .box{
@@ -399,7 +399,7 @@ html[data-theme="light"] .btnOpponents{
   background:var(--panel);
   overflow:hidden;
 }
-.boxPad{ padding:14px; }
+.boxPad{ padding:12px; }
 
 .leftPanel{
   display:flex;
@@ -415,8 +415,6 @@ html[data-theme="light"] .btnOpponents{
   margin:0 0 10px;
   line-height:1.03;
   letter-spacing:.2px;
-
-  margin-bottom:12px;
 }
 .rankLine{ margin-top:8px; }
 .rankLine .muted{ font-size:13px; }
@@ -440,19 +438,19 @@ html[data-theme="light"] .btnOpponents{
   letter-spacing:.4px;
 }
 
-.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px; }
-.statsGridRow2{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:14px; }
+.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.statsGridRow2{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:10px; }
 
 .stat{
   border:1px solid var(--border2);
   border-radius:16px;
-  padding:16px;
+  padding:12px;
   background:var(--panel2);
   min-width:0;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  min-height:92px;
+  min-height:76px;
 }
 .stat b{
   display:block;
@@ -463,8 +461,8 @@ html[data-theme="light"] .btnOpponents{
 }
 .stat span{
   display:block;
-  margin-top:14px;
-  font-size:20px;
+  margin-top:8px;
+  font-size:18px;
   font-weight:900;
   align-self:flex-start;
 }
@@ -480,7 +478,7 @@ html[data-theme="light"] .btnOpponents{
   height:100%;
 }
 .chartBox{ flex: 2 1 auto; }
-.metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:14px; }
+.metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
 
 .chartHead{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
 .chartHead b{ font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.9; }
@@ -549,7 +547,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .bigError .icon{ font-size:22px; }
 
 @media (max-width: 760px){
-  .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:14px; }
+  .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
   .heroGrid{ grid-template-columns: 1fr; }
   .leftPanel{ min-height:auto; }
   .heroName{ font-size:30px; }
@@ -653,7 +651,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   /* Player card: no horizontal scrolling except tables */
   .heroGrid{ grid-template-columns:1fr; }
   #eloChart{ min-height:180px; }
-  .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:14px; }
+  .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
   .metaBoxRow .stat{
     min-height:42px;
     flex-direction:row;
@@ -685,3 +683,51 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   padding: 4px 2px 14px;
 }
 .pageModal h2{ margin: 6px 0 10px; }
+
+
+/* Tournament filter (detail hráče) */
+.tournamentFilter{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:8px;
+}
+.tournamentFilter .filterInner{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:1px solid var(--border2);
+  background:var(--panel2);
+  padding:10px 12px;
+  border-radius:16px;
+}
+.tournamentFilter label{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.tournamentFilter select{
+  border:1px solid var(--border2);
+  background:transparent;
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:12px;
+  font-weight:800;
+  min-width:220px;
+}
+
+/* Opponents search */
+.oppSearchRow{
+  display:flex;
+  justify-content:flex-end;
+  margin:10px 0 12px;
+}
+.oppSearchRow input{
+  width:min(420px, 100%);
+  border:1px solid var(--border2);
+  background:transparent;
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:14px;
+}

@@ -76,7 +76,7 @@ function renderOpponentsTable(stats) {
   const body = stats.map(s => {
     const wr = Number.isFinite(s.winrate) ? `${s.winrate.toFixed(0)}%` : "—";
     return `
-      <tr>
+      <tr class="oppRow" data-opp="${escapeHtml(String(s.opponent||"").toLowerCase())}">
         <td>${escapeHtml(s.opponent)}</td>
         <td class="num">${s.games}</td>
         <td class="num">${s.win}</td>
@@ -112,7 +112,22 @@ export function openOpponentsModal({ playerName, cards, onBack }) {
   setModalContent(`
     <div class="box boxPad">
       <div class="sectionTitle">Soupeři hráče: ${escapeHtml(playerName || "")}</div>
+      <div class="oppSearchRow"><input id="oppSearchInput" type="text" placeholder="Hledat soupeře…" autocomplete="off" /></div>
       ${renderOpponentsTable(stats)}
     </div>
   `);
+
+  // Vyhledávání soupeře
+  queueMicrotask(() => {
+    const input = document.getElementById("oppSearchInput");
+    if (!input) return;
+    input.addEventListener("input", () => {
+      const q = (input.value || "").toLowerCase().trim();
+      const rows = document.querySelectorAll(".oppRow");
+      rows.forEach(r => {
+        const name = (r.getAttribute("data-opp") || "");
+        r.style.display = (!q || name.includes(q)) ? "" : "none";
+      });
+    });
+  });
 }

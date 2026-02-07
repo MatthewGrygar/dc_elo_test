@@ -395,9 +395,45 @@ function buildHero(playerObj, summary){
           <div class="stat statWin"><b>longest win streak</b><span>${winStreak} 🔥</span></div>
           <div class="stat statLoss"><b>longest loss streak</b><span>${lossStreak}</span></div>
         </div>
+        <div id="tournamentFilterSlot" class="tournamentFilter"></div>
       </div>
     </div>
   `;
+}
+
+
+function computeWLD(rows){
+  const w = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("won") ? 1 : 0), 0);
+  const l = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("lost") ? 1 : 0), 0);
+  const d = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("draw") ? 1 : 0), 0);
+  return { w, l, d, games: w + l + d };
+}
+
+function computeStreaks(rows){
+  // počítá nejdelší streak výher a proher v rámci daného pořadí zápasů
+  let bestWin=0, bestLoss=0, curWin=0, curLoss=0;
+  for (const r of rows){
+    const res = (r.result||"").toLowerCase();
+    const isWin = res.includes("won");
+    const isLoss = res.includes("lost");
+    if (isWin){
+      curWin += 1; bestWin = Math.max(bestWin, curWin);
+      curLoss = 0;
+    } else if (isLoss){
+      curLoss += 1; bestLoss = Math.max(bestLoss, curLoss);
+      curWin = 0;
+    } else {
+      // draw / unknown resets both
+      curWin = 0; curLoss = 0;
+    }
+  }
+  return { bestWin, bestLoss };
+}
+
+function computeAvgOpponent(rows){
+  const oppRatings = rows.map(r => extractOpponentRating(r.opponent)).filter(Number.isFinite);
+  if (!oppRatings.length) return NaN;
+  return oppRatings.reduce((a,b)=>a+b,0) / oppRatings.length;
 }
 
 function extractOpponentRating(opponentText){
@@ -495,6 +531,7 @@ async function loadPlayerDetail(playerObj){
 
     const sortedAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
 
+    // Skupiny podle názvu turnaje (tournamentDetail)
     const groups = new Map();
     const order = [];
     for (const r of sortedAll){
@@ -503,29 +540,107 @@ async function loadPlayerDetail(playerObj){
       groups.get(key).push(r);
     }
 
-    const sectionsHtml = order.map(key => {
-      const rows = groups.get(key).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0));
-      return `<div class="sectionTitle">${escapeHtml(key)}</div>${buildTournamentTable(rows)}`;
-    }).join("");
+    let currentTournament = "ALL";
 
-    setModalContent(buildHero(playerObj, summary) + sectionsHtml);
+    const renderForTournament = (tournamentKey) => {
+      currentTournament = tournamentKey;
 
-    const chartEl = document.getElementById("eloChart");
-    const chartMeta = document.getElementById("chartMeta");
+      const filteredCards = (tournamentKey === "ALL")
+        ? sortedAll.slice()
+        : (groups.get(tournamentKey) ? groups.get(tournamentKey).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0)) : []);
 
-    const points = sortedAll
-      .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
-      .map(r => ({ matchId:r.matchId, elo:r.elo }));
+      // Přepočet základních statistik pro levou část (games/winrate/win/loss/draw)
+      const wld = computeWLD(filteredCards);
+      const winrate = wld.games ? Math.round((wld.w / wld.games) * 100) : 0;
 
-    chartEl.innerHTML = buildSvgLineChartEqualX(points);
+      // Přepočet meta statistik
+      const avgOpp = computeAvgOpponent(filteredCards);
+      const peakElo = filteredCards.map(r => r.elo).filter(Number.isFinite);
+      const peak = peakElo.length ? Math.max(...peakElo) : NaN;
+      const streaks = computeStreaks(filteredCards);
 
-    if (points.length){
-      const last = points[points.length - 1];
-      chartMeta.textContent = `zápasů: ${points.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
-    } else {
-      chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
-      chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit (chybí Match ID/ELO v datech hráče).</div>`;
-    }
+      // Pokud filtr není ALL, dáme do "aktuální rating" poslední ELO z vybraného turnaje (dává větší smysl)
+      const lastElo = (() => {
+        const pts = filteredCards.filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo));
+        return pts.length ? pts[pts.length-1].elo : NaN;
+      })();
+
+      const playerObjForView = {
+        ...playerObj,
+        games: wld.games,
+        win: wld.w,
+        loss: wld.l,
+        draw: wld.d,
+        winrate: wld.games ? `${winrate}%` : "—",
+        rating: (tournamentKey === "ALL" || !Number.isFinite(lastElo)) ? playerObj.rating : lastElo
+      };
+
+      const summaryForView = summary ? { ...summary } : null;
+      if (summaryForView){
+        if (Number.isFinite(peak)) summaryForView.peak = peak;
+        summaryForView.avgOpp = avgOpp;
+        summaryForView.winStreak = streaks.bestWin;
+        summaryForView.lossStreak = streaks.bestLoss;
+      }
+
+      // Sekce tabulek
+      let sectionsHtml = "";
+      if (tournamentKey === "ALL"){
+        sectionsHtml = order.map(key => {
+          const rows = groups.get(key).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0));
+          return `<div class="sectionTitle">${escapeHtml(key)}</div>${buildTournamentTable(rows)}`;
+        }).join("");
+      } else {
+        sectionsHtml = `<div class="sectionTitle">${escapeHtml(tournamentKey)}</div>${buildTournamentTable(filteredCards)}`;
+      }
+
+      setModalContent(buildHero(playerObjForView, summaryForView) + sectionsHtml);
+
+      // Vykresli filtr (do pravé části pod metrikami)
+      const slot = document.getElementById("tournamentFilterSlot");
+      if (slot){
+        const options = [`<option value="ALL">Všechny turnaje</option>`]
+          .concat(order.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`));
+        slot.innerHTML = `
+          <div class="filterInner">
+            <label for="tournamentSelect">Filtr turnaje</label>
+            <select id="tournamentSelect">${options.join("")}</select>
+          </div>
+        `;
+        const sel = document.getElementById("tournamentSelect");
+        if (sel){
+          sel.value = tournamentKey;
+          sel.addEventListener("change", (e) => {
+            const val = e.target.value || "ALL";
+            renderForTournament(val);
+          }, { once:false });
+        }
+      }
+
+      // Graf
+      const chartEl = document.getElementById("eloChart");
+      const chartMeta = document.getElementById("chartMeta");
+      const points = filteredCards
+        .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
+        .map(r => ({ matchId:r.matchId, elo:r.elo }));
+
+      if (chartEl){
+        chartEl.innerHTML = buildSvgLineChartEqualX(points);
+      }
+
+      if (chartMeta){
+        if (points.length){
+          const last = points[points.length - 1];
+          chartMeta.textContent = `zápasů: ${points.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
+        } else {
+          chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
+          if (chartEl) chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit (chybí Match ID/ELO v datech hráče).</div>`;
+        }
+      }
+    };
+
+    // Výchozí stav: všechny turnaje
+    renderForTournament("ALL");
 
   } catch (e){
     currentPlayerDetail = null;
