@@ -1,43 +1,15 @@
-/* common.js – menu + theme + základní akce (používá se na všech stránkách) */
+/* common.js – menu ovládání + menu stránky jako fullscreen okna */
 
 (function(){
-  const htmlEl = document.documentElement;
-
   const menuBtn = document.getElementById("menuBtn");
   const menuPanel = document.getElementById("menuPanel");
 
-  const requestUploadBtn = document.getElementById("requestUploadBtn");
-  const newsBtn = document.getElementById("newsBtn");
+  const uploadBtn = document.getElementById("menuUpload");
+  const newsBtn = document.getElementById("menuNews");
+  const titlesBtn = document.getElementById("menuTitles");
+  const contactBtn = document.getElementById("menuContact");
+  const recordsBtn = document.getElementById("menuRecords");
 
-  const themeToggle = document.getElementById("themeToggle");
-  const themeLabel = document.getElementById("themeLabel");
-
-  function setTheme(next){
-    htmlEl.setAttribute("data-theme", next);
-    try { localStorage.setItem("theme", next); } catch(e){}
-    if (themeLabel){
-      themeLabel.textContent = (next === "dark" ? "🌙 Tmavý" : "☀️ Světlý");
-    }
-  }
-
-  // init theme from storage
-  try{
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark" || saved === "light") setTheme(saved);
-    else setTheme(htmlEl.getAttribute("data-theme") || "dark");
-  }catch(e){
-    setTheme(htmlEl.getAttribute("data-theme") || "dark");
-  }
-
-  // theme toggle
-  if (themeToggle){
-    themeToggle.addEventListener("click", () => {
-      const cur = htmlEl.getAttribute("data-theme") || "dark";
-      setTheme(cur === "dark" ? "light" : "dark");
-    });
-  }
-
-  // menu open/close
   function openMenu(){
     if (!menuPanel) return;
     menuPanel.classList.add("isOpen");
@@ -61,7 +33,6 @@
     });
 
     document.addEventListener("click", (e) => {
-      // klik mimo panel zavře
       if (!menuPanel.classList.contains("isOpen")) return;
       if (menuPanel.contains(e.target) || menuBtn.contains(e.target)) return;
       closeMenu();
@@ -72,19 +43,87 @@
     });
   }
 
-  // menu actions
-  if (requestUploadBtn){
-    requestUploadBtn.addEventListener("click", () => {
+  function openFullscreenPage({ title, subtitle, html }){
+    const fn = window.openModal;
+    if (typeof fn !== "function") return;
+    fn({ title, subtitle, html, fullscreen: true });
+  }
+
+  // NAHRÁNÍ DAT – otevře fullscreen okno s odkazem
+  if (uploadBtn){
+    uploadBtn.addEventListener("click", () => {
       closeMenu();
-      window.location.href = "https://forms.gle/Y7aHApF5NLFLw6MP9";
+      openFullscreenPage({
+        title: "Nahrání dat",
+        subtitle: "Formulář",
+        html: `
+          <div class="pageModal">
+            <h2>Nahrání dat</h2>
+            <p class="muted">Data se nahrávají přes Google formulář.</p>
+            <a class="btnPrimary" href="https://forms.gle/Y7aHApF5NLFLw6MP9" target="_blank" rel="noopener">Otevřít formulář</a>
+          </div>
+        `
+      });
     });
   }
 
+  // AKTUALITY
   if (newsBtn){
     newsBtn.addEventListener("click", () => {
       closeMenu();
       const fn = window.openNewsModal;
-      if (typeof fn === "function") fn();
+      if (typeof fn === "function") fn({ fullscreen: true });
+    });
+  }
+
+  // TITULY
+  if (titlesBtn){
+    titlesBtn.addEventListener("click", () => {
+      closeMenu();
+      openFullscreenPage({
+        title: "Tituly",
+        subtitle: "Přehled",
+        html: `
+          <div class="pageModal">
+            <h2>TITULY</h2>
+            <p class="muted">Zatím krátký popis. Tuhle stránku následně spolu přepracujeme.</p>
+          </div>
+        `
+      });
+    });
+  }
+
+  // KONTAKT
+  if (contactBtn){
+    contactBtn.addEventListener("click", () => {
+      closeMenu();
+      openFullscreenPage({
+        title: "Kontakt",
+        subtitle: "Info",
+        html: `
+          <div class="pageModal">
+            <h2>KONTAKT</h2>
+            <p class="muted">Zatím krátký popis. Později doplníme kontaktní údaje a odkazy.</p>
+          </div>
+        `
+      });
+    });
+  }
+
+  // REKORDY
+  if (recordsBtn){
+    recordsBtn.addEventListener("click", () => {
+      closeMenu();
+      openFullscreenPage({
+        title: "Rekordy",
+        subtitle: "Přehled",
+        html: `
+          <div class="pageModal">
+            <h2>REKORDY</h2>
+            <p class="muted">Zatím krátký popis. Následně doplníme konkrétní rekordy a statistiky.</p>
+          </div>
+        `
+      });
     });
   }
 })();

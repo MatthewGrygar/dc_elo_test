@@ -412,7 +412,7 @@ html[data-theme="light"] .btnOpponents{
 .heroName{
   font-size:38px;
   font-weight:950;
-  margin:0 0 6px;
+  margin:0 0 10px;
   line-height:1.03;
   letter-spacing:.2px;
 }
@@ -438,19 +438,19 @@ html[data-theme="light"] .btnOpponents{
   letter-spacing:.4px;
 }
 
-.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
 .statsGridRow2{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:10px; }
 
 .stat{
   border:1px solid var(--border2);
   border-radius:14px;
-  padding:10px;
+  padding:12px;
   background:var(--panel2);
   min-width:0;
   display:flex;
   flex-direction:column;
   justify-content:space-between; /* label top, value bottom */
-  min-height:70px;
+  min-height:78px;
 }
 .stat b{
   display:block;
@@ -477,7 +477,7 @@ html[data-theme="light"] .btnOpponents{
   gap:10px;
   height:100%;
 }
-.chartBox{ flex: 2 1 auto; display:flex; flex-direction:column; }
+.chartBox{ flex: 2 1 auto; }
 .metaBoxRow{
   flex: 1 1 auto;
   display:grid;
@@ -488,7 +488,7 @@ html[data-theme="light"] .btnOpponents{
 .chartHead{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
 .chartHead b{ font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.9; }
 .chartHead span{ font-size:12px; color:var(--muted); }
-#eloChart{ flex:1 1 auto; min-height:0; color:var(--muted); }
+#eloChart{ min-height:260px; color:var(--muted); }
 
 .sectionTitle{
   margin:18px 0 10px;
@@ -674,4 +674,20 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .tbl{ min-width:920px; }
 }
 
-#eloChart svg{ width:100%; height:100%; display:block; }
+
+/* Fullscreen modální "stránky" z menu */
+.modal.modalFullscreen{
+  width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
+  max-width: none;
+  margin: 12px;
+  border-radius: 18px;
+}
+.modal.modalFullscreen .modalBody{
+  height: calc(100% - 64px);
+  overflow:auto;
+}
+.pageModal{
+  padding: 4px 2px 14px;
+}
+.pageModal h2{ margin: 6px 0 10px; }

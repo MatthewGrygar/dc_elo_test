@@ -40,8 +40,12 @@ export function ensureModal() {
   return overlay;
 }
 
-export function openModal({ title, subtitle, html }) {
+export function openModal({ title, subtitle, html, fullscreen }) {
   const overlay = ensureModal();
+  const modalEl = overlay.querySelector('.modal');
+  if (modalEl){
+    modalEl.classList.toggle('modalFullscreen', !!fullscreen);
+  }
   overlay.querySelector("#modalName").textContent = title || "Hráč";
   overlay.querySelector("#modalSub").textContent = subtitle || "Detail hráče";
   overlay.querySelector("#modalBody").innerHTML = html || "";
@@ -51,9 +55,20 @@ export function openModal({ title, subtitle, html }) {
   document.body.style.overflow = "hidden";
 }
 
+// zpřístupnění pro non-module skripty (menu/aktuality)
+try{
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.setModalContent = setModalContent;
+  window.setModalHeaderMeta = setModalHeaderMeta;
+  window.setModalActions = setModalActions;
+}catch(e){}
+
 export function closeModal() {
   const overlay = document.getElementById("modalOverlay");
   if (!overlay) return;
+  const modalEl = overlay.querySelector('.modal');
+  if (modalEl) modalEl.classList.remove('modalFullscreen');
   overlay.style.display = "none";
   document.body.style.overflow = "";
   const body = overlay.querySelector("#modalBody");
@@ -81,3 +96,12 @@ export function setModalActions(html){
   if (!actions) return;
   actions.innerHTML = html || "";
 }
+
+// Zpřístupnění i mimo ES moduly (např. common.js, aktuality.js)
+try{
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.setModalContent = setModalContent;
+  window.setModalHeaderMeta = setModalHeaderMeta;
+  window.setModalActions = setModalActions;
+}catch(e){}
