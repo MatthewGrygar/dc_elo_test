@@ -428,6 +428,21 @@ html[data-theme="light"] .btnOpponents{
   letter-spacing:.2px;
 }
 
+.rankPill.rank1{
+  background: rgba(212,175,55,.14);
+  border-color: rgba(212,175,55,.55);
+  color: rgba(245,215,110,1);
+}
+.rankPill.rank2{
+  background: rgba(192,192,192,.14);
+  border-color: rgba(192,192,192,.55);
+  color: rgba(230,230,230,1);
+}
+.rankPill.rank3{
+  background: rgba(205,127,50,.14);
+  border-color: rgba(205,127,50,.55);
+  color: rgba(255,200,150,1);
+}
 .rankPill{
   display:inline-flex; align-items:center; gap:8px;
   border:1px solid var(--border);
@@ -503,6 +518,10 @@ html[data-theme="light"] .btnOpponents{
   opacity:.95;
 }
 
+
+#tournamentTables .sectionTitle:first-child{
+  margin-top:10px;
+}
 /* Tournament table */
 .tblWrap{
   overflow-x:auto;
@@ -750,7 +769,8 @@ html[data-theme="light"] .tournamentFilter select{ color-scheme: light; }
 .tournamentFilterRow{
   display:flex;
   justify-content:flex-end;
-  margin-top:12px;
+  margin-top:6px;
+  margin-bottom:6px;
 }
 
 /* Opponents header row (title + search in one line) */
