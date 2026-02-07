@@ -1,10 +1,11 @@
 import { openModal } from "./modal.js";
 
 // Okno "Aktuality" (dočasný obsah – později upravíme podle reálných změn)
-export function openNewsModal(){
+export function openNewsModal(opts = {}){
   openModal({
     title: "Aktuality",
     subtitle: "Informace o verzi",
+    fullscreen: !!opts.fullscreen,
     html: `
       <div class="box boxPad">
         <div class="sectionTitle" style="margin-top:0;">Aktuální verze</div>
