@@ -442,7 +442,8 @@ html[data-theme="light"] .btnOpponents{
   background: rgba(205,127,50,.14);
   border-color: rgba(205,127,50,.55);
   color: rgba(255,200,150,1);
-  
+  }
+
 .rankPill{
   display:inline-flex;
   align-items:center;
