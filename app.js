@@ -1,4 +1,5 @@
-import { openModal, setModalContent, setModalHeaderMeta } from "./modal.js";
+import { openModal, setModalActions, setModalContent, setModalHeaderMeta } from "./modal.js";
+import { openOpponentsModal } from "./opponents.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
@@ -26,6 +27,7 @@ const avgWinrateEl = document.getElementById("avgWinrate");
 const totalGamesEl = document.getElementById("totalGames");
 const lastTournamentEl = document.getElementById("lastTournament");
 const requestUploadBtn = document.getElementById("requestUploadBtn");
+const newsBtn = document.getElementById("newsBtn");
 
 const logoImg = document.getElementById("logoImg");
 const htmlEl = document.documentElement;
@@ -36,6 +38,9 @@ let allRows = [];
 let lastTournamentText = "";
 let playerCardsCache = null;
 let playerSummaryCache = null;
+
+// posledně otevřený detail hráče (pro Protihráče / návrat)
+let currentPlayerDetail = null;
 
 function escapeHtml(str){
   return (str ?? "").toString()
@@ -345,16 +350,21 @@ function buildHero(playerObj, summary){
   const winStreak = summary && Number.isFinite(summary.winStreak) ? summary.winStreak.toFixed(0) : "—";
   const lossStreak = summary && Number.isFinite(summary.lossStreak) ? summary.lossStreak.toFixed(0) : "—";
   const peakText = Number.isFinite(playerObj.peak) ? playerObj.peak.toFixed(0) : "—";
-
-  const rankNum = Number.isFinite(toNumber(playerObj.rank)) ? Math.trunc(toNumber(playerObj.rank)) : NaN;
-  const rankText = Number.isFinite(rankNum) ? String(rankNum) : "—";
-  const rankClass = (rankNum === 1) ? "rankGold" : (rankNum === 2) ? "rankSilver" : (rankNum === 3) ? "rankBronze" : "rankDefault";
+  const rankText = (playerObj.rank ?? "").toString().trim();
+    const rankNum = parseInt(rankText, 10);
+    const rankClass = (Number.isFinite(rankNum) && !Number.isNaN(rankNum))
+      ? (rankNum === 1 ? "rank1" : rankNum === 2 ? "rank2" : rankNum === 3 ? "rank3" : "")
+      : "";
 
   return `
     <div class="heroGrid">
       <div class="box boxPad leftPanel">
         <div class="leftTop">
-          <div class="heroName">${escapeHtml(playerObj.player)} <span class="heroRankTag ${rankClass}">#${escapeHtml(rankText)}</span></div>
+          <div class="heroName">${escapeHtml(playerObj.player)}</div>
+          <div class="rankLine">
+            <span class="muted">Pořadí hráče</span>
+            <span class="rankPill ${rankClass}">${escapeHtml(rankText || "—")}</span>
+          </div>
           <div style="margin-top:10px;">
             <div class="heroEloLabel">aktuální rating</div>
             <div class="heroElo">${Number.isFinite(playerObj.rating) ? playerObj.rating.toFixed(0) : ""}</div>
@@ -390,9 +400,45 @@ function buildHero(playerObj, summary){
           <div class="stat statWin"><b>longest win streak</b><span>${winStreak} 🔥</span></div>
           <div class="stat statLoss"><b>longest loss streak</b><span>${lossStreak}</span></div>
         </div>
+        
       </div>
     </div>
   `;
+}
+
+
+function computeWLD(rows){
+  const w = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("won") ? 1 : 0), 0);
+  const l = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("lost") ? 1 : 0), 0);
+  const d = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("draw") ? 1 : 0), 0);
+  return { w, l, d, games: w + l + d };
+}
+
+function computeStreaks(rows){
+  // počítá nejdelší streak výher a proher v rámci daného pořadí zápasů
+  let bestWin=0, bestLoss=0, curWin=0, curLoss=0;
+  for (const r of rows){
+    const res = (r.result||"").toLowerCase();
+    const isWin = res.includes("won");
+    const isLoss = res.includes("lost");
+    if (isWin){
+      curWin += 1; bestWin = Math.max(bestWin, curWin);
+      curLoss = 0;
+    } else if (isLoss){
+      curLoss += 1; bestLoss = Math.max(bestLoss, curLoss);
+      curWin = 0;
+    } else {
+      // draw / unknown resets both
+      curWin = 0; curLoss = 0;
+    }
+  }
+  return { bestWin, bestLoss };
+}
+
+function computeAvgOpponent(rows){
+  const oppRatings = rows.map(r => extractOpponentRating(r.opponent)).filter(Number.isFinite);
+  if (!oppRatings.length) return NaN;
+  return oppRatings.reduce((a,b)=>a+b,0) / oppRatings.length;
 }
 
 function extractOpponentRating(opponentText){
@@ -450,6 +496,8 @@ function buildTournamentTable(rows){
 
 async function loadPlayerDetail(playerObj){
   setModalHeaderMeta({ title: playerObj.player, subtitle: "Detail hráče" });
+  // Akce v horní liště nastavujeme až po načtení dat
+  setModalActions("");
   setModalContent(`<div class="muted">Načítám…</div>`);
 
   try{
@@ -458,13 +506,37 @@ async function loadPlayerDetail(playerObj){
     const cards = allCards.filter(r => r.player.trim() === wanted);
 
     if (!cards.length){
+      currentPlayerDetail = null;
+      setModalActions("");
       setModalContent(buildHero(playerObj, summary) +
         `<div class="bigError"><div class="icon">❌</div> Podrobná data hráče nenalezena</div>`);
       return;
     }
 
+    // Uložíme pro Protihráče
+    currentPlayerDetail = { playerObj, cards };
+
+    // Tlačítko "Protihráči" v horní liště (vedle Zavřít)
+    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">PROTIHRÁČI</button>`);
+    queueMicrotask(() => {
+      const btn = document.getElementById("oppBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        // Otevře "stránku" Protihráči v rámci stejného modalu
+        openOpponentsModal({
+          playerName: playerObj.player,
+          cards,
+          onBack: () => {
+            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+            loadPlayerDetail(playerObj);
+          }
+        });
+      });
+    });
+
     const sortedAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
 
+    // Skupiny podle názvu turnaje (tournamentDetail)
     const groups = new Map();
     const order = [];
     for (const r of sortedAll){
@@ -473,31 +545,92 @@ async function loadPlayerDetail(playerObj){
       groups.get(key).push(r);
     }
 
-    const sectionsHtml = order.map(key => {
-      const rows = groups.get(key).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0));
-      return `<div class="sectionTitle">${escapeHtml(key)}</div>${buildTournamentTable(rows)}`;
-    }).join("");
+    
+    let currentTournament = "ALL";
 
-    setModalContent(buildHero(playerObj, summary) + sectionsHtml);
+    // Filtr turnaje ovlivňuje POUZE spodní tabulky (graf + horní statistiky zůstávají vždy ze všech dat)
+    const renderTournamentTables = (tournamentKey) => {
+      currentTournament = tournamentKey;
 
+      const filteredCards = (tournamentKey === "ALL")
+        ? sortedAll.slice()
+        : (groups.get(tournamentKey) ? groups.get(tournamentKey).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0)) : []);
+
+      const filterOptions = [`<option value="ALL">Všechny turnaje</option>`]
+        .concat(order.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`));
+
+      const filterHtml = `
+        <div class="tournamentFilterInline">
+          <div class="filterLabel">FILTR TURNAJE</div>
+          <div class="tournamentFilter">
+            <select id="tournamentSelect">${filterOptions.join("")}</select>
+          </div>
+        </div>
+      `;
+
+      let sectionsHtml = "";
+      if (tournamentKey === "ALL"){
+        sectionsHtml = order.map((key, i) => {
+          const rows = groups.get(key).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0));
+          if (i === 0){
+            return `<div class="sectionHeader"><div class="sectionTitle">${escapeHtml(key)}</div>${filterHtml}</div>${buildTournamentTable(rows)}`;
+          }
+          return `<div class="sectionTitle">${escapeHtml(key)}</div>${buildTournamentTable(rows)}`;
+        }).join("");
+      } else {
+        sectionsHtml = `<div class="sectionHeader"><div class="sectionTitle">${escapeHtml(tournamentKey)}</div>${filterHtml}</div>${buildTournamentTable(filteredCards)}`;
+      }
+
+      const tablesEl = document.getElementById("tournamentTables");
+      if (tablesEl) tablesEl.innerHTML = sectionsHtml;
+
+      // nastav vybranou hodnotu + handler (po každém re-renderu)
+      const sel = document.getElementById("tournamentSelect");
+      if (sel){
+        sel.value = currentTournament || "ALL";
+        sel.onchange = (e) => {
+          const val = e.target.value || "ALL";
+          renderTournamentTables(val);
+        };
+      }
+    };
+
+    // Postav obsah modalu: hero (ALL data) + filtr (níže) + tabulky
+    setModalContent(
+      buildHero(playerObj, summary)
+      + `
+        <div id="tournamentTables"></div>
+      `
+    );
+
+    // Graf (vždy ze všech dat)
     const chartEl = document.getElementById("eloChart");
     const chartMeta = document.getElementById("chartMeta");
-
-    const points = sortedAll
+    const allPoints = sortedAll
       .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
       .map(r => ({ matchId:r.matchId, elo:r.elo }));
 
-    chartEl.innerHTML = buildSvgLineChartEqualX(points);
-
-    if (points.length){
-      const last = points[points.length - 1];
-      chartMeta.textContent = `zápasů: ${points.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
-    } else {
-      chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
-      chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit (chybí Match ID/ELO v datech hráče).</div>`;
+    if (chartEl){
+      chartEl.innerHTML = buildSvgLineChartEqualX(allPoints);
     }
 
+    if (chartMeta){
+      if (allPoints.length){
+        const last = allPoints[allPoints.length - 1];
+        chartMeta.textContent = `zápasů: ${allPoints.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
+      } else {
+        chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
+        if (chartEl) chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit.</div>`;
+      }
+    }
+
+
+    // Výchozí stav: všechny turnaje
+    renderTournamentTables("ALL");
+
   } catch (e){
+    currentPlayerDetail = null;
+    setModalActions("");
     setModalContent(`<div class="bigError"><div class="icon">❌</div> Chyba při načítání: ${escapeHtml(String(e?.message || e))}</div>`);
   }
 }
@@ -515,24 +648,22 @@ function syncLogo(){
 }
 function setTheme(theme){
   htmlEl.setAttribute("data-theme", theme);
-  themeLabel.textContent = (theme === "dark") ? "☀️ Světlý" : "Tmavý 🌙";
+  if (themeLabel) themeLabel.textContent = (theme === "dark") ? "☀️ Světlý" : "Tmavý 🌙";
   localStorage.setItem("theme", theme);
   syncLogo();
 }
 (function initTheme(){
+  if (window.__themeHandled) return;
   const saved = localStorage.getItem("theme");
   if (saved === "light" || saved === "dark") setTheme(saved);
   else setTheme("dark");
 })();
-themeToggle.addEventListener("click", () => {
+if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click", () => {
   const cur = htmlEl.getAttribute("data-theme") || "dark";
   setTheme(cur === "dark" ? "light" : "dark");
 });
 
 /* Events */
-requestUploadBtn.addEventListener("click", () => {
-  window.location.href = "https://forms.gle/Y7aHApF5NLFLw6MP9";
-});
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 
