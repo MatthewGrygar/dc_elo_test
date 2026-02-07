@@ -547,16 +547,17 @@ function syncLogo(){
 }
 function setTheme(theme){
   htmlEl.setAttribute("data-theme", theme);
-  themeLabel.textContent = (theme === "dark") ? "☀️ Světlý" : "Tmavý 🌙";
+  if (themeLabel) themeLabel.textContent = (theme === "dark") ? "☀️ Světlý" : "Tmavý 🌙";
   localStorage.setItem("theme", theme);
   syncLogo();
 }
 (function initTheme(){
+  if (window.__themeHandled) return;
   const saved = localStorage.getItem("theme");
   if (saved === "light" || saved === "dark") setTheme(saved);
   else setTheme("dark");
 })();
-themeToggle.addEventListener("click", () => {
+if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click", () => {
   const cur = htmlEl.getAttribute("data-theme") || "dark";
   setTheme(cur === "dark" ? "light" : "dark");
 });

@@ -415,8 +415,10 @@ html[data-theme="light"] .btnOpponents{
   margin:0 0 10px;
   line-height:1.03;
   letter-spacing:.2px;
+
+  margin-bottom:12px;
 }
-.rankLine{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.rankLine{ margin-top:8px; }
 .rankLine .muted{ font-size:13px; }
 
 .rankPill{
@@ -434,23 +436,23 @@ html[data-theme="light"] .btnOpponents{
   font-size:60px;
   font-weight:950;
   line-height:1;
-  margin:7px 0 0;
+  margin:10px 0 0;
   letter-spacing:.4px;
 }
 
-.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
-.statsGridRow2{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:10px; }
+.statsGrid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px; }
+.statsGridRow2{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:14px; }
 
 .stat{
   border:1px solid var(--border2);
-  border-radius:14px;
-  padding:12px;
+  border-radius:16px;
+  padding:16px;
   background:var(--panel2);
   min-width:0;
   display:flex;
   flex-direction:column;
-  justify-content:space-between; /* label top, value bottom */
-  min-height:78px;
+  justify-content:space-between;
+  min-height:92px;
 }
 .stat b{
   display:block;
@@ -461,8 +463,8 @@ html[data-theme="light"] .btnOpponents{
 }
 .stat span{
   display:block;
-  margin-top:10px;
-  font-size:18px;
+  margin-top:14px;
+  font-size:20px;
   font-weight:900;
   align-self:flex-start;
 }
@@ -478,12 +480,7 @@ html[data-theme="light"] .btnOpponents{
   height:100%;
 }
 .chartBox{ flex: 2 1 auto; }
-.metaBoxRow{
-  flex: 1 1 auto;
-  display:grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:10px;
-}
+.metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:14px; }
 
 .chartHead{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
 .chartHead b{ font-size:13px; letter-spacing:.08em; text-transform:uppercase; opacity:.9; }
@@ -552,7 +549,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .bigError .icon{ font-size:22px; }
 
 @media (max-width: 760px){
-  .metaBoxRow{ grid-template-columns: 1fr 1fr; }
+  .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:14px; }
   .heroGrid{ grid-template-columns: 1fr; }
   .leftPanel{ min-height:auto; }
   .heroName{ font-size:30px; }
@@ -656,10 +653,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   /* Player card: no horizontal scrolling except tables */
   .heroGrid{ grid-template-columns:1fr; }
   #eloChart{ min-height:180px; }
-  .metaBoxRow{
-    grid-template-columns:1fr;
-    gap:8px;
-  }
+  .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:14px; }
   .metaBoxRow .stat{
     min-height:42px;
     flex-direction:row;
