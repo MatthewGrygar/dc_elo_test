@@ -52,37 +52,11 @@ html[data-theme="light"]{
   --dangerTx: rgba(120, 20, 20, .92);
 }
 
- :root{ color-scheme: light dark; }
-
-/*
-  Mobile viewport fix:
-  - 100vh na mobilech často nezohlední horní/spodní lištu prohlížeče (URL bar, home bar)
-  - 100svh = "small viewport" (stav s viditelnými lištami) => stránka/modaly se neuseknou
-  - fallback přes JS proměnnou --vh (window.innerHeight)
-*/
-:root{ --vh: 1vh; }
-
-html, body{ height:100%; }
-
-/* Když je otevřený modal, zamkneme scroll pozadí bez "position:fixed" (to dělá na mobilech ořez). */
-html.modalOpen,
-body.modalOpen{
-  overflow:hidden;
-  height:100%;
-}
-html.modalOpen{ overscroll-behavior: none; }
+:root{ color-scheme: light dark; }
 
 body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   margin:0; color:var(--text);
-  /*
-    Zajistí, že se stránka na mobilech nepřekryje horní/dolní lištou prohlížeče.
-    - fallback: CSS var(--vh) * 100 (nastavuje common.js)
-    - pokud je k dispozici 100svh, použije se místo toho
-  */
-  min-height: calc(var(--vh) * 100);
-  /* iOS/Android safe-area (notch + home indicator) */
-  padding-bottom: env(safe-area-inset-bottom);
   background:
     radial-gradient(1200px 600px at 20% -10%, rgba(255,255,255,.10), transparent 60%),
     radial-gradient(900px 500px at 80% 0%, rgba(255,215,0,.08), transparent 60%),
@@ -99,13 +73,8 @@ html[data-theme="light"] body{
     var(--bg0);
 }
 
-@supports (height: 100svh){
-  body{ min-height: 100svh; }
-}
-
 header{
-  /* iOS notch safe-area */
-  padding:calc(18px + env(safe-area-inset-top)) 18px 14px;
+  padding:18px 18px 14px;
   border-bottom:1px solid var(--border2);
   background:var(--bg1);
   backdrop-filter: blur(10px);
@@ -247,15 +216,6 @@ html[data-theme="light"] .menuPanel{
 .container{ max-width:1150px; margin:0 auto; padding:0 16px; }
 main{ max-width:1150px; margin:0 auto; padding:16px; }
 
-/*
-  Android/Chrome často překrývá spodní část stránky vlastní lištou (toolbar).
-  Safe-area insets jsou na Androidu většinou 0, proto přidáváme na mobilu trochu "rezervy",
-  aby šel dojet úplně spodní obsah bez useknutí.
-*/
-@media (max-width: 560px){
-  main{ padding-bottom: calc(16px + env(safe-area-inset-bottom) + 88px); }
-}
-
 .infoBar{
   margin:12px 0 4px;
   padding:10px 12px;
@@ -372,35 +332,14 @@ footer{
 
 /* Modal */
 .modalOverlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  /* Stabilnější výška na mobilech (URL bar / spodní lišta) */
-  height: calc(var(--vh) * 100);
+  display:none; position:fixed; inset:0;
   background:rgba(0,0,0,.65);
   backdrop-filter: blur(6px);
-  z-index:50;
-  /* rezerva pro notch + home bar + systémové lišty */
-  padding-top: calc(18px + env(safe-area-inset-top));
-  padding-right: calc(18px + env(safe-area-inset-right));
-  padding-bottom: calc(18px + env(safe-area-inset-bottom));
-  padding-left: calc(18px + env(safe-area-inset-left));
-  box-sizing:border-box;
-  /* flex layout = stabilnější scroll na mobilech */
-  align-items:center;
-  justify-content:center;
-}
-.modalOverlay.isOpen{ display:flex; }
-
-@supports (height: 100svh){
-  .modalOverlay{ height: 100svh; }
+  z-index:50; padding:18px;
 }
 .modal{
-  width:100%;
-  max-width:1100px;
-  margin:0 auto;
-  /* max výška podle overlay (už zahrnuje safe-area + rezervu) */
-  max-height:100%;
+  max-width:1100px; margin:0 auto;
+  height:calc(100vh - 36px);
   border-radius:20px;
   border:1px solid var(--border);
   background:var(--thead);
@@ -408,9 +347,6 @@ footer{
   overflow:hidden;
   display:flex; flex-direction:column;
 }
-
-/* (dřív tu bylo počítání přes vh; teď se řídí výškou .modalOverlay) */
-
 .modalHeader{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:12px;
@@ -420,16 +356,7 @@ footer{
 .modalTitle{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .modalTitle b{ font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70vw; }
 .modalTitle span{ font-size:12px; color:var(--muted); }
-.modalBody{
-  padding:12px;
-  flex:1 1 auto;
-  min-height:0;
-  overflow:auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
-}
+.modalBody{ padding:12px; overflow:auto; }
 
 .btnDanger{
   border-color:var(--dangerBd);
@@ -632,7 +559,6 @@ html[data-theme="light"] .heroRank.rank2{
   text-transform:uppercase;
   font-weight:950;
   opacity:.95;
-  text-align:left;
 }
 
 
@@ -700,7 +626,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 }
 
 @media (max-width: 560px){
-  header{ padding:calc(12px + env(safe-area-inset-top)) 12px 10px; }
+  header{ padding:12px 12px 10px; }
   header .wrap{ flex-direction:column; gap:10px; }
   .logo{ width:76px; height:76px; flex-basis:76px; margin-top:0; }
   h1{ font-size:19px; margin-bottom:2px; }
@@ -782,19 +708,18 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .playerCol{ width:62%; }
   .ratingCol{ width:28%; }
 
-  /* Modal: na mobilu jako "okno" (ne fullscreen přes celou obrazovku) */
-  .modalOverlay{ padding:12px; }
+  /* Modal full-screen on mobile */
+  .modalOverlay{ padding:0; }
   .modal{
-    max-width:1100px;
-    width:100%;
-    /* bez fixní height – kvůli mobilním adresním lištám */
-    max-height:calc(100vh - 24px);
-    border-radius:18px;
-    border:1px solid var(--border);
+    max-width:none;
+    width:100vw;
+    height:100vh;
+    border-radius:0;
+    border:none;
   }
   .modalBody{ padding:12px; }
 
-/* Player card: no horizontal scrolling except tables */
+  /* Player card: no horizontal scrolling except tables */
   .heroGrid{ grid-template-columns:1fr; }
   #eloChart{ min-height:180px; }
   .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
@@ -821,11 +746,6 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   font-size:10px;
   padding:5px 7px;
   letter-spacing:.04em;
-  justify-self:start;
-  width:max-content;
-  max-width:220px;
-  overflow:hidden;
-  text-overflow:ellipsis;
 }
 
 /* 3) Detail hráče: horní statistiky (GAMES / WINRATE / WIN / LOSS / DRAW) trochu menší */
@@ -859,128 +779,36 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .metaBoxRow .stat span{ font-size:13px; }
 
 /* 6) Protihráči: na mobilu bez scrollu + jen 3 sloupce (řeší i opponents.js) */
-.tblWrap.oppNoScroll{
-  /* Robustní ořez zaoblených rohů na mobilech (hlavně iOS/Safari) */
-  position:relative;
-  overflow:hidden;
-  border-radius:16px;
-  border:1px solid var(--border2);
-  background:var(--panel2);
-  isolation:isolate;
-  -webkit-mask-image:-webkit-radial-gradient(white, black);
-  clip-path: inset(0 round 16px);
-}
-.tbl.tblOpponents{
-  min-width:0;
-  table-layout:fixed;
-  border:0;
-  border-radius:0;
-  margin-bottom:0;
-  background:transparent;
-}
+.tblWrap.oppNoScroll{ overflow-x:hidden; }
+.tbl.tblOpponents{ min-width:0; table-layout:fixed; }
 .tbl.tblOpponents th,
 .tbl.tblOpponents td{
   padding:8px 8px;
   font-size:12px;
 }
-
-/* iOS/Safari: sticky thead občas "přetéká" přes zaoblení wrapperu -> vypnout + zaoblit rohy hlavičky */
-.tbl.tblOpponents thead th{
-  position:static;
-  top:auto;
-}
-.tbl.tblOpponents thead th:first-child{ border-top-left-radius:16px; }
-.tbl.tblOpponents thead th:last-child{ border-top-right-radius:16px; }
-.tbl.tblOpponents thead th{ background-clip:padding-box; }
 .tbl.tblOpponents .colOppWin,
 .tbl.tblOpponents .colOppLoss,
 .tbl.tblOpponents .colOppDraw{ display:none !important; }
-
-  /* Detail hráče: hlavička sekce (filtr nahoře, název tabulky pod ním) */
-  .sectionHeader{
-    flex-direction:column-reverse;
-    align-items:flex-start;
-    gap:8px;
-  }
-  .sectionHeader .sectionTitle{ width:100%; text-align:left; }
-  .tournamentFilterInline{
-    width:100%;
-    justify-content:flex-start;
-    flex-wrap:nowrap;
-  }
-  .tournamentFilterInline .tournamentFilter{ margin-top:0; }
-  .tournamentFilterInline select{ min-width:0; width:100%; max-width:260px; }
-
 }
 
 
 
 /* Fullscreen modální "stránky" z menu */
 .modal.modalFullscreen{
-  width: 100%;
+  width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
   max-width: none;
-  margin: 0;
+  margin: 12px;
   border-radius: 18px;
-
-  /* Na mobilech 100vh často "lže" kvůli horní/spodní liště prohlížeče.
-     Proto jedeme přes max-height + flex layout, aby šel obsah vždy doscrollovat. */
-  height: auto;
-  max-height: 100%;
-
-  display:flex;
-  flex-direction:column;
 }
-
-/* (max-height řeší .modalOverlay; tady držíme jen 100%) */
-
 .modal.modalFullscreen .modalBody{
-  /* Bez ručního calc(100%-header) — flex to vyřeší spolehlivěji */
-  flex: 1 1 auto;
-  min-height: 0;
+  height: calc(100% - 64px);
   overflow:auto;
-
-  /* aby poslední řádky nebyly pod home indikátorem */
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 .pageModal{
   padding: 4px 2px 14px;
 }
 .pageModal h2{ margin: 6px 0 10px; }
-
-/* --- Aktuality (modal) --- */
-.newsWrap{ overflow: visible; }
-.newsHero{
-  width:100%;
-  max-width:520px;
-  height:auto;
-  display:block;
-  margin: 0 auto 12px;
-  border-radius:18px;
-  border:1px solid var(--border2);
-}
-.newsTitle{
-  font-size:18px;
-  font-weight:950;
-  letter-spacing:.2px;
-  margin: 4px 0 6px;
-}
-.newsSubtitle{
-  font-size:13px;
-  font-weight:900;
-  letter-spacing:.04em;
-  color: var(--muted);
-  margin: 10px 0 6px;
-}
-.newsH{
-  font-size:13px;
-  font-weight:950;
-  margin: 10px 0 6px;
-}
-.newsList{
-  margin: 0 0 8px;
-  padding-left: 18px;
-}
-.newsList li{ margin: 6px 0; line-height:1.35; }
 
 
 /* Tournament filter (detail hráče) */

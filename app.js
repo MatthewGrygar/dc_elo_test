@@ -59,22 +59,6 @@ function toNumber(x){
 }
 function safeInt(x){ return Number.isFinite(x) ? x.toFixed(0) : ""; }
 
-function isMobileViewport(){
-  return window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
-}
-
-// Na mobilu zkrať extrémně dlouhá jména na "první + poslední slovo".
-function shortNameMobile(name){
-  const full = (name ?? "").toString().trim();
-  if (!full) return "";
-  // Není co zkracovat
-  if (!isMobileViewport()) return full;
-  if (full.length <= 20) return full;
-  const parts = full.split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return full;
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-}
-
 function formatNow(){
   return new Intl.DateTimeFormat("cs-CZ", {
     year:"numeric", month:"2-digit", day:"2-digit",
@@ -193,7 +177,7 @@ function renderStandings(rows){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="rank colRank">${rankCellHtml(r.rank)}</td>
-      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(shortNameMobile(r.player))}</button></td>
+      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(r.player)}</button></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
       <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
@@ -681,13 +665,6 @@ if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click",
 /* Events */
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
-
-// Přepnutí orientace / změna šířky: na mobilu se mají dlouhá jména zkracovat.
-let __resizeT = null;
-window.addEventListener("resize", () => {
-  clearTimeout(__resizeT);
-  __resizeT = setTimeout(() => renderStandings(allRows), 80);
-});
 
 tbody.addEventListener("click", (e) => {
   const btn = e.target.closest(".playerBtn");

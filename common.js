@@ -5,25 +5,6 @@ import { openNewsModal } from "./aktuality.js";
 const htmlEl = document.documentElement;
 const logoImg = document.getElementById("logoImg");
 
-// --- MOBILE VIEWPORT (vh) FIX ---
-// Nastaví CSS proměnnou --vh podle reálné výšky viewportu.
-// Používá se jako fallback tam, kde 100svh/100dvh není dostupné nebo se chová nestabilně.
-function setVH(){
-  const h = (window.visualViewport && window.visualViewport.height)
-    ? window.visualViewport.height
-    : window.innerHeight;
-  htmlEl.style.setProperty("--vh", `${h * 0.01}px`);
-}
-
-setVH();
-window.addEventListener("resize", setVH, { passive:true });
-window.addEventListener("orientationchange", setVH, { passive:true });
-if (window.visualViewport){
-  window.visualViewport.addEventListener("resize", setVH, { passive:true });
-  // některé prohlížeče mění výšku i při scrollu (schování URL baru)
-  window.visualViewport.addEventListener("scroll", setVH, { passive:true });
-}
-
 // --- THEME (stejně jako dřív) ---
 function syncLogo(){
   if (!logoImg) return;
