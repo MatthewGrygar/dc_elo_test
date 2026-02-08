@@ -1,33 +1,66 @@
 import { openModal } from "./modal.js";
 
-// Okno "Aktuality" (dočasný obsah – později upravíme podle reálných změn)
-export function openNewsModal(opts = {}){
+export function openNewsModal(opts = {}) {
   openModal({
     title: "Aktuality",
-    subtitle: "Informace o verzi",
+    subtitle: "Přehled změn a novinek",
     fullscreen: !!opts.fullscreen,
     html: `
       <div class="box boxPad">
-        <div class="sectionTitle" style="margin-top:0;">Aktuální verze</div>
-        <p class="muted" style="margin-top:6px;">
-          Toto okno slouží jako rychlý přehled změn. Text je zatím zástupný a později ho doplníme.
-        </p>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li><b>Beta 0.9</b> – žebříček a detail hráče</li>
-          <li>Načítání dat z Google Sheets</li>
-          <li>Světlý / tmavý režim</li>
-          <li>Tlačítko Aktuality + úprava souhrnných panelů na mobilu</li>
+
+        <div class="sectionTitle" style="margin-top:0;">
+          📱 Verze 1.0.2
+        </div>
+        <div class="muted" style="margin-bottom:14px;">
+          Aktualizace aplikace
+        </div>
+
+        <div class="sectionTitle">✨ Vylepšení mobilního zobrazení</div>
+
+        <div style="margin-top:10px;">
+          <b>Titulní stránka (mobil)</b>
+          <ul style="margin:6px 0 12px; padding-left:18px;">
+            <li>U dlouhých jmen hráčů se nyní zobrazuje pouze <b>první a poslední slovo</b>, aby nedocházelo k narušení layoutu.</li>
+            <li>Pole <b>„Načteno: datum, čas“</b> je menší a užší a již nezabírá celou šířku obrazovky.</li>
+          </ul>
+        </div>
+
+        <div>
+          <b>Individuální karta hráče (mobil)</b>
+          <ul style="margin:6px 0 12px; padding-left:18px;">
+            <li><b>Filtr turnaje</b> a výběrové pole jsou nyní zobrazeny v jednom řádku.</li>
+            <li>Název tabulky byl přesunut pod filtr pro přehlednější rozvržení.</li>
+            <li>Názvy tabulek jsou nově zarovnány doleva.</li>
+            <li>Celkově upraven layout pro lepší čitelnost na telefonech.</li>
+          </ul>
+        </div>
+
+        <div class="sectionTitle">🎨 Grafické úpravy a opravy</div>
+        <ul style="margin:10px 0 12px; padding-left:18px;">
+          <li>Opraven problém s přesahem černého pozadí v tabulce <b>Protiháči</b> (mobilní zobrazení).</li>
+          <li>Opraveny drobné grafické chyby při přepínání světlého a tmavého režimu.</li>
+          <li>Lehká vizuální úprava individuální karty hráče.</li>
+          <li>Optimalizace zobrazení karty hráče pro lepší uživatelský zážitek.</li>
         </ul>
-        <div class="hr"></div>
-        <div class="sectionTitle">Co chystáme</div>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li>Další statistiky a filtry</li>
-          <li>Rychlejší načítání detailu hráče</li>
+
+        <div class="sectionTitle">🆕 Nové funkce</div>
+        <ul style="margin:10px 0 12px; padding-left:18px;">
+          <li>Přidáno nové okno <b>Protiháči</b> na individuální kartu hráče.</li>
+          <li>Přidána možnost <b>Filtru turnaje</b> na individuální kartě hráče.</li>
+          <li>Na titulní stránku přidáno menu pro snadnější navigaci.</li>
         </ul>
+
+        <div class="sectionTitle">🛠 Technické změny</div>
+        <ul style="margin:10px 0 0; padding-left:18px;">
+          <li>Kompletní refaktoring projektu.</li>
+          <li>Původní struktura s jedním souborem <b>main.html</b> byla přepracována.</li>
+          <li>Aplikace nyní využívá strukturovaný repozitář (<b>index.html, app.js, common.js</b> atd.).</li>
+          <li>Zlepšena přehlednost kódu a připravenost na další rozvoj.</li>
+        </ul>
+
       </div>
     `
   });
 }
 
-// zpřístupnění pro app.js (který může běžet samostatně jako modul)
 window.openNewsModal = openNewsModal;
