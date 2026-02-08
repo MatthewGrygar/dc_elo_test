@@ -756,6 +756,18 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   max-width:70vw;
   overflow:hidden;
   text-overflow:ellipsis;
+
+  /* Modal (detail hráče) na mobilu jako okno přizpůsobené obrazovce */
+  .modalOverlay{ padding:12px; }
+  .modal{
+    height:auto;
+    max-height:calc(100vh - 24px);
+    width:100%;
+    max-width:560px;
+    margin:0 auto;
+  }
+  .modalBody{ max-height:calc(100vh - 24px - 56px); } /* minus header */
+
 }
 
 /* 3) Detail hráče: horní statistiky (GAMES / WINRATE / WIN / LOSS / DRAW) trochu menší */
@@ -1001,14 +1013,17 @@ html[data-theme="light"] .tournamentFilter select option{
     margin:0;
     text-align:left;
   }
-  .tournamentFilterInline{ width:100%; }
+  .tournamentFilterInline{ width:100%; box-sizing:border-box; }
   .tournamentFilterInline .filterLabel{ white-space:nowrap; }
+  .tournamentFilter{ flex:1 1 auto; display:flex; }
   .tournamentFilter select{
+    flex:1 1 auto;
     min-width:0;
-    width:auto;
-    max-width:58vw;
+    width:100%;
+    max-width:100%;
   }
-  .sectionTitle{ text-align:left; }
+
+.sectionTitle{ text-align:left; }
 
   /* Protihráči: oříznout sticky hlavičku v iOS/Safari */
   .tblWrap.oppNoScroll{ overflow:hidden; }

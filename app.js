@@ -51,6 +51,19 @@ function normalizeKey(s){
   return (s || "").toString().trim().toLowerCase()
     .normalize("NFD").replace(/\p{Diacritic}/gu,"");
 }
+
+
+function isMobile(){
+  return window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
+}
+function displayPlayerName(fullName){
+  const name = (fullName || "").toString().trim();
+  if (!isMobile()) return name;
+  if (name.length <= 18) return name;
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return name;
+  return `${parts[0]} ${parts[parts.length-1]}`;
+}
 function toNumber(x){
   if (x == null) return NaN;
   const s = x.toString().replace(/\s/g,"").replace(",",".");
@@ -177,7 +190,7 @@ function renderStandings(rows){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="rank colRank">${rankCellHtml(r.rank)}</td>
-      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(r.player)}</button></td>
+      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(displayPlayerName(r.player))}</button></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
       <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
