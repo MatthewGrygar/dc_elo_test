@@ -567,21 +567,30 @@ async function loadPlayerDetail(playerObj){
         </div>
       `;
 
+      // Horní lišta nad tabulkami: na desktopu filtr vpravo pod hero, na mobilu se hezky zalomí
+      const topBarTitle = (tournamentKey && tournamentKey !== "ALL")
+        ? `<div class="sectionTitle sectionTitleInline">${escapeHtml(tournamentKey)}</div>`
+        : `<div class="tablesTopLeft"></div>`;
+
+      const topBarHtml = `
+        <div class="tablesTopBar">
+          ${topBarTitle}
+          ${filterHtml}
+        </div>
+      `;
+
       let sectionsHtml = "";
       if (tournamentKey === "ALL"){
-        sectionsHtml = order.map((key, i) => {
+        sectionsHtml = order.map((key) => {
           const rows = groups.get(key).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0));
-          if (i === 0){
-            return `<div class="sectionHeader"><div class="sectionTitle">${escapeHtml(key)}</div>${filterHtml}</div>${buildTournamentTable(rows)}`;
-          }
           return `<div class="sectionTitle">${escapeHtml(key)}</div>${buildTournamentTable(rows)}`;
         }).join("");
       } else {
-        sectionsHtml = `<div class="sectionHeader"><div class="sectionTitle">${escapeHtml(tournamentKey)}</div>${filterHtml}</div>${buildTournamentTable(filteredCards)}`;
+        sectionsHtml = `${buildTournamentTable(filteredCards)}`;
       }
 
       const tablesEl = document.getElementById("tournamentTables");
-      if (tablesEl) tablesEl.innerHTML = sectionsHtml;
+      if (tablesEl) tablesEl.innerHTML = topBarHtml + sectionsHtml;
 
       // nastav vybranou hodnotu + handler (po každém re-renderu)
       const sel = document.getElementById("tournamentSelect");

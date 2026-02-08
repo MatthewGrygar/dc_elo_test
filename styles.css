@@ -598,6 +598,10 @@ html[data-theme="light"] .heroRank.rank2{
   font-size:11px;
   opacity:.85;
 }
+/* Sticky header + rounded corners (fixes tiny "bleed" in corners on mobile/iOS) */
+.tbl thead th:first-child{ border-top-left-radius:16px; }
+.tbl thead th:last-child{ border-top-right-radius:16px; }
+.tbl thead th{ background-clip:padding-box; }
 .tbl tr:last-child td{ border-bottom:none; }
 .summaryRow td{
   font-weight:900;
@@ -785,7 +789,11 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .metaBoxRow .stat span{ font-size:13px; }
 
 /* 6) Protihráči: na mobilu bez scrollu + jen 3 sloupce (řeší i opponents.js) */
-.tblWrap.oppNoScroll{ overflow:hidden; }
+.tblWrap.oppNoScroll{
+  overflow:hidden;
+  border-radius:16px;
+  background:var(--panel2);
+}
 .tbl.tblOpponents{ min-width:0; table-layout:fixed; }
 .tbl.tblOpponents th,
 .tbl.tblOpponents td{
@@ -795,73 +803,6 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .tbl.tblOpponents .colOppWin,
 .tbl.tblOpponents .colOppLoss,
 .tbl.tblOpponents .colOppDraw{ display:none !important; }
-
-  /* 7) Detail hrace: na mobilu filtr nad nazvem tabulky /*
-  .sectionHeader{
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
-  }
-  .sectionHeader .sectionTitle{
-    order:2;
-    margin:0;
-    text-align:left;
-  }
-  .sectionHeader .tournamentFilterInline{
-    order:1;
-    width:100%;
-    justify-content:space-between;
-  }
-  .tournamentFilterInline{
-    width:100%;
-  }
-  .tournamentFilterInline .filterLabel{
-    flex:0 0 auto;
-    white-space:nowrap;
-  }
-  .tournamentFilterInline select{
-    min-width:0;
-    width:auto;
-    max-width:60vw;
-  }
-  .sectionTitle{
-    text-align:left;
-  }
-
-  /* 7) Detail hrace: na mobilu filtr nad nazvem tabulky /*
-  .sectionHeader{
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
-  }
-  .sectionHeader .sectionTitle{
-    order:2;
-    margin:0;
-    text-align:left;
-  }
-  .sectionHeader .tournamentFilterInline{
-    order:1;
-    width:100%;
-    justify-content:space-between;
-  }
-  .tournamentFilterInline{
-    width:100%;
-    justify-content:space-between;
-  }
-  .tournamentFilterInline .filterLabel{
-    font-size:10px;
-    letter-spacing:.12em;
-    opacity:.8;
-  }
-  .tournamentFilterInline select{
-    min-width:0;
-    width:auto;
-    max-width:58vw;
-  }
-
-  .sectionTitle{ text-align:left; }
-
-}
 
 
 
@@ -1009,23 +950,56 @@ html[data-theme="light"] .tournamentFilter select option{
 
 .filterLabel{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.72; }
 
+/* Top bar above tournament tables (filter under hero, title left) */
+.tablesTopBar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin: 8px 0 10px;
+}
+.tablesTopLeft{ flex:1 1 auto; }
+.sectionTitleInline{ margin:0; }
+
+/* Nicer desktop look for the tournament filter */
+.tournamentFilterInline{
+  border:1px solid var(--border2);
+  background: rgba(120,120,120,.08);
+  padding:10px 12px;
+  border-radius:16px;
+}
+.tournamentFilterInline .filterLabel{ opacity:.78; }
+.tournamentFilterInline .tournamentFilter select{
+  border:1px solid var(--border2);
+  background:var(--panel);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:12px;
+  font-weight:850;
+  min-width: 220px;
+}
+.tournamentFilterInline .tournamentFilter select:focus{
+  outline:none;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+}
+
 /* --- DC ELO: mobile layout fixes (Feb 2026) --- */
 @media (max-width: 560px){
   /* Detail hráče: FILTR TURNAJE + select na jeden řádek, název tabulky pod tím */
-  .sectionHeader{
+  .tablesTopBar{
     flex-direction:column;
     align-items:stretch;
     gap:8px;
   }
-  .sectionHeader .sectionTitle{
-    order:2;
-    margin:0;
-    text-align:left;
-  }
-  .sectionHeader .tournamentFilterInline{
+  .tablesTopBar .tournamentFilterInline{
     order:1;
     width:100%;
     justify-content:space-between;
+  }
+  .tablesTopBar .sectionTitleInline{
+    order:2;
+    margin:0;
+    text-align:left;
   }
   .tournamentFilterInline{ width:100%; }
   .tournamentFilterInline .filterLabel{ white-space:nowrap; }
