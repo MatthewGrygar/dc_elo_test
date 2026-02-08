@@ -969,26 +969,46 @@ html[data-theme="light"] .tournamentFilter select option{
   justify-content:space-between;
   gap:12px;
   margin: 8px 0 10px;
+  width:100%;
 }
 .tablesTopLeft{ flex:1 1 auto; }
 .sectionTitleInline{ margin:0; }
 
-/* Nicer desktop look for the tournament filter */
+/* Na desktopu drž filtr vždy vpravo */
+.tablesTopBar .tournamentFilterInline{
+  margin-left:auto;
+}
+
+/* Nicer look for the tournament filter (sjednoceno pro desktop i mobil) */
 .tournamentFilterInline{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
   border:1px solid var(--border2);
-  background: rgba(120,120,120,.08);
+  background:var(--chip);
   padding:10px 12px;
   border-radius:16px;
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
 }
-.tournamentFilterInline .filterLabel{ opacity:.78; }
+.tournamentFilterInline .filterLabel{ opacity:.82; }
+
+/* V inline variantě nechceme, aby .tournamentFilter přidával své vlastní odsazení/zarovnání */
+.tournamentFilterInline .tournamentFilter{
+  margin-top:0;
+  justify-content:flex-end;
+}
+
 .tournamentFilterInline .tournamentFilter select{
   border:1px solid var(--border2);
   background:var(--panel);
   color:var(--text);
-  padding:8px 10px;
+  padding:9px 34px 9px 12px;
   border-radius:12px;
-  font-weight:850;
-  min-width: 220px;
+  font-weight:900;
+  font-size:13px;
+  line-height:1;
+  min-width: 240px;
+  max-width: 100%;
 }
 .tournamentFilterInline .tournamentFilter select:focus{
   outline:none;
