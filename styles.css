@@ -559,6 +559,7 @@ html[data-theme="light"] .heroRank.rank2{
   text-transform:uppercase;
   font-weight:950;
   opacity:.95;
+  text-align:left;
 }
 
 
@@ -598,10 +599,6 @@ html[data-theme="light"] .heroRank.rank2{
   font-size:11px;
   opacity:.85;
 }
-/* Sticky header + rounded corners (fixes tiny "bleed" in corners on mobile/iOS) */
-.tbl thead th:first-child{ border-top-left-radius:16px; }
-.tbl thead th:last-child{ border-top-right-radius:16px; }
-.tbl thead th{ background-clip:padding-box; }
 .tbl tr:last-child td{ border-bottom:none; }
 .summaryRow td{
   font-weight:900;
@@ -712,18 +709,18 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .playerCol{ width:62%; }
   .ratingCol{ width:28%; }
 
-  /* Modal full-screen on mobile */
-  .modalOverlay{ padding:0; }
+  /* Modal: na mobilu jako "okno" (ne fullscreen přes celou obrazovku) */
+  .modalOverlay{ padding:12px; }
   .modal{
-    max-width:none;
-    width:100vw;
-    height:100vh;
-    border-radius:0;
-    border:none;
+    max-width:1100px;
+    width:100%;
+    height:calc(100vh - 24px);
+    border-radius:18px;
+    border:1px solid var(--border);
   }
   .modalBody{ padding:12px; }
 
-  /* Player card: no horizontal scrolling except tables */
+/* Player card: no horizontal scrolling except tables */
   .heroGrid{ grid-template-columns:1fr; }
   #eloChart{ min-height:180px; }
   .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
@@ -751,23 +748,10 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   padding:5px 7px;
   letter-spacing:.04em;
   justify-self:start;
-  align-self:center;
   width:max-content;
-  max-width:70vw;
+  max-width:220px;
   overflow:hidden;
   text-overflow:ellipsis;
-
-  /* Modal (detail hráče) na mobilu jako okno přizpůsobené obrazovce */
-  .modalOverlay{ padding:12px; }
-  .modal{
-    height:auto;
-    max-height:calc(100vh - 24px);
-    width:100%;
-    max-width:560px;
-    margin:0 auto;
-  }
-  .modalBody{ max-height:calc(100vh - 24px - 56px); } /* minus header */
-
 }
 
 /* 3) Detail hráče: horní statistiky (GAMES / WINRATE / WIN / LOSS / DRAW) trochu menší */
@@ -804,9 +788,17 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .tblWrap.oppNoScroll{
   overflow:hidden;
   border-radius:16px;
+  border:1px solid var(--border2);
   background:var(--panel2);
 }
-.tbl.tblOpponents{ min-width:0; table-layout:fixed; }
+.tbl.tblOpponents{
+  min-width:0;
+  table-layout:fixed;
+  border:0;
+  border-radius:0;
+  margin-bottom:0;
+  background:transparent;
+}
 .tbl.tblOpponents th,
 .tbl.tblOpponents td{
   padding:8px 8px;
@@ -815,6 +807,23 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .tbl.tblOpponents .colOppWin,
 .tbl.tblOpponents .colOppLoss,
 .tbl.tblOpponents .colOppDraw{ display:none !important; }
+
+  /* Detail hráče: hlavička sekce (filtr nahoře, název tabulky pod ním) */
+  .sectionHeader{
+    flex-direction:column-reverse;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .sectionHeader .sectionTitle{ width:100%; text-align:left; }
+  .tournamentFilterInline{
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+  }
+  .tournamentFilterInline .tournamentFilter{ margin-top:0; }
+  .tournamentFilterInline select{ min-width:0; width:100%; max-width:260px; }
+
+}
 
 
 
@@ -825,8 +834,6 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   max-width: none;
   margin: 12px;
   border-radius: 18px;
-  border:1px solid var(--border);
-  background:var(--thead);
 }
 .modal.modalFullscreen .modalBody{
   height: calc(100% - 64px);
@@ -961,90 +968,3 @@ html[data-theme="light"] .tournamentFilter select option{
 }
 
 .filterLabel{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.72; }
-
-/* Top bar above tournament tables (filter under hero, title left) */
-.tablesTopBar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin: 8px 0 10px;
-  width:100%;
-}
-.tablesTopLeft{ flex:1 1 auto; }
-.sectionTitleInline{ margin:0; }
-
-/* Na desktopu drž filtr vždy vpravo */
-.tablesTopBar .tournamentFilterInline{
-  margin-left:auto;
-}
-
-/* Nicer look for the tournament filter (sjednoceno pro desktop i mobil) */
-.tournamentFilterInline{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  border:1px solid var(--border2);
-  background:var(--chip);
-  padding:10px 12px;
-  border-radius:16px;
-  box-shadow:0 10px 28px rgba(0,0,0,.18);
-}
-.tournamentFilterInline .filterLabel{ opacity:.82; }
-
-/* V inline variantě nechceme, aby .tournamentFilter přidával své vlastní odsazení/zarovnání */
-.tournamentFilterInline .tournamentFilter{
-  margin-top:0;
-  justify-content:flex-end;
-}
-
-.tournamentFilterInline .tournamentFilter select{
-  border:1px solid var(--border2);
-  background:var(--panel);
-  color:var(--text);
-  padding:9px 34px 9px 12px;
-  border-radius:12px;
-  font-weight:900;
-  font-size:13px;
-  line-height:1;
-  min-width: 240px;
-  max-width: 100%;
-}
-.tournamentFilterInline .tournamentFilter select:focus{
-  outline:none;
-  box-shadow: 0 0 0 3px rgba(255,255,255,.06);
-}
-
-/* --- DC ELO: mobile layout fixes (Feb 2026) --- */
-@media (max-width: 560px){
-  /* Detail hráče: FILTR TURNAJE + select na jeden řádek, název tabulky pod tím */
-  .tablesTopBar{
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
-  }
-  .tablesTopBar .tournamentFilterInline{
-    order:1;
-    width:100%;
-    justify-content:space-between;
-  }
-  .tablesTopBar .sectionTitleInline{
-    order:2;
-    margin:0;
-    text-align:left;
-  }
-  .tournamentFilterInline{ width:100%; box-sizing:border-box; }
-  .tournamentFilterInline .filterLabel{ white-space:nowrap; }
-  .tournamentFilter{ flex:1 1 auto; display:flex; }
-  .tournamentFilter select{
-    flex:1 1 auto;
-    min-width:0;
-    width:100%;
-    max-width:100%;
-  }
-
-.sectionTitle{ text-align:left; }
-
-  /* Protihráči: oříznout sticky hlavičku v iOS/Safari */
-  .tblWrap.oppNoScroll{ overflow:hidden; }
-}
