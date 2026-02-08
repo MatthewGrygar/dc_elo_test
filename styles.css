@@ -804,6 +804,15 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   padding:8px 8px;
   font-size:12px;
 }
+
+/* iOS/Safari: sticky thead občas "přetéká" přes zaoblení wrapperu -> vypnout + zaoblit rohy hlavičky */
+.tbl.tblOpponents thead th{
+  position:static;
+  top:auto;
+}
+.tbl.tblOpponents thead th:first-child{ border-top-left-radius:16px; }
+.tbl.tblOpponents thead th:last-child{ border-top-right-radius:16px; }
+.tbl.tblOpponents thead th{ background-clip:padding-box; }
 .tbl.tblOpponents .colOppWin,
 .tbl.tblOpponents .colOppLoss,
 .tbl.tblOpponents .colOppDraw{ display:none !important; }
