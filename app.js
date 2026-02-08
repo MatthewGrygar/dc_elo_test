@@ -332,7 +332,8 @@ function buildSvgLineChartEqualX(points){
   const dots = clean.map((p,i) => `<circle cx="${X(i)}" cy="${Y(p.elo)}" r="3.2" fill="var(--chartDot)" />`).join("");
 
   return `
-    <svg viewBox="0 0 ${w} ${h}" width="100%" height="280" role="img" aria-label="ELO chart">
+    <div class=\"chartAspect\">
+      <svg viewBox=\"0 0 ${w} ${h}\" width=\"100%\" height=\"100%\" role=\"img\" aria-label=\"ELO chart\">
       ${grid}
       <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="var(--chartAxis)" />
       <line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="var(--chartAxis)" />
@@ -342,6 +343,7 @@ function buildSvgLineChartEqualX(points){
       <text x="${padL}" y="${padT-4}" fill="var(--chartText)" font-size="11">ELO</text>
       <text x="${w-padR}" y="${h-10}" text-anchor="end" fill="var(--chartText)" font-size="11">Match ID</text>
     </svg>
+    </div>
   `;
 }
 
@@ -526,7 +528,7 @@ async function loadPlayerDetail(playerObj){
           playerName: playerObj.player,
           cards,
           onBack: () => {
-            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>`, fullscreen: true });
+            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
             loadPlayerDetail(playerObj);
           }
         });
@@ -669,7 +671,7 @@ searchEl.addEventListener("input", () => renderStandings(allRows));
 tbody.addEventListener("click", (e) => {
   const btn = e.target.closest(".playerBtn");
   if (!btn) return;
-  openModal({ title: btn._playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>`, fullscreen: true });
+  openModal({ title: btn._playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
   loadPlayerDetail(btn._playerObj);
 });
 
