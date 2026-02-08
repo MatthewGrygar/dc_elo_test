@@ -1,12 +1,8 @@
 import { openModal } from "./modal.js";
 
-// Okno "Aktuality" – reálné změny
-export function openNewsModal(opts = {}){
-  openModal({
-    title: "Aktuality",
-    subtitle: "Verze 1.0.0",
-    fullscreen: !!opts.fullscreen,
-    html: `
+// HTML obsah "Aktuality" – sdílený pro modal i mobilní "stránku"
+export function buildNewsHtml(){
+  return `
       <div class="box boxPad">
         <img
           src="verze%201.0.0.png"
@@ -14,54 +10,65 @@ export function openNewsModal(opts = {}){
           style="width:100%; height:auto; border-radius:16px; border:1px solid var(--border2); margin-bottom:12px;"
         />
 
-        <div class="sectionTitle" style="margin-top:0;">📱 Verze 1.0.0 – Aktualizace aplikace</div>
-        <div class="muted" style="margin-top:6px; font-weight:800;">✨ Vylepšení mobilního zobrazení</div>
+        <div class="sectionTitle">📱 Verze 1.0.0 – Aktualizace aplikace</div>
+        <div class="muted" style="margin-top:-4px; margin-bottom:12px;">✨ Vylepšení mobilního zobrazení</div>
 
-        <div class="hr"></div>
-        <div class="sectionTitle" style="margin-top:0;">Titulní stránka (mobil)</div>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li>U dlouhých jmen hráčů se nyní zobrazuje pouze první a poslední slovo, aby nedocházelo k rozbití layoutu.</li>
-          <li>Pole „Načteno: datum, čas“ je na mobilu nově menší a užší, již nezabírá celou šířku obrazovky.</li>
-        </ul>
+        <div class="box" style="margin:12px 0;">
+          <div class="sectionTitle">Titulní stránka (mobil)</div>
+          <ul class="bullets">
+            <li>U dlouhých jmen hráčů se nyní zobrazuje pouze první a poslední slovo, aby nedocházelo k rozbití layoutu.</li>
+            <li>Pole „Načteno: datum, čas“ je na mobilu nově menší a užší, již nezabírá celou šířku obrazovky.</li>
+          </ul>
+        </div>
 
-        <div class="hr"></div>
-        <div class="sectionTitle" style="margin-top:0;">Individuální karta hráče (mobil)</div>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li>FILTR TURNAJE a výběrové pole jsou nově zobrazeny v jednom řádku.</li>
-          <li>Název tabulky je přesunut pod filtr pro přehlednější rozvržení.</li>
-          <li>Názvy tabulek jsou nyní zarovnány doleva.</li>
-          <li>Celkově upraven layout pro lepší čitelnost na telefonech.</li>
-        </ul>
+        <div class="box" style="margin:12px 0;">
+          <div class="sectionTitle">Individuální karta hráče (mobil)</div>
+          <ul class="bullets">
+            <li>FILTR TURNAJE a výběrové pole jsou nově zobrazeny v jednom řádku.</li>
+            <li>Název tabulky je přesunut pod filtr pro přehlednější rozvržení.</li>
+            <li>Názvy tabulek jsou nyní zarovnány doleva.</li>
+            <li>Celkově upraven layout pro lepší čitelnost na telefonech.</li>
+          </ul>
+        </div>
 
-        <div class="hr"></div>
-        <div class="sectionTitle" style="margin-top:0;">🎨 Grafické úpravy a opravy chyb</div>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li>Opraven problém s přesahem černého pozadí v tabulce Protihráči (mobilní zobrazení).</li>
-          <li>Opraveny drobné grafické chyby při přepínání světlého a tmavého režimu.</li>
-          <li>Lehká vizuální úprava individuální karty hráče.</li>
-          <li>Optimalizace zobrazení karty hráče pro lepší uživatelský zážitek.</li>
-        </ul>
+        <div class="box" style="margin:12px 0;">
+          <div class="sectionTitle">🎨 Grafické úpravy a opravy chyb</div>
+          <ul class="bullets">
+            <li>Opraven problém s přesahem černého pozadí v tabulce Protiháči (mobilní zobrazení).</li>
+            <li>Opraveny drobné grafické chyby při přepínání světlého a tmavého režimu.</li>
+            <li>Lehká vizuální úprava individuální karty hráče.</li>
+            <li>Optimalizace zobrazení karty hráče pro lepší uživatelský zážitek.</li>
+          </ul>
+        </div>
 
-        <div class="hr"></div>
-        <div class="sectionTitle" style="margin-top:0;">🆕 Nové funkce</div>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li>Přidáno nové okno Protihráči na individuální kartu hráče.</li>
-          <li>Přidána možnost FILTR TURNAJE na individuální kartě hráče.</li>
-          <li>Na titulní stránku přidáno menu pro snadnější navigaci.</li>
-        </ul>
+        <div class="box" style="margin:12px 0;">
+          <div class="sectionTitle">🆕 Nové funkce</div>
+          <ul class="bullets">
+            <li>Přidáno nové okno Protiháči na individuální kartu hráče.</li>
+            <li>Přidána možnost FILTR TURNAJE na individuální kartě hráče.</li>
+            <li>Na titulní stránku přidáno menu pro snadnější navigaci.</li>
+          </ul>
+        </div>
 
-        <div class="hr"></div>
-        <div class="sectionTitle" style="margin-top:0;">🛠 Technické změny</div>
-        <ul style="margin:10px 0 0; padding-left:18px;">
-          <li><b>Refaktoring projektu:</b></li>
-          <li>Původní struktura s jedním souborem main.html byla kompletně přepracována.</li>
-          <li>Aplikace nyní využívá strukturovaný repozitář (index.html, app.js, common.js atd.).</li>
-          <li>Zlepšena přehlednost kódu a připravenost na další rozvoj.</li>
-        </ul>
+        <div class="box" style="margin:12px 0;">
+          <div class="sectionTitle">🛠 Technické změny</div>
+          <div class="muted" style="margin-bottom:6px;">Refaktoring projektu:</div>
+          <ul class="bullets">
+            <li>Původní struktura s jedním souborem main.html byla kompletně přepracována.</li>
+            <li>Aplikace nyní využívá strukturovaný repozitář (index.html, app.js, common.js atd.).</li>
+            <li>Zlepšena přehlednost kódu a připravenost na další rozvoj.</li>
+          </ul>
+        </div>
       </div>
-    `
-  });
+  `;
 }
 
-// zpřístupnění pro app.js (který může běžet samostatně jako modul)
-window.openNewsModal = openNewsModal;
+// Okno "Aktuality" – desktop modal
+export function openNewsModal(){
+  openModal({
+    title: "Aktuality",
+    subtitle: "Verze 1.0.0",
+    fullscreen: false,
+    html: buildNewsHtml()
+  });
+}

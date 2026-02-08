@@ -1,6 +1,6 @@
-// common.js – menu ovládání + fullscreen "stránky" v modalu + přepínač režimu
-import { openModal } from "./modal.js";
-import { openNewsModal } from "./aktuality.js";
+// common.js – menu ovládání + mobilní "stránky" + přepínač režimu
+import { openModal, closeModal } from "./modal.js";
+import { openNewsModal, buildNewsHtml } from "./aktuality.js";
 
 const htmlEl = document.documentElement;
 const logoImg = document.getElementById("logoImg");
@@ -9,13 +9,10 @@ function isNarrowMobile(){
   return window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
 }
 
-
-
-// --- THEME (stejně jako dřív) ---
+// -------------------- THEME --------------------
 function syncLogo(){
   if (!logoImg) return;
   const theme = htmlEl.getAttribute("data-theme") || "dark";
-  // Pokud máš jiné názvy souborů, uprav zde
   logoImg.src = (theme === "dark") ? "logo.png" : "logo2.png";
 }
 
@@ -44,11 +41,97 @@ if (themeToggle){
     setTheme(cur === "dark" ? "light" : "dark");
   });
 }
-
 // Aby app.js nedělalo dvojí bind
 window.__themeHandled = true;
 
-// --- MENU ---
+// -------------------- MOBILNÍ "STRÁNKA" --------------------
+// Na mobilu nechceme "okno" (modal), ale samostatnou celou stránku přes displej.
+function ensureMobilePage(){
+  let page = document.getElementById("mobilePage");
+  if (page) return page;
+
+  page = document.createElement("div");
+  page.id = "mobilePage";
+  page.className = "mobilePage";
+  page.setAttribute("aria-hidden", "true");
+
+  page.innerHTML = `
+    <div class="mobilePageHeader">
+      <button class="btnPrimary mobileBackBtn" type="button" id="mobileBackBtn">← Zpět</button>
+      <div class="mobilePageTitles">
+        <div class="mobilePageTitle" id="mobilePageTitle"></div>
+        <div class="mobilePageSub" id="mobilePageSub"></div>
+      </div>
+    </div>
+    <div class="mobilePageBody" id="mobilePageBody"></div>
+  `;
+
+  document.body.appendChild(page);
+
+  const backBtn = page.querySelector("#mobileBackBtn");
+  backBtn.addEventListener("click", () => {
+    // pokud jsme pushnuli stav, vrátíme se backem
+    if (history.state && history.state.__mobilePage){
+      history.back();
+    } else {
+      closeMobilePage();
+    }
+  });
+
+  window.addEventListener("popstate", () => {
+    // když se uživatel vrátí zpět, zavřeme mobilní stránku
+    if (!history.state || !history.state.__mobilePage){
+      closeMobilePage(true);
+    }
+  });
+
+  return page;
+}
+
+function openMobilePage({ title, subtitle, html }){
+  const page = ensureMobilePage();
+  // kdyby byl otevřený modal, zavřeme ho (na mobilu chceme čistou stránku)
+  try{ closeModal(); }catch(e){}
+
+  page.querySelector("#mobilePageTitle").textContent = title || "";
+  page.querySelector("#mobilePageSub").textContent = subtitle || "";
+  page.querySelector("#mobilePageBody").innerHTML = html || "";
+
+  page.classList.add("isOpen");
+  page.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+
+  // "oddělená stránka" – push do historie
+  if (!history.state || !history.state.__mobilePage){
+    history.pushState({ __mobilePage: true }, "");
+  }
+}
+
+function closeMobilePage(fromPopState=false){
+  const page = document.getElementById("mobilePage");
+  if (!page) return;
+
+  page.classList.remove("isOpen");
+  page.setAttribute("aria-hidden", "true");
+  page.querySelector("#mobilePageBody").innerHTML = "";
+  document.body.style.overflow = "";
+
+  // když zavíráme ručně (ne přes back), zkusíme vrátit historii
+  if (!fromPopState && history.state && history.state.__mobilePage){
+    try{ history.back(); }catch(e){}
+  }
+}
+
+function openMenuDestination({ title, subtitle, html }){
+  if (isNarrowMobile()){
+    openMobilePage({ title, subtitle, html });
+  } else {
+    // Na PC: klasické okno stejné velikosti jako karta hráče (tj. NE fullscreen)
+    openModal({ title, subtitle, html, fullscreen: false });
+  }
+}
+
+// -------------------- MENU --------------------
 const menuBtn = document.getElementById("menuBtn");
 const menuPanel = document.getElementById("menuPanel");
 
@@ -91,16 +174,11 @@ if (menuBtn && menuPanel){
   });
 }
 
-function openFullscreenPage({ title, subtitle, html }){
-  // On desktop: centered "page" modal. On phones: real fullscreen.
-  openModal({ title, subtitle, html, fullscreen: true });
-}
-
 // NAHRÁNÍ DAT
 if (uploadBtn){
   uploadBtn.addEventListener("click", () => {
     closeMenu();
-    openFullscreenPage({
+    openMenuDestination({
       title: "Nahrání dat",
       subtitle: "Formulář",
       html: `
@@ -118,7 +196,15 @@ if (uploadBtn){
 if (newsBtn){
   newsBtn.addEventListener("click", () => {
     closeMenu();
-    openNewsModal({ fullscreen: isNarrowMobile() });
+    if (isNarrowMobile()){
+      openMobilePage({
+        title: "Aktuality",
+        subtitle: "Verze 1.0.0",
+        html: buildNewsHtml()
+      });
+    } else {
+      openNewsModal();
+    }
   });
 }
 
@@ -126,7 +212,7 @@ if (newsBtn){
 if (titlesBtn){
   titlesBtn.addEventListener("click", () => {
     closeMenu();
-    openFullscreenPage({
+    openMenuDestination({
       title: "Tituly",
       subtitle: "Přehled",
       html: `
@@ -143,7 +229,7 @@ if (titlesBtn){
 if (contactBtn){
   contactBtn.addEventListener("click", () => {
     closeMenu();
-    openFullscreenPage({
+    openMenuDestination({
       title: "Kontakt",
       subtitle: "Info",
       html: `
@@ -160,7 +246,7 @@ if (contactBtn){
 if (recordsBtn){
   recordsBtn.addEventListener("click", () => {
     closeMenu();
-    openFullscreenPage({
+    openMenuDestination({
       title: "Rekordy",
       subtitle: "Přehled",
       html: `

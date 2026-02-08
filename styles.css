@@ -974,3 +974,39 @@ html[data-theme="light"] .tournamentFilter select option{
 }
 
 .filterLabel{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.72; }
+
+
+/* Mobilní "oddělená stránka" (menu položky) */
+.mobilePage{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  background:var(--bg0);
+  display:none;
+  overflow:hidden;
+}
+.mobilePage.isOpen{ display:block; }
+.mobilePageHeader{
+  position:sticky;
+  top:0;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  background:var(--panel2);
+  border-bottom:1px solid var(--border2);
+}
+.mobileBackBtn{ flex:0 0 auto; }
+.mobilePageTitles{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.mobilePageTitle{ font-weight:900; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mobilePageSub{ font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mobilePageBody{
+  height:calc(100vh - 56px);
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  padding:12px;
+}
+@media (min-width: 561px){
+  .mobilePage{ display:none !important; }
+}
