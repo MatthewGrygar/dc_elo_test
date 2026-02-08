@@ -1,4 +1,28 @@
 // modal.js
+
+let __scrollY = 0;
+let __prevBodyOverflow = "";
+let __prevHtmlOverflow = "";
+let __lockedScroll = false;
+
+function lockPageScroll(){
+  if (__lockedScroll) return;
+  __lockedScroll = true;
+  __scrollY = window.scrollY || 0;
+  __prevBodyOverflow = document.body.style.overflow || "";
+  __prevHtmlOverflow = document.documentElement.style.overflow || "";
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.overflow = "hidden";
+}
+
+function unlockPageScroll(){
+  if (!__lockedScroll) return;
+  __lockedScroll = false;
+  document.documentElement.style.overflow = __prevHtmlOverflow;
+  document.body.style.overflow = __prevBodyOverflow;
+  window.scrollTo(0, __scrollY);
+}
+
 export function ensureModal() {
   let overlay = document.getElementById("modalOverlay");
   if (overlay) return overlay;
@@ -52,7 +76,7 @@ export function openModal({ title, subtitle, html, fullscreen }) {
   const actions = overlay.querySelector("#modalActions");
   if (actions) actions.innerHTML = "";
   overlay.style.display = "block";
-  document.body.style.overflow = "hidden";
+  lockPageScroll();
 }
 
 // zpřístupnění pro non-module skripty (menu/aktuality)
@@ -70,7 +94,7 @@ export function closeModal() {
   const modalEl = overlay.querySelector('.modal');
   if (modalEl) modalEl.classList.remove('modalFullscreen');
   overlay.style.display = "none";
-  document.body.style.overflow = "";
+  unlockPageScroll();
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";
 
