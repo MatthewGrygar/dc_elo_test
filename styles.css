@@ -356,7 +356,8 @@ footer{
 .modalTitle{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .modalTitle b{ font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70vw; }
 .modalTitle span{ font-size:12px; color:var(--muted); }
-.modalBody{ padding:12px; overflow:auto; }
+.modalBody{ padding:12px;
+  padding-bottom:72px; overflow:auto; }
 
 .btnDanger{
   border-color:var(--dangerBd);
@@ -720,7 +721,8 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     border-radius:0;
     border:none;
   }
-  .modalBody{ padding:12px; }
+  .modalBody{ padding:12px;
+  padding-bottom:72px; }
 
   /* Player card: no horizontal scrolling except tables */
   .heroGrid{ grid-template-columns:1fr; }
@@ -1006,6 +1008,7 @@ html[data-theme="light"] .tournamentFilter select option{
   overflow:auto;
   -webkit-overflow-scrolling: touch;
   padding:12px;
+  padding-bottom:72px;
 }
 @media (min-width: 561px){
   .mobilePage{ display:none !important; }
