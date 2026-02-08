@@ -52,15 +52,13 @@ export function openModal({ title, subtitle, html, fullscreen }) {
   const actions = overlay.querySelector("#modalActions");
   if (actions) actions.innerHTML = "";
 
-  // Robustní zamknutí scrollu stránky (lepší chování na mobilech/iOS/Android)
+  // Zamknutí scrollu stránky:
+  // - "position: fixed" na body často způsobuje useknutí obsahu na mobilech (URL bar / spodní lišta)
+  // - používáme proto overflow lock na <html>/<body> + overscroll containment
   const y = window.scrollY || 0;
   document.body.dataset.scrollY = String(y);
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${y}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.width = "100%";
-  document.body.style.overflow = "hidden";
+  document.documentElement.classList.add("modalOpen");
+  document.body.classList.add("modalOpen");
 
   overlay.classList.add("isOpen");
 }
@@ -85,12 +83,8 @@ export function closeModal() {
   // Obnovení scrollu stránky
   const y = parseInt(document.body.dataset.scrollY || "0", 10) || 0;
   delete document.body.dataset.scrollY;
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.width = "";
-  document.body.style.overflow = "";
+  document.documentElement.classList.remove("modalOpen");
+  document.body.classList.remove("modalOpen");
   window.scrollTo(0, y);
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";

@@ -64,6 +64,14 @@ html[data-theme="light"]{
 
 html, body{ height:100%; }
 
+/* Když je otevřený modal, zamkneme scroll pozadí bez "position:fixed" (to dělá na mobilech ořez). */
+html.modalOpen,
+body.modalOpen{
+  overflow:hidden;
+  height:100%;
+}
+html.modalOpen{ overscroll-behavior: none; }
+
 body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   margin:0; color:var(--text);
@@ -239,6 +247,15 @@ html[data-theme="light"] .menuPanel{
 .container{ max-width:1150px; margin:0 auto; padding:0 16px; }
 main{ max-width:1150px; margin:0 auto; padding:16px; }
 
+/*
+  Android/Chrome často překrývá spodní část stránky vlastní lištou (toolbar).
+  Safe-area insets jsou na Androidu většinou 0, proto přidáváme na mobilu trochu "rezervy",
+  aby šel dojet úplně spodní obsah bez useknutí.
+*/
+@media (max-width: 560px){
+  main{ padding-bottom: calc(16px + env(safe-area-inset-bottom) + 88px); }
+}
+
 .infoBar{
   margin:12px 0 4px;
   padding:10px 12px;
@@ -358,21 +375,32 @@ footer{
   display:none;
   position:fixed;
   inset:0;
+  /* Stabilnější výška na mobilech (URL bar / spodní lišta) */
+  height: calc(var(--vh) * 100);
   background:rgba(0,0,0,.65);
   backdrop-filter: blur(6px);
   z-index:50;
-  padding:18px;
+  /* rezerva pro notch + home bar + systémové lišty */
+  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-right: calc(18px + env(safe-area-inset-right));
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  padding-left: calc(18px + env(safe-area-inset-left));
+  box-sizing:border-box;
   /* flex layout = stabilnější scroll na mobilech */
   align-items:center;
   justify-content:center;
 }
 .modalOverlay.isOpen{ display:flex; }
+
+@supports (height: 100svh){
+  .modalOverlay{ height: 100svh; }
+}
 .modal{
   width:100%;
   max-width:1100px;
   margin:0 auto;
-  /* Nepoužívat fixní height (vh umí na mobilech "lhát") */
-  max-height:calc(100vh - 36px);
+  /* max výška podle overlay (už zahrnuje safe-area + rezervu) */
+  max-height:100%;
   border-radius:20px;
   border:1px solid var(--border);
   background:var(--thead);
@@ -381,13 +409,7 @@ footer{
   display:flex; flex-direction:column;
 }
 
-@supports (height: 100dvh){
-  .modal{ max-height: calc(100dvh - 36px); }
-}
-
-@supports (height: 100svh){
-  .modal{ max-height: calc(100svh - 36px); }
-}
+/* (dřív tu bylo počítání přes vh; teď se řídí výškou .modalOverlay) */
 
 .modalHeader{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -895,33 +917,21 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 
 /* Fullscreen modální "stránky" z menu */
 .modal.modalFullscreen{
-  width: calc(100vw - 24px);
+  width: 100%;
   max-width: none;
-  margin: 12px;
+  margin: 0;
   border-radius: 18px;
 
   /* Na mobilech 100vh často "lže" kvůli horní/spodní liště prohlížeče.
      Proto jedeme přes max-height + flex layout, aby šel obsah vždy doscrollovat. */
   height: auto;
-  max-height: calc(100vh - 24px);
+  max-height: 100%;
 
   display:flex;
   flex-direction:column;
 }
 
-/* Dynamická výška viewportu (když se lišty schovají/zobrazí) */
-@supports (height: 100dvh){
-  .modal.modalFullscreen{
-    max-height: calc(100dvh - 24px);
-  }
-}
-
-/* "small" viewport = stav s viditelnými lištami (nejbezpečnější proti useknutí) */
-@supports (height: 100svh){
-  .modal.modalFullscreen{
-    max-height: calc(100svh - 24px);
-  }
-}
+/* (max-height řeší .modalOverlay; tady držíme jen 100%) */
 
 .modal.modalFullscreen .modalBody{
   /* Bez ručního calc(100%-header) — flex to vyřeší spolehlivěji */
