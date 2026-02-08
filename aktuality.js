@@ -7,14 +7,15 @@ export function openNewsModal(opts = {}) {
     fullscreen: !!opts.fullscreen,
     html: `
       <div class="box boxPad">
+
         <div class="sectionTitle" style="margin-top:0;">🚀 Verze 1.0.0</div>
         <p class="muted" style="margin-top:6px; margin-bottom:14px;">
           První oficiální vydání aplikace DC ELO – přehled funkcí, vylepšení a technických změn.
         </p>
 
-        <div style="text-align:center; margin:0 0 16px;">
+        <div style="text-align:center; margin:0 0 14px;">
           <img
-            src="verze%201.0.0.png"
+            src="./assets/verze%201.0.0.png"
             alt="Verze 1.0.0"
             style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.25);"
           >
@@ -33,7 +34,7 @@ export function openNewsModal(opts = {}) {
         <div>
           <b>Individuální karta hráče (mobil)</b>
           <ul style="margin:6px 0 12px; padding-left:18px;">
-            <li><b>Filtr turnaje</b> a výběrové pole jsou nově zobrazeny v jednom řádku.</li>
+            <li><b>Filtr turnaje</b> a výběrové pole jsou nyní zobrazeny v jednom řádku.</li>
             <li>Název tabulky je přesunut pod filtr pro přehlednější rozvržení.</li>
             <li>Názvy tabulek jsou nyní zarovnány doleva.</li>
             <li>Celkově upraven layout pro lepší čitelnost na telefonech.</li>
@@ -51,20 +52,21 @@ export function openNewsModal(opts = {}) {
         <div class="sectionTitle">🆕 Nové funkce</div>
         <ul style="margin:10px 0 12px; padding-left:18px;">
           <li>Přidáno nové okno <b>Protiháči</b> na individuální kartu hráče.</li>
-          <li>Přidána možnost <b>FILTR TURNAJE</b> na individuální kartě hráče.</li>
+          <li>Přidána možnost <b>Filtr turnaje</b> na individuální kartě hráče.</li>
           <li>Na titulní stránku přidáno menu pro snadnější navigaci.</li>
         </ul>
 
         <div class="sectionTitle">🛠 Technické změny</div>
         <ul style="margin:10px 0 0; padding-left:18px;">
-          <li>Refaktoring projektu: původní struktura s jedním souborem <b>main.html</b> byla kompletně přepracována.</li>
+          <li>Kompletní refaktoring projektu.</li>
+          <li>Původní struktura s jedním souborem <b>main.html</b> byla kompletně přepracována.</li>
           <li>Aplikace nyní využívá strukturovaný repozitář (<b>index.html, app.js, common.js</b> atd.).</li>
           <li>Zlepšena přehlednost kódu a připravenost na další rozvoj.</li>
         </ul>
+
       </div>
     `
   });
 }
 
-// zpřístupnění pro app.js (který může běžet samostatně jako modul)
 window.openNewsModal = openNewsModal;
