@@ -526,7 +526,7 @@ async function loadPlayerDetail(playerObj){
           playerName: playerObj.player,
           cards,
           onBack: () => {
-            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>`, fullscreen: true });
             loadPlayerDetail(playerObj);
           }
         });
@@ -669,7 +669,7 @@ searchEl.addEventListener("input", () => renderStandings(allRows));
 tbody.addEventListener("click", (e) => {
   const btn = e.target.closest(".playerBtn");
   if (!btn) return;
-  openModal({ title: btn._playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+  openModal({ title: btn._playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>`, fullscreen: true });
   loadPlayerDetail(btn._playerObj);
 });
 

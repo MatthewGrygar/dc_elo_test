@@ -708,16 +708,31 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .playerCol{ width:62%; }
   .ratingCol{ width:28%; }
 
-  /* Modal full-screen on mobile */
-  .modalOverlay{ padding:0; }
+  /* Modal on mobile: default = "window" */
+  .modalOverlay{ padding:12px; }
   .modal{
-    max-width:none;
+    width:100%;
+    max-width:720px;
+    height:auto;
+    max-height:calc(100vh - 24px);
+    border-radius:18px;
+    border:1px solid var(--border);
+  }
+  .modalBody{ padding:12px; max-height:calc(100vh - 24px - 64px); overflow:auto; }
+
+  /* Fullscreen only when explicitly requested (player detail etc.) */
+  .modal.modalFullscreen{
     width:100vw;
     height:100vh;
+    max-width:none;
+    max-height:none;
+    margin:0;
     border-radius:0;
     border:none;
   }
-  .modalBody{ padding:12px; }
+  .modal.modalFullscreen .modalBody{
+    max-height:calc(100vh - 64px);
+  }
 
   /* Player card: no horizontal scrolling except tables */
   .heroGrid{ grid-template-columns:1fr; }
@@ -746,7 +761,13 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   font-size:10px;
   padding:5px 7px;
   letter-spacing:.04em;
+  justify-self:start;
+  width:fit-content;
+  max-width:calc(100vw - 84px);
+  display:inline-flex;
+  align-items:center;
 }
+
 
 /* 3) Detail hráče: horní statistiky (GAMES / WINRATE / WIN / LOSS / DRAW) trochu menší */
 .statsGrid .stat,
@@ -764,7 +785,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .chartHead b{ font-size:12px; }
 .chartHead span{ font-size:11px; }
 #eloChart{ min-height:0; }
-#eloChart svg{ height:220px !important; }
+#eloChart svg{ height:clamp(180px, 56vw, 260px) !important; }
 
 /* 5) Detail hráče: meta statistiky (peak/avg opp/streaky) tenké a pod sebou */
 .metaBoxRow{
@@ -789,6 +810,30 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .tbl.tblOpponents .colOppWin,
 .tbl.tblOpponents .colOppLoss,
 .tbl.tblOpponents .colOppDraw{ display:none !important; }
+
+/* 7) Detail hráče: na mobilu dát filtr turnaje na jeden řádek a název sekce pod něj */
+.sectionHeader{
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+}
+.tournamentFilterInline{
+  order:1;
+  width:100%;
+  justify-content:space-between;
+}
+.sectionHeader .sectionTitle{
+  order:2;
+}
+.tournamentFilterInline .filterLabel{
+  font-size:10px;
+  letter-spacing:.12em;
+}
+.tournamentFilterInline .tournamentFilter{ flex:1 1 auto; }
+.tournamentFilterInline select{
+  width:100%;
+  min-width:0;
+}
 }
 
 
