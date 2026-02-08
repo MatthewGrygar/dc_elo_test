@@ -1013,3 +1013,8 @@ html[data-theme="light"] .tournamentFilter select option{
 @media (min-width: 561px){
   .mobilePage{ display:none !important; }
 }
+
+
+/* extra bottom space for mobile scroll reach */
+.endSpacer{ height: 96px; }
+@media (min-width: 561px){ .endSpacer{ height: 24px; } }

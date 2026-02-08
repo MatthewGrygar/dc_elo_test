@@ -50,6 +50,7 @@ export function buildNewsHtml(){
           <li>Zlepšena přehlednost kódu a připravenost na další rozvoj.</li>
         </ul>
       </div>
+      <div class="endSpacer"></div>
   `;
 }
 
