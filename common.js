@@ -5,6 +5,12 @@ import { openNewsModal } from "./aktuality.js";
 const htmlEl = document.documentElement;
 const logoImg = document.getElementById("logoImg");
 
+function isNarrowMobile(){
+  return window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
+}
+
+
+
 // --- THEME (stejně jako dřív) ---
 function syncLogo(){
   if (!logoImg) return;
@@ -86,7 +92,8 @@ if (menuBtn && menuPanel){
 }
 
 function openFullscreenPage({ title, subtitle, html }){
-  openModal({ title, subtitle, html });
+  // On desktop: centered "page" modal. On phones: real fullscreen.
+  openModal({ title, subtitle, html, fullscreen: true });
 }
 
 // NAHRÁNÍ DAT
@@ -111,7 +118,7 @@ if (uploadBtn){
 if (newsBtn){
   newsBtn.addEventListener("click", () => {
     closeMenu();
-    openNewsModal({ });
+    openNewsModal({ fullscreen: isNarrowMobile() });
   });
 }
 

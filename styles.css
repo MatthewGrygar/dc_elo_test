@@ -618,6 +618,9 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .bigError .icon{ font-size:22px; }
 
 @media (max-width: 760px){
+  /* Modal full-screen on small screens */
+  .modalOverlay{ padding:0; }
+  .modal{ max-width:none; width:100vw; height:100vh; border-radius:0; border:none; }
   .metaBoxRow{ flex: 1 1 auto; display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; }
   .heroGrid{ grid-template-columns: 1fr; }
   .leftPanel{ min-height:auto; }
@@ -746,6 +749,9 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   font-size:10px;
   padding:5px 7px;
   letter-spacing:.04em;
+  width:fit-content;
+  max-width:78vw;
+  justify-self:start;
 }
 
 /* 3) Detail hráče: horní statistiky (GAMES / WINRATE / WIN / LOSS / DRAW) trochu menší */
@@ -779,7 +785,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .metaBoxRow .stat span{ font-size:13px; }
 
 /* 6) Protihráči: na mobilu bez scrollu + jen 3 sloupce (řeší i opponents.js) */
-.tblWrap.oppNoScroll{ overflow-x:hidden; }
+.tblWrap.oppNoScroll{ overflow:hidden; border-radius:16px; }
 .tbl.tblOpponents{ min-width:0; table-layout:fixed; }
 .tbl.tblOpponents th,
 .tbl.tblOpponents td{
@@ -789,6 +795,40 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 .tbl.tblOpponents .colOppWin,
 .tbl.tblOpponents .colOppLoss,
 .tbl.tblOpponents .colOppDraw{ display:none !important; }
+
+
+  /* --- Requested mobile layout tweaks --- */
+  /* 2) "načteno: datum/čas" badge should not stretch full width */
+  #lastDataBadge{ justify-self:start; }
+
+  /* 3) Detail hráče: filtr v 1 řádku a název tabulky pod ním, zarovnat doleva */
+  .sectionHeader{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .sectionHeader .tournamentFilterInline{ order:1; width:100%; justify-content:space-between; }
+  .sectionHeader .sectionTitle{ order:2; width:100%; text-align:left; }
+
+  .sectionTitle{ text-align:left; }
+
+  .tournamentFilterInline{ width:100%; justify-content:space-between; }
+  .tournamentFilter{ justify-content:flex-end; }
+  .tournamentFilter select{
+    min-width:0;
+    width:160px;
+    max-width:58vw;
+  }
+
+  /* 5) Menu "stránky" – na mobilu opravdové fullscreen i s modalFullscreen */
+  .modal.modalFullscreen{
+    width:100vw;
+    height:100vh;
+    margin:0;
+    border-radius:0;
+    border:none;
+  }
+
 }
 
 
