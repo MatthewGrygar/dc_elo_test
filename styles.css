@@ -332,14 +332,24 @@ footer{
 
 /* Modal */
 .modalOverlay{
-  display:none; position:fixed; inset:0;
+  display:none;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,.65);
   backdrop-filter: blur(6px);
-  z-index:50; padding:18px;
+  z-index:50;
+  padding:18px;
+  /* flex layout = stabilnější scroll na mobilech */
+  align-items:center;
+  justify-content:center;
 }
+.modalOverlay.isOpen{ display:flex; }
 .modal{
-  max-width:1100px; margin:0 auto;
-  height:calc(100vh - 36px);
+  width:100%;
+  max-width:1100px;
+  margin:0 auto;
+  /* Nepoužívat fixní height (vh umí na mobilech "lhát") */
+  max-height:calc(100vh - 36px);
   border-radius:20px;
   border:1px solid var(--border);
   background:var(--thead);
@@ -349,7 +359,7 @@ footer{
 }
 
 @supports (height: 100dvh){
-  .modal{ height: calc(100dvh - 36px); }
+  .modal{ max-height: calc(100dvh - 36px); }
 }
 
 .modalHeader{
@@ -361,7 +371,16 @@ footer{
 .modalTitle{ display:flex; flex-direction:column; gap:2px; min-width:0; }
 .modalTitle b{ font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70vw; }
 .modalTitle span{ font-size:12px; color:var(--muted); }
-.modalBody{ padding:12px; overflow:auto; -webkit-overflow-scrolling: touch; flex:1 1 auto; min-height:0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.modalBody{
+  padding:12px;
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
 
 .btnDanger{
   border-color:var(--dangerBd);
@@ -719,7 +738,8 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .modal{
     max-width:1100px;
     width:100%;
-    height:calc(100vh - 24px);
+    /* bez fixní height – kvůli mobilním adresním lištám */
+    max-height:calc(100vh - 24px);
     border-radius:18px;
     border:1px solid var(--border);
   }

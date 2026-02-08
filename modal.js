@@ -32,7 +32,7 @@ export function ensureModal() {
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.style.display === "block") closeModal();
+    if (e.key === "Escape" && overlay.classList.contains("isOpen")) closeModal();
   });
 
   overlay.querySelector("#closeModalBtn").addEventListener("click", closeModal);
@@ -51,8 +51,18 @@ export function openModal({ title, subtitle, html, fullscreen }) {
   overlay.querySelector("#modalBody").innerHTML = html || "";
   const actions = overlay.querySelector("#modalActions");
   if (actions) actions.innerHTML = "";
-  overlay.style.display = "block";
+
+  // Robustní zamknutí scrollu stránky (lepší chování na mobilech/iOS/Android)
+  const y = window.scrollY || 0;
+  document.body.dataset.scrollY = String(y);
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${y}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
   document.body.style.overflow = "hidden";
+
+  overlay.classList.add("isOpen");
 }
 
 // zpřístupnění pro non-module skripty (menu/aktuality)
@@ -69,8 +79,19 @@ export function closeModal() {
   if (!overlay) return;
   const modalEl = overlay.querySelector('.modal');
   if (modalEl) modalEl.classList.remove('modalFullscreen');
-  overlay.style.display = "none";
+
+  overlay.classList.remove("isOpen");
+
+  // Obnovení scrollu stránky
+  const y = parseInt(document.body.dataset.scrollY || "0", 10) || 0;
+  delete document.body.dataset.scrollY;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
   document.body.style.overflow = "";
+  window.scrollTo(0, y);
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";
 
