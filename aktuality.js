@@ -15,7 +15,7 @@ export function openNewsModal(opts = {}) {
 
         <div style="text-align:center; margin:0 0 14px;">
           <img
-            src="./assets/verze%201.0.0.png"
+            src="verze 1.0.0.png"
             alt="Verze 1.0.0"
             style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.25);"
           >
