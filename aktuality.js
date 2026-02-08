@@ -8,11 +8,18 @@ export function openNewsModal(opts = {}) {
     html: `
       <div class="box boxPad">
 
-        <div class="sectionTitle" style="margin-top:0;">
-          📱 Verze 1.0.2
+     <!-- VERZE 1.0.0 -->
+        <div style="text-align:center; margin:20px 0 10px;">
+          <img src="verze 1.0.0.png" 
+               alt="Verze 1.0.0"
+               style="max-width:100%; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.25);">
         </div>
-        <div class="muted" style="margin-bottom:14px;">
-          Aktualizace aplikace
+
+        <div class="sectionTitle">
+          🚀 Verze 1.0.0
+        </div>
+        <div class="muted" style="margin-bottom:10px;">
+          První oficiální vydání aplikace DC ELO
         </div>
 
         <div class="sectionTitle">✨ Vylepšení mobilního zobrazení</div>
