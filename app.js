@@ -47,6 +47,27 @@ function escapeHtml(str){
     .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
     .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
+
+function isMobileNarrow(){
+  try{ return window.matchMedia && window.matchMedia("(max-width: 560px)").matches; }
+  catch{ return false; }
+}
+
+// Titulní stránka (mobil): pokud je jméno příliš dlouhé, zobraz jen první + poslední slovo
+function formatPlayerNameForList(name){
+  const raw = (name || "").toString().trim();
+  if (!raw) return raw;
+
+  // pouze pro úzký mobil
+  if (!isMobileNarrow()) return raw;
+
+  // "příliš dlouhé" – kombinace délky + více slov
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length >= 3 && raw.length >= 20){
+    return `${parts[0]} ${parts[parts.length - 1]}`;
+  }
+  return raw;
+}
 function normalizeKey(s){
   return (s || "").toString().trim().toLowerCase()
     .normalize("NFD").replace(/\p{Diacritic}/gu,"");
@@ -177,7 +198,7 @@ function renderStandings(rows){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="rank colRank">${rankCellHtml(r.rank)}</td>
-      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(r.player)}</button></td>
+      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(formatPlayerNameForList(r.player))}</button></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
       <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
