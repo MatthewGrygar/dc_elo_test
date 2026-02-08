@@ -52,11 +52,27 @@ html[data-theme="light"]{
   --dangerTx: rgba(120, 20, 20, .92);
 }
 
-:root{ color-scheme: light dark; }
+ :root{ color-scheme: light dark; }
+
+/*
+  Mobile viewport fix:
+  - 100vh na mobilech často nezohlední horní/spodní lištu prohlížeče (URL bar, home bar)
+  - 100svh = "small viewport" (stav s viditelnými lištami) => stránka/modaly se neuseknou
+  - fallback přes JS proměnnou --vh (window.innerHeight)
+*/
+:root{ --vh: 1vh; }
+
+html, body{ height:100%; }
 
 body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   margin:0; color:var(--text);
+  /*
+    Zajistí, že se stránka na mobilech nepřekryje horní/dolní lištou prohlížeče.
+    - fallback: CSS var(--vh) * 100 (nastavuje common.js)
+    - pokud je k dispozici 100svh, použije se místo toho
+  */
+  min-height: calc(var(--vh) * 100);
   /* iOS/Android safe-area (notch + home indicator) */
   padding-bottom: env(safe-area-inset-bottom);
   background:
@@ -73,6 +89,10 @@ html[data-theme="light"] body{
     linear-gradient(120deg, rgba(230,220,205,.55), transparent 45%),
     linear-gradient(25deg, rgba(255,255,255,.65), transparent 55%),
     var(--bg0);
+}
+
+@supports (height: 100svh){
+  body{ min-height: 100svh; }
 }
 
 header{
@@ -363,6 +383,10 @@ footer{
 
 @supports (height: 100dvh){
   .modal{ max-height: calc(100dvh - 36px); }
+}
+
+@supports (height: 100svh){
+  .modal{ max-height: calc(100svh - 36px); }
 }
 
 .modalHeader{
@@ -885,10 +909,17 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   flex-direction:column;
 }
 
-/* Moderní prohlížeče: dynamická výška viewportu (lepší na mobilech) */
+/* Dynamická výška viewportu (když se lišty schovají/zobrazí) */
 @supports (height: 100dvh){
   .modal.modalFullscreen{
     max-height: calc(100dvh - 24px);
+  }
+}
+
+/* "small" viewport = stav s viditelnými lištami (nejbezpečnější proti useknutí) */
+@supports (height: 100svh){
+  .modal.modalFullscreen{
+    max-height: calc(100svh - 24px);
   }
 }
 
