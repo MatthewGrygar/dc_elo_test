@@ -57,6 +57,8 @@ html[data-theme="light"]{
 body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   margin:0; color:var(--text);
+  /* iOS/Android safe-area (notch + home indicator) */
+  padding-bottom: env(safe-area-inset-bottom);
   background:
     radial-gradient(1200px 600px at 20% -10%, rgba(255,255,255,.10), transparent 60%),
     radial-gradient(900px 500px at 80% 0%, rgba(255,215,0,.08), transparent 60%),
@@ -74,7 +76,8 @@ html[data-theme="light"] body{
 }
 
 header{
-  padding:18px 18px 14px;
+  /* iOS notch safe-area */
+  padding:calc(18px + env(safe-area-inset-top)) 18px 14px;
   border-bottom:1px solid var(--border2);
   background:var(--bg1);
   backdrop-filter: blur(10px);
@@ -335,45 +338,31 @@ footer{
   display:none;
   position:fixed;
   inset:0;
-  /* Stabilní viewport výška na mobilech */
-  height:100vh;
   background:rgba(0,0,0,.65);
   backdrop-filter: blur(6px);
   z-index:50;
-
-  /* bezpečné odsazení (notch/gesture bar) */
-  padding:
-    calc(12px + env(safe-area-inset-top))
-    calc(12px + env(safe-area-inset-right))
-    calc(12px + env(safe-area-inset-bottom))
-    calc(12px + env(safe-area-inset-left));
-
-  align-items:stretch;
+  padding:18px;
+  /* flex layout = stabilnější scroll na mobilech */
+  align-items:center;
   justify-content:center;
 }
-@supports (height: 100svh){
-  .modalOverlay{ height:100svh; }
-}
-@supports (height: 100dvh){
-  .modalOverlay{ height:100dvh; }
-}
-
 .modalOverlay.isOpen{ display:flex; }
-
 .modal{
   width:100%;
   max-width:1100px;
-
-  /* modal se vždy vejde do overlay (padding řeší okraje) */
-  max-height:100%;
+  margin:0 auto;
+  /* Nepoužívat fixní height (vh umí na mobilech "lhát") */
+  max-height:calc(100vh - 36px);
   border-radius:20px;
   border:1px solid var(--border);
   background:var(--thead);
   box-shadow:0 30px 90px rgba(0,0,0,.35);
   overflow:hidden;
-  display:flex;
-  flex-direction:column;
+  display:flex; flex-direction:column;
 }
+
+@supports (height: 100dvh){
+  .modal{ max-height: calc(100dvh - 36px); }
 }
 
 .modalHeader{
@@ -665,7 +654,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 }
 
 @media (max-width: 560px){
-  header{ padding:12px 12px 10px; }
+  header{ padding:calc(12px + env(safe-area-inset-top)) 12px 10px; }
   header .wrap{ flex-direction:column; gap:10px; }
   .logo{ width:76px; height:76px; flex-basis:76px; margin-top:0; }
   h1{ font-size:19px; margin-bottom:2px; }
@@ -883,14 +872,34 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 /* Fullscreen modální "stránky" z menu */
 .modal.modalFullscreen{
   width: calc(100vw - 24px);
-  height: calc(100vh - 24px);
   max-width: none;
   margin: 12px;
   border-radius: 18px;
+
+  /* Na mobilech 100vh často "lže" kvůli horní/spodní liště prohlížeče.
+     Proto jedeme přes max-height + flex layout, aby šel obsah vždy doscrollovat. */
+  height: auto;
+  max-height: calc(100vh - 24px);
+
+  display:flex;
+  flex-direction:column;
 }
+
+/* Moderní prohlížeče: dynamická výška viewportu (lepší na mobilech) */
+@supports (height: 100dvh){
+  .modal.modalFullscreen{
+    max-height: calc(100dvh - 24px);
+  }
+}
+
 .modal.modalFullscreen .modalBody{
-  height: calc(100% - 64px);
+  /* Bez ručního calc(100%-header) — flex to vyřeší spolehlivěji */
+  flex: 1 1 auto;
+  min-height: 0;
   overflow:auto;
+
+  /* aby poslední řádky nebyly pod home indikátorem */
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 .pageModal{
   padding: 4px 2px 14px;

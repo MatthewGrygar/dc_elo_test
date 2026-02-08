@@ -25,7 +25,7 @@ export function ensureModal() {
     </div>
   `;
 
-  document.documentElement.appendChild(overlay);
+  document.body.appendChild(overlay);
 
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeModal();
@@ -61,7 +61,6 @@ export function openModal({ title, subtitle, html, fullscreen }) {
   document.body.style.right = "0";
   document.body.style.width = "100%";
   document.body.style.overflow = "hidden";
-  document.documentElement.style.overflow = "hidden";
 
   overlay.classList.add("isOpen");
 }
@@ -92,7 +91,6 @@ export function closeModal() {
   document.body.style.right = "";
   document.body.style.width = "";
   document.body.style.overflow = "";
-  document.documentElement.style.overflow = "";
   window.scrollTo(0, y);
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";
