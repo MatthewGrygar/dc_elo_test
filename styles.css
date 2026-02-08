@@ -735,7 +735,62 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 
   .tblWrap{ overflow-x:auto; }
   .tbl{ min-width:920px; }
+
+
+/* --- DC ELO mobile tweaks (Grail Series request) --- */
+/* 1) Titulní stránka: na mobilu schovat "Načteno: X" (počet hráčů) */
+#status{ display:none !important; }
+
+/* 2) Titulní stránka: badge "načteno: datum/čas" udělat menší */
+#lastDataBadge{
+  font-size:10px;
+  padding:5px 7px;
+  letter-spacing:.04em;
 }
+
+/* 3) Detail hráče: horní statistiky (GAMES / WINRATE / WIN / LOSS / DRAW) trochu menší */
+.statsGrid .stat,
+.statsGridRow2 .stat{
+  min-height:52px;
+  padding:8px 10px;
+  border-radius:14px;
+}
+.statsGrid .stat b,
+.statsGridRow2 .stat b{ font-size:10px; letter-spacing:.07em; }
+.statsGrid .stat span,
+.statsGridRow2 .stat span{ font-size:15px; }
+
+/* 4) Detail hráče: box "Vývoj ELO" výškou víc odpovídá grafu */
+.chartHead b{ font-size:12px; }
+.chartHead span{ font-size:11px; }
+#eloChart{ min-height:0; }
+#eloChart svg{ height:220px !important; }
+
+/* 5) Detail hráče: meta statistiky (peak/avg opp/streaky) tenké a pod sebou */
+.metaBoxRow{
+  grid-template-columns:1fr;
+}
+.metaBoxRow .stat{
+  min-height:auto;
+  border-radius:14px;
+  padding:10px 10px;
+}
+.metaBoxRow .stat b{ font-size:10px; }
+.metaBoxRow .stat span{ font-size:13px; }
+
+/* 6) Protihráči: na mobilu bez scrollu + jen 3 sloupce (řeší i opponents.js) */
+.tblWrap.oppNoScroll{ overflow-x:hidden; }
+.tbl.tblOpponents{ min-width:0; table-layout:fixed; }
+.tbl.tblOpponents th,
+.tbl.tblOpponents td{
+  padding:8px 8px;
+  font-size:12px;
+}
+.tbl.tblOpponents .colOppWin,
+.tbl.tblOpponents .colOppLoss,
+.tbl.tblOpponents .colOppDraw{ display:none !important; }
+}
+
 
 
 /* Fullscreen modální "stránky" z menu */

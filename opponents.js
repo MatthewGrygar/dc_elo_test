@@ -64,11 +64,11 @@ function renderOpponentsTable(stats) {
     <thead>
       <tr>
         <th>Soupeř</th>
-        <th class="num">Počet her</th>
-        <th class="num">WIN</th>
-        <th class="num">LOSS</th>
-        <th class="num">DRAW</th>
-        <th class="num">WINRATE</th>
+        <th class="num colOppGames">Počet her</th>
+        <th class="num colOppWin">WIN</th>
+        <th class="num colOppLoss">LOSS</th>
+        <th class="num colOppDraw">DRAW</th>
+        <th class="num colOppWinrate">WINRATE</th>
       </tr>
     </thead>
   `;
@@ -78,16 +78,16 @@ function renderOpponentsTable(stats) {
     return `
       <tr class="oppRow" data-opp="${escapeHtml(String(s.opponent||"").toLowerCase())}">
         <td>${escapeHtml(s.opponent)}</td>
-        <td class="num">${s.games}</td>
-        <td class="num">${s.win}</td>
-        <td class="num">${s.loss}</td>
-        <td class="num">${s.draw}</td>
-        <td class="num">${wr}</td>
+        <td class="num colOppGames">${s.games}</td>
+        <td class="num colOppWin">${s.win}</td>
+        <td class="num colOppLoss">${s.loss}</td>
+        <td class="num colOppDraw">${s.draw}</td>
+        <td class="num colOppWinrate">${wr}</td>
       </tr>
     `;
   }).join("");
 
-  return `<div class="tblWrap"><table class="tbl">${head}<tbody>${body}</tbody></table></div>`;
+  return `<div class="tblWrap oppNoScroll"><table class="tbl tblOpponents">${head}<tbody>${body}</tbody></table></div>`;
 }
 
 export function openOpponentsModal({ playerName, cards, onBack }) {
