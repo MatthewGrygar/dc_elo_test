@@ -484,7 +484,7 @@ th.sortable.sortDesc .sortIcon::before{ content: "▼"; }
 }
 .comparePick{
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 }
 .comparePanel{
@@ -495,6 +495,7 @@ th.sortable.sortDesc .sortIcon::before{ content: "▼"; }
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
   min-height: 0;
 }
 .comparePanelHead{
@@ -516,6 +517,7 @@ th.sortable.sortDesc .sortIcon::before{ content: "▼"; }
   max-height: 46vh;
   overflow: auto;
   background: rgba(255,255,255,0.02);
+  min-width: 0;
 }
 html[data-theme="light"] .compareList{
   background: rgba(0,0,0,0.02);
@@ -534,6 +536,15 @@ html[data-theme="light"] .compareList{
   text-align: left;
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.comparePickItem .name{
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .comparePickItem:hover{
   background: rgba(255,255,255,0.045);
@@ -550,10 +561,37 @@ html[data-theme="light"] .comparePickItem:hover{
   border-color: rgba(58,164,107,0.6);
   background: rgba(58,164,107,0.12);
 }
+
+/* Fixed / locked player A (when opened from player detail) */
+.compareLocked{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.compareLockedLine{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(58,164,107,0.55);
+  background: rgba(58,164,107,0.10);
+}
+.compareLockedLine .name{
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
 .compareBottom{
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
+
+/* prevent any horizontal overflow in compare modal */
+.compareWrap{ max-width: 100%; overflow-x: hidden; }
 
 .compareHeader{
   display: grid;
@@ -639,11 +677,22 @@ html[data-theme="light"] .compareTbl td{
   font-size: 14px;
   white-space: nowrap;
 }
-.compareTbl td.isBetter{
-  background: rgba(58,164,107,0.14);
+
+/* Better value highlight (soft green gradient from center towards winner side) */
+.compareTbl td.betterLeft{
+  background: linear-gradient(to left, transparent 0%, rgba(58,164,107,0.08) 55%, rgba(58,164,107,0.18) 100%);
 }
-html[data-theme="light"] .compareTbl td.isBetter{
-  background: rgba(20,140,70,0.12);
+.compareTbl td.betterRight{
+  background: linear-gradient(to right, transparent 0%, rgba(58,164,107,0.08) 55%, rgba(58,164,107,0.18) 100%);
+}
+html[data-theme="light"] .compareTbl td.betterLeft{
+  background: linear-gradient(to left, transparent 0%, rgba(20,140,70,0.07) 55%, rgba(20,140,70,0.15) 100%);
+}
+html[data-theme="light"] .compareTbl td.betterRight{
+  background: linear-gradient(to right, transparent 0%, rgba(20,140,70,0.07) 55%, rgba(20,140,70,0.15) 100%);
+}
+.compareVal.better{
+  font-weight: 900;
 }
 .compareSectionTitle{
   font-weight: 800;
@@ -654,6 +703,71 @@ html[data-theme="light"] .compareTbl td.isBetter{
   border-radius: 14px;
   padding: 10px;
   background: var(--card);
+}
+
+/* Wrap chart in its own card/panel */
+.compareChartCard{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  background: var(--card);
+}
+
+/* Hero section */
+.compareHero{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.compareHeroRow{
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+  gap: 14px;
+}
+.compareHeroCard{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 14px;
+  background: rgba(255,255,255,0.02);
+  min-width: 0;
+}
+html[data-theme="light"] .compareHeroCard{
+  background: rgba(0,0,0,0.02);
+}
+.compareHeroCard .heroName{
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compareHeroCard .heroElo{
+  margin-top: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.compareHeroCard .heroElo .label{
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .7;
+  font-weight: 800;
+}
+.compareHeroCard .heroElo .val{
+  font-size: 34px;
+  font-weight: 950;
+}
+.compareVs{
+  font-weight: 950;
+  letter-spacing: .12em;
+  opacity: .7;
 }
 .compareLegend{
   display: flex;
@@ -689,6 +803,12 @@ html[data-theme="light"] .compareTbl td.isBetter{
   .h2hVal{ font-size: 36px; }
 }
 
+@media (max-width: 900px){
+  .comparePick{ grid-template-columns: 1fr; }
+  .compareHeroRow{ grid-template-columns: 1fr; }
+  .compareVs{ display: none; }
+}
+
 /* Modal */
 .modalOverlay{
   display:none; position:fixed; inset:0;
@@ -716,7 +836,7 @@ html[data-theme="light"] .compareTbl td.isBetter{
 .modalTitle b{ font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70vw; }
 .modalTitle span{ font-size:12px; color:var(--muted); }
 .modalBody{ padding:12px;
-  padding-bottom:72px; overflow:auto; }
+  padding-bottom:72px; overflow:auto; overflow-x:hidden; }
 
 .btnDanger{
   border-color:var(--dangerBd);
@@ -726,7 +846,7 @@ html[data-theme="light"] .compareTbl td.isBetter{
   padding:10px 14px;
 }
 
-.modalActions{ display:flex; gap:10px; align-items:center; }
+.modalActions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
 
 /* zelené tlačítko v detailu hráče */
 .btnOpponents{

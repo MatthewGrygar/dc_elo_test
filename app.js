@@ -1,5 +1,6 @@
 import { openModal, setModalActions, setModalContent, setModalHeaderMeta, closeModal, setModalOnCloseRequest } from "./modal.js";
 import { openOpponentsModal } from "./opponents.js";
+import { openComparePlayersWithA } from "./compare.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
@@ -762,9 +763,19 @@ async function loadPlayerDetail(playerObj){
     // Uložíme pro Protihráče
     currentPlayerDetail = { playerObj, cards };
 
-    // Tlačítko "Protihráči" v horní liště (vedle Zavřít)
-    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">PROTIHRÁČI</button>`);
+    // Tlačítka v horní liště (vedle Zavřít)
+    setModalActions(`
+      <button id="compareBtn" class="btnPrimary" type="button">POROVNAT</button>
+      <button id="oppBtn" class="btnOpponents" type="button">PROTIHRÁČI</button>
+    `);
     queueMicrotask(() => {
+      const cbtn = document.getElementById("compareBtn");
+      if (cbtn){
+        cbtn.addEventListener("click", () => {
+          // Open compare modal with Player A preselected from current profile
+          openComparePlayersWithA(playerObj.slug || playerObj.player);
+        });
+      }
       const btn = document.getElementById("oppBtn");
       if (!btn) return;
       btn.addEventListener("click", () => {

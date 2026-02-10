@@ -6,7 +6,7 @@ export function buildNewsHtml(){
 
       <div class="box boxPad">
         <img
-          src="verze 1.1.0.png"
+          src="verze%201.1.0.png"
           alt="Verze 1.1.0"
           style="width:100%; height:auto; border-radius:16px; border:1px solid var(--border2); margin-bottom:12px;"
         />
@@ -81,14 +81,14 @@ export function buildNewsHtml(){
         </div>
 
         <img
-          src="version 1.1.0_data.jpg"
+          src="version%201.1.0_data.png"
           alt="Verze 1.1.0 – data"
           style="width:100%; height:auto; border-radius:16px; border:1px solid var(--border2); margin-top:14px;"
         />
       </div>
       <div class="box boxPad">
         <img
-          src="verze 1.0.0.png"
+          src="verze%201.0.0.png"
           alt="Verze 1.0.0"
           style="width:100%; height:auto; border-radius:16px; border:1px solid var(--border2); margin-bottom:12px;"
         />

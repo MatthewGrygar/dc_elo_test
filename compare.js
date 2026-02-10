@@ -6,6 +6,7 @@ let __selectedB = null;
 let __searchA = "";
 let __searchB = "";
 let __view = "pick"; // pick | result
+let __lockA = false; // when opened from player detail, player A is fixed
 
 function escapeHtml(str){
   return (str ?? "")
@@ -76,9 +77,9 @@ function buildMetricRow(aVal, label, bVal, aRaw, bRaw){
 
   return `
     <tr>
-      <td class="num ${betterA ? "isBetter" : ""}">${escapeHtml(aVal)}</td>
+      <td class="num ${betterA ? "betterLeft" : ""}"><span class="compareVal ${betterA ? "better" : ""}">${escapeHtml(aVal)}</span></td>
       <td class="metricName">${escapeHtml(label)}</td>
-      <td class="num ${betterB ? "isBetter" : ""}">${escapeHtml(bVal)}</td>
+      <td class="num ${betterB ? "betterRight" : ""}"><span class="compareVal ${betterB ? "better" : ""}">${escapeHtml(bVal)}</span></td>
     </tr>
   `;
 }
@@ -176,7 +177,14 @@ function renderPickView(){
     `;
   };
 
-  const left = filteredA.map(p => item(p, "A")).join("");
+  const left = (__lockA && __selectedA)
+    ? `
+      <div class="compareLocked">
+        <div class="compareLockedLine"><span class="name">${escapeHtml(__selectedA.player)}</span><span class="mini">ELO ${fmt(__selectedA.rating)}</span></div>
+        <div class="muted">Hráč A je vybrán z profilu hráče.</div>
+      </div>
+    `
+    : (filteredA.map(p => item(p, "A")).join(""));
   const right = filteredB.map(p => item(p, "B")).join("");
 
   const canConfirm = !!(__selectedA && __selectedB);
@@ -186,7 +194,10 @@ function renderPickView(){
         <div class="comparePanel">
           <div class="comparePanelHead">
             <div class="compareColTitle">Hráč A</div>
-            <input id="compareSearchA" class="compareSearch" type="search" placeholder="Hledat hráče vlevo…" autocomplete="off" value="${escapeHtml(__searchA)}" />
+            ${(__lockA && __selectedA)
+              ? `<input id="compareSearchA" class="compareSearch" type="search" placeholder="Hledat hráče vlevo…" autocomplete="off" value="${escapeHtml(__searchA)}" disabled />`
+              : `<input id="compareSearchA" class="compareSearch" type="search" placeholder="Hledat hráče vlevo…" autocomplete="off" value="${escapeHtml(__searchA)}" />`
+            }
           </div>
           <div class="compareList" id="compareListA">${left || `<div class="muted">Nic nenalezeno.</div>`}</div>
         </div>
@@ -211,8 +222,22 @@ function renderPickView(){
   setModalContent(html);
 
   queueMicrotask(() => {
+    // Safety: prevent any accidental form submit inside modal (can cause full page reload)
+    const overlay = document.getElementById("modalOverlay");
+    if (overlay && !overlay.__compareNoSubmit){
+      overlay.__compareNoSubmit = true;
+      overlay.addEventListener("submit", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+    }
+
     const inputA = document.getElementById("compareSearchA");
     if (inputA){
+      inputA.addEventListener("keydown", (e) => {
+        // Prevent any accidental form submit / page reload on Enter
+        if (e.key === "Enter") e.preventDefault();
+      });
       inputA.addEventListener("input", () => {
         __searchA = inputA.value || "";
         renderPickView();
@@ -221,15 +246,20 @@ function renderPickView(){
 
     const inputB = document.getElementById("compareSearchB");
     if (inputB){
+      inputB.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") e.preventDefault();
+      });
       inputB.addEventListener("input", () => {
         __searchB = inputB.value || "";
         renderPickView();
       });
     }
 
+    // Only allow changing player A when not locked
     document.querySelectorAll(".comparePickItem").forEach(btn => {
       btn.addEventListener("click", () => {
         const side = btn.getAttribute("data-side");
+        if (side === "A" && __lockA) return;
         const slug = btn.getAttribute("data-slug");
         const p = getPlayers().find(x => x.slug === slug);
         if (!p) return;
@@ -316,31 +346,37 @@ async function renderResultView(){
 
   const html = `
     <div class="compareWrap">
-      <div class="compareHeader">
-        <div class="side">${escapeHtml(A.player)}</div>
-        <div class="mid">JMÉNO</div>
-        <div class="side">${escapeHtml(B.player)}</div>
-      </div>
+      <div class="compareHero">
+        <div class="compareHeroRow">
+          <div class="compareHeroCard left">
+            <div class="heroName">${escapeHtml(A.player)}</div>
+            <div class="heroElo"><span class="label">ELO</span><span class="val">${fmt(A.rating)}</span></div>
+          </div>
 
-      <div class="compareH2H">
-        <div class="h2hBig">
-          <div class="h2hVal">${aW}</div>
-          <div class="h2hMid">vs</div>
-          <div class="h2hVal">${bW}</div>
+          <div class="compareVs">VS</div>
+
+          <div class="compareHeroCard right">
+            <div class="heroName">${escapeHtml(B.player)}</div>
+            <div class="heroElo"><span class="label">ELO</span><span class="val">${fmt(B.rating)}</span></div>
+          </div>
         </div>
-        <div class="h2hSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
-      </div>
 
-      <div class="compareEloRow">
-        <div class="num">${fmt(A.rating)}</div>
-        <div class="mid">ELO</div>
-        <div class="num">${fmt(B.rating)}</div>
+        <div class="compareH2H">
+          <div class="h2hBig">
+            <div class="h2hVal">${aW}</div>
+            <div class="h2hMid">vs</div>
+            <div class="h2hVal">${bW}</div>
+          </div>
+          <div class="h2hSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
+        </div>
       </div>
 
       ${metricsHtml}
 
-      <div class="compareSectionTitle">Průběh ELO</div>
-      ${buildTwoSeriesChart(aPoints, bPoints, A.player, B.player)}
+      <div class="compareChartCard">
+        <div class="compareSectionTitle">Průběh ELO</div>
+        ${buildTwoSeriesChart(aPoints, bPoints, A.player, B.player)}
+      </div>
     </div>
   `;
 
@@ -357,7 +393,12 @@ async function renderResultView(){
   });
 }
 
-export function openComparePlayers(){
+export function openComparePlayers(opts = {}){
+  // By default (opened from menu) player A is NOT locked.
+  // When opened from player detail, caller passes { lockA: true }.
+  if (!opts || opts.lockA !== true){
+    __lockA = false;
+  }
   // open fullscreen overlay (like other sections)
   // Use the same modal width/styling as other sections (Aktuality / detail hráče)
   openModal({ title: "Porovnat hráče", subtitle: "Výběr", html: `<div class="muted">Načítám…</div>`, fullscreen: false });
@@ -367,4 +408,17 @@ export function openComparePlayers(){
     __view = "pick";
     renderPickView();
   }
+}
+
+// Open compare with optional preselected player A (from player detail)
+export function openComparePlayersWithA(playerSlugOrName){
+  const players = getPlayers();
+  const found = players.find(p => p.slug === playerSlugOrName) || players.find(p => (p.player || "").trim() === (playerSlugOrName || "").toString().trim());
+  if (found){
+    __selectedA = found;
+    __lockA = true;
+    // When preselecting A from profile, reset view to pick but keep any existing B
+    __view = "pick";
+  }
+  openComparePlayers({ lockA: true });
 }
