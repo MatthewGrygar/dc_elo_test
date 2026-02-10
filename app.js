@@ -358,11 +358,15 @@ function renderStandings(rows){
     return;
   }
 
-  for (const r of filtered){
+  for (let i = 0; i < filtered.length; i++){
+    const r = filtered[i];
+    // When "Pouze hodnocení hráči" is ON, re-number rank only for the displayed (rated) players.
+    // When OFF, keep the original global rank from the full standings.
+    const displayRank = ratedOnly ? (i + 1) : r.rank;
     const peakText = Number.isFinite(r.peak) ? r.peak.toFixed(0) : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="rank colRank">${rankCellHtml(r.rank)}</td>
+      <td class="rank colRank">${rankCellHtml(displayRank)}</td>
       <td class="playerCol"><span class="nameWrap"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}</button>${vtBadgeHtml(r.vt)}</span></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
       <td class="num colPeak">${peakText}</td>

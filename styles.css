@@ -803,16 +803,17 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 
   /* Toolbar (list) – mobile layout:
      row1: search full width
-     row2: refresh + toggle side-by-side
+     row2: only toggle (refresh hidden on mobile)
   */
   .toolbar{ flex-direction:column; align-items:stretch; gap:10px; position:relative; }
   .toolbarSearchRow{ width:100%; }
   input[type="search"]{ width:100%; }
   /* Keep status visible but out of the search row flow */
   #status{ position:absolute; top:12px; right:12px; }
-  .toolbarControlsRow{ width:100%; justify-content:space-between; gap:10px; }
-  #refresh{ flex: 0 0 auto; }
-  .ratedToggle{ flex: 1 1 auto; justify-content:flex-end; }
+  /* Hide the refresh button on mobile only (desktop stays unchanged) */
+  #refresh{ display:none; }
+  .toolbarControlsRow{ width:100%; justify-content:flex-end; gap:10px; }
+  .ratedToggle{ flex: 0 0 auto; justify-content:flex-end; }
   .ratedToggleText .labelFull{ display:none; }
   .ratedToggleText .labelShort{ display:inline; }
   /* mobile header: row1 = loaded + toggle, row2 = request button right */
