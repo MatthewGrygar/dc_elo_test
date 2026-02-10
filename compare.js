@@ -8,6 +8,19 @@ let __searchB = "";
 let __view = "pick"; // pick | result
 let __lockA = false; // when opened from player detail, player A is fixed
 
+// Pick view (autocomplete) state
+let __pickMounted = false;
+let __pickInputA = "";
+let __pickInputB = "";
+let __pickOpenA = false;
+let __pickOpenB = false;
+let __debounceA = null;
+let __debounceB = null;
+let __lastQueryA = "";
+let __lastQueryB = "";
+let __cachedPlayers = null;
+let __pickGlobalHandlersInstalled = false;
+
 function escapeHtml(str){
   return (str ?? "")
     .toString()
@@ -160,69 +173,126 @@ function getPlayers(){
   return Array.isArray(rows) ? rows : [];
 }
 
-function renderPickView(){
-  const players = getPlayers();
-  const qA = (__searchA || "").toLowerCase().trim();
-  const qB = (__searchB || "").toLowerCase().trim();
-  const filteredA = !qA ? players : players.filter(p => (p.player || "").toLowerCase().includes(qA));
-  const filteredB = !qB ? players : players.filter(p => (p.player || "").toLowerCase().includes(qB));
+function ensurePlayersCache(){
+  if (__cachedPlayers) return __cachedPlayers;
+  __cachedPlayers = getPlayers().slice();
+  return __cachedPlayers;
+}
 
-  const item = (p, side) => {
+function debounce(fn, ms, key){
+  if (key === "A"){
+    if (__debounceA) clearTimeout(__debounceA);
+    __debounceA = setTimeout(fn, ms);
+  } else {
+    if (__debounceB) clearTimeout(__debounceB);
+    __debounceB = setTimeout(fn, ms);
+  }
+}
+
+function filterPlayers(query){
+  const q = (query || "").toLowerCase().trim();
+  if (q.length < 2) return [];
+  const players = ensurePlayersCache();
+  const out = [];
+  for (const p of players){
+    const name = (p.player || "").toLowerCase();
+    if (name.includes(q)) out.push(p);
+    if (out.length >= 10) break;
+  }
+  return out;
+}
+
+function renderDropdown(side, items){
+  const dd = document.getElementById(side === "A" ? "compareDdA" : "compareDdB");
+  if (!dd) return;
+  if (!items.length){
+    dd.innerHTML = `<div class="compareDdEmpty muted">Žádné shody.</div>`;
+    return;
+  }
+  dd.innerHTML = items.map(p => {
     const isSel = (side === "A") ? (__selectedA?.slug === p.slug) : (__selectedB?.slug === p.slug);
     return `
-      <button class="comparePickItem ${isSel ? "isSelected" : ""}" type="button" data-side="${side}" data-slug="${escapeHtml(p.slug)}">
+      <button type="button" class="compareDdItem ${isSel ? "isSelected" : ""}" data-side="${side}" data-slug="${escapeHtml(p.slug)}">
         <span class="name">${escapeHtml(p.player)}</span>
         <span class="mini">ELO ${fmt(p.rating)}</span>
       </button>
     `;
-  };
+  }).join("");
+}
 
-  const left = (__lockA && __selectedA)
-    ? `
-      <div class="compareLocked">
-        <div class="compareLockedLine"><span class="name">${escapeHtml(__selectedA.player)}</span><span class="mini">ELO ${fmt(__selectedA.rating)}</span></div>
-        <div class="muted">Hráč A je vybrán z profilu hráče.</div>
+function setDropdownOpen(side, open){
+  if (side === "A") __pickOpenA = !!open;
+  if (side === "B") __pickOpenB = !!open;
+  const wrap = document.getElementById(side === "A" ? "compareFieldA" : "compareFieldB");
+  if (wrap) wrap.classList.toggle("ddOpen", !!open);
+}
+
+function syncConfirmBtn(){
+  const btn = document.getElementById("compareConfirm");
+  if (!btn) return;
+  const ok = !!(__selectedA && __selectedB);
+  btn.disabled = !ok;
+}
+
+function syncPickInputs(){
+  const aInput = document.getElementById("compareInputA");
+  const bInput = document.getElementById("compareInputB");
+  if (aInput){
+    aInput.value = __lockA && __selectedA ? (__selectedA.player || "") : (__pickInputA || "");
+  }
+  if (bInput){
+    bInput.value = (__pickInputB || "");
+  }
+  const clrA = document.getElementById("compareClearA");
+  const clrB = document.getElementById("compareClearB");
+  if (clrA) clrA.style.display = (__lockA ? "none" : ((__pickInputA || "") ? "" : "none"));
+  if (clrB) clrB.style.display = ((__pickInputB || "") ? "" : "none");
+  syncConfirmBtn();
+}
+
+function mountPickView(){
+  __pickMounted = true;
+  setModalHeaderMeta({ title: "Porovnat hráče", subtitle: "Výběr" });
+  setModalActions("");
+  setModalContent(`
+    <div class="compareWrap" id="comparePickRoot">
+      <div class="compareIntro">
+        <div class="muted">Porovnání hráčů umožňuje srovnat statistiky, vzájemné zápasy a průběh ELO dvou hráčů.</div>
       </div>
-    `
-    : (filteredA.map(p => item(p, "A")).join(""));
-  const right = filteredB.map(p => item(p, "B")).join("");
 
-  const canConfirm = !!(__selectedA && __selectedB);
-  const html = `
-    <div class="compareWrap">
-      <div class="comparePick">
-        <div class="comparePanel">
-          <div class="comparePanelHead">
+      <div class="compareAutoGrid">
+        <div class="compareAutoField" id="compareFieldA">
+          <div class="compareAutoHead">
             <div class="compareColTitle">Hráč A</div>
-            ${(__lockA && __selectedA)
-              ? `<input id="compareSearchA" class="compareSearch" type="search" placeholder="Hledat hráče vlevo…" autocomplete="off" value="${escapeHtml(__searchA)}" disabled />`
-              : `<input id="compareSearchA" class="compareSearch" type="search" placeholder="Hledat hráče vlevo…" autocomplete="off" value="${escapeHtml(__searchA)}" />`
-            }
           </div>
-          <div class="compareList" id="compareListA">${left || `<div class="muted">Nic nenalezeno.</div>`}</div>
+          <div class="compareInputWrap">
+            <input id="compareInputA" class="compareSearch" type="search" placeholder="Vyber hráče A" autocomplete="off" ${__lockA ? "disabled" : ""} />
+            <button id="compareClearA" class="compareClear" type="button" aria-label="Vymazat hráče A">✕</button>
+          </div>
+          <div class="compareDd" id="compareDdA" role="listbox" aria-label="Návrhy hráče A"></div>
+          ${(__lockA && __selectedA) ? `<div class="muted compareLockedNote">Hráč A je vybrán z profilu hráče.</div>` : ``}
         </div>
 
-        <div class="comparePanel">
-          <div class="comparePanelHead">
+        <div class="compareAutoField" id="compareFieldB">
+          <div class="compareAutoHead">
             <div class="compareColTitle">Hráč B</div>
-            <input id="compareSearchB" class="compareSearch" type="search" placeholder="Hledat hráče vpravo…" autocomplete="off" value="${escapeHtml(__searchB)}" />
           </div>
-          <div class="compareList" id="compareListB">${right || `<div class="muted">Nic nenalezeno.</div>`}</div>
+          <div class="compareInputWrap">
+            <input id="compareInputB" class="compareSearch" type="search" placeholder="Vyber hráče B" autocomplete="off" />
+            <button id="compareClearB" class="compareClear" type="button" aria-label="Vymazat hráče B">✕</button>
+          </div>
+          <div class="compareDd" id="compareDdB" role="listbox" aria-label="Návrhy hráče B"></div>
         </div>
       </div>
 
       <div class="compareBottom">
-        <button id="compareConfirm" class="btnPrimary" type="button" ${canConfirm ? "" : "disabled"}>Porovnat</button>
+        <button id="compareConfirm" class="btnPrimary" type="button" disabled>Porovnat</button>
       </div>
     </div>
-  `;
-
-  setModalHeaderMeta({ title: "Porovnat hráče", subtitle: "Výběr" });
-  setModalActions("");
-  setModalContent(html);
+  `);
 
   queueMicrotask(() => {
-    // Safety: prevent any accidental form submit inside modal (can cause full page reload)
+    // prevent any accidental form submit inside modal
     const overlay = document.getElementById("modalOverlay");
     if (overlay && !overlay.__compareNoSubmit){
       overlay.__compareNoSubmit = true;
@@ -232,41 +302,126 @@ function renderPickView(){
       }, true);
     }
 
-    const inputA = document.getElementById("compareSearchA");
+    const root = document.getElementById("comparePickRoot");
+    const inputA = document.getElementById("compareInputA");
+    const inputB = document.getElementById("compareInputB");
+    const clearA = document.getElementById("compareClearA");
+    const clearB = document.getElementById("compareClearB");
+
+    const closeAll = (exceptSide=null) => {
+      if (exceptSide !== "A") setDropdownOpen("A", false);
+      if (exceptSide !== "B") setDropdownOpen("B", false);
+    };
+
+    // Global handlers (install once): click outside + ESC closes dropdowns
+    if (!__pickGlobalHandlersInstalled){
+      __pickGlobalHandlersInstalled = true;
+      document.addEventListener("click", (e) => {
+        const r = document.getElementById("comparePickRoot");
+        if (!r) return;
+        if (!r.contains(e.target)){
+          setDropdownOpen("A", false);
+          setDropdownOpen("B", false);
+        }
+      }, { passive: true });
+      window.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        setDropdownOpen("A", false);
+        setDropdownOpen("B", false);
+      });
+    }
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") e.preventDefault();
+      if (e.key === "Escape") e.preventDefault();
+    };
+
     if (inputA){
-      inputA.addEventListener("keydown", (e) => {
-        // Prevent any accidental form submit / page reload on Enter
-        if (e.key === "Enter") e.preventDefault();
-      });
+      inputA.addEventListener("keydown", handleKeyDown);
+      inputA.addEventListener("focus", () => { if (!__lockA) setDropdownOpen("A", (__pickInputA || "").trim().length >= 2); });
       inputA.addEventListener("input", () => {
-        __searchA = inputA.value || "";
-        renderPickView();
+        if (__lockA) return;
+        __pickInputA = inputA.value || "";
+        __selectedA = null;
+        syncPickInputs();
+        const q = (__pickInputA || "").trim();
+        if (q.length < 2){
+          setDropdownOpen("A", false);
+          __lastQueryA = q;
+          return;
+        }
+        debounce(() => {
+          if (__lastQueryA === q) return;
+          __lastQueryA = q;
+          const items = filterPlayers(q);
+          renderDropdown("A", items);
+          setDropdownOpen("A", true);
+        }, 180, "A");
       });
     }
 
-    const inputB = document.getElementById("compareSearchB");
     if (inputB){
-      inputB.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") e.preventDefault();
-      });
+      inputB.addEventListener("keydown", handleKeyDown);
+      inputB.addEventListener("focus", () => setDropdownOpen("B", (__pickInputB || "").trim().length >= 2));
       inputB.addEventListener("input", () => {
-        __searchB = inputB.value || "";
-        renderPickView();
+        __pickInputB = inputB.value || "";
+        __selectedB = null;
+        syncPickInputs();
+        const q = (__pickInputB || "").trim();
+        if (q.length < 2){
+          setDropdownOpen("B", false);
+          __lastQueryB = q;
+          return;
+        }
+        debounce(() => {
+          if (__lastQueryB === q) return;
+          __lastQueryB = q;
+          const items = filterPlayers(q);
+          renderDropdown("B", items);
+          setDropdownOpen("B", true);
+        }, 180, "B");
       });
     }
 
-    // Only allow changing player A when not locked
-    document.querySelectorAll(".comparePickItem").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const side = btn.getAttribute("data-side");
-        if (side === "A" && __lockA) return;
-        const slug = btn.getAttribute("data-slug");
-        const p = getPlayers().find(x => x.slug === slug);
-        if (!p) return;
-        if (side === "A") __selectedA = p;
-        if (side === "B") __selectedB = p;
-        renderPickView();
+    if (clearA){
+      clearA.addEventListener("click", () => {
+        if (__lockA) return;
+        __pickInputA = "";
+        __selectedA = null;
+        setDropdownOpen("A", false);
+        syncPickInputs();
+        if (inputA) inputA.focus();
       });
+    }
+    if (clearB){
+      clearB.addEventListener("click", () => {
+        __pickInputB = "";
+        __selectedB = null;
+        setDropdownOpen("B", false);
+        syncPickInputs();
+        if (inputB) inputB.focus();
+      });
+    }
+
+    // Dropdown click (event delegation)
+    root.addEventListener("click", (e) => {
+      const btn = e.target.closest(".compareDdItem");
+      if (!btn) return;
+      const side = btn.getAttribute("data-side");
+      const slug = btn.getAttribute("data-slug");
+      const p = ensurePlayersCache().find(x => x.slug === slug);
+      if (!p) return;
+      if (side === "A"){
+        if (__lockA) return;
+        __selectedA = p;
+        __pickInputA = p.player || "";
+        setDropdownOpen("A", false);
+      } else {
+        __selectedB = p;
+        __pickInputB = p.player || "";
+        setDropdownOpen("B", false);
+      }
+      syncPickInputs();
     });
 
     const confirm = document.getElementById("compareConfirm");
@@ -277,7 +432,21 @@ function renderPickView(){
         await renderResultView();
       });
     }
+
+    // Seed inputs based on session selections
+    if (__lockA && __selectedA){
+      __pickInputA = __selectedA.player || "";
+    }
+    if (__selectedB && !__pickInputB) __pickInputB = __selectedB.player || "";
+    syncPickInputs();
   });
+}
+
+function renderPickView(){
+  // Prepare cached players once to avoid repeated lookups
+  ensurePlayersCache();
+  __pickMounted = false;
+  mountPickView();
 }
 
 async function renderResultView(){

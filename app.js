@@ -365,6 +365,7 @@ function renderStandings(rows){
     const getVal = (row) => {
       const rr = row.r;
       if (key === "winrate") return parseWinrateToNumber(rr.winrate);
+      if (key === "rating") return rr.rating;
       if (key === "peak") return rr.peak;
       if (key === "games") return rr.games;
       if (key === "win") return rr.win;

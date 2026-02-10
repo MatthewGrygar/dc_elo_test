@@ -463,10 +463,13 @@ th.sortable .sortIcon{
   display: inline-block;
   margin-left: 6px;
   font-size: 11px;
-  opacity: 0.35;
+  opacity: 0;
   vertical-align: middle;
+  transition: opacity .12s ease;
 }
-th.sortable .sortIcon::before{ content: "↕"; }
+th.sortable .sortIcon::before{ content: ""; }
+th.sortable:hover .sortIcon{ opacity: 0.55; }
+th.sortable:hover .sortIcon::before{ content: "↕"; }
 th.sortable.sortActive .sortIcon{ opacity: 0.95; }
 th.sortable.sortAsc .sortIcon::before{ content: "▲"; }
 th.sortable.sortDesc .sortIcon::before{ content: "▼"; }
@@ -482,6 +485,90 @@ th.sortable.sortDesc .sortIcon::before{ content: "▼"; }
   flex-direction: column;
   gap: 14px;
 }
+
+/* Autocomplete pick view (no long lists) */
+.compareIntro{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  padding: 12px 14px;
+}
+.compareAutoGrid{
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  gap: 16px;
+  align-items: start;
+}
+.compareAutoField{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.compareAutoHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.compareInputWrap{ position: relative; display:flex; align-items:center; min-width:0; }
+.compareInputWrap .compareSearch{ width: 100%; padding-right: 38px; box-sizing: border-box; }
+.compareClear{
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.02);
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  display: none;
+}
+html[data-theme="light"] .compareClear{ background: rgba(0,0,0,0.02); }
+.compareClear:hover{ opacity: 1; }
+.compareLockedNote{ margin-top: -2px; }
+
+.compareDd{
+  display: none;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.02);
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px;
+  min-width: 0;
+}
+html[data-theme="light"] .compareDd{ background: rgba(0,0,0,0.02); }
+.ddOpen .compareDd{ display: block; }
+.compareDdItem{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.compareDdItem .name{ flex: 1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.compareDdItem .mini{ opacity: 0.7; font-size: 12px; white-space: nowrap; }
+.compareDdItem:hover{ background: rgba(255,255,255,0.045); }
+html[data-theme="light"] .compareDdItem:hover{ background: rgba(0,0,0,0.045); }
+.compareDdItem.isSelected{
+  border-color: rgba(58,164,107,0.6);
+  background: rgba(58,164,107,0.12);
+}
+.compareDdEmpty{ padding: 10px 10px; }
 .comparePick{
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -660,8 +747,12 @@ html[data-theme="light"] .comparePickItem:hover{
 .compareMetrics .compareTbl{
   width: 100%;
 }
+.compareMetrics{
+  max-width: 860px;
+  margin: 0 auto;
+}
 .compareTbl td{
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 html[data-theme="light"] .compareTbl td{
@@ -805,8 +896,19 @@ html[data-theme="light"] .compareHeroCard{
 
 @media (max-width: 900px){
   .comparePick{ grid-template-columns: 1fr; }
+  .compareAutoGrid{ grid-template-columns: 1fr; }
   .compareHeroRow{ grid-template-columns: 1fr; }
   .compareVs{ display: none; }
+}
+
+/* Player detail: improve scroll performance for very long tournament tables */
+#tournamentTables{
+  content-visibility: auto;
+  contain-intrinsic-size: 1400px;
+}
+#tournamentTables .tblWrap{
+  content-visibility: auto;
+  contain-intrinsic-size: 560px;
 }
 
 /* Modal */
