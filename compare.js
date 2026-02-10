@@ -237,6 +237,18 @@ function buildRadarChart({ metrics, nameA, nameB }){
   const pathA = polygonPath(valuesA);
   const pathB = polygonPath(valuesB);
 
+  // Dots at each axis for both players
+  const dotEls = (values, cls) => {
+    return values.map((val, i) => {
+      const v01 = Math.max(0, Math.min(1, (val ?? 0) / 100));
+      const [x, y] = pointAt(i, v01);
+      return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.6" class="radarDot ${cls}" />`;
+    }).join("");
+  };
+
+  const dotsB = dotEls(valuesB, "radarDotB");
+  const dotsA = dotEls(valuesA, "radarDotA");
+
   // grid rings
   const rings = [0.25, 0.5, 0.75, 1];
   const ringPaths = rings.map((k) => {
@@ -270,6 +282,9 @@ function buildRadarChart({ metrics, nameA, nameB }){
 
       <path d="${pathB}" class="radarPoly radarB" />
       <path d="${pathA}" class="radarPoly radarA" />
+
+      ${dotsB}
+      ${dotsA}
 
       ${labelEls}
     </svg>

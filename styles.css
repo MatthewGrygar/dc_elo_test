@@ -1017,6 +1017,14 @@ html[data-theme="light"] .duelRow{ border-bottom: 1px solid rgba(0,0,0,0.06); }
 html[data-theme="light"] .radarA{ fill: rgba(58,164,107,0.18); }
 html[data-theme="light"] .radarB{ fill: rgba(210,75,75,0.16); }
 
+.radarDot{ pointer-events:none; }
+.radarDotA{ fill: #3aa46b; }
+.radarDotB{ fill: #d24b4b; }
+html[data-theme="dark"] .radarDotA,
+html[data-theme="dark"] .radarDotB{ stroke: rgba(255,255,255,0.45); stroke-width: 1.4; }
+html[data-theme="light"] .radarDotA,
+html[data-theme="light"] .radarDotB{ stroke: rgba(0,0,0,0.28); stroke-width: 1.4; }
+
 .radarLegend{ display:flex; justify-content:center; gap:16px; flex-wrap:wrap; }
 .radarLegend .legendItem{ opacity: .9; font-weight: 800; }
 .radarLegend .dot{ width: 10px; height: 10px; border-radius: 999px; display:inline-block; }
