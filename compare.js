@@ -3,7 +3,8 @@ import { openModal, setModalContent, setModalHeaderMeta, setModalActions } from 
 // Session-persistent selections (keeps choice when user closes and reopens compare)
 let __selectedA = null;
 let __selectedB = null;
-let __searchQ = "";
+let __searchA = "";
+let __searchB = "";
 let __view = "pick"; // pick | result
 
 function escapeHtml(str){
@@ -38,12 +39,46 @@ function fmt(v){
   return v.toFixed(0);
 }
 
-function buildMetricRow(aVal, label, bVal){
+function toNumMaybe(v){
+  if (v == null) return null;
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  const s = v.toString().trim();
+  if (!s || s === "—") return null;
+  // remove percent sign and spaces
+  const n = Number(s.replace(/%/g, "").replace(/\s+/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+function metricPreference(label){
+  const key = (label || "").toString().trim().toLowerCase();
+  // higher is better
+  if (["games","win","peak elo","average opponent rating","longest win streak","draw"].includes(key)) return "higher";
+  // lower is better
+  if (["loss","longest loss streak"].includes(key)) return "lower";
+  return "neutral";
+}
+
+function buildMetricRow(aVal, label, bVal, aRaw, bRaw){
+  const pref = metricPreference(label);
+  const aN = toNumMaybe(aRaw ?? aVal);
+  const bN = toNumMaybe(bRaw ?? bVal);
+  let betterA = false;
+  let betterB = false;
+  if (aN != null && bN != null && aN !== bN && pref !== "neutral"){
+    if (pref === "higher"){
+      betterA = aN > bN;
+      betterB = bN > aN;
+    } else if (pref === "lower"){
+      betterA = aN < bN;
+      betterB = bN < aN;
+    }
+  }
+
   return `
     <tr>
-      <td class="num">${escapeHtml(aVal)}</td>
+      <td class="num ${betterA ? "isBetter" : ""}">${escapeHtml(aVal)}</td>
       <td class="metricName">${escapeHtml(label)}</td>
-      <td class="num">${escapeHtml(bVal)}</td>
+      <td class="num ${betterB ? "isBetter" : ""}">${escapeHtml(bVal)}</td>
     </tr>
   `;
 }
@@ -126,8 +161,10 @@ function getPlayers(){
 
 function renderPickView(){
   const players = getPlayers();
-  const q = (__searchQ || "").toLowerCase().trim();
-  const filtered = !q ? players : players.filter(p => (p.player || "").toLowerCase().includes(q));
+  const qA = (__searchA || "").toLowerCase().trim();
+  const qB = (__searchB || "").toLowerCase().trim();
+  const filteredA = !qA ? players : players.filter(p => (p.player || "").toLowerCase().includes(qA));
+  const filteredB = !qB ? players : players.filter(p => (p.player || "").toLowerCase().includes(qB));
 
   const item = (p, side) => {
     const isSel = (side === "A") ? (__selectedA?.slug === p.slug) : (__selectedB?.slug === p.slug);
@@ -139,23 +176,26 @@ function renderPickView(){
     `;
   };
 
-  const left = filtered.map(p => item(p, "A")).join("");
-  const right = filtered.map(p => item(p, "B")).join("");
+  const left = filteredA.map(p => item(p, "A")).join("");
+  const right = filteredB.map(p => item(p, "B")).join("");
 
   const canConfirm = !!(__selectedA && __selectedB);
   const html = `
     <div class="compareWrap">
-      <div class="compareTop">
-        <input id="compareSearch" type="search" placeholder="Hledat hráče…" autocomplete="off" value="${escapeHtml(__searchQ)}" />
-      </div>
-
       <div class="comparePick">
-        <div class="compareCol">
-          <div class="compareColTitle">Hráč A</div>
+        <div class="comparePanel">
+          <div class="comparePanelHead">
+            <div class="compareColTitle">Hráč A</div>
+            <input id="compareSearchA" class="compareSearch" type="search" placeholder="Hledat hráče vlevo…" autocomplete="off" value="${escapeHtml(__searchA)}" />
+          </div>
           <div class="compareList" id="compareListA">${left || `<div class="muted">Nic nenalezeno.</div>`}</div>
         </div>
-        <div class="compareCol">
-          <div class="compareColTitle">Hráč B</div>
+
+        <div class="comparePanel">
+          <div class="comparePanelHead">
+            <div class="compareColTitle">Hráč B</div>
+            <input id="compareSearchB" class="compareSearch" type="search" placeholder="Hledat hráče vpravo…" autocomplete="off" value="${escapeHtml(__searchB)}" />
+          </div>
           <div class="compareList" id="compareListB">${right || `<div class="muted">Nic nenalezeno.</div>`}</div>
         </div>
       </div>
@@ -171,10 +211,18 @@ function renderPickView(){
   setModalContent(html);
 
   queueMicrotask(() => {
-    const input = document.getElementById("compareSearch");
-    if (input){
-      input.addEventListener("input", () => {
-        __searchQ = input.value || "";
+    const inputA = document.getElementById("compareSearchA");
+    if (inputA){
+      inputA.addEventListener("input", () => {
+        __searchA = inputA.value || "";
+        renderPickView();
+      });
+    }
+
+    const inputB = document.getElementById("compareSearchB");
+    if (inputB){
+      inputB.addEventListener("input", () => {
+        __searchB = inputB.value || "";
         renderPickView();
       });
     }
@@ -241,14 +289,14 @@ async function renderResultView(){
     <div class="compareMetrics">
       <table class="tbl compareTbl">
         <tbody>
-          ${buildMetricRow(fmt(A.games), "games", fmt(B.games))}
-          ${buildMetricRow(fmt(A.win), "WIN", fmt(B.win))}
-          ${buildMetricRow(fmt(A.loss), "LOSS", fmt(B.loss))}
-          ${buildMetricRow(fmt(A.draw), "DRAW", fmt(B.draw))}
-          ${buildMetricRow(fmt(A.peak), "peak elo", fmt(B.peak))}
-          ${buildMetricRow(fmt(safeNum(sumA?.avgOpp)), "average opponent rating", fmt(safeNum(sumB?.avgOpp)))}
-          ${buildMetricRow(fmt(safeNum(sumA?.winStreak)), "longest win streak", fmt(safeNum(sumB?.winStreak)))}
-          ${buildMetricRow(fmt(safeNum(sumA?.lossStreak)), "longest loss streak", fmt(safeNum(sumB?.lossStreak)))}
+          ${buildMetricRow(fmt(A.games), "games", fmt(B.games), A.games, B.games)}
+          ${buildMetricRow(fmt(A.win), "WIN", fmt(B.win), A.win, B.win)}
+          ${buildMetricRow(fmt(A.loss), "LOSS", fmt(B.loss), A.loss, B.loss)}
+          ${buildMetricRow(fmt(A.draw), "DRAW", fmt(B.draw), A.draw, B.draw)}
+          ${buildMetricRow(fmt(A.peak), "peak elo", fmt(B.peak), A.peak, B.peak)}
+          ${buildMetricRow(fmt(safeNum(sumA?.avgOpp)), "average opponent rating", fmt(safeNum(sumB?.avgOpp)), safeNum(sumA?.avgOpp), safeNum(sumB?.avgOpp))}
+          ${buildMetricRow(fmt(safeNum(sumA?.winStreak)), "longest win streak", fmt(safeNum(sumB?.winStreak)), safeNum(sumA?.winStreak), safeNum(sumB?.winStreak))}
+          ${buildMetricRow(fmt(safeNum(sumA?.lossStreak)), "longest loss streak", fmt(safeNum(sumB?.lossStreak)), safeNum(sumA?.lossStreak), safeNum(sumB?.lossStreak))}
         </tbody>
       </table>
     </div>
@@ -311,7 +359,8 @@ async function renderResultView(){
 
 export function openComparePlayers(){
   // open fullscreen overlay (like other sections)
-  openModal({ title: "Porovnat hráče", subtitle: "Výběr", html: `<div class="muted">Načítám…</div>`, fullscreen: true });
+  // Use the same modal width/styling as other sections (Aktuality / detail hráče)
+  openModal({ title: "Porovnat hráče", subtitle: "Výběr", html: `<div class="muted">Načítám…</div>`, fullscreen: false });
   if (__view === "result" && __selectedA && __selectedB){
     renderResultView();
   } else {
