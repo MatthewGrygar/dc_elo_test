@@ -1,4 +1,10 @@
 // modal.js
+let __modalOnCloseRequest = null;
+
+export function setModalOnCloseRequest(fn){
+  __modalOnCloseRequest = (typeof fn === 'function') ? fn : null;
+}
+
 export function ensureModal() {
   let overlay = document.getElementById("modalOverlay");
   if (overlay) return overlay;
@@ -28,14 +34,14 @@ export function ensureModal() {
   document.body.appendChild(overlay);
 
   overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeModal();
+    if (e.target === overlay) (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal());
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.style.display === "block") closeModal();
+    if (e.key === "Escape" && overlay.style.display === "block") (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal());
   });
 
-  overlay.querySelector("#closeModalBtn").addEventListener("click", closeModal);
+  overlay.querySelector("#closeModalBtn").addEventListener("click", () => (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal()));
 
   return overlay;
 }
@@ -64,7 +70,7 @@ try{
   window.setModalActions = setModalActions;
 }catch(e){}
 
-export function closeModal() {
+export export function closeModal() {
   const overlay = document.getElementById("modalOverlay");
   if (!overlay) return;
   const modalEl = overlay.querySelector('.modal');

@@ -68,17 +68,25 @@
 <main>
   <div class="card">
     <div class="toolbar">
-      <div class="left">
+      <div class="toolbarSearchRow">
         <span id="status" class="badge">Načítám…</span>
         <input id="search" type="search" placeholder="Hledat hráče…" autocomplete="off" />
       </div>
-      <div class="right">
-        <label class="ratedOnlyLabel" title="Zobrazí jen hráče s Rating Class (Class A–D)">
-          <input id="ratedOnly" type="checkbox" role="switch" aria-label="Pouze hodnocení hráči" />
-          <span class="ratedOnlySwitch" aria-hidden="true"></span>
-          <span class="ratedOnlyText">Pouze hodnocení hráči</span>
-        </label>
+
+      <div class="toolbarControlsRow">
         <button id="refresh" type="button">Znovu načíst</button>
+
+        <div class="ratedToggle" title="Zobrazí jen hráče s Rating Class (Class A–D)">
+          <span class="ratedToggleText">
+            <span class="labelFull">Pouze hodnocení hráči</span>
+            <span class="labelShort">Pouze hodnocení</span>
+          </span>
+
+          <label class="switch" aria-label="Pouze hodnocení hráči">
+            <input id="ratedOnly" type="checkbox" />
+            <span class="slider" aria-hidden="true"></span>
+          </label>
+        </div>
       </div>
     </div>
 

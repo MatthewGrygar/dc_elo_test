@@ -1,4 +1,4 @@
-import { openModal, setModalActions, setModalContent, setModalHeaderMeta } from "./modal.js";
+import { openModal, setModalActions, setModalContent, setModalHeaderMeta, closeModal, setModalOnCloseRequest } from "./modal.js";
 import { openOpponentsModal } from "./opponents.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
@@ -137,7 +137,7 @@ function getSlugFromLocation(){
   return rest.split("/")[0];
 }
 
-let __closeModalRaw = null;
+let __closeModalRaw = closeModal;
 function openPlayerModal(playerObj){
   openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
   loadPlayerDetail(playerObj);
@@ -182,6 +182,26 @@ function applyRoute(){
   }
 
   openPlayerModal(playerObj);
+}
+
+
+
+function closePlayerDetailAndRoute(){
+  const slug = getSlugFromLocation();
+  // Close modal UI immediately
+  try{ closeModal(); }catch(e){}
+  if (!slug) return;
+
+  // If we got here via in-app navigation (pushState with __playerSlug), go back to list so forward returns detail.
+  if (history.state && history.state.__playerSlug){
+    try{ history.back(); }catch(e){}
+    return;
+  }
+
+  // Direct entry to /<slug> (or unknown history state): keep user in app and reset URL to list.
+  try{
+    history.pushState({}, "", getBasePath());
+  }catch(e){}
 }
 
 // posledně otevřený detail hráče (pro Protihráče / návrat)
@@ -883,6 +903,9 @@ if (!__closeModalRaw){
 }
 
 // Back/forward support
+// When user clicks "Zavřít" in detail, also restore route back to list
+setModalOnCloseRequest(closePlayerDetailAndRoute);
+
 window.addEventListener("popstate", () => applyRoute());
 
 // Apply route immediately (if user opened /<slug>)

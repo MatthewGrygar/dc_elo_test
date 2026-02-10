@@ -29,12 +29,9 @@ html[data-theme="dark"]{
   --classB-bg:#2B240A; --classB-fg:#FFD76A;
   --classC-bg:#2B160B; --classC-fg:#FDBA74;
   --classD-bg:#2B0D10; --classD-fg:#FF8A94;
-
-  /* Rated-only toggle (dark) */
-  --toggleOffTrack: rgba(255,255,255,.18);
-  --toggleOnTrack: rgba(120,220,170,.38);
-  --toggleThumb: rgba(255,255,255,.92);
-  --toggleRing: rgba(255,255,255,.14);
+  --toggle-off-bg: rgba(120,120,120,.22);
+  --toggle-on-bg: rgba(70, 160, 115, .40);
+  --toggle-thumb: rgba(245,245,245,.92);
 }
 
 html[data-theme="light"]{
@@ -68,12 +65,6 @@ html[data-theme="light"]{
   --classB-bg:#FFF7D6; --classB-fg:#9A7B00;
   --classC-bg:#FFE9D6; --classC-fg:#B45309;
   --classD-bg:#FFE3E6; --classD-fg:#B4232C;
-
-  /* Rated-only toggle (light) */
-  --toggleOffTrack: rgba(0,0,0,.18);
-  --toggleOnTrack: rgba(60,160,110,.35);
-  --toggleThumb: rgba(255,255,255,.98);
-  --toggleRing: rgba(0,0,0,.10);
 }
 
 :root{ color-scheme: light dark; }
@@ -86,6 +77,9 @@ body{
     radial-gradient(900px 500px at 80% 0%, rgba(255,215,0,.08), transparent 60%),
     radial-gradient(900px 500px at 20% 80%, rgba(80,120,255,.06), transparent 60%),
     var(--bg0);
+  --toggle-off-bg: rgba(140,140,140,.35);
+  --toggle-on-bg: rgba(90, 180, 130, .45);
+  --toggle-thumb: rgba(255,255,255,.92);
 }
 html[data-theme="light"] body{
   background:
@@ -315,83 +309,76 @@ input[type="search"]:focus{
   box-shadow:0 0 0 4px var(--glow);
 }
 
-/* "Pouze hodnocení hráči" toggle */
-.ratedOnlyLabel{
+
+/* "Pouze hodnocení hráči" – moderní toggle switch (slider) */
+.toolbarSearchRow{ display:flex; gap:12px; align-items:center; flex: 1 1 auto; }
+.toolbarControlsRow{ display:flex; gap:12px; align-items:center; margin-left:auto; justify-content:flex-end; }
+
+.ratedToggle{
   display:inline-flex;
   align-items:center;
   gap:10px;
+  user-select:none;
+}
+.ratedToggleText{
   font-size:13px;
   color:var(--muted);
-  user-select:none;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid var(--border2);
-  background:var(--panel);
-  cursor:pointer;
-  line-height:1;
-  position:relative;
+  line-height:1.2;
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
 }
-.ratedOnlyText{ white-space:nowrap; }
+.ratedToggleText .labelShort{ display:none; }
 
-/* Hide the native checkbox but keep it accessible */
-.ratedOnlyLabel input{
+.switch{
+  position:relative;
+  width:46px;
+  height:26px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  flex: 0 0 auto;
+}
+.switch input{
   position:absolute;
-  opacity:0;
-  width:1px;
-  height:1px;
-  pointer-events:none;
+  width:1px; height:1px;
+  padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0);
+  white-space:nowrap; border:0;
 }
-
-/* Toggle track */
-.ratedOnlySwitch{
-  position:relative;
-  width:40px;
-  height:22px;
+.slider{
+  position:absolute;
+  inset:0;
   border-radius:999px;
-  background:var(--toggleOffTrack);
-  box-shadow:
-    inset 0 0 0 1px var(--toggleRing),
-    0 6px 18px rgba(0,0,0,.10);
-  flex:0 0 auto;
+  background:var(--toggle-off-bg);
+  border:1px solid var(--border2);
+  transition: background .18s ease, border-color .18s ease;
 }
-
-/* Toggle thumb */
-.ratedOnlySwitch::after{
+.slider::before{
   content:"";
   position:absolute;
-  top:3px;
-  left:3px;
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  background:var(--toggleThumb);
-  box-shadow:0 8px 18px rgba(0,0,0,.22);
-  transform:translateX(0);
-  transition:transform .18s ease, background .18s ease;
+  width:22px;
+  height:22px;
+  left:2px;
+  top:50%;
+  transform:translateY(-50%);
+  border-radius:999px;
+  background:var(--toggle-thumb);
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+  transition: transform .18s ease, background .18s ease;
+}
+.switch input:checked + .slider{
+  background:var(--toggle-on-bg);
+  border-color: rgba(120, 180, 140, .45);
+}
+.switch input:checked + .slider::before{
+  transform:translateY(-50%) translateX(20px);
+}
+.switch:focus-within .slider{
+  box-shadow:0 0 0 4px var(--glow);
 }
 
-/* ON state: color + thumb position */
-.ratedOnlyLabel input:checked + .ratedOnlySwitch{
-  background:var(--toggleOnTrack);
-}
-.ratedOnlyLabel input:checked + .ratedOnlySwitch::after{
-  transform:translateX(18px);
-}
-
-/* Focus ring for keyboard users */
-.ratedOnlyLabel input:focus-visible + .ratedOnlySwitch{
-  outline: none;
-  box-shadow:
-    inset 0 0 0 1px var(--toggleRing),
-    0 0 0 4px var(--glow);
-}
-
-/* Subtle hover feedback */
-.ratedOnlyLabel:hover .ratedOnlySwitch{
-  box-shadow:
-    inset 0 0 0 1px var(--toggleRing),
-    0 10px 22px rgba(0,0,0,.14);
-}
 
 
 .tableWrap{ overflow:auto; }
@@ -419,7 +406,11 @@ tbody tr:hover{ background:var(--hover); }
 
 /* Player name + class badge wrapper for perfect vertical centering */
 .nameWrap{
-  display:inline-flex;
+  display:flex
+  ;
+  min-width:0;
+  flex-wrap:nowrap;
+  display:flex;
   align-items:center;
   gap:8px;
 }
@@ -427,6 +418,8 @@ tbody tr:hover{ background:var(--hover); }
 /* VT badge (pill) – small, unobtrusive */
 .vtBadge{
   display:inline-flex;
+  white-space:nowrap;
+  flex-shrink:0;
   align-items:center;
   justify-content:center;
   padding:2px 8px;
@@ -558,12 +551,13 @@ html[data-theme="light"] .btnOpponents{
 
 /* Rating Class banner under player name in detail card */
 .heroVT{
-  margin-top:6px;
+  margin-top:4px;
   display:inline-flex;
   align-items:center;
-  padding:4px 10px;
+  padding:3px 8px;
   border-radius:999px;
-  font-weight:900;
+  font-size:11px;
+  font-weight:700;
   letter-spacing:.02em;
   border:1px solid currentColor;
   line-height:1.1;
@@ -653,12 +647,12 @@ html[data-theme="light"] .heroRank.rank2{
   height:22px;
 }
 
-.heroEloLabel{ color:var(--muted); font-size:12px; }
+.heroEloLabel{ color:var(--muted); font-size:12px; margin-bottom:2px; }
 .heroElo{
   font-size:60px;
   font-weight:950;
   line-height:1.2;
-  margin:10px 0 0;
+  margin:4px 0 0;
   letter-spacing:.4px;
 }
 
@@ -790,9 +784,37 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   header .wrap{ flex-direction:column; gap:10px; }
   .logo{ width:76px; height:76px; flex-basis:76px; margin-top:0; }
   h1{ font-size:19px; margin-bottom:2px; }
-  .subtitle{ margin-bottom:4px; font-size:11px; }
+  .subtitle
+  /* Table row stability on mobile (long names + Class badge) */
+  .playerCol .nameWrap{ gap:6px; }
+  .playerBtn{
+    max-width: 100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    display:inline-block;
+  }
+  .vtBadge{ white-space:nowrap; }
+  th, td{ padding:10px 8px; }
+  .colRank{ width:52px; padding-left:8px; padding-right:6px; }
+{ margin-bottom:4px; font-size:11px; }
   .muted{ font-size:12px; line-height:1.25; }
 
+
+  /* Toolbar (list) – mobile layout:
+     row1: search full width
+     row2: refresh + toggle side-by-side
+  */
+  .toolbar{ flex-direction:column; align-items:stretch; gap:10px; position:relative; }
+  .toolbarSearchRow{ width:100%; }
+  input[type="search"]{ width:100%; }
+  /* Keep status visible but out of the search row flow */
+  #status{ position:absolute; top:12px; right:12px; }
+  .toolbarControlsRow{ width:100%; justify-content:space-between; gap:10px; }
+  #refresh{ flex: 0 0 auto; }
+  .ratedToggle{ flex: 1 1 auto; justify-content:flex-end; }
+  .ratedToggleText .labelFull{ display:none; }
+  .ratedToggleText .labelShort{ display:inline; }
   /* mobile header: row1 = loaded + toggle, row2 = request button right */
   .headerRight{ width:100%; align-items:stretch; gap:8px; }
   .headerRightTop{
@@ -842,7 +864,6 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     flex-direction:row;
     align-items:center;
     gap:10px;
-    flex-wrap:wrap;
   }
   .left{
     width:100%;
@@ -856,24 +877,8 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     border-radius:12px;
     min-width:0;
   }
-  /* Put refresh + toggle under the search row on mobile */
-  .right{
-    flex:1 1 100%;
-    width:100%;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
-    gap:8px;
-  }
+  .right{ flex:0 0 auto; }
   #refresh{ padding:9px 10px; border-radius:12px; }
-
-  .ratedOnlyLabel{
-    padding:8px 10px;
-    border-radius:999px;
-  }
-  .ratedOnlySwitch{ width:42px; height:24px; }
-  .ratedOnlySwitch::after{ width:18px; height:18px; top:3px; left:3px; }
-  .ratedOnlyLabel input:checked + .ratedOnlySwitch::after{ transform:translateX(18px); }
 
   /* Mobile standings table: show Rank + Player + Rating */
   .tableWrap{ overflow-x:hidden; }
