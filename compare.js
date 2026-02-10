@@ -53,6 +53,20 @@ function fmt(v){
   return v.toFixed(0);
 }
 
+function fmtWinrate(p){
+  const v = p?.winrate;
+  if (typeof v === "string" && v.trim()) return v.trim();
+  if (typeof v === "number" && Number.isFinite(v)) return `${Math.round(v)}%`;
+  const g = toNumMaybe(p?.games);
+  const w = toNumMaybe(p?.win);
+  const d = toNumMaybe(p?.draw);
+  const l = toNumMaybe(p?.loss);
+  const games = (g ?? (w ?? 0) + (d ?? 0) + (l ?? 0));
+  if (!games) return "—";
+  if (w == null) return "—";
+  return `${Math.round((w * 100) / games)}%`;
+}
+
 function toNumMaybe(v){
   if (v == null) return null;
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -161,6 +175,114 @@ function buildTwoSeriesChart(pointsA, pointsB, labelA, labelB){
   `;
 
   return `<div class="compareChart">${svg}${legend}</div>`;
+}
+
+function normalizePairTo100(a, b){
+  // Returns [aN, bN] normalized to 0..100 within the pair.
+  // If both equal -> 50/50. If one missing -> missing 0, existing 100.
+  const aV = toNumMaybe(a);
+  const bV = toNumMaybe(b);
+  if (aV == null && bV == null) return [50, 50];
+  if (aV == null && bV != null) return [0, 100];
+  if (bV == null && aV != null) return [100, 0];
+  if (aV === bV) return [50, 50];
+  const min = Math.min(aV, bV);
+  const max = Math.max(aV, bV);
+  const span = Math.max(1e-9, max - min);
+  const aN = ((aV - min) * 100) / span;
+  const bN = ((bV - min) * 100) / span;
+  return [aN, bN];
+}
+
+function buildRadarChart({ metrics, nameA, nameB }){
+  // metrics: array of { key, label, aVal, bVal, invert }
+  const labels = metrics.map(m => m.label);
+  const pairs = metrics.map(m => {
+    let [aN, bN] = normalizePairTo100(m.aVal, m.bVal);
+    if (m.invert){
+      aN = 100 - aN;
+      bN = 100 - bN;
+    }
+    // if both were 50/50, keep
+    return [aN, bN];
+  });
+
+  const w = 420;
+  const h = 380;
+  const cx = w / 2;
+  const cy = 170;
+  const r = 140;
+  const n = metrics.length;
+  const angle0 = -Math.PI / 2;
+
+  const pointAt = (i, value01) => {
+    const ang = angle0 + (i * 2 * Math.PI) / n;
+    const rr = r * value01;
+    return [cx + rr * Math.cos(ang), cy + rr * Math.sin(ang)];
+  };
+
+  const polygonPath = (values) => {
+    let d = "";
+    for (let i = 0; i < n; i++){
+      const v = Math.max(0, Math.min(1, (values[i] ?? 0) / 100));
+      const [x, y] = pointAt(i, v);
+      d += (i === 0 ? "M " : "L ") + x.toFixed(2) + " " + y.toFixed(2) + " ";
+    }
+    d += "Z";
+    return d;
+  };
+
+  const valuesA = pairs.map(p => p[0]);
+  const valuesB = pairs.map(p => p[1]);
+  const pathA = polygonPath(valuesA);
+  const pathB = polygonPath(valuesB);
+
+  // grid rings
+  const rings = [0.25, 0.5, 0.75, 1];
+  const ringPaths = rings.map((k) => {
+    let d = "";
+    for (let i = 0; i < n; i++){
+      const [x, y] = pointAt(i, k);
+      d += (i === 0 ? "M " : "L ") + x.toFixed(2) + " " + y.toFixed(2) + " ";
+    }
+    d += "Z";
+    return `<path d="${d}" class="radarGrid" />`;
+  }).join("");
+
+  const axes = Array.from({ length: n }).map((_, i) => {
+    const [x, y] = pointAt(i, 1);
+    return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(2)}" y2="${y.toFixed(2)}" class="radarAxis" />`;
+  }).join("");
+
+  const labelEls = labels.map((t, i) => {
+    const [x, y] = pointAt(i, 1.14);
+    const anchor = (x < cx - 10) ? "end" : (x > cx + 10 ? "start" : "middle");
+    const dy = (y < cy - 90) ? "-2" : "12";
+    return `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" text-anchor="${anchor}" dominant-baseline="middle" dy="${dy}" class="radarLabel">${escapeHtml(t)}</text>`;
+  }).join("");
+
+  const svg = `
+    <svg class="radarSvg" viewBox="0 0 ${w} ${h}" role="img" aria-label="Radar porovnání">
+      <g>
+        ${ringPaths}
+        ${axes}
+      </g>
+
+      <path d="${pathB}" class="radarPoly radarB" />
+      <path d="${pathA}" class="radarPoly radarA" />
+
+      ${labelEls}
+    </svg>
+  `;
+
+  const legend = `
+    <div class="radarLegend">
+      <div class="legendItem"><span class="dot dotGreen" aria-hidden="true"></span>${escapeHtml(nameA || "Hráč A")}</div>
+      <div class="legendItem"><span class="dot dotRed" aria-hidden="true"></span>${escapeHtml(nameB || "Hráč B")}</div>
+    </div>
+  `;
+
+  return `<div class="radarWrap">${svg}${legend}</div>`;
 }
 
 function getApi(){
@@ -484,67 +606,70 @@ async function renderResultView(){
   const sumA = await api.getSummaryForPlayer(A.player);
   const sumB = await api.getSummaryForPlayer(B.player);
 
-  const metricsHtml = `
-    <div class="compareMetrics">
-      <table class="tbl compareTbl">
-        <tbody>
-          ${buildMetricRow(fmt(A.games), "games", fmt(B.games), A.games, B.games)}
-          ${buildMetricRow(fmt(A.win), "WIN", fmt(B.win), A.win, B.win)}
-          ${buildMetricRow(fmt(A.loss), "LOSS", fmt(B.loss), A.loss, B.loss)}
-          ${buildMetricRow(fmt(A.draw), "DRAW", fmt(B.draw), A.draw, B.draw)}
-          ${buildMetricRow(fmt(A.peak), "peak elo", fmt(B.peak), A.peak, B.peak)}
-          ${buildMetricRow(fmt(safeNum(sumA?.avgOpp)), "average opponent rating", fmt(safeNum(sumB?.avgOpp)), safeNum(sumA?.avgOpp), safeNum(sumB?.avgOpp))}
-          ${buildMetricRow(fmt(safeNum(sumA?.winStreak)), "longest win streak", fmt(safeNum(sumB?.winStreak)), safeNum(sumA?.winStreak), safeNum(sumB?.winStreak))}
-          ${buildMetricRow(fmt(safeNum(sumA?.lossStreak)), "longest loss streak", fmt(safeNum(sumB?.lossStreak)), safeNum(sumA?.lossStreak), safeNum(sumB?.lossStreak))}
-        </tbody>
-      </table>
-    </div>
-  `;
+  // Build metrics once (memoized per render) for panels + radar
+  const metrics = [
+    { key: "games", label: "GAMES", aShow: fmt(toNumMaybe(A.games)), bShow: fmt(toNumMaybe(B.games)), aVal: toNumMaybe(A.games), bVal: toNumMaybe(B.games), invert: false },
+    { key: "winrate", label: "WINRATE", aShow: fmtWinrate(A), bShow: fmtWinrate(B), aVal: toNumMaybe(fmtWinrate(A)), bVal: toNumMaybe(fmtWinrate(B)), invert: false },
+    { key: "win", label: "WIN", aShow: fmt(toNumMaybe(A.win)), bShow: fmt(toNumMaybe(B.win)), aVal: toNumMaybe(A.win), bVal: toNumMaybe(B.win), invert: false },
+    { key: "loss", label: "LOSS", aShow: fmt(toNumMaybe(A.loss)), bShow: fmt(toNumMaybe(B.loss)), aVal: toNumMaybe(A.loss), bVal: toNumMaybe(B.loss), invert: true },
+    { key: "draw", label: "DRAW", aShow: fmt(toNumMaybe(A.draw)), bShow: fmt(toNumMaybe(B.draw)), aVal: toNumMaybe(A.draw), bVal: toNumMaybe(B.draw), invert: false },
+    { key: "peak", label: "PEAK ELO", aShow: fmt(toNumMaybe(A.peak)), bShow: fmt(toNumMaybe(B.peak)), aVal: toNumMaybe(A.peak), bVal: toNumMaybe(B.peak), invert: false },
+    { key: "avgOpp", label: "AVERAGE OPPONENT RATING", aShow: fmt(safeNum(sumA?.avgOpp)), bShow: fmt(safeNum(sumB?.avgOpp)), aVal: safeNum(sumA?.avgOpp), bVal: safeNum(sumB?.avgOpp), invert: false },
+    { key: "winStreak", label: "LONGEST WIN STREAK", aShow: fmt(safeNum(sumA?.winStreak)), bShow: fmt(safeNum(sumB?.winStreak)), aVal: safeNum(sumA?.winStreak), bVal: safeNum(sumB?.winStreak), invert: false },
+    { key: "lossStreak", label: "LONGEST LOSS STREAK", aShow: fmt(safeNum(sumA?.lossStreak)), bShow: fmt(safeNum(sumB?.lossStreak)), aVal: safeNum(sumA?.lossStreak), bVal: safeNum(sumB?.lossStreak), invert: true },
+  ];
 
-  const aPoints = aCards
-    .slice()
-    .sort((x,y)=>(x.matchId||0)-(y.matchId||0))
-    .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
-    .map(r => ({ matchId:r.matchId, elo:r.elo }));
-  const bCards = cards.filter(c => (c.player || "").trim() === (B.player || "").trim());
-  const bPoints = bCards
-    .slice()
-    .sort((x,y)=>(x.matchId||0)-(y.matchId||0))
-    .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
-    .map(r => ({ matchId:r.matchId, elo:r.elo }));
+  const panelRowsA = metrics.map(m => `
+    <div class="duelRow">
+      <div class="duelKey">${escapeHtml(m.label)}</div>
+      <div class="duelVal">${escapeHtml(m.aShow)}</div>
+    </div>
+  `).join("");
+
+  const panelRowsB = metrics.map(m => `
+    <div class="duelRow">
+      <div class="duelKey">${escapeHtml(m.label)}</div>
+      <div class="duelVal">${escapeHtml(m.bShow)}</div>
+    </div>
+  `).join("");
+
+  const radar = buildRadarChart({ metrics, nameA: A.player, nameB: B.player });
 
   const html = `
-    <div class="compareWrap">
-      <div class="compareHero">
-        <div class="compareHeroRow">
-          <div class="compareHeroCard left">
-            <div class="heroName">${escapeHtml(A.player)}</div>
-            <div class="heroElo"><span class="label">ELO</span><span class="val">${fmt(A.rating)}</span></div>
-          </div>
-
-          <div class="compareVs">VS</div>
-
-          <div class="compareHeroCard right">
-            <div class="heroName">${escapeHtml(B.player)}</div>
-            <div class="heroElo"><span class="label">ELO</span><span class="val">${fmt(B.rating)}</span></div>
-          </div>
+    <div class="compareWrap compareDashboard">
+      <div class="duelHeader">
+        <div class="duelSide duelLeft">
+          <div class="duelName">${escapeHtml(A.player)}</div>
+          <div class="duelElo">${fmt(toNumMaybe(A.rating))}</div>
         </div>
 
-        <div class="compareH2H">
-          <div class="h2hBig">
-            <div class="h2hVal">${aW}</div>
-            <div class="h2hMid">vs</div>
-            <div class="h2hVal">${bW}</div>
-          </div>
-          <div class="h2hSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
+        <div class="duelCenter">
+          <div class="duelVs">VS</div>
+          <div class="duelScore">${aW} <span class="vs">vs</span> ${bW}</div>
+          <div class="duelSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
+        </div>
+
+        <div class="duelSide duelRight">
+          <div class="duelName">${escapeHtml(B.player)}</div>
+          <div class="duelElo">${fmt(toNumMaybe(B.rating))}</div>
         </div>
       </div>
 
-      ${metricsHtml}
+      <div class="duelMain">
+        <div class="duelPanel duelPanelA">
+          <div class="duelPanelTitle">STATISTIKY</div>
+          ${panelRowsA}
+        </div>
 
-      <div class="compareChartCard">
-        <div class="compareSectionTitle">Průběh ELO</div>
-        ${buildTwoSeriesChart(aPoints, bPoints, A.player, B.player)}
+        <div class="duelRadarCard">
+          <div class="duelPanelTitle">RADAR</div>
+          ${radar}
+        </div>
+
+        <div class="duelPanel duelPanelB">
+          <div class="duelPanelTitle">STATISTIKY</div>
+          ${panelRowsB}
+        </div>
       </div>
     </div>
   `;
