@@ -322,6 +322,7 @@ async function loadLastData(){
   try{
     const u = new URL(DATA_CSV_URL);
     u.searchParams.set("_", Date.now().toString());
+    console.log("[ELO] Fetch last tournament CSV:", u.toString());
     const { res, text } = await fetchUtf8Text(u.toString());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     if (text.trim().startsWith("<")) throw new Error("HTML místo CSV");
@@ -335,6 +336,7 @@ async function loadLastData(){
     lastTournamentText = last || "";
     updateInfoBar();
   } catch {
+    console.warn("[ELO] Failed to load last tournament info (Data sheet)");
     lastTournamentText = "";
     updateInfoBar();
   }
@@ -381,6 +383,7 @@ async function loadStandings(){
   try{
     const u = new URL(ELO_CSV_URL);
     u.searchParams.set("_", Date.now().toString());
+    console.log("[ELO] Fetch standings CSV:", u.toString());
     const { res, text } = await fetchUtf8Text(u.toString());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
@@ -421,6 +424,10 @@ async function loadStandings(){
       pendingSlugToOpen = null;
       applyRoute();
     }
+  } catch (e){
+    console.error("[ELO] Failed to load standings:", e);
+    statusEl.textContent = "Chyba načítání dat";
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">❌ Data se nepodařilo načíst. Zkus „Znovu načíst“.</td></tr>`;
   } finally {
     refreshBtn.disabled = false;
   }
