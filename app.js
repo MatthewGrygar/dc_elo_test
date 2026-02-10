@@ -92,22 +92,37 @@ function normalizeVT(v){
 }
 
 function vtToClass(vt){
-  return vt ? vt.toLowerCase() : ""; // vt1..vt4
+  // Map VT1–VT4 to consistent class tokens used in CSS
+  if (!vt) return "";
+  if (vt === "VT1") return "classA";
+  if (vt === "VT2") return "classB";
+  if (vt === "VT3") return "classC";
+  if (vt === "VT4") return "classD";
+  return "";
+}
+
+function vtToBadgeText(vt){
+  if (!vt) return "";
+  if (vt === "VT1") return "Class A";
+  if (vt === "VT2") return "Class B";
+  if (vt === "VT3") return "Class C";
+  if (vt === "VT4") return "Class D";
+  return "";
 }
 
 function vtBadgeHtml(vt){
   if (!vt) return "";
-  return ` <span class="vtBadge ${vtToClass(vt)}" aria-label="${vt}">${vt}</span>`;
+  const txt = vtToBadgeText(vt);
+  return ` <span class="vtBadge ${vtToClass(vt)}" aria-label="${escapeHtml(txt)}">${escapeHtml(txt)}</span>`;
 }
 
 function vtDetailText(vt){
+  // Text under player name (profile)
   if (!vt) return "";
-  if (vt === "VT1") return "1 výkonostní třída";
-  if (vt === "VT2") return "2 výkonostní třída";
-  if (vt === "VT3") return "3 výkonostní třída";
-  if (vt === "VT4") return "4 výkonostní třída";
-  return "";
+  const t = vtToBadgeText(vt);
+  return t ? `Rating ${t}` : "";
 }
+
 
 function getSlugFromLocation(){
   const base = getBasePath();
