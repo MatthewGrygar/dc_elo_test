@@ -19,6 +19,7 @@ const PLAYER_SUMMARY_CSV_URL =
 const statusEl = document.getElementById("status");
 const tbody = document.getElementById("tbody");
 const searchEl = document.getElementById("search");
+const ratedOnlyEl = document.getElementById("ratedOnly");
 const refreshBtn = document.getElementById("refresh");
 const lastDataBadge = document.getElementById("lastDataBadge");
 
@@ -113,7 +114,7 @@ function vtToBadgeText(vt){
 function vtBadgeHtml(vt){
   if (!vt) return "";
   const txt = vtToBadgeText(vt);
-  return ` <span class="vtBadge ${vtToClass(vt)}" aria-label="${escapeHtml(txt)}">${escapeHtml(txt)}</span>`;
+  return `<span class="vtBadge ${vtToClass(vt)}" aria-label="${escapeHtml(txt)}">${escapeHtml(txt)}</span>`;
 }
 
 function vtDetailText(vt){
@@ -321,7 +322,11 @@ async function loadLastData(){
 
 function renderStandings(rows){
   const q = normalizeKey(searchEl.value);
-  const filtered = rows.filter(r => !q || normalizeKey(r.player).includes(q)).sort((a,b)=>a.rank-b.rank);
+  const ratedOnly = !!(ratedOnlyEl && ratedOnlyEl.checked);
+  const filtered = rows
+    .filter(r => (!ratedOnly || !!r.vt))
+    .filter(r => !q || normalizeKey(r.player).includes(q))
+    .sort((a,b)=>a.rank-b.rank);
 
   tbody.innerHTML = "";
   if (!filtered.length){
@@ -336,7 +341,7 @@ function renderStandings(rows){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="rank colRank">${rankCellHtml(r.rank)}</td>
-      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}${vtBadgeHtml(r.vt)}</button></td>
+      <td class="playerCol"><span class="nameWrap"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}</button>${vtBadgeHtml(r.vt)}</span></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
       <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
@@ -840,6 +845,10 @@ if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click",
 /* Events */
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
+if (ratedOnlyEl){
+  ratedOnlyEl.addEventListener("change", () => renderStandings(allRows));
+}
+
 
 tbody.addEventListener("click", (e) => {
   const btn = e.target.closest(".playerBtn");

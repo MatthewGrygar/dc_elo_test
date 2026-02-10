@@ -25,10 +25,10 @@ html[data-theme="dark"]{
   --dangerTx: rgba(255, 200, 200, .92);
 
   /* Rating Class palette (dark) */
-  --classA-bg:#0B1B3A; --classA-fg:#93C5FD;
-  --classB-bg:#06261A; --classB-fg:#6EE7B7;
-  --classC-bg:#2A1206; --classC-fg:#FDBA74;
-  --classD-bg:#1B1233; --classD-fg:#C4B5FD;
+  --classA-bg:#0F2A1E; --classA-fg:#7FE0B2;
+  --classB-bg:#2B240A; --classB-fg:#FFD76A;
+  --classC-bg:#2B160B; --classC-fg:#FDBA74;
+  --classD-bg:#2B0D10; --classD-fg:#FF8A94;
 }
 
 html[data-theme="light"]{
@@ -58,10 +58,10 @@ html[data-theme="light"]{
   --dangerTx: rgba(120, 20, 20, .92);
 
   /* Rating Class palette (light) */
-  --classA-bg:#E8F1FF; --classA-fg:#1D4ED8;
-  --classB-bg:#ECFDF3; --classB-fg:#047857;
-  --classC-bg:#FFF7ED; --classC-fg:#C2410C;
-  --classD-bg:#F5F3FF; --classD-fg:#6D28D9;
+  --classA-bg:#E8F7EE; --classA-fg:#1F7A4D;
+  --classB-bg:#FFF7D6; --classB-fg:#9A7B00;
+  --classC-bg:#FFE9D6; --classC-fg:#B45309;
+  --classD-bg:#FFE3E6; --classD-fg:#B4232C;
 }
 
 :root{ color-scheme: light dark; }
@@ -303,6 +303,26 @@ input[type="search"]:focus{
   box-shadow:0 0 0 4px var(--glow);
 }
 
+/* "Pouze hodnocení hráči" toggle */
+.ratedOnlyLabel{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:var(--muted);
+  user-select:none;
+  padding:6px 8px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--panel);
+}
+.ratedOnlyLabel input{
+  width:16px;
+  height:16px;
+  accent-color: rgba(120,120,120,.8);
+}
+
+
 .tableWrap{ overflow:auto; }
 table{ width:100%; border-collapse:separate; border-spacing:0; }
 thead th{
@@ -325,13 +345,20 @@ tbody tr:hover{ background:var(--hover); }
   text-decoration:underline; text-decoration-color:rgba(120,120,120,.35); text-underline-offset:3px;
 }
 
+
+/* Player name + class badge wrapper for perfect vertical centering */
+.nameWrap{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
 /* VT badge (pill) – small, unobtrusive */
 .vtBadge{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  margin-left:8px;
-  padding:3px 8px;
+  padding:2px 8px;
   border-radius:999px;
   font-size:11px;
   font-weight:900;
@@ -339,7 +366,7 @@ tbody tr:hover{ background:var(--hover); }
   border:1px solid currentColor;
   background:var(--chip);
   vertical-align:middle;
-  line-height:1;
+  line-height:1.2;
 }
 .vtBadge.classA{ background:var(--classA-bg); color:var(--classA-fg); }
 .vtBadge.classB{ background:var(--classB-bg); color:var(--classB-fg); }
@@ -547,10 +574,10 @@ html[data-theme="light"] .heroRank.rank2{
   justify-content:center;
   border:1px solid var(--border);
   background:var(--chip);
-  padding:3px 8px;
+  padding:2px 8px;
   border-radius:8px;
   font-size:12px;
-  line-height:1;
+  line-height:1.2;
   min-width:28px;
   height:22px;
 }
@@ -559,7 +586,7 @@ html[data-theme="light"] .heroRank.rank2{
 .heroElo{
   font-size:60px;
   font-weight:950;
-  line-height:1;
+  line-height:1.2;
   margin:10px 0 0;
   letter-spacing:.4px;
 }
