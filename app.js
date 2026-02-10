@@ -39,6 +39,135 @@ let lastTournamentText = "";
 let playerCardsCache = null;
 let playerSummaryCache = null;
 
+// -------------------- SLUG ROUTING + VT --------------------
+let slugToPlayer = new Map();
+let pendingSlugToOpen = null;
+
+function getBasePath(){
+  // GitHub Pages project site base: /<repo>/
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  // If served from root (local dev), parts[0] may be undefined
+  return parts.length ? `/${parts[0]}/` : "/";
+}
+
+function stripDiacritics(s){
+  return (s || "").toString().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
+function baseSlugFromName(playerName){
+  const name = (playerName || "").toString().trim();
+  if (!name) return "";
+  const parts = name.split(/\s+/).filter(Boolean);
+  const first = parts[0] || "";
+  const last = parts[parts.length - 1] || "";
+  const joined = `${first}_${last}`;
+  const cleaned = stripDiacritics(joined)
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return cleaned;
+}
+
+function buildDeterministicSlugs(playerNamesInDataOrder){
+  const counts = new Map();
+  const out = [];
+  for (const name of playerNamesInDataOrder){
+    const base = baseSlugFromName(name);
+    const next = (counts.get(base) || 0) + 1;
+    counts.set(base, next);
+    out.push(next === 1 ? base : `${base}_${next}`);
+  }
+  return out;
+}
+
+function normalizeVT(v){
+  const s = (v ?? "").toString().trim();
+  if (!s) return null;
+  const u = s.toUpperCase();
+  if (u === "UNRANKED") return null;
+  if (/^VT[1-4]$/.test(u)) return u;
+  return null;
+}
+
+function vtToClass(vt){
+  return vt ? vt.toLowerCase() : ""; // vt1..vt4
+}
+
+function vtBadgeHtml(vt){
+  if (!vt) return "";
+  return ` <span class="vtBadge ${vtToClass(vt)}" aria-label="${vt}">${vt}</span>`;
+}
+
+function vtDetailText(vt){
+  if (!vt) return "";
+  if (vt === "VT1") return "1 výkonostní třída";
+  if (vt === "VT2") return "2 výkonostní třída";
+  if (vt === "VT3") return "3 výkonostní třída";
+  if (vt === "VT4") return "4 výkonostní třída";
+  return "";
+}
+
+function getSlugFromLocation(){
+  const base = getBasePath();
+  const path = window.location.pathname;
+  if (!path.startsWith(base)) return null;
+  const rest = path.slice(base.length).replace(/^\/+|\/+$/g, "");
+  if (!rest) return null;
+  // Ignore real files like kontakt.html
+  if (rest.includes(".")) return null;
+  // Only first segment
+  return rest.split("/")[0];
+}
+
+let __closeModalRaw = null;
+function openPlayerModal(playerObj){
+  openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+  loadPlayerDetail(playerObj);
+}
+
+function navigateToPlayer(playerObj){
+  const slug = playerObj?.slug;
+  if (!slug) return;
+  const url = getBasePath() + slug;
+  history.pushState({ __playerSlug: slug }, "", url);
+  openPlayerModal(playerObj);
+}
+
+function normalizeSpaRedirectIfPresent(){
+  const params = new URLSearchParams(window.location.search);
+  const r = params.get("r") || params.get("redirect");
+  if (!r) return;
+  const base = getBasePath();
+  const clean = r.toString().replace(/^\/+/, "").replace(/\/+$/, "");
+  history.replaceState(history.state || {}, "", base + clean);
+}
+
+function applyRoute(){
+  // Do not interfere with mobile "page" history in common.js
+  if (history.state && history.state.__mobilePage) return;
+
+  const slug = getSlugFromLocation();
+  if (!slug){
+    try{ __closeModalRaw?.(); }catch(e){}
+    return;
+  }
+
+  if (!slugToPlayer.size){
+    pendingSlugToOpen = slug;
+    return;
+  }
+
+  const playerObj = slugToPlayer.get(slug);
+  if (!playerObj){
+    try{ __closeModalRaw?.(); }catch(e){}
+    return;
+  }
+
+  openPlayerModal(playerObj);
+}
+
 // posledně otevřený detail hráče (pro Protihráče / návrat)
 let currentPlayerDetail = null;
 
@@ -192,7 +321,7 @@ function renderStandings(rows){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="rank colRank">${rankCellHtml(r.rank)}</td>
-      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}</button></td>
+      <td class="playerCol"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}${vtBadgeHtml(r.vt)}</button></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
       <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
@@ -218,9 +347,11 @@ async function loadStandings(){
 
     const rows = parseCSV(text);
 
-    const iPlayer = 0, iRating = 1, iGames=2, iWin=3, iLoss=4, iDraw=5, iWinrate=6, iPeak=7;
+    const iPlayer = 0, iRating = 1, iGames=2, iWin=3, iLoss=4, iDraw=5, iWinrate=6, iPeak=7, iVT=8;
 
-    const loaded = rows.slice(1).map(r => ({
+    // Preserve original data order for deterministic slug collision resolution
+    const loadedInDataOrder = rows.slice(1).map((r, idx) => ({
+      _dataIndex: idx,
       player:(r[iPlayer] ?? "").trim(),
       rating:toNumber(r[iRating]),
       peak:toNumber(r[iPeak]),
@@ -228,15 +359,28 @@ async function loadStandings(){
       win:toNumber(r[iWin]),
       loss:toNumber(r[iLoss]),
       draw:toNumber(r[iDraw]),
-      winrate:(r[iWinrate] ?? "").toString().trim()
+      winrate:(r[iWinrate] ?? "").toString().trim(),
+      vt: normalizeVT(r[iVT])
     })).filter(x=>x.player);
 
+    const slugs = buildDeterministicSlugs(loadedInDataOrder.map(x => x.player));
+    loadedInDataOrder.forEach((x, i) => { x.slug = slugs[i]; });
+
+    const loaded = loadedInDataOrder.slice();
     loaded.sort((a,b)=>(b.rating||-Infinity)-(a.rating||-Infinity));
     allRows = loaded.map((p,i)=>({ ...p, rank:i+1 }));
+
+    slugToPlayer = new Map(allRows.map(p => [p.slug, p]));
 
     statusEl.textContent = `Načteno: ${allRows.length}`;
     renderStandings(allRows);
     updateInfoBar();
+
+    // If the current URL is /<slug>, open it after data is ready (deep link / back-forward)
+    if (pendingSlugToOpen){
+      pendingSlugToOpen = null;
+      applyRoute();
+    }
   } finally {
     refreshBtn.disabled = false;
   }
@@ -379,6 +523,7 @@ function buildHero(playerObj, summary){
             ${escapeHtml(playerObj.player)}
             ${Number.isFinite(rankNum) ? `<span class="heroRank ${rankClass}">#${rankNum}</span>` : ""}
           </div>
+          ${playerObj.vt ? `<div class="heroVT ${vtToClass(playerObj.vt)}">${escapeHtml(vtDetailText(playerObj.vt))}</div>` : ""}
           <div style="margin-top:10px;">
             <div class="heroEloLabel">aktuální rating</div>
             <div class="heroElo">${Number.isFinite(playerObj.rating) ? playerObj.rating.toFixed(0) : ""}</div>
@@ -684,9 +829,40 @@ searchEl.addEventListener("input", () => renderStandings(allRows));
 tbody.addEventListener("click", (e) => {
   const btn = e.target.closest(".playerBtn");
   if (!btn) return;
-  openModal({ title: btn._playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
-  loadPlayerDetail(btn._playerObj);
+  navigateToPlayer(btn._playerObj);
 });
 
-/* Init */
+/* Init: GitHub Pages SPA redirect + routing */
+normalizeSpaRedirectIfPresent();
+
+// Wire close so it updates URL deterministically
+if (!__closeModalRaw){
+  __closeModalRaw = window.closeModal;
+  window.closeModal = function(){
+    const base = getBasePath();
+    const slug = getSlugFromLocation();
+    const hasPlayerState = !!(history.state && history.state.__playerSlug);
+
+    // Close UI first
+    try{ __closeModalRaw?.(); }catch(e){}
+
+    // If we are on a player route, return to base.
+    if (slug){
+      // If the player route was opened from within the app (pushState), go back.
+      // If this is a deep link, replace so we don't leave the site.
+      if (hasPlayerState && window.history.length > 1){
+        try{ history.back(); return; }catch(e){}
+      }
+      try{ history.replaceState({}, "", base); }catch(e){}
+    }
+  };
+}
+
+// Back/forward support
+window.addEventListener("popstate", () => applyRoute());
+
+// Apply route immediately (if user opened /<slug>)
+applyRoute();
+
+// Load data
 loadAll();
