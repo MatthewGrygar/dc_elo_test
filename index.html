@@ -71,12 +71,13 @@
       <div class="left">
         <span id="status" class="badge">Načítám…</span>
         <input id="search" type="search" placeholder="Hledat hráče…" autocomplete="off" />
-        <label class="ratedOnlyLabel" title="Zobrazí jen hráče s Rating Class (Class A–D)">
-          <input id="ratedOnly" type="checkbox" />
-          <span>Pouze hodnocení hráči</span>
-        </label>
       </div>
       <div class="right">
+        <label class="ratedOnlyLabel" title="Zobrazí jen hráče s Rating Class (Class A–D)">
+          <input id="ratedOnly" type="checkbox" role="switch" aria-label="Pouze hodnocení hráči" />
+          <span class="ratedOnlySwitch" aria-hidden="true"></span>
+          <span class="ratedOnlyText">Pouze hodnocení hráči</span>
+        </label>
         <button id="refresh" type="button">Znovu načíst</button>
       </div>
     </div>

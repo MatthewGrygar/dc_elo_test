@@ -29,6 +29,12 @@ html[data-theme="dark"]{
   --classB-bg:#2B240A; --classB-fg:#FFD76A;
   --classC-bg:#2B160B; --classC-fg:#FDBA74;
   --classD-bg:#2B0D10; --classD-fg:#FF8A94;
+
+  /* Rated-only toggle (dark) */
+  --toggleOffTrack: rgba(255,255,255,.18);
+  --toggleOnTrack: rgba(120,220,170,.38);
+  --toggleThumb: rgba(255,255,255,.92);
+  --toggleRing: rgba(255,255,255,.14);
 }
 
 html[data-theme="light"]{
@@ -62,6 +68,12 @@ html[data-theme="light"]{
   --classB-bg:#FFF7D6; --classB-fg:#9A7B00;
   --classC-bg:#FFE9D6; --classC-fg:#B45309;
   --classD-bg:#FFE3E6; --classD-fg:#B4232C;
+
+  /* Rated-only toggle (light) */
+  --toggleOffTrack: rgba(0,0,0,.18);
+  --toggleOnTrack: rgba(60,160,110,.35);
+  --toggleThumb: rgba(255,255,255,.98);
+  --toggleRing: rgba(0,0,0,.10);
 }
 
 :root{ color-scheme: light dark; }
@@ -307,19 +319,78 @@ input[type="search"]:focus{
 .ratedOnlyLabel{
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
   font-size:13px;
   color:var(--muted);
   user-select:none;
-  padding:6px 8px;
-  border-radius:12px;
+  padding:6px 10px;
+  border-radius:999px;
   border:1px solid var(--border2);
   background:var(--panel);
+  cursor:pointer;
+  line-height:1;
+  position:relative;
 }
+.ratedOnlyText{ white-space:nowrap; }
+
+/* Hide the native checkbox but keep it accessible */
 .ratedOnlyLabel input{
+  position:absolute;
+  opacity:0;
+  width:1px;
+  height:1px;
+  pointer-events:none;
+}
+
+/* Toggle track */
+.ratedOnlySwitch{
+  position:relative;
+  width:40px;
+  height:22px;
+  border-radius:999px;
+  background:var(--toggleOffTrack);
+  box-shadow:
+    inset 0 0 0 1px var(--toggleRing),
+    0 6px 18px rgba(0,0,0,.10);
+  flex:0 0 auto;
+}
+
+/* Toggle thumb */
+.ratedOnlySwitch::after{
+  content:"";
+  position:absolute;
+  top:3px;
+  left:3px;
   width:16px;
   height:16px;
-  accent-color: rgba(120,120,120,.8);
+  border-radius:50%;
+  background:var(--toggleThumb);
+  box-shadow:0 8px 18px rgba(0,0,0,.22);
+  transform:translateX(0);
+  transition:transform .18s ease, background .18s ease;
+}
+
+/* ON state: color + thumb position */
+.ratedOnlyLabel input:checked + .ratedOnlySwitch{
+  background:var(--toggleOnTrack);
+}
+.ratedOnlyLabel input:checked + .ratedOnlySwitch::after{
+  transform:translateX(18px);
+}
+
+/* Focus ring for keyboard users */
+.ratedOnlyLabel input:focus-visible + .ratedOnlySwitch{
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1px var(--toggleRing),
+    0 0 0 4px var(--glow);
+}
+
+/* Subtle hover feedback */
+.ratedOnlyLabel:hover .ratedOnlySwitch{
+  box-shadow:
+    inset 0 0 0 1px var(--toggleRing),
+    0 10px 22px rgba(0,0,0,.14);
 }
 
 
@@ -771,6 +842,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     flex-direction:row;
     align-items:center;
     gap:10px;
+    flex-wrap:wrap;
   }
   .left{
     width:100%;
@@ -784,8 +856,24 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     border-radius:12px;
     min-width:0;
   }
-  .right{ flex:0 0 auto; }
+  /* Put refresh + toggle under the search row on mobile */
+  .right{
+    flex:1 1 100%;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:8px;
+  }
   #refresh{ padding:9px 10px; border-radius:12px; }
+
+  .ratedOnlyLabel{
+    padding:8px 10px;
+    border-radius:999px;
+  }
+  .ratedOnlySwitch{ width:42px; height:24px; }
+  .ratedOnlySwitch::after{ width:18px; height:18px; top:3px; left:3px; }
+  .ratedOnlyLabel input:checked + .ratedOnlySwitch::after{ transform:translateX(18px); }
 
   /* Mobile standings table: show Rank + Player + Rating */
   .tableWrap{ overflow-x:hidden; }
