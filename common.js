@@ -1,6 +1,7 @@
 // common.js – menu ovládání + mobilní "stránky" + přepínač režimu
 import { openModal, closeModal } from "./modal.js";
 import { openNewsModal, buildNewsHtml } from "./aktuality.js";
+import { openComparePlayers } from "./compare.js";
 
 const htmlEl = document.documentElement;
 const logoImg = document.getElementById("logoImg");
@@ -137,6 +138,7 @@ const menuPanel = document.getElementById("menuPanel");
 
 const uploadBtn = document.getElementById("menuUpload");
 const newsBtn = document.getElementById("menuNews");
+const compareBtn = document.getElementById("menuCompare");
 const titlesBtn = document.getElementById("menuTitles");
 const contactBtn = document.getElementById("menuContact");
 const recordsBtn = document.getElementById("menuRecords");
@@ -205,6 +207,24 @@ if (newsBtn){
     } else {
       openNewsModal();
     }
+  });
+}
+
+// POROVNAT HRÁČE
+if (compareBtn){
+  compareBtn.addEventListener("click", () => {
+    closeMenu();
+    // Fullscreen overlay/modal – no URL change
+    openComparePlayers();
+  });
+}
+
+// POROVNAT HRÁČE
+if (compareBtn){
+  compareBtn.addEventListener("click", () => {
+    closeMenu();
+    // Fullscreen overlay on desktop; on mobile it will use the same overlay/page pattern.
+    openComparePlayers();
   });
 }
 

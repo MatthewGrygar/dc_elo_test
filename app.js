@@ -40,6 +40,11 @@ let lastTournamentText = "";
 let playerCardsCache = null;
 let playerSummaryCache = null;
 
+// Desktop table sorting state (applies after search + rated filter)
+// key: peak|games|win|loss|draw|winrate, dir: desc|asc
+let __tableSortKey = null;
+let __tableSortDir = "desc";
+
 // -------------------- SLUG ROUTING + VT --------------------
 let slugToPlayer = new Map();
 let pendingSlugToOpen = null;
@@ -348,18 +353,49 @@ function renderStandings(rows){
   const filtered = rows
     .filter(r => (!ratedOnly || !!r.vt))
     .filter(r => !q || normalizeKey(r.player).includes(q))
-    .sort((a,b)=>a.rank-b.rank);
+    .map((r, idx) => ({ r, idx }));
+
+  // Sorting: default by global rank, otherwise by selected numeric column.
+  const key = __tableSortKey;
+  if (!key){
+    filtered.sort((a,b)=>a.r.rank-b.r.rank);
+  } else {
+    const dir = (__tableSortDir === "asc") ? 1 : -1;
+    const getVal = (row) => {
+      const rr = row.r;
+      if (key === "winrate") return parseWinrateToNumber(rr.winrate);
+      if (key === "peak") return rr.peak;
+      if (key === "games") return rr.games;
+      if (key === "win") return rr.win;
+      if (key === "loss") return rr.loss;
+      if (key === "draw") return rr.draw;
+      return NaN;
+    };
+    filtered.sort((a,b) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+      const aBad = !Number.isFinite(va);
+      const bBad = !Number.isFinite(vb);
+      if (aBad && bBad) return a.idx - b.idx;
+      if (aBad) return 1;
+      if (bBad) return -1;
+      if (va === vb) return a.idx - b.idx;
+      return (va - vb) * dir;
+    });
+  }
+
+  const finalRows = filtered.map(x => x.r);
 
   tbody.innerHTML = "";
-  if (!filtered.length){
+  if (!finalRows.length){
     const tr = document.createElement("tr");
     tr.innerHTML = `<td colspan="9" class="muted">Nic nenalezeno.</td>`;
     tbody.appendChild(tr);
     return;
   }
 
-  for (let i = 0; i < filtered.length; i++){
-    const r = filtered[i];
+  for (let i = 0; i < finalRows.length; i++){
+    const r = finalRows[i];
     // When "Pouze hodnocení hráči" is ON, re-number rank only for the displayed (rated) players.
     // When OFF, keep the original global rank from the full standings.
     const displayRank = ratedOnly ? (i + 1) : r.rank;
@@ -880,6 +916,44 @@ if (ratedOnlyEl){
   ratedOnlyEl.addEventListener("change", () => renderStandings(allRows));
 }
 
+// -------------------- TABLE SORTING (DESKTOP) --------------------
+function syncSortIcons(){
+  const ths = document.querySelectorAll("th.sortable");
+  ths.forEach(th => {
+    const key = th.getAttribute("data-sort") || "";
+    const active = key && key === __tableSortKey;
+    th.classList.toggle("sortActive", active);
+    th.classList.toggle("sortAsc", active && __tableSortDir === "asc");
+    th.classList.toggle("sortDesc", active && __tableSortDir === "desc");
+    th.setAttribute("aria-sort", active ? (__tableSortDir === "asc" ? "ascending" : "descending") : "none");
+  });
+}
+
+function initTableSorting(){
+  const ths = document.querySelectorAll("th.sortable");
+  if (!ths.length) return;
+  ths.forEach(th => {
+    th.addEventListener("click", () => {
+      // Only required on desktop; on mobile it can remain inert.
+      if (window.matchMedia && window.matchMedia("(max-width: 560px)").matches) return;
+
+      const key = th.getAttribute("data-sort") || null;
+      if (!key) return;
+
+      if (__tableSortKey === key){
+        __tableSortDir = (__tableSortDir === "desc") ? "asc" : "desc";
+      } else {
+        __tableSortKey = key;
+        __tableSortDir = "desc";
+      }
+
+      syncSortIcons();
+      renderStandings(allRows);
+    });
+  });
+  syncSortIcons();
+}
+
 
 tbody.addEventListener("click", (e) => {
   const btn = e.target.closest(".playerBtn");
@@ -917,10 +991,22 @@ if (!__closeModalRaw){
 // When user clicks "Zavřít" in detail, also restore route back to list
 setModalOnCloseRequest(closePlayerDetailAndRoute);
 
+// Minimal API for other modules (e.g., player comparison) – no routing changes.
+try{
+  window.__ELO_APP_DATA = {
+    getAllRows: () => allRows,
+    loadPlayerCards,
+    getSummaryForPlayer,
+  };
+}catch(e){}
+
 window.addEventListener("popstate", () => applyRoute());
 
 // Apply route immediately (if user opened /<slug>)
 applyRoute();
+
+// Desktop-only sortable headers
+initTableSorting();
 
 // Load data
 loadAll();

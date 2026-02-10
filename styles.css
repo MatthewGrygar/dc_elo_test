@@ -454,6 +454,201 @@ footer{
   gap:10px;
 }
 
+/* -------------------- Desktop table sorting (clickable headers) -------------------- */
+th.sortable{
+  cursor: pointer;
+  user-select: none;
+}
+th.sortable .sortIcon{
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  opacity: 0.35;
+  vertical-align: middle;
+}
+th.sortable .sortIcon::before{ content: "↕"; }
+th.sortable.sortActive .sortIcon{ opacity: 0.95; }
+th.sortable.sortAsc .sortIcon::before{ content: "▲"; }
+th.sortable.sortDesc .sortIcon::before{ content: "▼"; }
+
+@media (max-width: 560px){
+  th.sortable{ cursor: default; }
+  th.sortable .sortIcon{ display: none; }
+}
+
+/* -------------------- Compare players (fullscreen modal) -------------------- */
+.compareWrap{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.compareTop input{
+  width: 100%;
+}
+.comparePick{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.compareCol{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.compareColTitle{
+  font-weight: 700;
+  opacity: 0.85;
+}
+.compareList{
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px;
+  max-height: 46vh;
+  overflow: auto;
+  background: var(--card);
+}
+.comparePickItem{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+.comparePickItem:hover{
+  background: rgba(255,255,255,0.04);
+}
+html[data-theme="light"] .comparePickItem:hover{
+  background: rgba(0,0,0,0.04);
+}
+.comparePickItem .mini{
+  opacity: 0.7;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.comparePickItem.isSelected{
+  border-color: rgba(58,164,107,0.6);
+  background: rgba(58,164,107,0.12);
+}
+.compareBottom{
+  display: flex;
+  justify-content: flex-end;
+}
+
+.compareHeader{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+}
+.compareHeader .mid,
+.compareEloRow .mid{
+  opacity: 0.7;
+  font-weight: 800;
+}
+.compareHeader .side:first-child,
+.compareEloRow .num:first-child{ text-align: left; }
+.compareHeader .side:last-child,
+.compareEloRow .num:last-child{ text-align: right; }
+
+.compareH2H{
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--card);
+}
+.h2hBig{
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 16px;
+}
+.h2hVal{
+  font-size: 42px;
+  font-weight: 900;
+}
+.h2hMid{
+  font-size: 18px;
+  font-weight: 800;
+  opacity: 0.65;
+}
+.h2hSub{ margin-top: 6px; text-align: center; }
+
+.compareEloRow{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--card);
+}
+.compareMetrics .compareTbl{
+  width: 100%;
+}
+.compareTbl td{
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+html[data-theme="light"] .compareTbl td{
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.compareTbl tr:last-child td{ border-bottom: none; }
+.compareTbl .metricName{
+  text-align: center;
+  opacity: 0.8;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.compareSectionTitle{
+  font-weight: 800;
+  opacity: 0.85;
+}
+.compareChart{
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px;
+  background: var(--card);
+}
+.compareLegend{
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.legendItem{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.85;
+  font-weight: 700;
+}
+.swatch{
+  width: 14px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.swatchRed{ background: #d24b4b; }
+.swatchGreen{ background: #3aa46b; }
+
+@media (max-width: 560px){
+  .comparePick{ grid-template-columns: 1fr; }
+  .compareList{ max-height: 34vh; }
+  .compareHeader{ grid-template-columns: 1fr; text-align: left; }
+  .compareHeader .mid{ display: none; }
+  .compareEloRow{ grid-template-columns: 1fr auto 1fr; }
+  .h2hVal{ font-size: 36px; }
+}
+
 /* Modal */
 .modalOverlay{
   display:none; position:fixed; inset:0;
