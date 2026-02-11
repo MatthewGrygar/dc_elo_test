@@ -598,6 +598,32 @@ a.btnPrimary{
   max-width:390px;
   margin:0 auto;
 }
+
+.supportHero{
+  width:100%;
+  text-align:center;
+  padding: 2px 0 2px;
+}
+.supportTitle{
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+.supportBrand{
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: .92;
+}
+.supportTagline{
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
 .supportQrWrap{
   width:100%;
   display:flex;
@@ -651,6 +677,22 @@ html[data-theme="light"] .supportInfo{
   text-transform:uppercase;
   opacity:.85;
   margin-right:6px;
+}
+
+.supportNote{
+  width:100%;
+  max-width:380px;
+  border-radius:14px;
+  padding:10px 14px;
+  border:1px solid rgba(60, 200, 120, .28);
+  background: rgba(60, 200, 120, .14);
+  color: var(--text);
+  text-align:center;
+  line-height:1.35;
+}
+html[data-theme="light"] .supportNote{
+  border:1px solid rgba(20, 140, 70, .28);
+  background: rgba(20, 140, 70, .10);
 }
 .supportThanks{
   font-size:15px;
