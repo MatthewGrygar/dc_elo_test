@@ -968,6 +968,15 @@ html[data-theme="light"] .compareHeroCard{
   min-width: 0;
 }
 
+/* Single compare table (header stays, everything below is one unified card) */
+.duelCompareOnly{
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  padding: 12px;
+  margin-top: 14px;
+}
+
 .duelMirrorCard{
   justify-self: center;
   width: 100%;

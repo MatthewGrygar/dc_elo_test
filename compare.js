@@ -754,21 +754,6 @@ async function renderResultView(){
     { key: "lossStreak", label: "LONGEST LOSS STREAK", aShow: fmt(safeNum(sumA?.lossStreak)), bShow: fmt(safeNum(sumB?.lossStreak)), aVal: safeNum(sumA?.lossStreak), bVal: safeNum(sumB?.lossStreak) },
   ];
 
-  const panelRowsA = metrics.map(m => `
-    <div class="duelRow">
-      <div class="duelKey">${escapeHtml(m.label)}</div>
-      <div class="duelVal">${escapeHtml(m.aShow)}</div>
-    </div>
-  `).join("");
-
-  // Right panel mirrored: VALUE … NAME
-  const panelRowsB = metrics.map(m => `
-    <div class="duelRow duelRowMirror">
-      <div class="duelVal">${escapeHtml(m.bShow)}</div>
-      <div class="duelKey">${escapeHtml(m.label)}</div>
-    </div>
-  `).join("");
-
   const mirror = buildMirrorScale({ metrics, maxima });
 
   const html = `
@@ -791,21 +776,8 @@ async function renderResultView(){
         </div>
       </div>
 
-      <div class="duelMain">
-        <div class="duelPanel duelPanelA">
-          <div class="duelPanelTitle">STATISTIKY</div>
-          ${panelRowsA}
-        </div>
-
-        <div class="duelMirrorCard">
-          <div class="duelPanelTitle">METRIKY</div>
-          ${mirror}
-        </div>
-
-        <div class="duelPanel duelPanelB">
-          <div class="duelPanelTitle">STATISTIKY</div>
-          ${panelRowsB}
-        </div>
+      <div class="duelCompareOnly">
+        ${mirror}
       </div>
     </div>
   `;
