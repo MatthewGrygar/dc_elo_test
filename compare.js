@@ -21,6 +21,10 @@ let __lastQueryB = "";
 let __cachedPlayers = null;
 let __pickGlobalHandlersInstalled = false;
 
+// Database-wide maxima for mirror bar scale (computed once per data load)
+let __dbMaxPromise = null;
+let __dbMaxCache = null;
+
 function escapeHtml(str){
   return (str ?? "")
     .toString()
@@ -311,9 +315,120 @@ function getPlayers(){
 }
 
 function ensurePlayersCache(){
+  // If underlying app data reloads, drop caches.
+  const fresh = getPlayers();
+  if (__cachedPlayers){
+    if (fresh.length !== __cachedPlayers.length){
+      __cachedPlayers = null;
+      __dbMaxCache = null;
+      __dbMaxPromise = null;
+    }
+  }
   if (__cachedPlayers) return __cachedPlayers;
-  __cachedPlayers = getPlayers().slice();
+  __cachedPlayers = fresh.slice();
   return __cachedPlayers;
+}
+
+async function computeDbMetricMaxima(api){
+  // Compute once and cache (maxima across ALL players in dataset)
+  if (__dbMaxCache) return __dbMaxCache;
+  if (__dbMaxPromise) return __dbMaxPromise;
+
+  __dbMaxPromise = (async () => {
+    const players = ensurePlayersCache();
+    const max = {
+      games: 0,
+      winrate: 0,
+      win: 0,
+      loss: 0,
+      draw: 0,
+      peak: 0,
+      avgOpp: 0,
+      winStreak: 0,
+      lossStreak: 0,
+    };
+
+    // Base stats are available directly on the rows
+    for (const p of players){
+      const g = toNumMaybe(p?.games) ?? 0;
+      const w = toNumMaybe(p?.win) ?? 0;
+      const l = toNumMaybe(p?.loss) ?? 0;
+      const d = toNumMaybe(p?.draw) ?? 0;
+      const peak = toNumMaybe(p?.peak) ?? 0;
+      const wr = toNumMaybe(fmtWinrate(p)) ?? 0;
+
+      if (g > max.games) max.games = g;
+      if (w > max.win) max.win = w;
+      if (l > max.loss) max.loss = l;
+      if (d > max.draw) max.draw = d;
+      if (peak > max.peak) max.peak = peak;
+      if (wr > max.winrate) max.winrate = wr;
+    }
+
+    // Derived stats are loaded from the summary CSV (cached by app.js)
+    // We keep it simple here: iterate all players once.
+    for (const p of players){
+      const s = await api.getSummaryForPlayer(p.player);
+      const avgOpp = safeNum(s?.avgOpp) ?? 0;
+      const winStreak = safeNum(s?.winStreak) ?? 0;
+      const lossStreak = safeNum(s?.lossStreak) ?? 0;
+      if (avgOpp > max.avgOpp) max.avgOpp = avgOpp;
+      if (winStreak > max.winStreak) max.winStreak = winStreak;
+      if (lossStreak > max.lossStreak) max.lossStreak = lossStreak;
+    }
+
+    __dbMaxCache = max;
+    return max;
+  })();
+
+  return __dbMaxPromise;
+}
+
+function mirrorBarWidthPct(val, max){
+  // We map max value to 100% of HALF axis width => 50% of container.
+  const v = toNumMaybe(val);
+  if (v == null || !Number.isFinite(max) || max <= 0) return 0;
+  const pct = (v / max) * 50;
+  if (!Number.isFinite(pct) || pct <= 0) return 0;
+  return Math.max(0, Math.min(50, pct));
+}
+
+function renderMirrorPanel(metrics, dbMax, betterFlagsFn){
+  const rows = metrics.map(m => {
+    const maxKey = m.key === "avgOpp" ? "avgOpp" :
+      m.key === "winStreak" ? "winStreak" :
+      m.key === "lossStreak" ? "lossStreak" :
+      m.key;
+
+    const max = Number.isFinite(dbMax?.[maxKey]) ? dbMax[maxKey] : 0;
+    const wA = mirrorBarWidthPct(m.aVal, max);
+    const wB = mirrorBarWidthPct(m.bVal, max);
+
+    const { aBetter, bBetter } = betterFlagsFn(m);
+    const lowBetterGlow = (m.pref === "lower");
+
+    return `
+      <div class="mirrorRow" data-metric="${escapeHtml(m.key)}">
+        <div class="mirrorLabel">${escapeHtml(m.label)}</div>
+        <div class="mirrorAxis" role="img" aria-label="${escapeHtml(m.label)} mirror scale">
+          <div class="mirrorBase"></div>
+          <div class="mirrorCenter"></div>
+          <div class="mirrorBar mirrorA ${aBetter && lowBetterGlow ? "betterLow" : ""}" style="--w:${wA.toFixed(2)}%">
+            <span class="mirrorVal mirrorValA">${escapeHtml(m.aShow)}</span>
+          </div>
+          <div class="mirrorBar mirrorB ${bBetter && lowBetterGlow ? "betterLow" : ""}" style="--w:${wB.toFixed(2)}%">
+            <span class="mirrorVal mirrorValB">${escapeHtml(m.bShow)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="mirrorPanel" aria-label="Porovnání metrik">
+      ${rows}
+    </section>
+  `;
 }
 
 function debounce(fn, ms, key){
@@ -664,9 +779,9 @@ async function renderResultView(){
   const metricRowsB = metrics.map(m => {
     const { bBetter } = betterFlags(m);
     return `
-      <div class="cmpMetricRow ${bBetter ? "isBetter" : ""}">
-        <div class="cmpMetricKey">${escapeHtml(m.label)}</div>
+      <div class="cmpMetricRow cmpMetricRowRight ${bBetter ? "isBetter" : ""}">
         <div class="cmpMetricVal ${bBetter ? "isBetterVal" : ""}">${escapeHtml(m.bShow)}</div>
+        <div class="cmpMetricKey">${escapeHtml(m.label)}</div>
       </div>
     `;
   }).join("");
@@ -678,6 +793,9 @@ async function renderResultView(){
       <td class="num">${escapeHtml(m.bShow)}</td>
     </tr>
   `).join("");
+
+  const dbMax = await computeDbMetricMaxima(api);
+  const mirrorPanel = renderMirrorPanel(metrics, dbMax, betterFlags);
 
   const html = `
     <div class="compareWrap compareRedesign">
@@ -705,6 +823,10 @@ async function renderResultView(){
             ${metricRowsA}
           </div>
         </section>
+
+        <div class="cmpCenter" aria-label="Grafické porovnání">
+          ${mirrorPanel}
+        </div>
 
         <section class="cmpPanel" aria-label="Hráč B">
           <div class="cmpHero">

@@ -683,7 +683,7 @@ html[data-theme="light"] .comparePickItem:hover{
 
 .cmpGrid{
   display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  grid-template-columns: minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);
   gap: 16px;
   align-items: start;
   width: 100%;
@@ -692,6 +692,14 @@ html[data-theme="light"] .comparePickItem:hover{
 
 @media (max-width: 900px){
   .cmpGrid{ grid-template-columns: 1fr; }
+}
+
+.cmpCenter{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  padding: 12px;
+  min-width: 0;
 }
 
 .cmpPanel{
@@ -793,6 +801,156 @@ html[data-theme="light"] .cmpMetricRow{
   font-weight: 800;
   white-space: nowrap;
 }
+
+/* Right panel (mirror) : value on left, metric name on right */
+.cmpMetricRowRight .cmpMetricKey{
+  text-align: right;
+}
+.cmpMetricRowRight .cmpMetricVal{
+  text-align: left;
+}
+
+/* -------------------- Mirror bar scale (center) -------------------- */
+.mirrorPanel{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.mirrorRow{
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mirrorLabel{
+  text-align: center;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mirrorAxis{
+  position: relative;
+  height: 18px;
+  width: 100%;
+  min-width: 0;
+}
+
+.mirrorBase{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.10);
+  border-radius: 999px;
+}
+html[data-theme="light"] .mirrorBase{
+  background: rgba(0,0,0,0.10);
+}
+
+.mirrorCenter{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 10px;
+  transform: translate(-50%,-50%);
+  background: rgba(255,255,255,0.22);
+  border-radius: 999px;
+}
+html[data-theme="light"] .mirrorCenter{
+  background: rgba(0,0,0,0.22);
+}
+
+.mirrorBar{
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  width: var(--w, 0%);
+}
+
+.mirrorBar::after{
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
+}
+html[data-theme="light"] .mirrorBar::after{
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
+}
+
+.mirrorA{
+  right: 50%;
+  color: #3aa46b;
+  background: rgba(58,164,107,0.85);
+  transform-origin: right center;
+  animation: mirrorGrowA 420ms ease-out both;
+}
+.mirrorA::after{
+  left: 0;
+  transform: translate(-50%,-50%);
+}
+
+.mirrorB{
+  left: 50%;
+  color: #d35b5b;
+  background: rgba(211,91,91,0.85);
+  transform-origin: left center;
+  animation: mirrorGrowB 420ms ease-out both;
+}
+.mirrorB::after{
+  right: 0;
+  transform: translate(50%,-50%);
+}
+
+.mirrorBar.betterLow{
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.mirrorVal{
+  position: absolute;
+  top: 50%;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  opacity: 0.95;
+  transform: translateY(-50%);
+}
+.mirrorValA{
+  left: 0;
+  transform: translate(-10px,-50%);
+}
+.mirrorValB{
+  right: 0;
+  transform: translate(10px,-50%);
+}
+
+@keyframes mirrorGrowA{
+  from{ transform: translateY(-50%) scaleX(0); }
+  to{ transform: translateY(-50%) scaleX(1); }
+}
+@keyframes mirrorGrowB{
+  from{ transform: translateY(-50%) scaleX(0); }
+  to{ transform: translateY(-50%) scaleX(1); }
+}
+
 
 /* Better row highlight (soft pastel green) */
 .cmpMetricRow.isBetter{
