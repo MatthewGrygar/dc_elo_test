@@ -5,91 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DC ELO žebříček</title>
   <link rel="stylesheet" href="styles.css" />
-
-  <style>
-    /* --- Titulní stránka: info o správě + anonymizace --- */
-    .inlineLink{
-      text-decoration: underline;
-      text-decoration-color: rgba(120,120,120,.55);
-      text-underline-offset: 3px;
-      cursor: pointer;
-      color: var(--text);
-    }
-    .inlineLink:hover{
-      text-decoration-color: rgba(120,180,140,.70);
-      filter: brightness(1.06);
-    }
-
-    .anonOverlay{
-      display:none;
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,.65);
-      backdrop-filter: blur(6px);
-      z-index: 60;
-      padding:18px;
-    }
-    .anonModal{
-      max-width: 740px;
-      width: min(740px, calc(100vw - 36px));
-      margin: 0 auto;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--thead);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      display:flex;
-      flex-direction:column;
-      max-height: calc(100vh - 36px);
-    }
-    .anonHeader{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px;
-      border-bottom:1px solid var(--border2);
-      background: var(--panel2);
-    }
-    .anonTitle{ display:flex; flex-direction:column; gap:2px; min-width:0; }
-    .anonTitle b{ font-size:16px; }
-    .anonTitle span{ font-size:12px; color: var(--muted); }
-
-    .anonClose{
-      width:38px;
-      height:38px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background: var(--chip);
-      color: var(--text);
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
-      line-height:1;
-      flex: 0 0 auto;
-    }
-    .anonClose:hover{ filter: brightness(1.06); }
-
-    .anonBody{
-      padding:14px 14px 16px;
-      overflow:auto;
-      line-height:1.65;
-    }
-    .anonBody p{ margin:0 0 12px; }
-    .anonActions{
-      display:flex;
-      justify-content:flex-end;
-      margin-top:14px;
-    }
-    .anonActions a.btnPrimary{
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-  </style>
 </head>
 
 <body>
@@ -102,14 +17,13 @@
       <div>
         <h1>DC ELO žebříček</h1>
         <div class="subtitle">by Grail Series</div>
-
-        <div class="muted" style="line-height:1.5;">
-          Web spravuje Matthew Grygar, data a datovou vrstvu spravuje Ervin Kuč.
+        <div class="credit muted">
+          Za správu webu odpovídá Matthew Grygar, správu dat a datové vrstvy má na starosti Ervin Kuč.
         </div>
-        <div class="muted" style="margin-top:4px; line-height:1.5;">
-          Nechcete mít na webu uvedené své jméno? <a href="#" id="anonLink" class="inlineLink">Klikněte sem</a>.
+        <div class="credit muted">
+          Nechcete mít na webu uvedené své jméno? <a class="inlineLink" id="anonLink" href="#">Klikněte sem</a>.
         </div>
-</div>
+      </div>
     </div>
 
     <div class="headerRight">
@@ -204,72 +118,45 @@
   </div>
 </main>
 
-
-<!-- Anonymizace: informační okno (pouze titulní stránka) -->
-<div class="anonOverlay" id="anonOverlay" aria-hidden="true">
-  <div class="anonModal" role="dialog" aria-modal="true" aria-labelledby="anonTitle">
-    <div class="anonHeader">
-      <div class="anonTitle">
-        <b id="anonTitle">Nechcete být na webu uvedeni?</b>
-        <span class="muted">Informace o anonymizaci</span>
-      </div>
-      <button class="anonClose" id="anonCloseBtn" type="button" aria-label="Zavřít" title="Zavřít">✕</button>
-    </div>
-    <div class="anonBody">
-      <p class="muted">
-        Rozumíme tomu. Zveřejňovaná data pocházejí z veřejně dostupných zdrojů nebo od organizátorů turnajů a lig a od heren, které s námi spolupracují. Projekt slouží k přehlednému zobrazování těchto informací na jednom místě. Pokud si nepřejete být na webu dohledatelní pod svým jménem, vaše údaje kompletně anonimizujeme, takže vás podle nich již nebude možné identifikovat. Pro anonymizaci vyplňte následující formulář.
-      </p>
-
-      <div class="anonActions">
-        <a class="btnPrimary" href="https://forms.gle/LrHufSZ3t8ZGehvw6" target="_blank" rel="noopener noreferrer">
-          Přejít na formulář
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script type="module" src="modal.js"></script>
+<script type="module">
+  const link = document.getElementById('anonLink');
+  if (link) {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const bodyHtml = `
+        <div class="anonModal">
+          <h2 class="anonH2">Nechcete být na webu uvedeni?</h2>
+          <p>Rozumíme tomu.</p>
+          <p>
+            Zveřejňovaná data pocházejí z veřejně dostupných zdrojů, od organizátorů turnajů a lig nebo od heren, které s námi spolupracují. Projekt slouží k přehlednému zobrazování těchto informací na jednom místě.
+          </p>
+          <p>
+            Pokud si nepřejete být na webu dohledatelní pod svým jménem, vaše údaje kompletně anonimizujeme, takže vás podle nich již nebude možné identifikovat. Pro anonymizaci vyplňte následující formulář.
+          </p>
+          <div class="anonActions">
+            <a class="btnPrimary btnAnon" href="https://www.seznam.cz" target="_blank" rel="noopener noreferrer">Přejít na formulář</a>
+          </div>
+        </div>
+      `;
+
+      // Modal header
+      if (window.openModal) {
+        window.openModal({ title: 'Anonimizace', subtitle: '', html: bodyHtml, fullscreen: false });
+      }
+
+      // Add a small "X" control (in addition to the existing close button)
+      if (window.setModalActions) {
+        window.setModalActions(`
+          <button class="btnIconClose" type="button" aria-label="Zavřít" title="Zavřít" onclick="window.closeModal && window.closeModal()">✕</button>
+        `);
+      }
+    });
+  }
+</script>
 <script type="module" src="aktuality.js"></script>
 <script type="module" src="common.js"></script>
 <script type="module" src="app.js"></script>
-
-<script type="module">
-  // Titulní stránka: otevření / zavření informačního okna anonymizace
-  (function(){
-    const link = document.getElementById("anonLink");
-    const overlay = document.getElementById("anonOverlay");
-    const closeBtn = document.getElementById("anonCloseBtn");
-    if (!link || !overlay || !closeBtn) return;
-
-    function openAnon(){
-      overlay.style.display = "block";
-      overlay.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-      try{ closeBtn.focus(); }catch(e){}
-    }
-
-    function closeAnon(){
-      overlay.style.display = "none";
-      overlay.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    }
-
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      openAnon();
-    });
-
-    closeBtn.addEventListener("click", () => closeAnon());
-
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) closeAnon();
-    });
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && overlay.style.display === "block") closeAnon();
-    });
-  })();
-</script>
 </body>
 </html>

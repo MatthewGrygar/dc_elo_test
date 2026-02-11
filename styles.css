@@ -140,6 +140,19 @@ button:hover{ filter: brightness(1.06); }
   padding:10px 14px;
 }
 
+/* inline link (titulní stránka) */
+.inlineLink{
+  color:inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(120, 160, 255, .55);
+  font-weight: 700;
+}
+.inlineLink:hover{
+  filter: brightness(1.12);
+  text-decoration-color: rgba(120, 160, 255, .85);
+}
+
 /* Menu button + dropdown */
 .btnIcon{
   display:inline-flex;
@@ -492,6 +505,58 @@ footer{
 }
 
 .modalActions{ display:flex; gap:10px; align-items:center; }
+
+/* anonymizace modal (titulní stránka) */
+.anonModal{
+  max-width: 760px;
+}
+.anonH2{
+  margin: 2px 0 10px;
+  font-size: 18px;
+  letter-spacing: .01em;
+}
+.anonModal p{
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.anonModal p:first-of-type{
+  color: var(--text);
+  font-weight: 700;
+}
+.anonActions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top: 14px;
+}
+
+a.btnPrimary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+}
+
+.btnAnon{
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.16);
+}
+.btnAnon:hover{
+  filter: brightness(1.10);
+}
+
+.btnIconClose{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 14px;
+  background: var(--chip);
+  border: 1px solid var(--border);
+  font-weight: 900;
+  line-height: 1;
+}
+.btnIconClose:hover{ filter: brightness(1.10); }
 
 /* zelené tlačítko v detailu hráče */
 .btnOpponents{
