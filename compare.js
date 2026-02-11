@@ -77,6 +77,33 @@ function toNumMaybe(v){
   return Number.isFinite(n) ? n : null;
 }
 
+// Rating Class helpers (UI-only; mirrors profile styling)
+function vtToClass(vt){
+  if (!vt) return "";
+  if (vt === "VT1") return "classA";
+  if (vt === "VT2") return "classB";
+  if (vt === "VT3") return "classC";
+  if (vt === "VT4") return "classD";
+  return "";
+}
+
+function vtDetailText(vt){
+  if (!vt) return "";
+  if (vt === "VT1") return "Rating Class A";
+  if (vt === "VT2") return "Rating Class B";
+  if (vt === "VT3") return "Rating Class C";
+  if (vt === "VT4") return "Rating Class D";
+  return "";
+}
+
+function ratingClassPillHtml(playerObj){
+  const vt = (playerObj?.vt ?? "").toString().trim().toUpperCase();
+  if (!/^VT[1-4]$/.test(vt)) return "";
+  const cls = vtToClass(vt);
+  const txt = vtDetailText(vt);
+  return `<div class="heroVT ${cls}">${escapeHtml(txt)}</div>`;
+}
+
 function metricPreference(label){
   const key = (label || "").toString().trim().toLowerCase();
   // higher is better
@@ -133,6 +160,12 @@ function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
   const bR = clamp01((bN ?? 0) / denom);
   const { betterA, betterB } = computeBetterFlag(label, aN, bN);
 
+  // Special rendering rule:
+  // If a player has value 0, keep the bar length at 0 but render the marker
+  // at the START of their side (not in the center).
+  const isZeroA = (aN === 0);
+  const isZeroB = (bN === 0);
+
   // One compact unified row:
   // | NAME | A VALUE | MIRROR AXIS | B VALUE | NAME |
   // Axis contains ONLY the visual bars/markers (no titles, no numbers).
@@ -142,7 +175,7 @@ function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
       <div class="mirrorName mirrorNameLeft">${escapeHtml(label)}</div>
       <div class="mirrorNum mirrorNumLeft ${betterA ? "isBetter" : ""}">${escapeHtml(aShow)}</div>
 
-      <div class="mirrorAxis" style="--a:${aR}; --b:${bR};">
+      <div class="mirrorAxis ${isZeroA ? "isZeroA" : ""} ${isZeroB ? "isZeroB" : ""}" style="--a:${aR}; --b:${bR};">
         <div class="mirrorBase" aria-hidden="true"></div>
         <div class="mirrorCenter" aria-hidden="true"></div>
 
@@ -759,9 +792,10 @@ async function renderResultView(){
   const html = `
     <div class="compareWrap compareDashboard">
       <div class="duelHeader duelHeaderV2">
-        <div class="duelMiniCard duelMiniLeft">
+        <div class="duelSide duelSideLeft">
           <div class="duelMiniName">${escapeHtml(A.player)}</div>
           <div class="duelMiniElo">${fmt(toNumMaybe(A.rating))}</div>
+          <div class="duelClassSlot">${ratingClassPillHtml(A)}</div>
         </div>
 
         <div class="duelMid">
@@ -770,9 +804,10 @@ async function renderResultView(){
           <div class="duelSub muted">Head-to-head: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
         </div>
 
-        <div class="duelMiniCard duelMiniRight">
+        <div class="duelSide duelSideRight">
           <div class="duelMiniName">${escapeHtml(B.player)}</div>
           <div class="duelMiniElo">${fmt(toNumMaybe(B.rating))}</div>
+          <div class="duelClassSlot">${ratingClassPillHtml(B)}</div>
         </div>
       </div>
 
