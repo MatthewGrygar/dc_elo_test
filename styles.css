@@ -677,6 +677,155 @@ html[data-theme="light"] .comparePickItem:hover{
   justify-content: center;
 }
 
+/* -------------------- Compare result redesign (two symmetric panels) -------------------- */
+.compareRedesign{ box-sizing: border-box; }
+.compareRedesign *{ box-sizing: border-box; }
+
+.cmpGrid{
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 900px){
+  .cmpGrid{ grid-template-columns: 1fr; }
+}
+
+.cmpPanel{
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  padding: 12px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cmpHero{
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 12px;
+}
+html[data-theme="light"] .cmpHero{
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.cmpName{
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cmpElo{
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.cmpQuick{
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.cmpQuickItem{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.cmpQuickItem .k{
+  opacity: 0.75;
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cmpQuickItem .v{
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cmpMetrics{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cmpMetricRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  min-width: 0;
+}
+html[data-theme="light"] .cmpMetricRow{
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.02);
+}
+
+.cmpMetricKey{
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cmpMetricVal{
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Better row highlight (soft pastel green) */
+.cmpMetricRow.isBetter{
+  border-color: rgba(58,164,107,0.32);
+  background: rgba(58,164,107,0.10);
+}
+html[data-theme="light"] .cmpMetricRow.isBetter{
+  border-color: rgba(20,140,70,0.26);
+  background: rgba(20,140,70,0.09);
+}
+.cmpMetricVal.isBetterVal{ font-weight: 950; }
+
+/* Head-to-head compact block */
+.compareH2H.compareH2HCompact{
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Shared technical table (centered, narrower) */
+.cmpSharedTableWrap{
+  display: flex;
+  justify-content: center;
+}
+.cmpSharedTable{
+  width: 100%;
+  max-width: 85%;
+}
+@media (max-width: 560px){
+  .cmpSharedTable{ max-width: 100%; }
+}
+.cmpSharedTable td{ padding: 5px 8px; }
+.cmpSharedTable .metricName{ font-size: 12px; }
+
 /* prevent any horizontal overflow in compare modal */
 .compareWrap{ max-width: 100%; overflow-x: hidden; }
 

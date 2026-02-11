@@ -621,70 +621,113 @@ async function renderResultView(){
   const sumA = await api.getSummaryForPlayer(A.player);
   const sumB = await api.getSummaryForPlayer(B.player);
 
-  // Build metrics once (memoized per render) for panels + radar
+  // Build metrics once (compute & format once per compare) and reuse for panels + shared table.
   const metrics = [
-    { key: "games", label: "GAMES", aShow: fmt(toNumMaybe(A.games)), bShow: fmt(toNumMaybe(B.games)), aVal: toNumMaybe(A.games), bVal: toNumMaybe(B.games), invert: false },
-    { key: "winrate", label: "WINRATE", aShow: fmtWinrate(A), bShow: fmtWinrate(B), aVal: toNumMaybe(fmtWinrate(A)), bVal: toNumMaybe(fmtWinrate(B)), invert: false },
-    { key: "win", label: "WIN", aShow: fmt(toNumMaybe(A.win)), bShow: fmt(toNumMaybe(B.win)), aVal: toNumMaybe(A.win), bVal: toNumMaybe(B.win), invert: false },
-    { key: "loss", label: "LOSS", aShow: fmt(toNumMaybe(A.loss)), bShow: fmt(toNumMaybe(B.loss)), aVal: toNumMaybe(A.loss), bVal: toNumMaybe(B.loss), invert: true },
-    { key: "draw", label: "DRAW", aShow: fmt(toNumMaybe(A.draw)), bShow: fmt(toNumMaybe(B.draw)), aVal: toNumMaybe(A.draw), bVal: toNumMaybe(B.draw), invert: false },
-    { key: "peak", label: "PEAK ELO", aShow: fmt(toNumMaybe(A.peak)), bShow: fmt(toNumMaybe(B.peak)), aVal: toNumMaybe(A.peak), bVal: toNumMaybe(B.peak), invert: false },
-    { key: "avgOpp", label: "AVERAGE OPPONENT RATING", aShow: fmt(safeNum(sumA?.avgOpp)), bShow: fmt(safeNum(sumB?.avgOpp)), aVal: safeNum(sumA?.avgOpp), bVal: safeNum(sumB?.avgOpp), invert: false },
-    { key: "winStreak", label: "LONGEST WIN STREAK", aShow: fmt(safeNum(sumA?.winStreak)), bShow: fmt(safeNum(sumB?.winStreak)), aVal: safeNum(sumA?.winStreak), bVal: safeNum(sumB?.winStreak), invert: false },
-    { key: "lossStreak", label: "LONGEST LOSS STREAK", aShow: fmt(safeNum(sumA?.lossStreak)), bShow: fmt(safeNum(sumB?.lossStreak)), aVal: safeNum(sumA?.lossStreak), bVal: safeNum(sumB?.lossStreak), invert: true },
+    { key: "games", label: "GAMES", aShow: fmt(toNumMaybe(A.games)), bShow: fmt(toNumMaybe(B.games)), aVal: toNumMaybe(A.games), bVal: toNumMaybe(B.games), pref: "higher" },
+    { key: "winrate", label: "WINRATE", aShow: fmtWinrate(A), bShow: fmtWinrate(B), aVal: toNumMaybe(fmtWinrate(A)), bVal: toNumMaybe(fmtWinrate(B)), pref: "higher" },
+    { key: "win", label: "WIN", aShow: fmt(toNumMaybe(A.win)), bShow: fmt(toNumMaybe(B.win)), aVal: toNumMaybe(A.win), bVal: toNumMaybe(B.win), pref: "higher" },
+    { key: "loss", label: "LOSS", aShow: fmt(toNumMaybe(A.loss)), bShow: fmt(toNumMaybe(B.loss)), aVal: toNumMaybe(A.loss), bVal: toNumMaybe(B.loss), pref: "lower" },
+    { key: "draw", label: "DRAW", aShow: fmt(toNumMaybe(A.draw)), bShow: fmt(toNumMaybe(B.draw)), aVal: toNumMaybe(A.draw), bVal: toNumMaybe(B.draw), pref: "higher" },
+    { key: "peak", label: "PEAK ELO", aShow: fmt(toNumMaybe(A.peak)), bShow: fmt(toNumMaybe(B.peak)), aVal: toNumMaybe(A.peak), bVal: toNumMaybe(B.peak), pref: "higher" },
+    { key: "avgOpp", label: "AVERAGE OPPONENT RATING", aShow: fmt(safeNum(sumA?.avgOpp)), bShow: fmt(safeNum(sumB?.avgOpp)), aVal: safeNum(sumA?.avgOpp), bVal: safeNum(sumB?.avgOpp), pref: "higher" },
+    { key: "winStreak", label: "LONGEST WIN STREAK", aShow: fmt(safeNum(sumA?.winStreak)), bShow: fmt(safeNum(sumB?.winStreak)), aVal: safeNum(sumA?.winStreak), bVal: safeNum(sumB?.winStreak), pref: "higher" },
+    { key: "lossStreak", label: "LONGEST LOSS STREAK", aShow: fmt(safeNum(sumA?.lossStreak)), bShow: fmt(safeNum(sumB?.lossStreak)), aVal: safeNum(sumA?.lossStreak), bVal: safeNum(sumB?.lossStreak), pref: "lower" },
   ];
 
-  const panelRowsA = metrics.map(m => `
-    <div class="duelRow">
-      <div class="duelKey">${escapeHtml(m.label)}</div>
-      <div class="duelVal">${escapeHtml(m.aShow)}</div>
-    </div>
-  `).join("");
+  const quickGamesA = fmt(toNumMaybe(A.games));
+  const quickGamesB = fmt(toNumMaybe(B.games));
+  const quickWrA = fmtWinrate(A);
+  const quickWrB = fmtWinrate(B);
+  const scoreA = `${fmt(toNumMaybe(A.win))}–${fmt(toNumMaybe(A.loss))}–${fmt(toNumMaybe(A.draw))}`;
+  const scoreB = `${fmt(toNumMaybe(B.win))}–${fmt(toNumMaybe(B.loss))}–${fmt(toNumMaybe(B.draw))}`;
 
-  const panelRowsB = metrics.map(m => `
-    <div class="duelRow">
-      <div class="duelKey">${escapeHtml(m.label)}</div>
-      <div class="duelVal">${escapeHtml(m.bShow)}</div>
-    </div>
-  `).join("");
+  const betterFlags = (m) => {
+    const aN = toNumMaybe(m.aVal);
+    const bN = toNumMaybe(m.bVal);
+    if (aN == null || bN == null) return { aBetter:false, bBetter:false };
+    if (aN === bN) return { aBetter:false, bBetter:false };
+    if (m.pref === "higher") return { aBetter: aN > bN, bBetter: bN > aN };
+    if (m.pref === "lower") return { aBetter: aN < bN, bBetter: bN < aN };
+    return { aBetter:false, bBetter:false };
+  };
 
-  const radar = buildRadarChart({ metrics, nameA: A.player, nameB: B.player });
+  const metricRowsA = metrics.map(m => {
+    const { aBetter } = betterFlags(m);
+    return `
+      <div class="cmpMetricRow ${aBetter ? "isBetter" : ""}">
+        <div class="cmpMetricKey">${escapeHtml(m.label)}</div>
+        <div class="cmpMetricVal ${aBetter ? "isBetterVal" : ""}">${escapeHtml(m.aShow)}</div>
+      </div>
+    `;
+  }).join("");
+
+  const metricRowsB = metrics.map(m => {
+    const { bBetter } = betterFlags(m);
+    return `
+      <div class="cmpMetricRow ${bBetter ? "isBetter" : ""}">
+        <div class="cmpMetricKey">${escapeHtml(m.label)}</div>
+        <div class="cmpMetricVal ${bBetter ? "isBetterVal" : ""}">${escapeHtml(m.bShow)}</div>
+      </div>
+    `;
+  }).join("");
+
+  const sharedTblRows = metrics.map(m => `
+    <tr>
+      <td class="num">${escapeHtml(m.aShow)}</td>
+      <td class="metricName">${escapeHtml(m.label)}</td>
+      <td class="num">${escapeHtml(m.bShow)}</td>
+    </tr>
+  `).join("");
 
   const html = `
-    <div class="compareWrap compareDashboard">
-      <div class="duelHeader">
-        <div class="duelSide duelLeft">
-          <div class="duelName">${escapeHtml(A.player)}</div>
-          <div class="duelElo">${fmt(toNumMaybe(A.rating))}</div>
+    <div class="compareWrap compareRedesign">
+      <div class="compareH2H compareH2HCompact">
+        <div class="h2hBig">
+          <div class="h2hVal">${aW}</div>
+          <div class="h2hMid">vs</div>
+          <div class="h2hVal">${bW}</div>
         </div>
-
-        <div class="duelCenter">
-          <div class="duelVs">VS</div>
-          <div class="duelScore">${aW} <span class="vs">vs</span> ${bW}</div>
-          <div class="duelSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
-        </div>
-
-        <div class="duelSide duelRight">
-          <div class="duelName">${escapeHtml(B.player)}</div>
-          <div class="duelElo">${fmt(toNumMaybe(B.rating))}</div>
-        </div>
+        <div class="h2hSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
       </div>
 
-      <div class="duelMain">
-        <div class="duelPanel duelPanelA">
-          <div class="duelPanelTitle">STATISTIKY</div>
-          ${panelRowsA}
-        </div>
+      <div class="cmpGrid">
+        <section class="cmpPanel" aria-label="Hráč A">
+          <div class="cmpHero">
+            <div class="cmpName">${escapeHtml(A.player)}</div>
+            <div class="cmpElo">${fmt(toNumMaybe(A.rating))}</div>
+            <div class="cmpQuick">
+              <div class="cmpQuickItem"><span class="k">Games</span><span class="v">${escapeHtml(quickGamesA)}</span></div>
+              <div class="cmpQuickItem"><span class="k">Winrate</span><span class="v">${escapeHtml(quickWrA)}</span></div>
+              <div class="cmpQuickItem"><span class="k">Skóre</span><span class="v">${escapeHtml(scoreA)}</span></div>
+            </div>
+          </div>
+          <div class="cmpMetrics">
+            ${metricRowsA}
+          </div>
+        </section>
 
-        <div class="duelRadarCard">
-          <div class="duelPanelTitle">RADAR</div>
-          ${radar}
-        </div>
+        <section class="cmpPanel" aria-label="Hráč B">
+          <div class="cmpHero">
+            <div class="cmpName">${escapeHtml(B.player)}</div>
+            <div class="cmpElo">${fmt(toNumMaybe(B.rating))}</div>
+            <div class="cmpQuick">
+              <div class="cmpQuickItem"><span class="k">Games</span><span class="v">${escapeHtml(quickGamesB)}</span></div>
+              <div class="cmpQuickItem"><span class="k">Winrate</span><span class="v">${escapeHtml(quickWrB)}</span></div>
+              <div class="cmpQuickItem"><span class="k">Skóre</span><span class="v">${escapeHtml(scoreB)}</span></div>
+            </div>
+          </div>
+          <div class="cmpMetrics">
+            ${metricRowsB}
+          </div>
+        </section>
+      </div>
 
-        <div class="duelPanel duelPanelB">
-          <div class="duelPanelTitle">STATISTIKY</div>
-          ${panelRowsB}
-        </div>
+      <div class="cmpSharedTableWrap">
+        <table class="compareTbl cmpSharedTable" aria-label="Technický přehled metrik">
+          <tbody>
+            ${sharedTblRows}
+          </tbody>
+        </table>
       </div>
     </div>
   `;
