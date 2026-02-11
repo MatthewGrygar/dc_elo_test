@@ -169,6 +169,24 @@ button:hover{ filter: brightness(1.06); }
   box-shadow:0 8px 24px rgba(0,0,0,.18);
 }
 
+/* Podpořit (tlačítko vpravo nahoře vedle menu) */
+.btnSupport{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:44px;
+  padding:0 14px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--chip);
+  color:var(--text);
+  box-shadow:0 8px 24px rgba(0,0,0,.14);
+}
+.btnSupportIcon{ font-size:16px; line-height:1; }
+.btnSupportText{ font-weight:900; letter-spacing:.02em; }
+.btnSupport:hover{ filter: brightness(1.06); }
+
 .headerRightTop{
   display:flex;
   justify-content:flex-end;
@@ -495,6 +513,17 @@ footer{
   padding:18px;
   padding-bottom:18px;
 }
+
+/* Kompaktní varianta modalu – používá se pouze pro titulní stránku (Podpořit) */
+.modalOverlay.isSupport .modal{
+  max-width:560px;
+  height:auto;
+  max-height:calc(100vh - 36px);
+}
+.modalOverlay.isSupport .modalBody{
+  padding:18px;
+  padding-bottom:18px;
+}
 .modalHeader{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:12px;
@@ -556,6 +585,54 @@ a.btnPrimary{
 }
 .btnAnon:hover{
   filter: brightness(1.10);
+}
+
+/* Podpořit modal (titulní stránka) */
+.supportModal{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+}
+.supportQrWrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.supportQr{
+  width:min(360px, 90vw);
+  max-width:100%;
+  height:auto;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--panel);
+  padding:10px;
+}
+.supportInfo{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--panel);
+  padding:14px 16px;
+  line-height:1.55;
+}
+.supportInfoTitle{
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  font-size:12px;
+  margin-bottom:8px;
+  color:var(--muted);
+}
+.supportInfoLine{
+  margin:0 0 6px;
+  color:var(--text);
+}
+.supportThanks{
+  font-size:18px;
+  font-weight:950;
+  letter-spacing:.01em;
+  padding-top:4px;
 }
 
 .btnIconClose{
