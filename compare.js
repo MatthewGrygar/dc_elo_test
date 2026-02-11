@@ -133,11 +133,15 @@ function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
   const bR = clamp01((bN ?? 0) / denom);
   const { betterA, betterB } = computeBetterFlag(label, aN, bN);
 
-  // Markup is built so bars always grow from center outward.
-  // Left bar is green, right bar is red.
+  // One compact unified row:
+  // | NAME | A VALUE | MIRROR AXIS | B VALUE | NAME |
+  // Axis contains ONLY the visual bars/markers (no titles, no numbers).
+  // Bars always grow from center outward.
   return `
     <div class="mirrorRow" data-metric="${escapeHtml(key)}">
-      <div class="mirrorLabel">${escapeHtml(label)}</div>
+      <div class="mirrorName mirrorNameLeft">${escapeHtml(label)}</div>
+      <div class="mirrorNum mirrorNumLeft ${betterA ? "isBetter" : ""}">${escapeHtml(aShow)}</div>
+
       <div class="mirrorAxis" style="--a:${aR}; --b:${bR};">
         <div class="mirrorBase" aria-hidden="true"></div>
         <div class="mirrorCenter" aria-hidden="true"></div>
@@ -147,10 +151,10 @@ function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
 
         <div class="mirrorMarker mirrorMarkerLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>
         <div class="mirrorMarker mirrorMarkerRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>
-
-        <div class="mirrorValue mirrorValueLeft ${betterA ? "isBetter" : ""}">${escapeHtml(aShow)}</div>
-        <div class="mirrorValue mirrorValueRight ${betterB ? "isBetter" : ""}">${escapeHtml(bShow)}</div>
       </div>
+
+      <div class="mirrorNum mirrorNumRight ${betterB ? "isBetter" : ""}">${escapeHtml(bShow)}</div>
+      <div class="mirrorName mirrorNameRight">${escapeHtml(label)}</div>
     </div>
   `;
 }

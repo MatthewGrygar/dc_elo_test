@@ -1082,25 +1082,43 @@ html[data-theme="light"] .duelMiniCard{
   padding: 6px 2px 2px;
 }
 
-.mirrorRow{ padding: 12px 2px 18px; }
+.mirrorRow{
+  display: grid;
+  grid-template-columns: 15% 10% 50% 10% 15%;
+  align-items: center;
+  gap: 0;
+  padding: 10px 0 12px;
+}
 .mirrorRow:not(:last-child){ border-bottom: 1px solid rgba(255,255,255,0.06); }
 html[data-theme="light"] .mirrorRow:not(:last-child){ border-bottom: 1px solid rgba(0,0,0,0.06); }
 
-.mirrorLabel{
-  text-align: center;
-  font-size: 12px;
-  letter-spacing: .12em;
+.mirrorName{
+  font-size: 11px;
+  letter-spacing: .14em;
   text-transform: uppercase;
   font-weight: 900;
-  opacity: .78;
-  margin-bottom: 12px;
+  opacity: .62;
+  padding: 0 8px;
 }
+.mirrorNameLeft{ text-align: left; }
+.mirrorNameRight{ text-align: right; }
+
+.mirrorNum{
+  font-size: 14px;
+  font-weight: 950;
+  opacity: .86;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.mirrorNumLeft{ text-align: right; }
+.mirrorNumRight{ text-align: left; }
+.mirrorNum.isBetter{ opacity: 1; }
 
 .mirrorAxis{
   position: relative;
   height: 22px;
-  max-width: 880px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .mirrorBase{
