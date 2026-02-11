@@ -516,7 +516,8 @@ footer{
 
 /* Kompaktní varianta modalu – používá se pouze pro titulní stránku (Podpořit) */
 .modalOverlay.isSupport .modal{
-  max-width:560px;
+  /* Užší, "premium" varianta */
+  max-width:460px;
   height:auto;
   max-height:calc(100vh - 36px);
 }
@@ -592,7 +593,10 @@ a.btnPrimary{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:14px;
+  gap:10px;
+  width:100%;
+  max-width:390px;
+  margin:0 auto;
 }
 .supportQrWrap{
   width:100%;
@@ -600,39 +604,60 @@ a.btnPrimary{
   justify-content:center;
 }
 .supportQr{
-  width:min(360px, 90vw);
+  /* kompaktnější, stále dobře skenovatelné */
+  width:min(310px, 86vw);
   max-width:100%;
   height:auto;
-  border-radius:16px;
-  border:1px solid var(--border);
-  background:var(--panel);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:color-mix(in srgb, var(--panel) 70%, transparent);
   padding:10px;
+  box-shadow:0 14px 38px rgba(0,0,0,.22);
+}
+html[data-theme="light"] .supportQr{
+  border:1px solid rgba(0,0,0,.10);
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
 }
 .supportInfo{
   width:100%;
-  border:1px solid var(--border);
-  border-radius:18px;
-  background:var(--panel);
-  padding:14px 16px;
-  line-height:1.55;
+  max-width:380px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:color-mix(in srgb, var(--panel) 62%, transparent);
+  backdrop-filter: blur(8px);
+  padding:12px 14px;
+  line-height:1.45;
+}
+html[data-theme="light"] .supportInfo{
+  border:1px solid rgba(0,0,0,.10);
+  background:color-mix(in srgb, var(--panel) 82%, transparent);
 }
 .supportInfoTitle{
   font-weight:950;
   letter-spacing:.06em;
   text-transform:uppercase;
   font-size:12px;
-  margin-bottom:8px;
+  margin-bottom:6px;
   color:var(--muted);
 }
 .supportInfoLine{
   margin:0 0 6px;
   color:var(--text);
 }
+.supportInfoLine b{
+  display:inline-block;
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.85;
+  margin-right:6px;
+}
 .supportThanks{
-  font-size:18px;
-  font-weight:950;
+  font-size:15px;
+  font-weight:800;
   letter-spacing:.01em;
-  padding-top:4px;
+  padding-top:2px;
+  opacity:.92;
 }
 
 .btnIconClose{
