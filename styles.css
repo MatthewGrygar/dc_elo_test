@@ -484,6 +484,17 @@ footer{
   overflow:hidden;
   display:flex; flex-direction:column;
 }
+
+/* Kompaktní varianta modalu – používá se pouze pro titulní stránku (Anonimizace) */
+.modalOverlay.isAnon .modal{
+  max-width:680px;
+  height:auto;
+  max-height:calc(100vh - 36px);
+}
+.modalOverlay.isAnon .modalBody{
+  padding:18px;
+  padding-bottom:18px;
+}
 .modalHeader{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:12px;
@@ -508,11 +519,12 @@ footer{
 
 /* anonymizace modal (titulní stránka) */
 .anonModal{
-  max-width: 760px;
+  max-width: 100%;
 }
-.anonH2{
+.anonH1{
   margin: 2px 0 10px;
-  font-size: 18px;
+  font-size: 24px;
+  font-weight: 900;
   letter-spacing: .01em;
 }
 .anonModal p{

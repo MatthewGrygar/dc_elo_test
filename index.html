@@ -127,7 +127,7 @@
 
       const bodyHtml = `
         <div class="anonModal">
-          <h2 class="anonH2">Nechcete být na webu uvedeni?</h2>
+          <h1 class="anonH1">Nechcete být na webu uvedeni?</h1>
           <p>Rozumíme tomu.</p>
           <p>
             Zveřejňovaná data pocházejí z veřejně dostupných zdrojů, od organizátorů turnajů a lig nebo od heren, které s námi spolupracují. Projekt slouží k přehlednému zobrazování těchto informací na jednom místě.
@@ -136,7 +136,7 @@
             Pokud si nepřejete být na webu dohledatelní pod svým jménem, vaše údaje kompletně anonimizujeme, takže vás podle nich již nebude možné identifikovat. Pro anonymizaci vyplňte následující formulář.
           </p>
           <div class="anonActions">
-            <a class="btnPrimary btnAnon" href="https://www.seznam.cz" target="_blank" rel="noopener noreferrer">Přejít na formulář</a>
+            <a class="btnPrimary btnAnon" href="https://docs.google.com/forms/d/e/1FAIpQLSfwFbnvW9SnOvGZ3KGhk4mHx61GIrWdQBSIp8vGovC1xr9wDg/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">Přejít na formulář</a>
           </div>
         </div>
       `;
@@ -146,11 +146,28 @@
         window.openModal({ title: 'Anonimizace', subtitle: '', html: bodyHtml, fullscreen: false });
       }
 
-      // Add a small "X" control (in addition to the existing close button)
-      if (window.setModalActions) {
-        window.setModalActions(`
-          <button class="btnIconClose" type="button" aria-label="Zavřít" title="Zavřít" onclick="window.closeModal && window.closeModal()">✕</button>
-        `);
+      // Visual tuning for the anonymizace modal only (kept local to the homepage)
+      const overlay = document.getElementById('modalOverlay');
+      if (overlay) {
+        overlay.classList.add('isAnon');
+
+        const cleanup = () => overlay.classList.remove('isAnon');
+
+        // Close button
+        const closeBtn = overlay.querySelector('#closeModalBtn');
+        if (closeBtn) closeBtn.addEventListener('click', cleanup, { once: true });
+
+        // Click outside
+        overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cleanup(); }, { once: true });
+
+        // ESC
+        const escHandler = (ev) => {
+          if (ev.key === 'Escape') {
+            cleanup();
+            window.removeEventListener('keydown', escHandler);
+          }
+        };
+        window.addEventListener('keydown', escHandler);
       }
     });
   }
