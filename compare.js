@@ -21,10 +21,6 @@ let __lastQueryB = "";
 let __cachedPlayers = null;
 let __pickGlobalHandlersInstalled = false;
 
-// Database-wide maxima for mirror bar scale (computed once per data load)
-let __dbMaxPromise = null;
-let __dbMaxCache = null;
-
 function escapeHtml(str){
   return (str ?? "")
     .toString()
@@ -113,6 +109,63 @@ function buildMetricRow(aVal, label, bVal, aRaw, bRaw){
       <td class="num ${betterB ? "betterRight" : ""}"><span class="compareVal ${betterB ? "better" : ""}">${escapeHtml(bVal)}</span></td>
     </tr>
   `;
+}
+
+function clamp01(x){
+  if (!Number.isFinite(x)) return 0;
+  return Math.max(0, Math.min(1, x));
+}
+
+function computeBetterFlag(label, aNum, bNum){
+  const pref = metricPreference(label);
+  if (pref === "neutral") return { betterA: false, betterB: false };
+  if (aNum == null || bNum == null || aNum === bNum) return { betterA: false, betterB: false };
+  if (pref === "higher") return { betterA: aNum > bNum, betterB: bNum > aNum };
+  if (pref === "lower") return { betterA: aNum < bNum, betterB: bNum < aNum };
+  return { betterA: false, betterB: false };
+}
+
+function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
+  const aN = toNumMaybe(aVal);
+  const bN = toNumMaybe(bVal);
+  const denom = Number.isFinite(maxVal) && maxVal > 0 ? maxVal : 1;
+  const aR = clamp01((aN ?? 0) / denom);
+  const bR = clamp01((bN ?? 0) / denom);
+  const { betterA, betterB } = computeBetterFlag(label, aN, bN);
+
+  // Markup is built so bars always grow from center outward.
+  // Left bar is green, right bar is red.
+  return `
+    <div class="mirrorRow" data-metric="${escapeHtml(key)}">
+      <div class="mirrorLabel">${escapeHtml(label)}</div>
+      <div class="mirrorAxis" style="--a:${aR}; --b:${bR};">
+        <div class="mirrorBase" aria-hidden="true"></div>
+        <div class="mirrorCenter" aria-hidden="true"></div>
+
+        <div class="mirrorBar mirrorBarLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>
+        <div class="mirrorBar mirrorBarRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>
+
+        <div class="mirrorMarker mirrorMarkerLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>
+        <div class="mirrorMarker mirrorMarkerRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>
+
+        <div class="mirrorValue mirrorValueLeft ${betterA ? "isBetter" : ""}">${escapeHtml(aShow)}</div>
+        <div class="mirrorValue mirrorValueRight ${betterB ? "isBetter" : ""}">${escapeHtml(bShow)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function buildMirrorScale({ metrics, maxima }){
+  const rows = metrics.map(m => buildMirrorRow({
+    label: m.label,
+    key: m.key,
+    aShow: m.aShow,
+    bShow: m.bShow,
+    aVal: m.aVal,
+    bVal: m.bVal,
+    maxVal: maxima?.[m.key],
+  })).join("");
+  return `<div class="mirrorCard" id="mirrorCard">${rows}</div>`;
 }
 
 function buildTwoSeriesChart(pointsA, pointsB, labelA, labelB){
@@ -315,120 +368,65 @@ function getPlayers(){
 }
 
 function ensurePlayersCache(){
-  // If underlying app data reloads, drop caches.
-  const fresh = getPlayers();
-  if (__cachedPlayers){
-    if (fresh.length !== __cachedPlayers.length){
-      __cachedPlayers = null;
-      __dbMaxCache = null;
-      __dbMaxPromise = null;
-    }
-  }
   if (__cachedPlayers) return __cachedPlayers;
-  __cachedPlayers = fresh.slice();
+  __cachedPlayers = getPlayers().slice();
   return __cachedPlayers;
 }
 
-async function computeDbMetricMaxima(api){
-  // Compute once and cache (maxima across ALL players in dataset)
-  if (__dbMaxCache) return __dbMaxCache;
-  if (__dbMaxPromise) return __dbMaxPromise;
+// Global maxima cache (computed once per data load)
+let __globalMaxima = null;
 
-  __dbMaxPromise = (async () => {
-    const players = ensurePlayersCache();
-    const max = {
-      games: 0,
-      winrate: 0,
-      win: 0,
-      loss: 0,
-      draw: 0,
-      peak: 0,
-      avgOpp: 0,
-      winStreak: 0,
-      lossStreak: 0,
-    };
+async function ensureGlobalMaxima(){
+  if (__globalMaxima) return __globalMaxima;
 
-    // Base stats are available directly on the rows
-    for (const p of players){
-      const g = toNumMaybe(p?.games) ?? 0;
-      const w = toNumMaybe(p?.win) ?? 0;
-      const l = toNumMaybe(p?.loss) ?? 0;
-      const d = toNumMaybe(p?.draw) ?? 0;
-      const peak = toNumMaybe(p?.peak) ?? 0;
-      const wr = toNumMaybe(fmtWinrate(p)) ?? 0;
+  const api = getApi();
+  const players = ensurePlayersCache();
 
-      if (g > max.games) max.games = g;
-      if (w > max.win) max.win = w;
-      if (l > max.loss) max.loss = l;
-      if (d > max.draw) max.draw = d;
-      if (peak > max.peak) max.peak = peak;
-      if (wr > max.winrate) max.winrate = wr;
+  const max = {
+    games: 0,
+    winrate: 0,
+    win: 0,
+    loss: 0,
+    draw: 0,
+    peak: 0,
+    avgOpp: 0,
+    winStreak: 0,
+    lossStreak: 0,
+  };
+
+  // Standings rows
+  for (const p of players){
+    max.games = Math.max(max.games, toNumMaybe(p.games) ?? 0);
+    max.win = Math.max(max.win, toNumMaybe(p.win) ?? 0);
+    max.loss = Math.max(max.loss, toNumMaybe(p.loss) ?? 0);
+    max.draw = Math.max(max.draw, toNumMaybe(p.draw) ?? 0);
+    max.peak = Math.max(max.peak, toNumMaybe(p.peak) ?? 0);
+    const wr = toNumMaybe(fmtWinrate(p));
+    if (wr != null) max.winrate = Math.max(max.winrate, wr);
+  }
+
+  // Summary rows (avg opponent rating + streaks)
+  if (api?.getSummaryForPlayer){
+    // getSummaryForPlayer internally loads + caches the CSV, so this is cheap after first call
+    const promises = players.map(p => api.getSummaryForPlayer(p.player));
+    const summaries = await Promise.allSettled(promises);
+    for (const s of summaries){
+      if (s.status !== "fulfilled") continue;
+      const sum = s.value;
+      if (!sum) continue;
+      if (Number.isFinite(sum.avgOpp)) max.avgOpp = Math.max(max.avgOpp, sum.avgOpp);
+      if (Number.isFinite(sum.winStreak)) max.winStreak = Math.max(max.winStreak, sum.winStreak);
+      if (Number.isFinite(sum.lossStreak)) max.lossStreak = Math.max(max.lossStreak, sum.lossStreak);
     }
+  }
 
-    // Derived stats are loaded from the summary CSV (cached by app.js)
-    // We keep it simple here: iterate all players once.
-    for (const p of players){
-      const s = await api.getSummaryForPlayer(p.player);
-      const avgOpp = safeNum(s?.avgOpp) ?? 0;
-      const winStreak = safeNum(s?.winStreak) ?? 0;
-      const lossStreak = safeNum(s?.lossStreak) ?? 0;
-      if (avgOpp > max.avgOpp) max.avgOpp = avgOpp;
-      if (winStreak > max.winStreak) max.winStreak = winStreak;
-      if (lossStreak > max.lossStreak) max.lossStreak = lossStreak;
-    }
+  // Avoid division by zero
+  for (const k of Object.keys(max)){
+    if (!Number.isFinite(max[k]) || max[k] <= 0) max[k] = 1;
+  }
 
-    __dbMaxCache = max;
-    return max;
-  })();
-
-  return __dbMaxPromise;
-}
-
-function mirrorBarWidthPct(val, max){
-  // We map max value to 100% of HALF axis width => 50% of container.
-  const v = toNumMaybe(val);
-  if (v == null || !Number.isFinite(max) || max <= 0) return 0;
-  const pct = (v / max) * 50;
-  if (!Number.isFinite(pct) || pct <= 0) return 0;
-  return Math.max(0, Math.min(50, pct));
-}
-
-function renderMirrorPanel(metrics, dbMax, betterFlagsFn){
-  const rows = metrics.map(m => {
-    const maxKey = m.key === "avgOpp" ? "avgOpp" :
-      m.key === "winStreak" ? "winStreak" :
-      m.key === "lossStreak" ? "lossStreak" :
-      m.key;
-
-    const max = Number.isFinite(dbMax?.[maxKey]) ? dbMax[maxKey] : 0;
-    const wA = mirrorBarWidthPct(m.aVal, max);
-    const wB = mirrorBarWidthPct(m.bVal, max);
-
-    const { aBetter, bBetter } = betterFlagsFn(m);
-    const lowBetterGlow = (m.pref === "lower");
-
-    return `
-      <div class="mirrorRow" data-metric="${escapeHtml(m.key)}">
-        <div class="mirrorLabel">${escapeHtml(m.label)}</div>
-        <div class="mirrorAxis" role="img" aria-label="${escapeHtml(m.label)} mirror scale">
-          <div class="mirrorBase"></div>
-          <div class="mirrorCenter"></div>
-          <div class="mirrorBar mirrorA ${aBetter && lowBetterGlow ? "betterLow" : ""}" style="--w:${wA.toFixed(2)}%">
-            <span class="mirrorVal mirrorValA">${escapeHtml(m.aShow)}</span>
-          </div>
-          <div class="mirrorBar mirrorB ${bBetter && lowBetterGlow ? "betterLow" : ""}" style="--w:${wB.toFixed(2)}%">
-            <span class="mirrorVal mirrorValB">${escapeHtml(m.bShow)}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  return `
-    <section class="mirrorPanel" aria-label="Porovnání metrik">
-      ${rows}
-    </section>
-  `;
+  __globalMaxima = max;
+  return __globalMaxima;
 }
 
 function debounce(fn, ms, key){
@@ -736,120 +734,74 @@ async function renderResultView(){
   const sumA = await api.getSummaryForPlayer(A.player);
   const sumB = await api.getSummaryForPlayer(B.player);
 
-  // Build metrics once (compute & format once per compare) and reuse for panels + shared table.
+  // Global maxima (computed once, cached)
+  const maxima = await ensureGlobalMaxima();
+
+  // Metrics (exact list + order from spec)
   const metrics = [
-    { key: "games", label: "GAMES", aShow: fmt(toNumMaybe(A.games)), bShow: fmt(toNumMaybe(B.games)), aVal: toNumMaybe(A.games), bVal: toNumMaybe(B.games), pref: "higher" },
-    { key: "winrate", label: "WINRATE", aShow: fmtWinrate(A), bShow: fmtWinrate(B), aVal: toNumMaybe(fmtWinrate(A)), bVal: toNumMaybe(fmtWinrate(B)), pref: "higher" },
-    { key: "win", label: "WIN", aShow: fmt(toNumMaybe(A.win)), bShow: fmt(toNumMaybe(B.win)), aVal: toNumMaybe(A.win), bVal: toNumMaybe(B.win), pref: "higher" },
-    { key: "loss", label: "LOSS", aShow: fmt(toNumMaybe(A.loss)), bShow: fmt(toNumMaybe(B.loss)), aVal: toNumMaybe(A.loss), bVal: toNumMaybe(B.loss), pref: "lower" },
-    { key: "draw", label: "DRAW", aShow: fmt(toNumMaybe(A.draw)), bShow: fmt(toNumMaybe(B.draw)), aVal: toNumMaybe(A.draw), bVal: toNumMaybe(B.draw), pref: "higher" },
-    { key: "peak", label: "PEAK ELO", aShow: fmt(toNumMaybe(A.peak)), bShow: fmt(toNumMaybe(B.peak)), aVal: toNumMaybe(A.peak), bVal: toNumMaybe(B.peak), pref: "higher" },
-    { key: "avgOpp", label: "AVERAGE OPPONENT RATING", aShow: fmt(safeNum(sumA?.avgOpp)), bShow: fmt(safeNum(sumB?.avgOpp)), aVal: safeNum(sumA?.avgOpp), bVal: safeNum(sumB?.avgOpp), pref: "higher" },
-    { key: "winStreak", label: "LONGEST WIN STREAK", aShow: fmt(safeNum(sumA?.winStreak)), bShow: fmt(safeNum(sumB?.winStreak)), aVal: safeNum(sumA?.winStreak), bVal: safeNum(sumB?.winStreak), pref: "higher" },
-    { key: "lossStreak", label: "LONGEST LOSS STREAK", aShow: fmt(safeNum(sumA?.lossStreak)), bShow: fmt(safeNum(sumB?.lossStreak)), aVal: safeNum(sumA?.lossStreak), bVal: safeNum(sumB?.lossStreak), pref: "lower" },
+    { key: "games", label: "GAMES", aShow: fmt(toNumMaybe(A.games)), bShow: fmt(toNumMaybe(B.games)), aVal: toNumMaybe(A.games), bVal: toNumMaybe(B.games) },
+    { key: "winrate", label: "WINRATE", aShow: fmtWinrate(A), bShow: fmtWinrate(B), aVal: toNumMaybe(fmtWinrate(A)), bVal: toNumMaybe(fmtWinrate(B)) },
+    { key: "win", label: "WIN", aShow: fmt(toNumMaybe(A.win)), bShow: fmt(toNumMaybe(B.win)), aVal: toNumMaybe(A.win), bVal: toNumMaybe(B.win) },
+    { key: "loss", label: "LOSS", aShow: fmt(toNumMaybe(A.loss)), bShow: fmt(toNumMaybe(B.loss)), aVal: toNumMaybe(A.loss), bVal: toNumMaybe(B.loss) },
+    { key: "draw", label: "DRAW", aShow: fmt(toNumMaybe(A.draw)), bShow: fmt(toNumMaybe(B.draw)), aVal: toNumMaybe(A.draw), bVal: toNumMaybe(B.draw) },
+    { key: "peak", label: "PEAK ELO", aShow: fmt(toNumMaybe(A.peak)), bShow: fmt(toNumMaybe(B.peak)), aVal: toNumMaybe(A.peak), bVal: toNumMaybe(B.peak) },
+    { key: "avgOpp", label: "AVERAGE OPPONENT RATING", aShow: fmt(safeNum(sumA?.avgOpp)), bShow: fmt(safeNum(sumB?.avgOpp)), aVal: safeNum(sumA?.avgOpp), bVal: safeNum(sumB?.avgOpp) },
+    { key: "winStreak", label: "LONGEST WIN STREAK", aShow: fmt(safeNum(sumA?.winStreak)), bShow: fmt(safeNum(sumB?.winStreak)), aVal: safeNum(sumA?.winStreak), bVal: safeNum(sumB?.winStreak) },
+    { key: "lossStreak", label: "LONGEST LOSS STREAK", aShow: fmt(safeNum(sumA?.lossStreak)), bShow: fmt(safeNum(sumB?.lossStreak)), aVal: safeNum(sumA?.lossStreak), bVal: safeNum(sumB?.lossStreak) },
   ];
 
-  const quickGamesA = fmt(toNumMaybe(A.games));
-  const quickGamesB = fmt(toNumMaybe(B.games));
-  const quickWrA = fmtWinrate(A);
-  const quickWrB = fmtWinrate(B);
-  const scoreA = `${fmt(toNumMaybe(A.win))}–${fmt(toNumMaybe(A.loss))}–${fmt(toNumMaybe(A.draw))}`;
-  const scoreB = `${fmt(toNumMaybe(B.win))}–${fmt(toNumMaybe(B.loss))}–${fmt(toNumMaybe(B.draw))}`;
-
-  const betterFlags = (m) => {
-    const aN = toNumMaybe(m.aVal);
-    const bN = toNumMaybe(m.bVal);
-    if (aN == null || bN == null) return { aBetter:false, bBetter:false };
-    if (aN === bN) return { aBetter:false, bBetter:false };
-    if (m.pref === "higher") return { aBetter: aN > bN, bBetter: bN > aN };
-    if (m.pref === "lower") return { aBetter: aN < bN, bBetter: bN < aN };
-    return { aBetter:false, bBetter:false };
-  };
-
-  const metricRowsA = metrics.map(m => {
-    const { aBetter } = betterFlags(m);
-    return `
-      <div class="cmpMetricRow ${aBetter ? "isBetter" : ""}">
-        <div class="cmpMetricKey">${escapeHtml(m.label)}</div>
-        <div class="cmpMetricVal ${aBetter ? "isBetterVal" : ""}">${escapeHtml(m.aShow)}</div>
-      </div>
-    `;
-  }).join("");
-
-  const metricRowsB = metrics.map(m => {
-    const { bBetter } = betterFlags(m);
-    return `
-      <div class="cmpMetricRow cmpMetricRowRight ${bBetter ? "isBetter" : ""}">
-        <div class="cmpMetricVal ${bBetter ? "isBetterVal" : ""}">${escapeHtml(m.bShow)}</div>
-        <div class="cmpMetricKey">${escapeHtml(m.label)}</div>
-      </div>
-    `;
-  }).join("");
-
-  const sharedTblRows = metrics.map(m => `
-    <tr>
-      <td class="num">${escapeHtml(m.aShow)}</td>
-      <td class="metricName">${escapeHtml(m.label)}</td>
-      <td class="num">${escapeHtml(m.bShow)}</td>
-    </tr>
+  const panelRowsA = metrics.map(m => `
+    <div class="duelRow">
+      <div class="duelKey">${escapeHtml(m.label)}</div>
+      <div class="duelVal">${escapeHtml(m.aShow)}</div>
+    </div>
   `).join("");
 
-  const dbMax = await computeDbMetricMaxima(api);
-  const mirrorPanel = renderMirrorPanel(metrics, dbMax, betterFlags);
+  // Right panel mirrored: VALUE … NAME
+  const panelRowsB = metrics.map(m => `
+    <div class="duelRow duelRowMirror">
+      <div class="duelVal">${escapeHtml(m.bShow)}</div>
+      <div class="duelKey">${escapeHtml(m.label)}</div>
+    </div>
+  `).join("");
+
+  const mirror = buildMirrorScale({ metrics, maxima });
 
   const html = `
-    <div class="compareWrap compareRedesign">
-      <div class="compareH2H compareH2HCompact">
-        <div class="h2hBig">
-          <div class="h2hVal">${aW}</div>
-          <div class="h2hMid">vs</div>
-          <div class="h2hVal">${bW}</div>
-        </div>
-        <div class="h2hSub muted">Vzájemné zápasy: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
-      </div>
-
-      <div class="cmpGrid">
-        <section class="cmpPanel" aria-label="Hráč A">
-          <div class="cmpHero">
-            <div class="cmpName">${escapeHtml(A.player)}</div>
-            <div class="cmpElo">${fmt(toNumMaybe(A.rating))}</div>
-            <div class="cmpQuick">
-              <div class="cmpQuickItem"><span class="k">Games</span><span class="v">${escapeHtml(quickGamesA)}</span></div>
-              <div class="cmpQuickItem"><span class="k">Winrate</span><span class="v">${escapeHtml(quickWrA)}</span></div>
-              <div class="cmpQuickItem"><span class="k">Skóre</span><span class="v">${escapeHtml(scoreA)}</span></div>
-            </div>
-          </div>
-          <div class="cmpMetrics">
-            ${metricRowsA}
-          </div>
-        </section>
-
-        <div class="cmpCenter" aria-label="Grafické porovnání">
-          ${mirrorPanel}
+    <div class="compareWrap compareDashboard">
+      <div class="duelHeader duelHeaderV2">
+        <div class="duelMiniCard duelMiniLeft">
+          <div class="duelMiniName">${escapeHtml(A.player)}</div>
+          <div class="duelMiniElo">${fmt(toNumMaybe(A.rating))}</div>
         </div>
 
-        <section class="cmpPanel" aria-label="Hráč B">
-          <div class="cmpHero">
-            <div class="cmpName">${escapeHtml(B.player)}</div>
-            <div class="cmpElo">${fmt(toNumMaybe(B.rating))}</div>
-            <div class="cmpQuick">
-              <div class="cmpQuickItem"><span class="k">Games</span><span class="v">${escapeHtml(quickGamesB)}</span></div>
-              <div class="cmpQuickItem"><span class="k">Winrate</span><span class="v">${escapeHtml(quickWrB)}</span></div>
-              <div class="cmpQuickItem"><span class="k">Skóre</span><span class="v">${escapeHtml(scoreB)}</span></div>
-            </div>
-          </div>
-          <div class="cmpMetrics">
-            ${metricRowsB}
-          </div>
-        </section>
+        <div class="duelMid">
+          <div class="duelVs">VS</div>
+          <div class="duelScoreBig">${aW}<span class="duelScoreSep">:</span>${bW}</div>
+          <div class="duelSub muted">Head-to-head: ${g}${d ? ` • Remízy: ${d}` : ""}</div>
+        </div>
+
+        <div class="duelMiniCard duelMiniRight">
+          <div class="duelMiniName">${escapeHtml(B.player)}</div>
+          <div class="duelMiniElo">${fmt(toNumMaybe(B.rating))}</div>
+        </div>
       </div>
 
-      <div class="cmpSharedTableWrap">
-        <table class="compareTbl cmpSharedTable" aria-label="Technický přehled metrik">
-          <tbody>
-            ${sharedTblRows}
-          </tbody>
-        </table>
+      <div class="duelMain">
+        <div class="duelPanel duelPanelA">
+          <div class="duelPanelTitle">STATISTIKY</div>
+          ${panelRowsA}
+        </div>
+
+        <div class="duelMirrorCard">
+          <div class="duelPanelTitle">METRIKY</div>
+          ${mirror}
+        </div>
+
+        <div class="duelPanel duelPanelB">
+          <div class="duelPanelTitle">STATISTIKY</div>
+          ${panelRowsB}
+        </div>
       </div>
     </div>
   `;
@@ -863,6 +815,12 @@ async function renderResultView(){
         __view = "pick";
         renderPickView();
       });
+    }
+
+    // Trigger smooth bar animation (from center outward)
+    const mirrorEl = document.getElementById("mirrorCard");
+    if (mirrorEl){
+      requestAnimationFrame(() => mirrorEl.classList.add("isReady"));
     }
   });
 }

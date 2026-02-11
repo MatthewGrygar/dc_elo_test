@@ -677,313 +677,6 @@ html[data-theme="light"] .comparePickItem:hover{
   justify-content: center;
 }
 
-/* -------------------- Compare result redesign (two symmetric panels) -------------------- */
-.compareRedesign{ box-sizing: border-box; }
-.compareRedesign *{ box-sizing: border-box; }
-
-.cmpGrid{
-  display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);
-  gap: 16px;
-  align-items: start;
-  width: 100%;
-  min-width: 0;
-}
-
-@media (max-width: 900px){
-  .cmpGrid{ grid-template-columns: 1fr; }
-}
-
-.cmpCenter{
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--card);
-  padding: 12px;
-  min-width: 0;
-}
-
-.cmpPanel{
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--card);
-  padding: 12px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.cmpHero{
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: 12px;
-}
-html[data-theme="light"] .cmpHero{
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-
-.cmpName{
-  font-size: 22px;
-  font-weight: 950;
-  line-height: 1.05;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cmpElo{
-  margin-top: 6px;
-  font-size: 34px;
-  font-weight: 950;
-  letter-spacing: -0.02em;
-}
-
-.cmpQuick{
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-.cmpQuickItem{
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
-}
-.cmpQuickItem .k{
-  opacity: 0.75;
-  font-size: 12px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.cmpQuickItem .v{
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.cmpMetrics{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.cmpMetricRow{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  min-width: 0;
-}
-html[data-theme="light"] .cmpMetricRow{
-  border: 1px solid rgba(0,0,0,0.06);
-  background: rgba(0,0,0,0.02);
-}
-
-.cmpMetricKey{
-  flex: 1;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  opacity: 0.9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cmpMetricVal{
-  font-size: 14px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-/* Right panel (mirror) : value on left, metric name on right */
-.cmpMetricRowRight .cmpMetricKey{
-  text-align: right;
-}
-.cmpMetricRowRight .cmpMetricVal{
-  text-align: left;
-}
-
-/* -------------------- Mirror bar scale (center) -------------------- */
-.mirrorPanel{
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-width: 0;
-}
-
-.mirrorRow{
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.mirrorLabel{
-  text-align: center;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  opacity: 0.85;
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mirrorAxis{
-  position: relative;
-  height: 18px;
-  width: 100%;
-  min-width: 0;
-}
-
-.mirrorBase{
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.10);
-  border-radius: 999px;
-}
-html[data-theme="light"] .mirrorBase{
-  background: rgba(0,0,0,0.10);
-}
-
-.mirrorCenter{
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 2px;
-  height: 10px;
-  transform: translate(-50%,-50%);
-  background: rgba(255,255,255,0.22);
-  border-radius: 999px;
-}
-html[data-theme="light"] .mirrorCenter{
-  background: rgba(0,0,0,0.22);
-}
-
-.mirrorBar{
-  position: absolute;
-  top: 50%;
-  height: 6px;
-  transform: translateY(-50%);
-  border-radius: 999px;
-  width: var(--w, 0%);
-}
-
-.mirrorBar::after{
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  transform: translateY(-50%);
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
-}
-html[data-theme="light"] .mirrorBar::after{
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.9);
-}
-
-.mirrorA{
-  right: 50%;
-  color: #3aa46b;
-  background: rgba(58,164,107,0.85);
-  transform-origin: right center;
-  animation: mirrorGrowA 420ms ease-out both;
-}
-.mirrorA::after{
-  left: 0;
-  transform: translate(-50%,-50%);
-}
-
-.mirrorB{
-  left: 50%;
-  color: #d35b5b;
-  background: rgba(211,91,91,0.85);
-  transform-origin: left center;
-  animation: mirrorGrowB 420ms ease-out both;
-}
-.mirrorB::after{
-  right: 0;
-  transform: translate(50%,-50%);
-}
-
-.mirrorBar.betterLow{
-  filter: drop-shadow(0 0 4px currentColor);
-}
-
-.mirrorVal{
-  position: absolute;
-  top: 50%;
-  font-size: 11px;
-  font-weight: 900;
-  white-space: nowrap;
-  opacity: 0.95;
-  transform: translateY(-50%);
-}
-.mirrorValA{
-  left: 0;
-  transform: translate(-10px,-50%);
-}
-.mirrorValB{
-  right: 0;
-  transform: translate(10px,-50%);
-}
-
-@keyframes mirrorGrowA{
-  from{ transform: translateY(-50%) scaleX(0); }
-  to{ transform: translateY(-50%) scaleX(1); }
-}
-@keyframes mirrorGrowB{
-  from{ transform: translateY(-50%) scaleX(0); }
-  to{ transform: translateY(-50%) scaleX(1); }
-}
-
-
-/* Better row highlight (soft pastel green) */
-.cmpMetricRow.isBetter{
-  border-color: rgba(58,164,107,0.32);
-  background: rgba(58,164,107,0.10);
-}
-html[data-theme="light"] .cmpMetricRow.isBetter{
-  border-color: rgba(20,140,70,0.26);
-  background: rgba(20,140,70,0.09);
-}
-.cmpMetricVal.isBetterVal{ font-weight: 950; }
-
-/* Head-to-head compact block */
-.compareH2H.compareH2HCompact{
-  max-width: 520px;
-  margin: 0 auto;
-}
-
-/* Shared technical table (centered, narrower) */
-.cmpSharedTableWrap{
-  display: flex;
-  justify-content: center;
-}
-.cmpSharedTable{
-  width: 100%;
-  max-width: 85%;
-}
-@media (max-width: 560px){
-  .cmpSharedTable{ max-width: 100%; }
-}
-.cmpSharedTable td{ padding: 5px 8px; }
-.cmpSharedTable .metricName{ font-size: 12px; }
-
 /* prevent any horizontal overflow in compare modal */
 .compareWrap{ max-width: 100%; overflow-x: hidden; }
 
@@ -1257,22 +950,28 @@ html[data-theme="light"] .compareHeroCard{
 
 .duelMain{
   display: grid;
-  grid-template-columns: minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);
+  grid-template-columns: minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);
   grid-template-areas: "a r b";
   gap: 14px;
   align-items: start;
 }
 .duelPanelA{ grid-area: a; }
-.duelRadarCard{ grid-area: r; }
+.duelMirrorCard{ grid-area: r; }
 .duelPanelB{ grid-area: b; }
 
 .duelPanel,
-.duelRadarCard{
+.duelMirrorCard{
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--card);
   padding: 12px;
   min-width: 0;
+}
+
+.duelMirrorCard{
+  justify-self: center;
+  width: 100%;
+  max-width: 92%;
 }
 
 .duelPanelTitle{
@@ -1309,6 +1008,190 @@ html[data-theme="light"] .duelRow{ border-bottom: 1px solid rgba(0,0,0,0.06); }
   font-weight: 950;
   white-space: nowrap;
   margin-left: auto;
+}
+
+/* Right panel mirror (VALUE … NAME) */
+.duelRowMirror{ justify-content: flex-start; }
+.duelRowMirror .duelVal{ margin-left: 0; }
+.duelRowMirror .duelVal{ min-width: 46px; text-align: left; }
+.duelRowMirror .duelKey{ margin-left: auto; text-align: right; }
+
+/* -------- Hero (Compare players) v2 -------- */
+.duelHeaderV2{
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  gap: 12px;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  padding: 14px;
+}
+
+.duelMiniCard{
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.02);
+  padding: 12px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+html[data-theme="light"] .duelMiniCard{
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(0,0,0,0.02);
+}
+.duelMiniLeft{ text-align: left; }
+.duelMiniRight{ text-align: right; }
+
+.duelMiniName{
+  font-size: 20px;
+  font-weight: 950;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.duelMiniElo{
+  font-size: 38px;
+  font-weight: 950;
+  letter-spacing: .01em;
+  line-height: 1;
+}
+
+.duelMid{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+}
+.duelScoreBig{
+  font-size: 40px;
+  font-weight: 950;
+  line-height: 1;
+}
+.duelScoreSep{ opacity: .65; margin: 0 8px; }
+
+/* -------- Mirror scale (Compare players) -------- */
+.mirrorCard{
+  width: 100%;
+  padding: 6px 2px 2px;
+}
+
+.mirrorRow{ padding: 12px 2px 18px; }
+.mirrorRow:not(:last-child){ border-bottom: 1px solid rgba(255,255,255,0.06); }
+html[data-theme="light"] .mirrorRow:not(:last-child){ border-bottom: 1px solid rgba(0,0,0,0.06); }
+
+.mirrorLabel{
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 900;
+  opacity: .78;
+  margin-bottom: 12px;
+}
+
+.mirrorAxis{
+  position: relative;
+  height: 22px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.mirrorBase{
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+}
+html[data-theme="light"] .mirrorBase{ background: rgba(0,0,0,0.08); }
+
+.mirrorCenter{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 14px;
+  transform: translate(-50%,-50%);
+  border-radius: 2px;
+  background: rgba(255,255,255,0.22);
+}
+html[data-theme="light"] .mirrorCenter{ background: rgba(0,0,0,0.22); }
+
+.mirrorBar{
+  position: absolute;
+  top: 50%;
+  height: 8px;
+  transform: translateY(-50%) scaleX(0);
+  will-change: transform;
+  border-radius: 999px;
+  opacity: .78;
+  filter: saturate(0.95);
+}
+.mirrorBarLeft{
+  right: 50%;
+  width: calc(var(--a) * 50%);
+  transform-origin: right center;
+  background: #3aa46b;
+}
+.mirrorBarRight{
+  left: 50%;
+  width: calc(var(--b) * 50%);
+  transform-origin: left center;
+  background: #d24b4b;
+}
+.mirrorBar.isBetter{ opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,0.06); }
+html[data-theme="light"] .mirrorBar.isBetter{ box-shadow: 0 0 0 1px rgba(0,0,0,0.06); }
+
+.mirrorMarker{
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  transform: translate(-50%,-50%);
+  opacity: .92;
+}
+.mirrorMarkerLeft{ left: calc(50% - (var(--a) * 50%)); background: #3aa46b; }
+.mirrorMarkerRight{ left: calc(50% + (var(--b) * 50%)); background: #d24b4b; }
+.mirrorMarker.isBetter{ box-shadow: 0 0 0 2px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.18); }
+html[data-theme="light"] .mirrorMarker.isBetter{ box-shadow: 0 0 0 2px rgba(255,255,255,0.7), 0 0 0 1px rgba(0,0,0,0.18); }
+
+.mirrorValue{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 950;
+  opacity: .82;
+  white-space: nowrap;
+}
+.mirrorValueLeft{
+  left: calc(50% - (var(--a) * 50%));
+  transform: translate(-110%,-50%);
+}
+.mirrorValueRight{
+  left: calc(50% + (var(--b) * 50%));
+  transform: translate(10%,-50%);
+}
+.mirrorValue.isBetter{ opacity: 1; }
+
+/* Animation (300–500ms, ease-out) */
+.mirrorCard.isReady .mirrorBar{
+  animation: mirrorGrow 420ms ease-out both;
+}
+@keyframes mirrorGrow{
+  from{ transform: translateY(-50%) scaleX(0); }
+  to{ transform: translateY(-50%) scaleX(1); }
 }
 
 /* Radar */
@@ -1355,8 +1238,10 @@ html[data-theme="light"] .radarDotB{ stroke: rgba(0,0,0,0.28); stroke-width: 1.4
   .compareHeroRow{ grid-template-columns: 1fr; }
   .compareVs{ display: none; }
 
-  .duelHeader{ grid-template-columns: 1fr; text-align: center; }
+  .duelHeader,
+  .duelHeaderV2{ grid-template-columns: 1fr; text-align: center; }
   .duelLeft, .duelRight{ text-align: center; }
+  .duelMiniLeft, .duelMiniRight{ text-align: center; }
   .duelMain{
     grid-template-columns: 1fr;
     grid-template-areas:
