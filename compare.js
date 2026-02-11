@@ -160,11 +160,10 @@ function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
   const bR = clamp01((bN ?? 0) / denom);
   const { betterA, betterB } = computeBetterFlag(label, aN, bN);
 
-  // Special rendering rule:
-  // If a player has value 0, keep the bar length at 0 but render the marker
-  // at the START of their side (not in the center).
-  const isZeroA = (aN === 0);
-  const isZeroB = (bN === 0);
+  // Rendering rule for zero values (visual-only):
+  // If a player's value is 0, render NOTHING on that side (no bar, no marker).
+  const renderA = (aN != null && aN > 0);
+  const renderB = (bN != null && bN > 0);
 
   // One compact unified row:
   // | NAME | A VALUE | MIRROR AXIS | B VALUE | NAME |
@@ -175,15 +174,15 @@ function buildMirrorRow({ label, key, aShow, bShow, aVal, bVal, maxVal }){
       <div class="mirrorName mirrorNameLeft">${escapeHtml(label)}</div>
       <div class="mirrorNum mirrorNumLeft ${betterA ? "isBetter" : ""}">${escapeHtml(aShow)}</div>
 
-      <div class="mirrorAxis ${isZeroA ? "isZeroA" : ""} ${isZeroB ? "isZeroB" : ""}" style="--a:${aR}; --b:${bR};">
+      <div class="mirrorAxis" style="--a:${aR}; --b:${bR};">
         <div class="mirrorBase" aria-hidden="true"></div>
         <div class="mirrorCenter" aria-hidden="true"></div>
 
-        <div class="mirrorBar mirrorBarLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>
-        <div class="mirrorBar mirrorBarRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>
+        ${renderA ? `<div class="mirrorBar mirrorBarLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>` : ""}
+        ${renderB ? `<div class="mirrorBar mirrorBarRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>` : ""}
 
-        <div class="mirrorMarker mirrorMarkerLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>
-        <div class="mirrorMarker mirrorMarkerRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>
+        ${renderA ? `<div class="mirrorMarker mirrorMarkerLeft ${betterA ? "isBetter" : ""}" aria-hidden="true"></div>` : ""}
+        ${renderB ? `<div class="mirrorMarker mirrorMarkerRight ${betterB ? "isBetter" : ""}" aria-hidden="true"></div>` : ""}
       </div>
 
       <div class="mirrorNum mirrorNumRight ${betterB ? "isBetter" : ""}">${escapeHtml(bShow)}</div>
