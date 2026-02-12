@@ -42,6 +42,10 @@ let lastTournamentText = "";
 let playerCardsCache = null;
 let playerSummaryCache = null;
 
+// Prevent race conditions when switching sources (e.g., toggling "Pouze DCPR").
+// Only the latest loadStandings() call is allowed to update UI/state.
+let standingsLoadSeq = 0;
+
 // Rating Class (VT1–VT4) is now ALWAYS sourced from: Tournament Elo → column I.
 let vtByPlayerCache = null;
 
@@ -419,10 +423,19 @@ function renderStandings(rows){
 }
 
 async function loadStandings(){
+  const seq = ++standingsLoadSeq;
   refreshBtn.disabled = true;
+
+  // Clear previous table immediately so old data doesn't linger while reloading.
+  allRows = [];
+  if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
+  tbody.innerHTML = `<tr><td colspan="9" class="muted">Načítám…</td></tr>`;
   try{
     const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
     const vtMap = await loadVtByPlayer();
+
+    // If another reload started while we were awaiting, abort this one.
+    if (seq !== standingsLoadSeq) return;
 
     const u = new URL(dcprMode ? TOURNAMENT_ELO_CSV_URL : ELO_CSV_URL);
     u.searchParams.set("_", Date.now().toString());
@@ -430,6 +443,8 @@ async function loadStandings(){
     const { res, text } = await fetchUtf8Text(u.toString());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
+
+    if (seq !== standingsLoadSeq) return;
 
     const rows = parseCSV(text);
 
