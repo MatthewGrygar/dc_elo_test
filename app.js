@@ -19,6 +19,12 @@ const PLAYER_CARDS_CSV_URL =
 const PLAYER_SUMMARY_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_SUMMARY_SHEET_NAME)}`;
 
+function buildCsvUrlForSheet(sheetName){
+  // Build a fresh URL for the requested sheet.
+  // This prevents any chance of accidentally reusing the wrong sheet URL.
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
 const tbody = document.getElementById("tbody");
 const searchEl = document.getElementById("search");
 const ratedOnlyEl = document.getElementById("ratedOnly");
@@ -52,7 +58,7 @@ let vtByPlayerCache = null;
 async function loadVtByPlayer(){
   if (vtByPlayerCache) return vtByPlayerCache;
   try{
-    const u = new URL(TOURNAMENT_ELO_CSV_URL);
+    const u = new URL(buildCsvUrlForSheet(TOURNAMENT_ELO_SHEET_NAME));
     u.searchParams.set("_", Date.now().toString());
     console.log("[ELO] Fetch Tournament Elo (VT map) CSV:", u.toString());
     const { res, text } = await fetchUtf8Text(u.toString());
@@ -422,7 +428,7 @@ function renderStandings(rows){
   }
 }
 
-async function loadStandings(){
+async function loadStandings(forceDcprMode){
   const seq = ++standingsLoadSeq;
   refreshBtn.disabled = true;
 
@@ -431,13 +437,20 @@ async function loadStandings(){
   if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
   tbody.innerHTML = `<tr><td colspan="9" class="muted">Načítám…</td></tr>`;
   try{
-    const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
+    const dcprMode = (typeof forceDcprMode === "boolean")
+      ? forceDcprMode
+      : !!(ratedOnlyEl && ratedOnlyEl.checked);
     const vtMap = await loadVtByPlayer();
 
     // If another reload started while we were awaiting, abort this one.
     if (seq !== standingsLoadSeq) return;
 
-    const u = new URL(dcprMode ? TOURNAMENT_ELO_CSV_URL : ELO_CSV_URL);
+    // IMPORTANT:
+    // - Normal mode must load from "Elo standings"
+    // - DCPR mode must load from "Tournament Elo"
+    // Build URL dynamically to ensure the correct sheet is always requested.
+    const sheetName = dcprMode ? TOURNAMENT_ELO_SHEET_NAME : ELO_SHEET_NAME;
+    const u = new URL(buildCsvUrlForSheet(sheetName));
     u.searchParams.set("_", Date.now().toString());
     console.log(`[ELO] Fetch standings CSV (${dcprMode ? "Tournament Elo" : "Elo standings"}):`, u.toString());
     const { res, text } = await fetchUtf8Text(u.toString());
@@ -956,7 +969,11 @@ refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 if (ratedOnlyEl){
   // Toggle "Pouze DCPR" switches the data source to Tournament Elo (same spreadsheet, different sheet)
-  ratedOnlyEl.addEventListener("change", () => loadStandings());
+  ratedOnlyEl.addEventListener("change", (e) => {
+    const checked = !!e?.target?.checked;
+    // Force the mode for this reload so we never read a stale value.
+    loadStandings(checked);
+  });
 }
 
 
