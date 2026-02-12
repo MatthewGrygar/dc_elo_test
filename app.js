@@ -470,9 +470,6 @@ async function loadStandings(forceDcprMode){
 
       if (dcprMode){
         // Tournament Elo mapping (A..I)
-        // Rating Class (VT1-VT4) is ALWAYS sourced from Tournament Elo column I
-        // by matching PLAYER in column A. If the player is not present/missing
-        // in that column, treat as unranked (do not display any class badge).
         return {
           _dataIndex: idx,
           player,
@@ -483,7 +480,7 @@ async function loadStandings(forceDcprMode){
           draw: toNumber(r[5]),
           winrate: (r[6] ?? "").toString().trim(),
           peak: toNumber(r[7]),
-          vt: (vtMap.get(normalizeKey(player)) ?? null)
+          vt: normalizeVT(r[8])
         };
       }
 
@@ -505,13 +502,9 @@ async function loadStandings(forceDcprMode){
     const slugs = buildDeterministicSlugs(loadedInDataOrder.map(x => x.player));
     loadedInDataOrder.forEach((x, i) => { x.slug = slugs[i]; });
 
-    if (dcprMode){
-      allRows = loadedInDataOrder.map((p,i)=>({ ...p, rank:i+1 }));
-    } else {
-      const loaded = loadedInDataOrder.slice();
-      loaded.sort((a,b)=>(b.rating||-Infinity)-(a.rating||-Infinity));
-      allRows = loaded.map((p,i)=>({ ...p, rank:i+1 }));
-    }
+    // Rank is always based on the row order in the selected sheet.
+    // Row 2 = rank 1, row 3 = rank 2, etc.
+    allRows = loadedInDataOrder.map((p, i) => ({ ...p, rank: i + 1 }));
 
     slugToPlayer = new Map(allRows.map(p => [p.slug, p]));
     renderStandings(allRows);
