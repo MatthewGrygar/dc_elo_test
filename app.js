@@ -3,7 +3,7 @@ import { openOpponentsModal } from "./opponents.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
-const TOURNAMENT_ELO_SHEET_NAME = "Tournament Elo";
+const TOURNAMENT_ELO_SHEET_NAME = "Tournament_Elo";
 const DATA_SHEET_NAME = "Data";
 const PLAYER_CARDS_SHEET_NAME = "Player cards (CSV)";
 const PLAYER_SUMMARY_SHEET_NAME = "Player summary";
