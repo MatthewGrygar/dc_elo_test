@@ -345,9 +345,20 @@ function parseWinrateToNumber(winrateText){
 function updateInfoBar(){
   const ratings = allRows.map(r => r.rating).filter(Number.isFinite).sort((a,b)=>a-b);
   const gamesArr = allRows.map(r => r.games).filter(Number.isFinite);
-  
+  const winrates = allRows.map(r => parseWinrateToNumber(r.winrate)).filter(Number.isFinite);
+
+  let medianElo = NaN;
+  if (ratings.length){
+    const mid = Math.floor(ratings.length/2);
+    medianElo = (ratings.length % 2) ? ratings[mid] : (ratings[mid-1]+ratings[mid])/2;
+  }
+  const totalGamesRaw = gamesArr.length ? gamesArr.reduce((a,b)=>a+b,0) : NaN;
+  const totalGames = Number.isFinite(totalGamesRaw) ? (totalGamesRaw/2) : NaN;
+  const avgWinrate = winrates.length ? (winrates.reduce((a,b)=>a+b,0)/winrates.length) : NaN;
+
   avgEloEl.textContent = Number.isFinite(medianElo) ? medianElo.toFixed(0) : "—";
   totalGamesEl.textContent = Number.isFinite(totalGames) ? totalGames.toFixed(0) : "—";
+  avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
   lastTournamentEl.textContent = lastTournamentText || "—";
 }
 

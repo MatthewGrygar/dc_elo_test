@@ -273,8 +273,6 @@ main{ max-width:1150px; margin:0 auto; padding:16px; }
   border:1px solid var(--border);
   background:var(--panel2);
   overflow:hidden;
-  position:relative;
-  aspect-ratio: 4400 / 1585;
 }
 .carouselTrack{
   position:relative;
