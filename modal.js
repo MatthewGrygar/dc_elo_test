@@ -142,3 +142,23 @@ function showCopyFeedback(el){
     el.appendChild(msg);
     setTimeout(()=>{ msg.remove(); },1500);
 }
+
+// Improved copy feedback (avoid stacking)
+function showCopyFeedback(el){
+    if(el.querySelector('.copy-feedback')) return;
+
+    const msg = document.createElement("span");
+    msg.className = "copy-feedback";
+    msg.textContent = " Zkopírováno";
+    msg.style.fontSize = "0.75rem";
+    msg.style.marginLeft = "6px";
+    msg.style.opacity = "0.7";
+    msg.style.transition = "opacity 0.3s ease";
+
+    el.appendChild(msg);
+
+    setTimeout(()=>{
+        msg.style.opacity = "0";
+        setTimeout(()=> msg.remove(), 300);
+    },1200);
+}

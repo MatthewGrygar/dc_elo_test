@@ -1560,3 +1560,56 @@ html[data-theme="light"] .tournamentFilter select option{
     padding: 16px;
     border-radius: 12px;
 }
+
+/* Desktop header alignment */
+@media (min-width: 768px) {
+  .header-right, .top-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px;
+  }
+}
+
+.grail-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.grail-link:hover {
+  opacity: 0.8;
+}
+
+/* Account info block premium refinement */
+.account-info {
+  padding: 24px !important;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  line-height: 1.6;
+}
+
+.account-info p {
+  margin: 8px 0;
+}
+
+/* Copy values styling */
+.copy-value {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.15s ease;
+}
+
+.copy-value:hover {
+  opacity: 0.75;
+}
+
+/* Green thank you box refinement */
+.green-box {
+  background-color: #dff5e6 !important;
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 18px;
+  border-radius: 14px;
+}
