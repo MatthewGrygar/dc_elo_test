@@ -1519,76 +1519,97 @@ html[data-theme="light"] .tournamentFilter select option{
 @media (min-width: 561px){ .endSpacer{ height: 24px; } }
 
 
-
-/* === Requested UI tweaks (title page + support modal) === */
-
-/* 1) Desktop: Support + hamburger in one row (preserve mobile behavior) */
-@media (min-width: 900px) {
-  .headerRightTop {
+/* Top controls alignment */
+.top-controls {
     display: flex;
     align-items: center;
-    gap: 10px; /* 8–12px */
+    gap: 10px;
+}
+
+/* Grail link styling */
+.grail-link {
+    text-decoration: underline;
+    opacity: 0.9;
+}
+.grail-link:hover {
+    opacity: 1;
+}
+
+/* Account block enhancement */
+.account-info {
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+}
+
+/* Copy values */
+.copy-value {
+    cursor: pointer;
+    text-decoration: underline;
+}
+.copy-value:hover {
+    opacity: 0.8;
+}
+
+/* Green thank you box */
+.green-box {
+    background-color: #d8f5df;
+    font-size: 1.4em;
+    font-weight: 600;
+    text-align: center;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+/* Desktop header alignment */
+@media (min-width: 768px) {
+  .header-right, .top-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px;
   }
 }
 
-/* 2) Link styling for "GRAIL SERIES" in intro */
 .grail-link {
   text-decoration: underline;
   text-underline-offset: 3px;
-  opacity: 0.9;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, text-decoration-color 0.2s ease;
 }
+
 .grail-link:hover {
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
-/* 3) Support modal: account block + copy + green thank-you box */
-.supportInfo {
-  padding: 18px 18px;
+/* Account info block premium refinement */
+.account-info {
+  padding: 24px !important;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.03);
-}
-/* better spacing between lines */
-.supportInfoLine {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: baseline;
-  padding: 6px 0;
-}
-.supportInfoTitle {
-  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  line-height: 1.6;
 }
 
-/* click-to-copy values */
-.supportCopy {
+.account-info p {
+  margin: 8px 0;
+}
+
+/* Copy values styling */
+.copy-value {
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: opacity 0.15s ease;
 }
-.supportCopy:hover {
+
+.copy-value:hover {
   opacity: 0.75;
 }
 
-/* subtle feedback */
-.supportCopyFeedback {
-  margin-left: 6px;
-  font-size: 0.8rem;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-.supportCopyFeedback.isVisible {
-  opacity: 0.75;
-}
-
-/* green box becomes "Děkujeme" */
-.supportNote {
-  background: #dff5e6;
-  border-radius: 14px;
-  padding: 18px;
-  text-align: center;
-  font-weight: 600;
+/* Green thank you box refinement */
+.green-box {
+  background-color: #dff5e6 !important;
   font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 18px;
+  border-radius: 14px;
 }

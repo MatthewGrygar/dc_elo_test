@@ -16,7 +16,7 @@
       </div>
       <div>
         <h1>DC ELO žebříček</h1>
-        <div class="subtitle">by <a href="https://grailseries.cz/" target="_blank" rel="noopener noreferrer" class="grail-link">GRAIL SERIES</a></div>
+        <div class="subtitle">by Grail Series</div>
         <div class="credit muted">
           Tento projekt přináší ELO hodnocení pro Duel Commander komunitu. Naším cílem je spravedlivě hodnotit výkony hráčů, podpořit soutěživost a nabídnout přehledný dlouhodobý žebříček.
         </div>
@@ -264,6 +264,62 @@
     setActive(0);
     startAuto();
   })();
+
+  // Podpořit (QR + účet)
+  const supportBtn = document.getElementById('supportBtn');
+  if (supportBtn) {
+    supportBtn.addEventListener('click', () => {
+      const mobile = isMobileModal();
+
+      const bodyHtml = `
+        <div class="supportModal">
+          <div class="supportHero">
+            <div class="supportTitle">Podpořte DC ELO</div>
+            <div class="supportBrand">BY <a href="https://grailseries.cz/" target="_blank" rel="noopener noreferrer" class="grail-link">GRAIL SERIES</a></div>
+            <div class="supportTagline">Vaše podpora nám pomáhá organizovat lepší turnaje</div>
+          </div>
+
+          <div class="supportQrWrap">
+            <img class="supportQr" src="QR.png" alt="QR kód" loading="lazy" />
+          </div>
+
+          <div class="supportInfo">
+            <div class="supportInfoTitle">INFORMACE O ÚČTU:</div>
+            <div class="supportInfoLine"><b>Číslo účtu:</b> <span class="copy-value" data-copy="2640017029/3030">2640017029/3030</span></div>
+            <div class="supportInfoLine"><b>IBAN:</b> <span class="copy-value" data-copy="CZ03 3030 0000 0026 4001 7029">CZ03 3030 0000 0026 4001 7029</span></div>
+            <div class="supportInfoLine"><b>BIC (SWIFT):</b> <span class="copy-value" data-copy="AIRACZP">AIRACZP</span></div>
+          </div>
+
+          <div class="supportNote">
+            Do zprávy pro příjemce uveďte <b>DC ELO Podpora</b>
+          </div>
+
+          <div class="supportThanks">Děkujeme</div>
+        </div>
+      `;
+
+      if (window.openModal) {
+        window.openModal({ title: 'Podpořit', subtitle: '', html: bodyHtml, fullscreen: mobile });
+      }
+
+      const overlay = document.getElementById('modalOverlay');
+      if (overlay && !mobile) {
+        overlay.classList.add('isSupport');
+
+        const cleanup = () => overlay.classList.remove('isSupport');
+        const closeBtn = overlay.querySelector('#closeModalBtn');
+        if (closeBtn) closeBtn.addEventListener('click', cleanup, { once: true });
+        overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cleanup(); }, { once: true });
+        const escHandler = (ev) => {
+          if (ev.key === 'Escape') {
+            cleanup();
+            window.removeEventListener('keydown', escHandler);
+          }
+        };
+        window.addEventListener('keydown', escHandler);
+      }
+    });
+  }
 
   const link = document.getElementById('anonLink');
   if (link) {

@@ -9,119 +9,6 @@ function isNarrowMobile(){
   return window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
 }
 
-function isMobileModal(){
-  // Fullscreen modal for smaller screens (homepage uses 760px).
-  return window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
-}
-
-// -------------------- PODPOŘIT --------------------
-function openSupportModal(){
-  const bodyHtml = `
-    <div class="supportModal">
-      <div class="supportHero">
-        <div class="supportTitle">Podpořte DC ELO</div>
-        <div class="supportBrand">BY GRAIL SERIES</div>
-        <div class="supportTagline">Vaše podpora nám pomáhá organizovat lepší turnaje</div>
-      </div>
-
-      <div class="supportQrWrap">
-        <img class="supportQr" src="QR.png" alt="QR kód" loading="lazy" />
-      </div>
-
-      <div class="supportInfo" aria-label="Informace o účtu">
-        <div class="supportInfoTitle">INFORMACE O ÚČTU:</div>
-
-        <div class="supportInfoLine">
-          <b>Číslo účtu:</b>
-          <span class="supportCopy" role="button" tabindex="0" data-copy="2640017029/3030">2640017029/3030</span>
-          <span class="supportCopyFeedback" aria-live="polite"></span>
-        </div>
-
-        <div class="supportInfoLine">
-          <b>IBAN:</b>
-          <span class="supportCopy" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">CZ03 3030 0000 0026 4001 7029</span>
-          <span class="supportCopyFeedback" aria-live="polite"></span>
-        </div>
-
-        <div class="supportInfoLine">
-          <b>BIC (SWIFT):</b>
-          <span class="supportCopy" role="button" tabindex="0" data-copy="AIRACZP">AIRACZP</span>
-          <span class="supportCopyFeedback" aria-live="polite"></span>
-        </div>
-      </div>
-
-      <div class="supportNote" aria-label="Poděkování">
-        Děkujeme
-      </div>
-    </div>
-  `;
-
-  openModal({
-    title: "Podpořit",
-    subtitle: "",
-    html: bodyHtml,
-    fullscreen: isMobileModal()
-  });
-
-  // Copy-to-clipboard (support modal) – binding after modal render
-  const overlayEl = document.getElementById("modalOverlay");
-  if (!overlayEl) return;
-  const rootEl = overlayEl.querySelector(".supportModal");
-  if (!rootEl) return;
-
-  const doCopy = async (text) => {
-    try{
-      if (navigator.clipboard && navigator.clipboard.writeText){
-        await navigator.clipboard.writeText(text);
-        return true;
-      }
-    }catch(e){}
-
-    // Fallback
-    try{
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      return !!ok;
-    }catch(e){
-      return false;
-    }
-  };
-
-  const flash = (wrapEl, msg) => {
-    const feedback = wrapEl?.querySelector?.(".supportCopyFeedback");
-    if (!feedback) return;
-    feedback.textContent = msg;
-    window.setTimeout(() => { feedback.textContent = ""; }, 1200);
-  };
-
-  const binds = rootEl.querySelectorAll(".supportCopy");
-  binds.forEach((el) => {
-    const text = el.getAttribute("data-copy") || "";
-    const wrap = el.closest(".supportInfoLine");
-
-    const handler = async () => {
-      if (!text) return;
-      const ok = await doCopy(text);
-      flash(wrap, ok ? "Zkopírováno" : "Nelze zkopírovat");
-    };
-
-    el.addEventListener("click", handler);
-    el.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " "){
-        ev.preventDefault();
-        handler();
-      }
-    });
-  });
-}
-
 // -------------------- THEME --------------------
 function syncLogo(){
   if (!logoImg) return;
@@ -245,7 +132,6 @@ function openMenuDestination({ title, subtitle, html }){
 }
 
 // -------------------- MENU --------------------
-const supportBtn = document.getElementById("supportBtn");
 const menuBtn = document.getElementById("menuBtn");
 const menuPanel = document.getElementById("menuPanel");
 
@@ -256,15 +142,6 @@ const articlesBtn = document.getElementById("menuArticles");
 const titlesBtn = document.getElementById("menuTitles");
 const contactBtn = document.getElementById("menuContact");
 const recordsBtn = document.getElementById("menuRecords");
-
-if (supportBtn){
-  supportBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMenu();
-    openSupportModal();
-  });
-}
 
 function openMenu(){
   if (!menuPanel) return;
