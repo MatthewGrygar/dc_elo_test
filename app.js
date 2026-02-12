@@ -3,12 +3,15 @@ import { openOpponentsModal } from "./opponents.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
+const TOURNAMENT_ELO_SHEET_NAME = "Tournament Elo";
 const DATA_SHEET_NAME = "Data";
 const PLAYER_CARDS_SHEET_NAME = "Player cards (CSV)";
 const PLAYER_SUMMARY_SHEET_NAME = "Player summary";
 
 const ELO_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(ELO_SHEET_NAME)}`;
+const TOURNAMENT_ELO_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(TOURNAMENT_ELO_SHEET_NAME)}`;
 const DATA_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(DATA_SHEET_NAME)}`;
 const PLAYER_CARDS_CSV_URL =
@@ -16,16 +19,15 @@ const PLAYER_CARDS_CSV_URL =
 const PLAYER_SUMMARY_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_SUMMARY_SHEET_NAME)}`;
 
-const statusEl = document.getElementById("status");
 const tbody = document.getElementById("tbody");
 const searchEl = document.getElementById("search");
 const ratedOnlyEl = document.getElementById("ratedOnly");
 const refreshBtn = document.getElementById("refresh");
-const lastDataBadge = document.getElementById("lastDataBadge");
 
 const avgEloEl = document.getElementById("avgElo");
 const avgWinrateEl = document.getElementById("avgWinrate");
 const totalGamesEl = document.getElementById("totalGames");
+const uniquePlayersEl = document.getElementById("uniquePlayers");
 const lastTournamentEl = document.getElementById("lastTournament");
 const requestUploadBtn = document.getElementById("requestUploadBtn");
 const newsBtn = document.getElementById("newsBtn");
@@ -39,6 +41,39 @@ let allRows = [];
 let lastTournamentText = "";
 let playerCardsCache = null;
 let playerSummaryCache = null;
+
+// Rating Class (VT1–VT4) is now ALWAYS sourced from: Tournament Elo → column I.
+let vtByPlayerCache = null;
+
+async function loadVtByPlayer(){
+  if (vtByPlayerCache) return vtByPlayerCache;
+  try{
+    const u = new URL(TOURNAMENT_ELO_CSV_URL);
+    u.searchParams.set("_", Date.now().toString());
+    console.log("[ELO] Fetch Tournament Elo (VT map) CSV:", u.toString());
+    const { res, text } = await fetchUtf8Text(u.toString());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
+
+    const rows = parseCSV(text);
+    // Tournament Elo mapping:
+    // PLAYER -> column A (0)
+    // Rating Class -> column I (8)
+    const map = new Map();
+    for (let i = 1; i < rows.length; i++){
+      const player = (rows[i][0] ?? "").toString().trim();
+      if (!player) continue;
+      const vt = normalizeVT(rows[i][8]);
+      map.set(normalizeKey(player), vt);
+    }
+    vtByPlayerCache = map;
+    return map;
+  } catch (e){
+    console.warn("[ELO] Failed to load Tournament Elo VT map:", e);
+    vtByPlayerCache = new Map();
+    return vtByPlayerCache;
+  }
+}
 
 // -------------------- SLUG ROUTING + VT --------------------
 let slugToPlayer = new Map();
@@ -318,7 +353,6 @@ function updateInfoBar(){
 }
 
 async function loadLastData(){
-  lastDataBadge.textContent = `načteno: ${formatNow()}`;
   try{
     const u = new URL(DATA_CSV_URL);
     u.searchParams.set("_", Date.now().toString());
@@ -344,11 +378,15 @@ async function loadLastData(){
 
 function renderStandings(rows){
   const q = normalizeKey(searchEl.value);
-  const ratedOnly = !!(ratedOnlyEl && ratedOnlyEl.checked);
+  const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
   const filtered = rows
-    .filter(r => (!ratedOnly || !!r.vt))
     .filter(r => !q || normalizeKey(r.player).includes(q))
     .sort((a,b)=>a.rank-b.rank);
+
+  // "Unikátní hráči" = počet řádků aktuálně zobrazených v tabulce
+  if (uniquePlayersEl){
+    uniquePlayersEl.textContent = filtered.length.toString();
+  }
 
   tbody.innerHTML = "";
   if (!filtered.length){
@@ -360,9 +398,8 @@ function renderStandings(rows){
 
   for (let i = 0; i < filtered.length; i++){
     const r = filtered[i];
-    // When "Pouze hodnocení hráči" is ON, re-number rank only for the displayed (rated) players.
-    // When OFF, keep the original global rank from the full standings.
-    const displayRank = ratedOnly ? (i + 1) : r.rank;
+    // Rank is always the stored rank. For DCPR mode, rank follows the row order in the Tournament Elo sheet.
+    const displayRank = r.rank;
     const peakText = Number.isFinite(r.peak) ? r.peak.toFixed(0) : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -382,44 +419,70 @@ function renderStandings(rows){
 }
 
 async function loadStandings(){
-  statusEl.textContent = "Načítám…";
   refreshBtn.disabled = true;
   try{
-    const u = new URL(ELO_CSV_URL);
+    const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
+    const vtMap = await loadVtByPlayer();
+
+    const u = new URL(dcprMode ? TOURNAMENT_ELO_CSV_URL : ELO_CSV_URL);
     u.searchParams.set("_", Date.now().toString());
-    console.log("[ELO] Fetch standings CSV:", u.toString());
+    console.log(`[ELO] Fetch standings CSV (${dcprMode ? "Tournament Elo" : "Elo standings"}):`, u.toString());
     const { res, text } = await fetchUtf8Text(u.toString());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
 
     const rows = parseCSV(text);
 
-    const iPlayer = 0, iRating = 1, iGames=2, iWin=3, iLoss=4, iDraw=5, iWinrate=6, iPeak=7, iVT=8;
+    // Data source mapping
+    // - Normal mode: Elo standings sheet (we still compute rank by sorting rating DESC)
+    // - DCPR mode: Tournament Elo sheet (rank follows row order, first player is row 2)
+    const loadedInDataOrder = rows.slice(1).map((r, idx) => {
+      const player = (r[0] ?? "").toString().trim();
+      if (!player) return null;
 
-    // Preserve original data order for deterministic slug collision resolution
-    const loadedInDataOrder = rows.slice(1).map((r, idx) => ({
-      _dataIndex: idx,
-      player:(r[iPlayer] ?? "").trim(),
-      rating:toNumber(r[iRating]),
-      peak:toNumber(r[iPeak]),
-      games:toNumber(r[iGames]),
-      win:toNumber(r[iWin]),
-      loss:toNumber(r[iLoss]),
-      draw:toNumber(r[iDraw]),
-      winrate:(r[iWinrate] ?? "").toString().trim(),
-      vt: normalizeVT(r[iVT])
-    })).filter(x=>x.player);
+      if (dcprMode){
+        // Tournament Elo mapping (A..I)
+        return {
+          _dataIndex: idx,
+          player,
+          rating: toNumber(r[1]),
+          games: toNumber(r[2]),
+          win: toNumber(r[3]),
+          loss: toNumber(r[4]),
+          draw: toNumber(r[5]),
+          winrate: (r[6] ?? "").toString().trim(),
+          peak: toNumber(r[7]),
+          vt: normalizeVT(r[8])
+        };
+      }
+
+      // Elo standings mapping (A..I), but VT is ALWAYS sourced from Tournament Elo → column I
+      return {
+        _dataIndex: idx,
+        player,
+        rating: toNumber(r[1]),
+        games: toNumber(r[2]),
+        win: toNumber(r[3]),
+        loss: toNumber(r[4]),
+        draw: toNumber(r[5]),
+        winrate: (r[6] ?? "").toString().trim(),
+        peak: toNumber(r[7]),
+        vt: vtMap.get(normalizeKey(player)) ?? null
+      };
+    }).filter(Boolean);
 
     const slugs = buildDeterministicSlugs(loadedInDataOrder.map(x => x.player));
     loadedInDataOrder.forEach((x, i) => { x.slug = slugs[i]; });
 
-    const loaded = loadedInDataOrder.slice();
-    loaded.sort((a,b)=>(b.rating||-Infinity)-(a.rating||-Infinity));
-    allRows = loaded.map((p,i)=>({ ...p, rank:i+1 }));
+    if (dcprMode){
+      allRows = loadedInDataOrder.map((p,i)=>({ ...p, rank:i+1 }));
+    } else {
+      const loaded = loadedInDataOrder.slice();
+      loaded.sort((a,b)=>(b.rating||-Infinity)-(a.rating||-Infinity));
+      allRows = loaded.map((p,i)=>({ ...p, rank:i+1 }));
+    }
 
     slugToPlayer = new Map(allRows.map(p => [p.slug, p]));
-
-    statusEl.textContent = `Načteno: ${allRows.length}`;
     renderStandings(allRows);
     updateInfoBar();
 
@@ -430,7 +493,7 @@ async function loadStandings(){
     }
   } catch (e){
     console.error("[ELO] Failed to load standings:", e);
-    statusEl.textContent = "Chyba načítání dat";
+    if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
     tbody.innerHTML = `<tr><td colspan="9" class="muted">❌ Data se nepodařilo načíst. Zkus „Znovu načíst“.</td></tr>`;
   } finally {
     refreshBtn.disabled = false;
@@ -877,7 +940,8 @@ if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click",
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 if (ratedOnlyEl){
-  ratedOnlyEl.addEventListener("change", () => renderStandings(allRows));
+  // Toggle "Pouze DCPR" switches the data source to Tournament Elo (same spreadsheet, different sheet)
+  ratedOnlyEl.addEventListener("change", () => loadStandings());
 }
 
 

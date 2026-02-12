@@ -137,6 +137,8 @@ const menuPanel = document.getElementById("menuPanel");
 
 const uploadBtn = document.getElementById("menuUpload");
 const newsBtn = document.getElementById("menuNews");
+const managementBtn = document.getElementById("menuManagement");
+const articlesBtn = document.getElementById("menuArticles");
 const titlesBtn = document.getElementById("menuTitles");
 const contactBtn = document.getElementById("menuContact");
 const recordsBtn = document.getElementById("menuRecords");
@@ -205,6 +207,40 @@ if (newsBtn){
     } else {
       openNewsModal();
     }
+  });
+}
+
+// VEDENÍ
+if (managementBtn){
+  managementBtn.addEventListener("click", () => {
+    closeMenu();
+    openMenuDestination({
+      title: "Vedení",
+      subtitle: "Placeholder",
+      html: `
+        <div class="pageModal">
+          <h2>VEDENÍ</h2>
+          <p class="muted">Obsah bude doplněn.</p>
+        </div>
+      `
+    });
+  });
+}
+
+// ČLÁNKY
+if (articlesBtn){
+  articlesBtn.addEventListener("click", () => {
+    closeMenu();
+    openMenuDestination({
+      title: "Články",
+      subtitle: "Placeholder",
+      html: `
+        <div class="pageModal">
+          <h2>ČLÁNKY</h2>
+          <p class="muted">Obsah bude doplněn.</p>
+        </div>
+      `
+    });
   });
 }
 

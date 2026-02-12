@@ -29,8 +29,6 @@
     <div class="headerRight">
       
       <div class="headerRightTop">
-        <div class="badge" id="lastDataBadge">načteno: načítám…</div>
-
         <button class="btnSupport" id="supportBtn" type="button" aria-label="Podpořit" title="Podpořit">
           <span class="btnSupportIcon" aria-hidden="true">★</span>
           <span class="btnSupportText">Podpořit</span>
@@ -43,6 +41,8 @@
         <div class="menuPanel" id="menuPanel" aria-hidden="true">
           <!-- <button class="menuItem" id="menuUpload" type="button">NAHRÁNÍ DAT</button> -->
           <button class="menuItem" id="menuNews" type="button">AKTUALITY</button>
+          <button class="menuItem" id="menuManagement" type="button">VEDENÍ</button>
+          <button class="menuItem" id="menuArticles" type="button">ČLÁNKY</button>
           <!-- <button class="menuItem" id="menuTitles" type="button">TITULY</button>
           <button class="menuItem" id="menuContact" type="button">KONTAKT</button>
           <button class="menuItem" id="menuRecords" type="button">REKORDY</button> -->
@@ -64,11 +64,20 @@
 </header>
 
 <div class="container">
+  <div class="heroCarousel" aria-label="Carousel">
+    <div class="carouselTrack" id="carouselTrack">
+      <img class="carouselImg isActive" src="carousel_1.svg" alt="Carousel 1" loading="lazy" />
+      <img class="carouselImg" src="carousel_2.svg" alt="Carousel 2" loading="lazy" />
+      <img class="carouselImg" src="carousel_3.svg" alt="Carousel 3" loading="lazy" />
+    </div>
+  </div>
+
   <div class="infoBar" aria-label="Souhrn">
     <div class="infoItem"><b>průměrné ELO</b><span id="avgElo">—</span></div>
     <div class="infoItem"><b>průměrný winrate</b><span id="avgWinrate">—</span></div>
     <div class="infoItem"><b>celkový počet her</b><span id="totalGames">—</span></div>
-    <div class="infoItem"><b>poslední turnaj</b><span id="lastTournament">—</span></div>
+    <div class="infoItem"><b>unikátní hráči</b><span id="uniquePlayers">—</span></div>
+    <div class="infoItem"><b>poslední data</b><span id="lastTournament">—</span></div>
   </div>
 </div>
 
@@ -76,20 +85,19 @@
   <div class="card">
     <div class="toolbar">
       <div class="toolbarSearchRow">
-        <span id="status" class="badge">Načítám…</span>
         <input id="search" type="search" placeholder="Hledat hráče…" autocomplete="off" />
       </div>
 
       <div class="toolbarControlsRow">
         <button id="refresh" type="button">Znovu načíst</button>
 
-        <div class="ratedToggle" title="Zobrazí jen hráče s Rating Class (Class A–D)">
+        <div class="ratedToggle" title="Zobrazí data z listu Tournament Elo">
           <span class="ratedToggleText">
-            <span class="labelFull">Pouze hodnocení hráči</span>
-            <span class="labelShort">Pouze hodnocení</span>
+            <span class="labelFull">Pouze DCPR</span>
+            <span class="labelShort">Pouze DCPR</span>
           </span>
 
-          <label class="switch" aria-label="Pouze hodnocení hráči">
+          <label class="switch" aria-label="Pouze DCPR">
             <input id="ratedOnly" type="checkbox" />
             <span class="slider" aria-hidden="true"></span>
           </label>
@@ -126,6 +134,21 @@
 <script type="module" src="modal.js"></script>
 <script type="module">
   const isMobileModal = () => window.matchMedia('(max-width: 760px)').matches;
+
+  // Carousel (placeholder images)
+  (function initCarousel(){
+    const track = document.getElementById('carouselTrack');
+    if (!track) return;
+    const imgs = Array.from(track.querySelectorAll('.carouselImg'));
+    if (imgs.length < 2) return;
+    let i = 0;
+    const next = () => {
+      imgs[i].classList.remove('isActive');
+      i = (i + 1) % imgs.length;
+      imgs[i].classList.add('isActive');
+    };
+    setInterval(next, 5200);
+  })();
 
   // Podpořit (QR + účet)
   const supportBtn = document.getElementById('supportBtn');
