@@ -112,3 +112,33 @@ try{
   window.setModalHeaderMeta = setModalHeaderMeta;
   window.setModalActions = setModalActions;
 }catch(e){}
+
+
+document.addEventListener("click", function(e){
+    if(e.target.classList.contains("copy-value")){
+        const text = e.target.getAttribute("data-copy");
+        if(navigator.clipboard){
+            navigator.clipboard.writeText(text).then(()=>{
+                showCopyFeedback(e.target);
+            });
+        } else {
+            const temp = document.createElement("textarea");
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            try { document.execCommand("copy"); } catch(err){}
+            document.body.removeChild(temp);
+            showCopyFeedback(e.target);
+        }
+    }
+});
+
+function showCopyFeedback(el){
+    const msg = document.createElement("span");
+    msg.textContent = " Zkopírováno";
+    msg.style.fontSize = "0.8em";
+    msg.style.marginLeft = "6px";
+    msg.style.opacity = "0.8";
+    el.appendChild(msg);
+    setTimeout(()=>{ msg.remove(); },1500);
+}
