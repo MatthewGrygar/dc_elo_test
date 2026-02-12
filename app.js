@@ -470,6 +470,9 @@ async function loadStandings(forceDcprMode){
 
       if (dcprMode){
         // Tournament Elo mapping (A..I)
+        // Rating Class (VT1-VT4) is ALWAYS sourced from Tournament Elo column I
+        // by matching PLAYER in column A. If the player is not present/missing
+        // in that column, treat as unranked (do not display any class badge).
         return {
           _dataIndex: idx,
           player,
@@ -480,7 +483,7 @@ async function loadStandings(forceDcprMode){
           draw: toNumber(r[5]),
           winrate: (r[6] ?? "").toString().trim(),
           peak: toNumber(r[7]),
-          vt: normalizeVT(r[8])
+          vt: (vtMap.get(normalizeKey(player)) ?? null)
         };
       }
 
