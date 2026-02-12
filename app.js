@@ -3,7 +3,7 @@ import { openOpponentsModal } from "./opponents.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
-const TOURNAMENT_ELO_SHEET_NAME = "Tournament Elo";
+const TOURNAMENT_ELO_SHEET_NAME = "Tournament_Elo";
 const DATA_SHEET_NAME = "Data";
 const PLAYER_CARDS_SHEET_NAME = "Player cards (CSV)";
 const PLAYER_SUMMARY_SHEET_NAME = "Player summary";
@@ -358,7 +358,7 @@ function updateInfoBar(){
 
   avgEloEl.textContent = Number.isFinite(medianElo) ? medianElo.toFixed(0) : "—";
   totalGamesEl.textContent = Number.isFinite(totalGames) ? totalGames.toFixed(0) : "—";
-  avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
+  if (avgWinrateEl) avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
   lastTournamentEl.textContent = lastTournamentText || "—";
 }
 
@@ -502,13 +502,9 @@ async function loadStandings(forceDcprMode){
     const slugs = buildDeterministicSlugs(loadedInDataOrder.map(x => x.player));
     loadedInDataOrder.forEach((x, i) => { x.slug = slugs[i]; });
 
-    if (dcprMode){
-      allRows = loadedInDataOrder.map((p,i)=>({ ...p, rank:i+1 }));
-    } else {
-      const loaded = loadedInDataOrder.slice();
-      loaded.sort((a,b)=>(b.rating||-Infinity)-(a.rating||-Infinity));
-      allRows = loaded.map((p,i)=>({ ...p, rank:i+1 }));
-    }
+    // Rank is always based on the row order in the selected sheet.
+    // Row 2 = rank 1, row 3 = rank 2, etc.
+    allRows = loadedInDataOrder.map((p, i) => ({ ...p, rank: i + 1 }));
 
     slugToPlayer = new Map(allRows.map(p => [p.slug, p]));
     renderStandings(allRows);
