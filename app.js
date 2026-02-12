@@ -358,7 +358,7 @@ function updateInfoBar(){
 
   avgEloEl.textContent = Number.isFinite(medianElo) ? medianElo.toFixed(0) : "—";
   totalGamesEl.textContent = Number.isFinite(totalGames) ? totalGames.toFixed(0) : "—";
-  avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
+  if (avgWinrateEl) avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
   lastTournamentEl.textContent = lastTournamentText || "—";
 }
 
