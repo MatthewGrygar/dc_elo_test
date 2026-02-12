@@ -70,6 +70,8 @@
       <img class="carouselImg" src="carousel_2.png" alt="Carousel 2" loading="lazy" />
       <img class="carouselImg" src="carousel_3.png" alt="Carousel 3" loading="lazy" />
     </div>
+    <button class="carouselZone carouselZoneLeft" id="carouselPrev" type="button" aria-label="Předchozí slide"></button>
+    <button class="carouselZone carouselZoneRight" id="carouselNext" type="button" aria-label="Další slide"></button>
     <div class="carouselDots" id="carouselDots" aria-hidden="true"></div>
   </div>
 
@@ -137,14 +139,18 @@
 
   // Carousel (placeholder images)
   (function initCarousel(){
+    const hero = document.querySelector('.heroCarousel');
     const track = document.getElementById('carouselTrack');
     const dotsWrap = document.getElementById('carouselDots');
-    if (!track) return;
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+    if (!track || !hero) return;
 
     const imgs = Array.from(track.querySelectorAll('.carouselImg'));
     if (imgs.length < 2) return;
 
     let i = 0;
+    let timer = null;
 
     // Dots
     let dots = [];
@@ -164,14 +170,99 @@
       if (dots.length) dots.forEach((d, k) => d.classList.toggle('isActive', k === idx));
     };
 
-    const next = () => {
-      i = (i + 1) % imgs.length;
+    const go = (idx) => {
+      i = (idx + imgs.length) % imgs.length;
       setActive(i);
     };
 
+    const next = () => go(i + 1);
+    const prev = () => go(i - 1);
+
+    const startAuto = () => {
+      stopAuto();
+      timer = window.setInterval(next, 5200);
+    };
+    const stopAuto = () => {
+      if (timer) {
+        window.clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    // Desktop click zones (no visible arrows)
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        prev();
+        startAuto();
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        next();
+        startAuto();
+      });
+    }
+
+    // Touch swipe (mobile/tablet)
+    let startX = 0;
+    let startY = 0;
+    let dx = 0;
+    let dy = 0;
+    let isTracking = false;
+    let isHorizontal = false;
+
+    const onTouchStart = (e) => {
+      if (!e.touches || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      dx = 0;
+      dy = 0;
+      isTracking = true;
+      isHorizontal = false;
+    };
+
+    const onTouchMove = (e) => {
+      if (!isTracking || !e.touches || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      dx = t.clientX - startX;
+      dy = t.clientY - startY;
+
+      // Decide gesture direction once user moves a bit
+      if (!isHorizontal) {
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        if (ax < 8 && ay < 8) return;
+        isHorizontal = ax > ay * 1.15;
+      }
+
+      // Prevent vertical scroll when user is swiping the carousel horizontally
+      if (isHorizontal) e.preventDefault();
+    };
+
+    const onTouchEnd = () => {
+      if (!isTracking) return;
+      isTracking = false;
+
+      const ax = Math.abs(dx);
+      const ay = Math.abs(dy);
+      const threshold = 40;
+      if (ax > threshold && ax > ay * 1.15) {
+        // Swipe left -> next, swipe right -> prev
+        if (dx < 0) next();
+        else prev();
+        startAuto();
+      }
+    };
+
+    hero.addEventListener('touchstart', onTouchStart, { passive: true });
+    hero.addEventListener('touchmove', onTouchMove, { passive: false });
+    hero.addEventListener('touchend', onTouchEnd, { passive: true });
+    hero.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
     // Start
     setActive(0);
-    setInterval(next, 5200);
+    startAuto();
   })();
 
   // Podpořit (QR + účet)
