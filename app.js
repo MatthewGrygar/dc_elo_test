@@ -64,12 +64,60 @@ function getCachedRows(dcprMode){
   return dcprMode ? standingsCache.dcprRows : standingsCache.eloRows;
 }
 
+// Ensure every standings row has a stable slug and the global slugToPlayer map is up to date.
+function ensureSlugsAndRouting(){
+  const elo = Array.isArray(standingsCache.eloRows) ? standingsCache.eloRows : [];
+  const dcpr = Array.isArray(standingsCache.dcprRows) ? standingsCache.dcprRows : [];
+
+  // Prefer Elo standings order as the canonical ordering for slug disambiguation.
+  // This keeps deep links stable when switching between ELO and DCPR modes.
+  const canonicalNames = elo.length
+    ? elo.map(r => r.player)
+    : dcpr.map(r => r.player);
+
+  const slugs = buildDeterministicSlugs(canonicalNames);
+  const nameToSlug = new Map();
+  canonicalNames.forEach((name, i) => {
+    nameToSlug.set(normalizeKey(name), slugs[i]);
+  });
+
+  function apply(rows){
+    for (const r of rows){
+      const k = normalizeKey(r.player);
+      if (!r.slug){
+        const s = nameToSlug.get(k);
+        if (s) r.slug = s;
+      }
+      // In case a player appears only in one dataset, generate + memoize.
+      if (!r.slug){
+        const s = baseSlugFromName(r.player);
+        let final = s;
+        let n = 2;
+        while ([...nameToSlug.values()].includes(final)){
+          final = `${s}-${n++}`;
+        }
+        r.slug = final;
+        nameToSlug.set(k, final);
+      }
+    }
+  }
+
+  apply(elo);
+  apply(dcpr);
+
+  // Keep routing map in sync with whatever is currently rendered
+  slugToPlayer = new Map((allRows || []).map(p => [p.slug, p]));
+}
+
 function switchStandingsMode(dcprMode){
   const cached = getCachedRows(!!dcprMode);
   if (cached && Array.isArray(cached) && cached.length){
     allRows = cached;
+    ensureSlugsAndRouting();
     updateInfoBar();
     renderStandings(allRows);
+    // If there is a deep link pending, apply it now that slug map is ready.
+    if (pendingSlugToOpen) applyRoute();
     return;
   }
   // Fallback (should be rare): fetch if cache missing
@@ -637,6 +685,7 @@ async function preloadStandingsOnInit(){
     // render current mode instantly (no refetch on toggle)
     const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
     allRows = getCachedRows(dcprMode) || [];
+    ensureSlugsAndRouting();
     updateInfoBar();
     renderStandings(allRows);
   } catch(e){
