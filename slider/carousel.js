@@ -21,35 +21,23 @@ function applyLangToSlides(lang){
   });
 }
 
-function wireSlideClicks(){
-  const track = document.getElementById("carouselTrack");
-  if (!track) return;
-
-  track.addEventListener("click", (e) => {
-    const img = e.target && e.target.closest ? e.target.closest(".carouselImg") : null;
-    if (!img) return;
-
-    const imgs = Array.from(track.querySelectorAll(".carouselImg"));
-    const k = imgs.indexOf(img);
-    if (k === -1) return;
-
-    // 1) Vedení (interní)
-    if (k === 0){
-      const btn = document.getElementById("menuManagement");
-      if (btn) btn.click();
-      return;
-    }
-    // 2) Články (interní)
-    if (k === 1){
-      const btn = document.getElementById("menuArticles");
-      if (btn) btn.click();
-      return;
-    }
-    // 3) Externí web
-    if (k === 2){
-      window.open("https://grailseries.cz/", "_blank", "noopener,noreferrer");
-    }
-  });
+function openSlideLink(k){
+  // 1) Vedení (interní)
+  if (k === 0){
+    const btn = document.getElementById("menuManagement");
+    if (btn) btn.click();
+    return;
+  }
+  // 2) Články (interní)
+  if (k === 1){
+    const btn = document.getElementById("menuArticles");
+    if (btn) btn.click();
+    return;
+  }
+  // 3) Externí web
+  if (k === 2){
+    window.open("https://grailseries.cz/", "_blank", "noopener,noreferrer");
+  }
 }
 
 function initCarousel(){
@@ -58,6 +46,7 @@ function initCarousel(){
   const dotsWrap = document.getElementById("carouselDots");
   const prevBtn = document.getElementById("carouselPrev");
   const nextBtn = document.getElementById("carouselNext");
+  const goBtn = document.getElementById("carouselGo");
   if (!track || !hero) return;
 
   const imgs = Array.from(track.querySelectorAll(".carouselImg"));
@@ -66,14 +55,29 @@ function initCarousel(){
   let i = 0;
   let timer = null;
 
-  // Dots
+  // Dots (clickable)
   let dots = [];
   if (dotsWrap){
     dotsWrap.innerHTML = "";
     dots = imgs.map((_, idx) => {
       const d = document.createElement("span");
       d.className = "carouselDot" + (idx === 0 ? " isActive" : "");
-      d.setAttribute("role", "presentation");
+      d.setAttribute("role", "button");
+      d.setAttribute("tabindex", "0");
+      d.setAttribute("aria-label", `Go to slide ${idx + 1}`);
+      d.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        go(idx);
+        startAuto();
+      });
+      d.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          go(idx);
+          startAuto();
+        }
+      });
       dotsWrap.appendChild(d);
       return d;
     });
@@ -109,6 +113,15 @@ function initCarousel(){
   }
   if (nextBtn){
     nextBtn.addEventListener("click", () => { next(); startAuto(); });
+  }
+
+  // Center click zone: open slide link
+  if (goBtn){
+    goBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openSlideLink(i);
+    });
   }
 
   // Touch swipe
@@ -157,7 +170,6 @@ function initCarousel(){
   hero.addEventListener("mouseleave", startAuto);
 
   startAuto();
-  wireSlideClicks();
 }
 
 // Init

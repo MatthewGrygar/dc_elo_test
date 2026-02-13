@@ -33,6 +33,7 @@ const DICT = {
     // Carousel
     carousel_prev: "Předchozí slide",
     carousel_next: "Další slide",
+    carousel_open: "Otevřít odkaz ze slideru",
 
     // Info bar
     info_median_elo: "Medián ELO",
@@ -153,6 +154,7 @@ const DICT = {
 
     carousel_prev: "Previous slide",
     carousel_next: "Next slide",
+    carousel_open: "Open slide link",
 
     info_median_elo: "Median ELO",
     info_total_games: "total games",
@@ -265,6 +267,7 @@ const DICT = {
 
     carousel_prev: "Diapositive précédente",
     carousel_next: "Diapositive suivante",
+    carousel_open: "Ouvrir le lien de la diapositive",
 
     info_median_elo: "ELO médian",
     info_total_games: "parties totales",

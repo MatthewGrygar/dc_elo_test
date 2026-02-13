@@ -386,7 +386,7 @@ html[data-theme="light"] .carouselDot.isActive{
   position:absolute;
   top:0;
   bottom:0;
-  width:50%;
+  width:10%;
   border:0;
   padding:0;
   margin:0;
@@ -397,6 +397,25 @@ html[data-theme="light"] .carouselDot.isActive{
 }
 .carouselZoneLeft{ left:0; }
 .carouselZoneRight{ right:0; }
+
+.carouselZoneCenter{
+  left:10%;
+  right:10%;
+  width:auto;
+  /* Leave space for dots row so they can be clicked without triggering navigation */
+  bottom:40px;
+  z-index:2;
+}
+
+/* Center click zone: opens the current slide link.
+   Keep dots clickable by leaving space at the bottom. */
+.carouselZoneCenter{
+  left:10%;
+  right:10%;
+  width:auto;
+  bottom:34px;
+  z-index:2;
+}
 
 @media (hover:hover){
   .carouselZone{ cursor:pointer; }
@@ -883,7 +902,8 @@ html[data-theme="light"] .btnOpponents{
 /* Player hero */
 .heroGrid{
   display:grid;
-  grid-template-columns: 340px 1fr;
+  /* Slightly wider left column for the dual (DCPR+ELO) block */
+  grid-template-columns: 410px 1fr;
   gap:10px;
   margin-bottom:12px;
   align-items:stretch;
@@ -1071,6 +1091,37 @@ html[data-theme="light"] .heroRank.rank2{
   flex-direction:column;
   gap:2px;
   min-width:0;
+  border:1px solid var(--border2);
+  background:var(--panel);
+  border-radius:14px;
+  padding:8px 10px;
+}
+
+.heroMiniStatWin{
+  border-color: rgba(60, 200, 120, .35);
+  background: rgba(60, 200, 120, .10);
+}
+html[data-theme="light"] .heroMiniStatWin{
+  border-color: rgba(20, 140, 70, .30);
+  background: rgba(20, 140, 70, .08);
+}
+
+.heroMiniStatLoss{
+  border-color: rgba(255, 110, 110, .35);
+  background: rgba(255, 110, 110, .10);
+}
+html[data-theme="light"] .heroMiniStatLoss{
+  border-color: rgba(190, 40, 40, .28);
+  background: rgba(190, 40, 40, .07);
+}
+
+.heroMiniStatDraw{
+  border-color: rgba(245, 200, 70, .35);
+  background: rgba(245, 200, 70, .10);
+}
+html[data-theme="light"] .heroMiniStatDraw{
+  border-color: rgba(190, 140, 20, .28);
+  background: rgba(190, 140, 20, .07);
 }
 .heroMiniStat b{
   font-size:11px;
