@@ -8,7 +8,7 @@ function prefixFor(lang){
 
 function srcFor(lang, idx){
   const p = prefixFor(lang);
-  return `slider/carousel_${p}_${idx}.png`;
+  return `assets/images/slider/carousel_${p}_${idx}.png`;
 }
 
 function applyLangToSlides(lang){

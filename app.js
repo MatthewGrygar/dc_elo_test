@@ -1300,7 +1300,7 @@ async function loadAll(){
 /* THEME + LOGO swap */
 function syncLogo(){
   const theme = htmlEl.getAttribute("data-theme") || "dark";
-  logoImg.src = (theme === "light") ? "logo2.png" : "logo.png";
+  logoImg.src = (theme === "light") ? "assets/images/logos/logo2.png" : "assets/images/logos/logo.png";
 }
 function setTheme(theme){
   htmlEl.setAttribute("data-theme", theme);

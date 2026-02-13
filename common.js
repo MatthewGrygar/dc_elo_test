@@ -29,7 +29,7 @@ function openSupportModal(){
       </div>
 
       <div class="supportQrWrap">
-        <img class="supportQr" src="QR.png" alt="QR kód" loading="lazy" />
+        <img class="supportQr" src="assets/images/support/QR.png" alt="QR kód" loading="lazy" />
       </div>
 
       <div class="supportInfo" aria-label="Informace o účtu">
@@ -130,7 +130,7 @@ function openSupportModal(){
 function syncLogo(){
   if (!logoImg) return;
   const theme = htmlEl.getAttribute("data-theme") || "dark";
-  logoImg.src = (theme === "dark") ? "logo.png" : "logo2.png";
+  logoImg.src = (theme === "dark") ? "assets/images/logos/logo.png" : "assets/images/logos/logo2.png";
 }
 
 function setTheme(theme){
@@ -272,7 +272,7 @@ const langBtn = document.getElementById("langBtn");
 const langPanel = document.getElementById("langPanel");
 
 function flagFor(lang){
-  const src = (lang === "en") ? "eng.png" : (lang === "fr") ? "fr.png" : "cz.png";
+  const src = (lang === "en") ? "assets/images/flags/eng.png" : (lang === "fr") ? "assets/images/flags/fr.png" : "assets/images/flags/cz.png";
   const alt = (lang === "en") ? "GB" : (lang === "fr") ? "FR" : "CZ";
   return `<img class="langFlagImg" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
@@ -310,7 +310,7 @@ function renderLangUi(){
   if (!langBtn || !langPanel) return;
 
   const cur = getLang();
-  langBtn.innerHTML = `<span class="langCurrent"><span class="langCode">${codeFor(cur)}</span><span class="langCircle" aria-hidden="true">${flagFor(cur)}</span></span>`;
+  langBtn.innerHTML = `<span class="langCurrent"><span class="langCircle" aria-hidden="true">${flagFor(cur)}</span><span class="langCode">${codeFor(cur)}</span></span>`;
 langBtn.setAttribute("aria-label", "Language");
   langBtn.setAttribute("title", "Language");
 
