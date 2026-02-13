@@ -465,19 +465,19 @@ async function getPlayerStandingFromSheet(sheetName, dcprMode, playerName){
 function heroMiniStatsHtml(obj){
   if (!obj){
     return `
-      <div class="heroMiniStat"><b>games</b><span>—</span></div>
       <div class="heroMiniStat heroMiniStatWin"><b>win</b><span>—</span></div>
       <div class="heroMiniStat heroMiniStatLoss"><b>loss</b><span>—</span></div>
       <div class="heroMiniStat heroMiniStatDraw"><b>draw</b><span>—</span></div>
+      <div class="heroMiniStat"><b>games</b><span>—</span></div>
       <div class="heroMiniStat"><b>winrate</b><span>—</span></div>
       <div class="heroMiniStat"><b>peak</b><span>—</span></div>
     `;
   }
   return `
-    <div class="heroMiniStat"><b>games</b><span>${safeInt(obj.games)}</span></div>
     <div class="heroMiniStat heroMiniStatWin"><b>win</b><span>${safeInt(obj.win)}</span></div>
     <div class="heroMiniStat heroMiniStatLoss"><b>loss</b><span>${safeInt(obj.loss)}</span></div>
     <div class="heroMiniStat heroMiniStatDraw"><b>draw</b><span>${safeInt(obj.draw)}</span></div>
+    <div class="heroMiniStat"><b>games</b><span>${safeInt(obj.games)}</span></div>
     <div class="heroMiniStat"><b>winrate</b><span>${escapeHtml(obj.winrate || "—")}</span></div>
     <div class="heroMiniStat"><b>peak</b><span>${Number.isFinite(obj.peak) ? obj.peak.toFixed(0) : "—"}</span></div>
   `;

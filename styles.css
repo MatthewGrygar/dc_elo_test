@@ -1128,11 +1128,13 @@ html[data-theme="light"] .heroRank.rank2{
   line-height:1;
 }
 .heroColStats{
+  /* push stats grid to the bottom of the left column */
   margin-top:auto;
   display:grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap:8px 10px;
-  margin-top:6px;
+  /* keep a bit of breathing room above, while still staying anchored at the bottom */
+  padding-top:6px;
 }
 .heroMiniStat{
   display:flex;
