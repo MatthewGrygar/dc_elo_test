@@ -1,4 +1,5 @@
 import { setModalActions, setModalHeaderMeta, setModalContent } from "./modal.js";
+import { t as i18nT } from "./i18n.js";
 
 function escapeHtml(str) {
   return (str ?? "")
@@ -57,14 +58,14 @@ function buildOpponentsStats(cards) {
 
 function renderOpponentsTable(stats) {
   if (!stats.length) {
-    return `<div class="bigError"><div class="icon">❌</div> Žádní soupeři nenalezeni.</div>`;
+    return `<div class="bigError"><div class="icon">❌</div> ${i18nT("opp_none")}</div>`;
   }
 
   const head = `
     <thead>
       <tr>
-        <th>Soupeř</th>
-        <th class="num colOppGames">Počet her</th>
+        <th>${i18nT("opp_th_opponent")}</th>
+        <th class="num colOppGames">${i18nT("opp_th_games")}</th>
         <th class="num colOppWin">WIN</th>
         <th class="num colOppLoss">LOSS</th>
         <th class="num colOppDraw">DRAW</th>
@@ -91,10 +92,10 @@ function renderOpponentsTable(stats) {
 }
 
 export function openOpponentsModal({ playerName, cards, onBack }) {
-  setModalHeaderMeta({ title: playerName || "Hráč", subtitle: "Protihráči" });
+  setModalHeaderMeta({ title: playerName || "Player", subtitle: i18nT("opp_subtitle") });
 
   setModalActions(`
-    <button id="oppBackBtn" class="btnPrimary" type="button">← Zpět</button>
+    <button id="oppBackBtn" class="btnPrimary" type="button">${i18nT("opp_back")}</button>
   `);
 
   // Back handler (delegated after DOM update)
@@ -112,8 +113,8 @@ export function openOpponentsModal({ playerName, cards, onBack }) {
   setModalContent(`
     <div class="box boxPad">
       <div class="oppHeaderRow">
-        <div class="sectionTitle">Soupeři hráče: ${escapeHtml(playerName || "")}</div>
-        <input id="oppSearchInput" type="text" placeholder="Hledat soupeře…" autocomplete="off" />
+        <div class="sectionTitle">${i18nT("opp_section_title")} ${escapeHtml(playerName || "")}</div>
+        <input id="oppSearchInput" type="text" placeholder="${i18nT("opp_search_placeholder")}" autocomplete="off" />
       </div>
       ${renderOpponentsTable(stats)}
     </div>

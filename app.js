@@ -1,5 +1,6 @@
 import { openModal, setModalActions, setModalContent, setModalHeaderMeta, closeModal, setModalOnCloseRequest } from "./modal.js";
 import { openOpponentsModal } from "./opponents.js";
+import { t, onLangChange } from "./i18n.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
@@ -184,7 +185,7 @@ function getSlugFromLocation(){
 
 let __closeModalRaw = closeModal;
 function openPlayerModal(playerObj){
-  openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+  openModal({ title: playerObj.player, subtitle: t("player_detail"), html: `<div class="muted">${t("loading")}</div>` });
   loadPlayerDetail(playerObj);
 }
 
@@ -435,7 +436,7 @@ async function loadStandings(forceDcprMode){
   // Clear previous table immediately so old data doesn't linger while reloading.
   allRows = [];
   if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
-  tbody.innerHTML = `<tr><td colspan="9" class="muted">Načítám…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("loading")}</td></tr>`;
   try{
     const dcprMode = (typeof forceDcprMode === "boolean")
       ? forceDcprMode
@@ -518,7 +519,7 @@ async function loadStandings(forceDcprMode){
   } catch (e){
     console.error("[ELO] Failed to load standings:", e);
     if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
-    tbody.innerHTML = `<tr><td colspan="9" class="muted">❌ Data se nepodařilo načíst. Zkus „Znovu načíst“.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("data_load_failed")}</td></tr>`;
   } finally {
     refreshBtn.disabled = false;
   }
@@ -584,7 +585,7 @@ async function getSummaryForPlayer(playerName){
 
 function buildSvgLineChartEqualX(points){
   const clean = points.filter(p => Number.isFinite(p.matchId) && Number.isFinite(p.elo)).slice();
-  if (clean.length < 2) return `<div class="muted">Graf nelze vykreslit (málo dat).</div>`;
+  if (clean.length < 2) return `<div class="muted">${t("chart_no_data")}</div>`;
 
   const w=980, h=280, padL=44, padR=18, padT=18, padB=42;
   const ys = clean.map(p=>p.elo);
@@ -663,7 +664,7 @@ function buildHero(playerObj, summary){
           </div>
           ${playerObj.vt ? `<div class="heroVT ${vtToClass(playerObj.vt)}">${escapeHtml(vtDetailText(playerObj.vt))}</div>` : ""}
           <div style="margin-top:10px;">
-            <div class="heroEloLabel">aktuální rating</div>
+            <div class="heroEloLabel">${t("current_rating")}</div>
             <div class="heroElo">${Number.isFinite(playerObj.rating) ? playerObj.rating.toFixed(0) : ""}</div>
           </div>
         </div>
@@ -685,10 +686,10 @@ function buildHero(playerObj, summary){
       <div class="rightCol">
         <div class="box boxPad chartBox">
           <div class="chartHead">
-            <b>Vývoj ELO</b>
-            <span id="chartMeta" class="muted">Načítám data hráče…</span>
+            <b>${t("elo_evolution")}</b>
+            <span id="chartMeta" class="muted">${t("loading_player_data")}</span>
           </div>
-          <div id="eloChart" class="muted">Načítám data hráče…</div>
+          <div id="eloChart" class="muted">${t("loading_player_data")}</div>
         </div>
 
         <div class="metaBoxRow">
@@ -783,7 +784,7 @@ function buildTournamentTable(rows){
     <tr class="summaryRow">
       <td colspan="2">Souhrn</td>
       <td>Record: ${w}-${l}-${d}</td>
-      <td colspan="2" class="num">Průměr ELO soupeřů: ${Number.isFinite(avgOpp) ? avgOpp.toFixed(0) : "—"}</td>
+      <td colspan="2" class="num">${t("avg_opp_elo")} ${Number.isFinite(avgOpp) ? avgOpp.toFixed(0) : "—"}</td>
       <td colspan="2"></td>
     </tr>
   `;
@@ -792,10 +793,10 @@ function buildTournamentTable(rows){
 }
 
 async function loadPlayerDetail(playerObj){
-  setModalHeaderMeta({ title: playerObj.player, subtitle: "Detail hráče" });
+  setModalHeaderMeta({ title: playerObj.player, subtitle: t("player_detail") });
   // Akce v horní liště nastavujeme až po načtení dat
   setModalActions("");
-  setModalContent(`<div class="muted">Načítám…</div>`);
+  setModalContent(`<div class="muted">${t("loading")}</div>`);
 
   try{
     const [allCards, summary] = await Promise.all([loadPlayerCards(), getSummaryForPlayer(playerObj.player)]);
@@ -806,7 +807,7 @@ async function loadPlayerDetail(playerObj){
       currentPlayerDetail = null;
       setModalActions("");
       setModalContent(buildHero(playerObj, summary) +
-        `<div class="bigError"><div class="icon">❌</div> Podrobná data hráče nenalezena</div>`);
+        `<div class="bigError"><div class="icon">❌</div> ${t("player_not_found")}</div>`);
       return;
     }
 
@@ -814,7 +815,7 @@ async function loadPlayerDetail(playerObj){
     currentPlayerDetail = { playerObj, cards };
 
     // Tlačítko "Protihráči" v horní liště (vedle Zavřít)
-    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">PROTIHRÁČI</button>`);
+    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">${t("opponents")}</button>`);
     queueMicrotask(() => {
       const btn = document.getElementById("oppBtn");
       if (!btn) return;
@@ -824,7 +825,7 @@ async function loadPlayerDetail(playerObj){
           playerName: playerObj.player,
           cards,
           onBack: () => {
-            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+            openModal({ title: playerObj.player, subtitle: t("player_detail"), html: `<div class="muted">${t("loading")}</div>` });
             loadPlayerDetail(playerObj);
           }
         });
@@ -917,7 +918,7 @@ async function loadPlayerDetail(playerObj){
         chartMeta.textContent = `zápasů: ${allPoints.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
       } else {
         chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
-        if (chartEl) chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit.</div>`;
+        if (chartEl) chartEl.innerHTML = `<div class="muted">${t("chart_no_data")}</div>`;
       }
     }
 

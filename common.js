@@ -1,12 +1,129 @@
 // common.js – menu ovládání + mobilní "stránky" + přepínač režimu
 import { openModal, closeModal } from "./modal.js";
 import { openNewsModal, buildNewsHtml } from "./aktuality.js";
+import { initI18n, t, setLang, getLang, onLangChange } from "./i18n.js";
 
 const htmlEl = document.documentElement;
 const logoImg = document.getElementById("logoImg");
 
+// Init i18n early
+initI18n();
+
 function isNarrowMobile(){
   return window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
+}
+
+function isMobileModal(){
+  // Fullscreen modal for smaller screens (homepage uses 760px).
+  return window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+}
+
+// -------------------- PODPOŘIT --------------------
+function openSupportModal(){
+  const bodyHtml = `
+    <div class="supportModal">
+      <div class="supportHero">
+        <div class="supportTitle">${t("support_hero_title")}</div>
+        <div class="supportBrand">${t("support_hero_brand")}</div>
+        <div class="supportTagline">${t("support_hero_tag")}</div>
+      </div>
+
+      <div class="supportQrWrap">
+        <img class="supportQr" src="QR.png" alt="QR kód" loading="lazy" />
+      </div>
+
+      <div class="supportInfo" aria-label="Informace o účtu">
+        <div class="supportInfoTitle">${t("support_acc_title")}</div>
+
+        <div class="supportInfoLine">
+          <b>${t("support_acc_number")}</b>
+          <span class="supportCopy" role="button" tabindex="0" data-copy="2640017029/3030">2640017029/3030</span>
+          <span class="supportCopyFeedback" aria-live="polite"></span>
+        </div>
+
+        <div class="supportInfoLine">
+          <b>${t("support_iban")}</b>
+          <span class="supportCopy" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">CZ03 3030 0000 0026 4001 7029</span>
+          <span class="supportCopyFeedback" aria-live="polite"></span>
+        </div>
+
+        <div class="supportInfoLine">
+          <b>${t("support_bic")}</b>
+          <span class="supportCopy" role="button" tabindex="0" data-copy="AIRACZP">AIRACZP</span>
+          <span class="supportCopyFeedback" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="supportNote" aria-label="Poděkování">
+        ${t("support_thanks")}
+      </div>
+    </div>
+  `;
+
+  openModal({
+    title: t("support_modal_title"),
+    subtitle: "",
+    html: bodyHtml,
+    fullscreen: isMobileModal()
+  });
+
+  // Copy-to-clipboard (support modal) – binding after modal render
+  const overlayEl = document.getElementById("modalOverlay");
+  if (!overlayEl) return;
+  const rootEl = overlayEl.querySelector(".supportModal");
+  if (!rootEl) return;
+
+  const doCopy = async (text) => {
+    try{
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    }catch(e){}
+
+    // Fallback
+    try{
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return !!ok;
+    }catch(e){
+      return false;
+    }
+  };
+
+  const flash = (wrapEl, msg) => {
+    const feedback = wrapEl?.querySelector?.(".supportCopyFeedback");
+    if (!feedback) return;
+    feedback.textContent = msg;
+    window.setTimeout(() => { feedback.textContent = ""; }, 1200);
+  };
+
+  const binds = rootEl.querySelectorAll(".supportCopy");
+  binds.forEach((el) => {
+    const text = el.getAttribute("data-copy") || "";
+    const wrap = el.closest(".supportInfoLine");
+
+    const handler = async () => {
+      if (!text) return;
+      const ok = await doCopy(text);
+      flash(wrap, ok ? t("copied") : t("copy_fail"));
+    };
+
+    el.addEventListener("click", handler);
+    el.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " "){
+        ev.preventDefault();
+        handler();
+      }
+    });
+  });
 }
 
 // -------------------- THEME --------------------
@@ -20,7 +137,7 @@ function setTheme(theme){
   htmlEl.setAttribute("data-theme", theme);
   const themeLabel = document.getElementById("themeLabel");
   if (themeLabel){
-    themeLabel.textContent = (theme === "dark") ? "☀️ Světlý" : "Tmavý 🌙";
+    themeLabel.textContent = (theme === "dark") ? t("theme_light") : t("theme_dark");
   }
   localStorage.setItem("theme", theme);
   syncLogo();
@@ -43,6 +160,20 @@ if (themeToggle){
 }
 // Aby app.js nedělalo dvojí bind
 window.__themeHandled = true;
+
+// If language changes, re-render theme label too.
+onLangChange(() => {
+  const cur = htmlEl.getAttribute("data-theme") || "dark";
+  const themeLabel = document.getElementById("themeLabel");
+  if (themeLabel){
+    themeLabel.textContent = (cur === "dark") ? t("theme_light") : t("theme_dark");
+  }
+  // Also update document title if keyed
+  const titleKey = document.querySelector("meta[name='dc-title-key']")?.getAttribute("content");
+  if (titleKey){
+    document.title = t(titleKey);
+  }
+});
 
 // -------------------- MOBILNÍ "STRÁNKA" --------------------
 // Na mobilu nechceme "okno" (modal), ale samostatnou celou stránku přes displej.
@@ -132,8 +263,95 @@ function openMenuDestination({ title, subtitle, html }){
 }
 
 // -------------------- MENU --------------------
+const supportBtn = document.getElementById("supportBtn");
 const menuBtn = document.getElementById("menuBtn");
 const menuPanel = document.getElementById("menuPanel");
+
+// -------------------- LANGUAGE --------------------
+const langBtn = document.getElementById("langBtn");
+const langPanel = document.getElementById("langPanel");
+
+function flagFor(lang){
+  if (lang === "en") return "🇬🇧";
+  if (lang === "fr") return "🇫🇷";
+  return "🇨🇿";
+}
+
+function labelFor(lang){
+  if (lang === "en") return "English";
+  if (lang === "fr") return "Français";
+  return "Čeština";
+}
+
+function openLang(){
+  if (!langPanel) return;
+  langPanel.classList.add("isOpen");
+  langPanel.setAttribute("aria-hidden", "false");
+}
+
+function closeLang(){
+  if (!langPanel) return;
+  langPanel.classList.remove("isOpen");
+  langPanel.setAttribute("aria-hidden", "true");
+}
+
+function toggleLang(){
+  if (!langPanel) return;
+  langPanel.classList.contains("isOpen") ? closeLang() : openLang();
+}
+
+function renderLangUi(){
+  if (!langBtn || !langPanel) return;
+
+  const cur = getLang();
+  langBtn.textContent = flagFor(cur);
+  langBtn.setAttribute("aria-label", "Language");
+  langBtn.setAttribute("title", "Language");
+
+  // show other two languages (requested: CZ shows EN+FR)
+  const options = ["cs", "en", "fr"].filter((l) => l !== cur);
+  langPanel.innerHTML = options
+    .map((l) =>
+      `<button class="langItem" type="button" data-lang="${l}"><span class="langFlag">${flagFor(l)}</span><span class="langName">${labelFor(l)}</span></button>`
+    )
+    .join("");
+
+  langPanel.querySelectorAll(".langItem").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const l = btn.getAttribute("data-lang") || "cs";
+      closeLang();
+      setLang(l);
+      renderLangUi();
+    });
+  });
+}
+
+if (langBtn && langPanel){
+  renderLangUi();
+
+  langBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // keep menu and lang dropdown mutually exclusive
+    try{ closeMenu(); }catch(_e){}
+    toggleLang();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!langPanel.classList.contains("isOpen")) return;
+    if (langPanel.contains(e.target) || langBtn.contains(e.target)) return;
+    closeLang();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLang();
+  });
+
+  onLangChange(() => {
+    renderLangUi();
+  });
+}
 
 const uploadBtn = document.getElementById("menuUpload");
 const newsBtn = document.getElementById("menuNews");
@@ -142,6 +360,15 @@ const articlesBtn = document.getElementById("menuArticles");
 const titlesBtn = document.getElementById("menuTitles");
 const contactBtn = document.getElementById("menuContact");
 const recordsBtn = document.getElementById("menuRecords");
+
+if (supportBtn){
+  supportBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu();
+    openSupportModal();
+  });
+}
 
 function openMenu(){
   if (!menuPanel) return;
@@ -162,6 +389,7 @@ if (menuBtn && menuPanel){
   menuBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
+    try{ closeLang(); }catch(_e){}
     toggleMenu();
   });
 
@@ -181,13 +409,13 @@ if (uploadBtn){
   uploadBtn.addEventListener("click", () => {
     closeMenu();
     openMenuDestination({
-      title: "Nahrání dat",
-      subtitle: "Formulář",
+      title: t("upload_title"),
+      subtitle: t("upload_sub"),
       html: `
         <div class="pageModal">
-          <h2>NAHRÁNÍ DAT</h2>
-          <p class="muted">Data se nahrávají přes Google formulář.</p>
-          <a class="btnPrimary" href="https://forms.gle/Y7aHApF5NLFLw6MP9" target="_blank" rel="noopener">Otevřít formulář</a>
+          <h2>${t("menu_upload")}</h2>
+          <p class="muted">${t("upload_desc")}</p>
+          <a class="btnPrimary" href="https://forms.gle/Y7aHApF5NLFLw6MP9" target="_blank" rel="noopener">${t("upload_open")}</a>
         </div>
       `
     });
@@ -200,7 +428,7 @@ if (newsBtn){
     closeMenu();
     if (isNarrowMobile()){
       openMobilePage({
-        title: "Aktuality",
+        title: t("news_title"),
         subtitle: "Verze 1.0.0",
         html: buildNewsHtml()
       });
@@ -215,12 +443,12 @@ if (managementBtn){
   managementBtn.addEventListener("click", () => {
     closeMenu();
     openMenuDestination({
-      title: "Vedení",
-      subtitle: "Placeholder",
+      title: t("management_title"),
+      subtitle: t("management_sub"),
       html: `
         <div class="pageModal">
-          <h2>VEDENÍ</h2>
-          <p class="muted">Obsah bude doplněn.</p>
+          <h2>${t("menu_management")}</h2>
+          <p class="muted">${t("management_body")}</p>
         </div>
       `
     });
@@ -232,12 +460,12 @@ if (articlesBtn){
   articlesBtn.addEventListener("click", () => {
     closeMenu();
     openMenuDestination({
-      title: "Články",
-      subtitle: "Placeholder",
+      title: t("articles_title"),
+      subtitle: t("articles_sub"),
       html: `
         <div class="pageModal">
-          <h2>ČLÁNKY</h2>
-          <p class="muted">Obsah bude doplněn.</p>
+          <h2>${t("menu_articles")}</h2>
+          <p class="muted">${t("articles_body")}</p>
         </div>
       `
     });
@@ -249,12 +477,12 @@ if (titlesBtn){
   titlesBtn.addEventListener("click", () => {
     closeMenu();
     openMenuDestination({
-      title: "Tituly",
-      subtitle: "Přehled",
+      title: t("titles_title"),
+      subtitle: t("titles_desc"),
       html: `
         <div class="pageModal">
-          <h2>TITULY</h2>
-          <p class="muted">Zatím krátký popis. Tuhle stránku následně spolu přepracujeme.</p>
+          <h2>${t("menu_titles")}</h2>
+          <p class="muted">${t("titles_desc")}</p>
         </div>
       `
     });
@@ -266,12 +494,12 @@ if (contactBtn){
   contactBtn.addEventListener("click", () => {
     closeMenu();
     openMenuDestination({
-      title: "Kontakt",
-      subtitle: "Info",
+      title: t("contact_title"),
+      subtitle: t("contact_desc"),
       html: `
         <div class="pageModal">
-          <h2>KONTAKT</h2>
-          <p class="muted">Zatím krátký popis. Později doplníme kontaktní údaje a odkazy.</p>
+          <h2>${t("menu_contact")}</h2>
+          <p class="muted">${t("contact_desc")}</p>
         </div>
       `
     });
@@ -283,12 +511,12 @@ if (recordsBtn){
   recordsBtn.addEventListener("click", () => {
     closeMenu();
     openMenuDestination({
-      title: "Rekordy",
-      subtitle: "Přehled",
+      title: t("records_title"),
+      subtitle: t("records_desc"),
       html: `
         <div class="pageModal">
-          <h2>REKORDY</h2>
-          <p class="muted">Zatím krátký popis. Následně doplníme konkrétní rekordy a statistiky.</p>
+          <h2>${t("menu_records")}</h2>
+          <p class="muted">${t("records_desc")}</p>
         </div>
       `
     });

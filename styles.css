@@ -216,6 +216,55 @@ html[data-theme="light"] .menuPanel{
 
 .menuPanel.isOpen{ display:block; }
 
+/* ---------- Language switcher ---------- */
+.langWrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+}
+
+.btnLang{ font-size:18px; line-height:1; }
+
+.langPanel{
+  position:absolute;
+  right:0;
+  top:56px;
+  min-width:190px;
+  padding:10px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:rgba(15,17,21,.92);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  display:none;
+  z-index:45;
+}
+
+html[data-theme="light"] .langPanel{
+  background:rgba(255,255,255,.92);
+}
+
+.langPanel.isOpen{ display:block; }
+
+.langItem{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+  font-weight:800;
+}
+
+.langItem:hover{ background:var(--panel2); border-color:var(--border2); }
+
+.langFlag{ font-size:18px; line-height:1; }
+.langName{ font-size:14px; opacity:.92; }
+
 .menuItem{
   width:100%;
   display:flex;
@@ -1517,3 +1566,78 @@ html[data-theme="light"] .tournamentFilter select option{
 /* extra bottom space for mobile scroll reach */
 .endSpacer{ height: 96px; }
 @media (min-width: 561px){ .endSpacer{ height: 24px; } }
+
+
+
+/* === Requested UI tweaks (title page + support modal) === */
+
+/* 1) Desktop: Support + hamburger in one row (preserve mobile behavior) */
+@media (min-width: 900px) {
+  .headerRightTop {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 8–12px */
+  }
+}
+
+/* 2) Link styling for "GRAIL SERIES" in intro */
+.grail-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+.grail-link:hover {
+  opacity: 0.75;
+}
+
+/* 3) Support modal: account block + copy + green thank-you box */
+.supportInfo {
+  padding: 18px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+/* better spacing between lines */
+.supportInfoLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 0;
+}
+.supportInfoTitle {
+  margin-bottom: 10px;
+}
+
+/* click-to-copy values */
+.supportCopy {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.15s ease;
+}
+.supportCopy:hover {
+  opacity: 0.75;
+}
+
+/* subtle feedback */
+.supportCopyFeedback {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.supportCopyFeedback.isVisible {
+  opacity: 0.75;
+}
+
+/* green box becomes "Děkujeme" */
+.supportNote {
+  background: #dff5e6;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.6rem;
+}
