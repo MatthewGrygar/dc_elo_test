@@ -53,6 +53,31 @@ let playerSummaryCache = null;
 // Only the latest loadStandings() call is allowed to update UI/state.
 let standingsLoadSeq = 0;
 
+// Standings caches (prefetched on page load to avoid table "jump" when switching modes)
+let standingsCache = {
+  vtMap: null,
+  eloRows: null,   // from "Elo standings"
+  dcprRows: null   // from "Tournament Elo"
+};
+
+function getCachedRows(dcprMode){
+  return dcprMode ? standingsCache.dcprRows : standingsCache.eloRows;
+}
+
+function switchStandingsMode(dcprMode){
+  const cached = getCachedRows(!!dcprMode);
+  if (cached && Array.isArray(cached) && cached.length){
+    allRows = cached;
+    updateInfoBar();
+    renderStandings(allRows);
+    return;
+  }
+  // Fallback (should be rare): fetch if cache missing
+  loadStandings(!!dcprMode);
+}
+
+
+
 // Rating Class (VT1–VT4) is now ALWAYS sourced from: Tournament Elo → column I.
 let vtByPlayerCache = null;
 
@@ -410,6 +435,18 @@ function heroMiniStatsHtml(obj){
   `;
 }
 
+
+function rankBadgeHtml(rank){
+  if (!Number.isFinite(rank)) return "";
+  const r = Math.max(1, Math.floor(rank));
+  let cls = "";
+  if (r === 1) cls = " rank1";
+  else if (r === 2) cls = " rank2";
+  else if (r === 3) cls = " rank3";
+  return `<span class="rankBadge${cls}">#${r}</span>`;
+}
+
+
 function rankCellHtml(rank){
   if (rank === 1) return `<span class="r1">👑 ${rank}</span>`;
   if (rank === 2) return `<span class="r2">${rank}</span>`;
@@ -513,6 +550,104 @@ function renderStandings(rows){
     tbody.appendChild(tr);
   }
 }
+
+
+async function fetchStandingsRows(dcprMode, vtMap){
+  const sheetName = dcprMode ? TOURNAMENT_ELO_SHEET_NAME : ELO_SHEET_NAME;
+  const u = new URL(buildCsvUrlForSheet(sheetName));
+  u.searchParams.set("_", Date.now().toString());
+  const { res, text } = await fetchUtf8Text(u.toString());
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
+  const rows = parseCSV(text);
+
+  const loadedInDataOrder = rows.slice(1).map((r, idx) => {
+    const player = (r[0] ?? "").toString().trim();
+    if (!player) return null;
+
+    if (dcprMode){
+      return {
+        _dataIndex: idx,
+        player,
+        rating: toNumber(r[1]),
+        games: toNumber(r[2]),
+        win: toNumber(r[3]),
+        loss: toNumber(r[4]),
+        draw: toNumber(r[5]),
+        winrate: (r[6] ?? "").toString().trim(),
+        peak: toNumber(r[7]),
+        vt: normalizeVT(r[8])
+      };
+    }
+
+    // Elo standings mapping (VT is always from Tournament Elo column I)
+    const vtFromMap = vtMap ? vtMap.get(normalizeKey(player)) : null;
+    return {
+      _dataIndex: idx,
+      player,
+      rating: toNumber(r[1]),
+      games: toNumber(r[2]),
+      win: toNumber(r[3]),
+      loss: toNumber(r[4]),
+      draw: toNumber(r[5]),
+      winrate: (r[6] ?? "").toString().trim(),
+      peak: toNumber(r[7]),
+      vt: vtFromMap || null
+    };
+  }).filter(Boolean);
+
+  let finalRows = [];
+
+  if (dcprMode){
+    // Rank follows sheet order (row 2 = rank 1)
+    finalRows = loadedInDataOrder.map((r, i) => ({ ...r, rank: i + 1 }));
+  } else {
+    // Rank by rating DESC, stable by data order
+    const sorted = [...loadedInDataOrder]
+      .sort((a,b) => {
+        const ra = Number.isFinite(a.rating) ? a.rating : -Infinity;
+        const rb = Number.isFinite(b.rating) ? b.rating : -Infinity;
+        if (rb !== ra) return rb - ra;
+        return a._dataIndex - b._dataIndex;
+      })
+      .map((r, i) => ({ ...r, rank: i + 1 }));
+
+    // Keep original data order in storage, but with rank attached
+    const byPlayer = new Map(sorted.map(r => [normalizeKey(r.player), r.rank]));
+    finalRows = loadedInDataOrder.map(r => ({ ...r, rank: byPlayer.get(normalizeKey(r.player)) || null }));
+  }
+
+  return finalRows;
+}
+
+async function preloadStandingsOnInit(){
+  refreshBtn.disabled = true;
+  tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("loading")}</td></tr>`;
+  try{
+    const vtMap = await loadVtByPlayer();
+    standingsCache.vtMap = vtMap;
+
+    const [eloRows, dcprRows] = await Promise.all([
+      fetchStandingsRows(false, vtMap),
+      fetchStandingsRows(true, vtMap)
+    ]);
+    standingsCache.eloRows = eloRows;
+    standingsCache.dcprRows = dcprRows;
+
+    // render current mode instantly (no refetch on toggle)
+    const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
+    allRows = getCachedRows(dcprMode) || [];
+    updateInfoBar();
+    renderStandings(allRows);
+  } catch(e){
+    console.error("[ELO] Failed to preload standings:", e);
+    if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("data_load_failed")}</td></tr>`;
+  } finally {
+    refreshBtn.disabled = false;
+  }
+}
+
 
 async function loadStandings(forceDcprMode){
   const seq = ++standingsLoadSeq;
@@ -756,7 +891,7 @@ function buildHero(playerName, tournamentObj, eloObj, summary){
               <div class="heroCol">
                 <div class="heroColHead">
                   <div class="heroColTitle">DCPR</div>
-                  <div class="heroColRank">${dcprRank ? `#${dcprRank}` : ""}</div>
+                  <div class="heroColRank">${rankBadgeHtml(dcprRank)}</div>
                 </div>
                 <div class="heroColValue">
                   <div class="heroColNumber">${Number.isFinite(tournamentObj?.rating) ? tournamentObj.rating.toFixed(0) : "—"}</div>
@@ -771,7 +906,7 @@ function buildHero(playerName, tournamentObj, eloObj, summary){
               <div class="heroCol">
                 <div class="heroColHead">
                   <div class="heroColTitle">ELO</div>
-                  <div class="heroColRank">${eloRank ? `#${eloRank}` : ""}</div>
+                  <div class="heroColRank">${rankBadgeHtml(eloRank)}</div>
                 </div>
                 <div class="heroColValue">
                   <div class="heroColNumber">${Number.isFinite(eloObj?.rating) ? eloObj.rating.toFixed(0) : "—"}</div>
@@ -1107,7 +1242,8 @@ let currentTournament = "ALL";
 }
 
 async function loadAll(){
-  await Promise.all([loadStandings(), loadLastData()]);
+  // Preload BOTH standings datasets to avoid UI "jump" when switching modes.
+  await Promise.all([preloadStandingsOnInit(), loadLastData()]);
   playerCardsCache = null;
   playerSummaryCache = null;
 }
@@ -1138,11 +1274,10 @@ if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click",
 refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 if (ratedOnlyEl){
-  // Toggle "Pouze DCPR" switches the data source to Tournament Elo (same spreadsheet, different sheet)
+  // Toggle "Pouze DCPR" should not refetch — we pre-load both datasets on page load.
   ratedOnlyEl.addEventListener("change", (e) => {
     const checked = !!e?.target?.checked;
-    // Force the mode for this reload so we never read a stale value.
-    loadStandings(checked);
+    switchStandingsMode(checked);
   });
 }
 

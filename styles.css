@@ -1821,3 +1821,65 @@ html[data-theme="light"] .tournamentFilter select option{
   .credit{ margin-top:4px; font-size:13px; line-height:1.35; }
   .subtitle{ margin-bottom:6px; }
 }
+
+
+
+/* --- Player card refinements: mode header integrated, bigger numbers, rank badge --- */
+.heroCol{
+  border:0;
+  background:transparent;
+  padding:0;
+  border-radius:0;
+}
+.heroColHead{
+  margin-bottom:10px;
+}
+.heroColTitle{
+  font-size:13px;
+  color:var(--muted);
+}
+.heroColNumber{
+  font-size:58px;
+}
+.heroMiniStat span{
+  font-size:18px;
+}
+
+.heroColRank{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.rankBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border2);
+  background:var(--chip);
+  padding:2px 8px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:950;
+  line-height:1.2;
+  min-width:32px;
+  height:22px;
+}
+
+.rankBadge.rank1{
+  background: rgba(212,175,55,.18);
+  border-color: rgba(212,175,55,.60);
+  color: rgba(245,215,110,1);
+  box-shadow:0 0 10px rgba(255,215,0,.18);
+}
+.rankBadge.rank2{
+  background: rgba(192,192,192,.16);
+  border-color: rgba(192,192,192,.58);
+  color: rgba(230,230,230,1);
+}
+html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
+.rankBadge.rank3{
+  background: rgba(205,127,50,.16);
+  border-color: rgba(205,127,50,.58);
+  color: rgba(255,200,150,1);
+}
