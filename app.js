@@ -788,7 +788,7 @@ function buildHero(playerName, tournamentObj, eloObj, summary){
       <div class="rightCol">
         <div class="box boxPad chartBox">
           <div class="chartHead">
-            <b>${t("elo_evolution")}</b>
+            <b id="chartTitle">${t("elo_evolution")}</b>
             <span id="chartMeta" class="muted">${t("loading_player_data")}</span>
           </div>
           <div id="eloChart" class="muted">${t("loading_player_data")}</div>
@@ -936,26 +936,46 @@ async function loadPlayerDetail(playerObj){
       });
     });
 
-    const sortedAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
+    const sortedAllAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
 
-    // Skupiny podle názvu turnaje (tournamentDetail)
-    const groups = new Map();
-    const order = [];
-    for (const r of sortedAll){
-      const key = (r.tournamentDetail || "Neznámé").trim();
-      if (!groups.has(key)){ groups.set(key, []); order.push(key); }
-      groups.get(key).push(r);
-    }
+    const isFNM = (row) => ((row?.tournament || "").toString().trim().toUpperCase() === "FNM");
 
-    
-    let currentTournament = "ALL";
+    // Current mode affects chart + tournament list below.
+    let currentMode = "dcpr"; // default
+    let modeRows = [];
+    let groups = new Map();
+    let order = [];
+
+    const buildGroupsFromRows = (rows) => {
+      groups = new Map();
+      order = [];
+      for (const r of rows){
+        const key = (r.tournamentDetail || "Neznámé").trim();
+        if (!groups.has(key)){ groups.set(key, []); order.push(key); }
+        groups.get(key).push(r);
+      }
+    };
+
+    const rowsForMode = (mode) => {
+      if (mode === "dcpr") return sortedAllAll.filter(r => !isFNM(r));
+      return sortedAllAll.slice();
+    };
+
+    const applyMode = (mode) => {
+      currentMode = (mode === "elo") ? "elo" : "dcpr";
+      modeRows = rowsForMode(currentMode);
+      buildGroupsFromRows(modeRows);
+    };
+
+    applyMode("dcpr");
+let currentTournament = "ALL";
 
     // Filtr turnaje ovlivňuje POUZE spodní tabulky (graf + horní statistiky zůstávají vždy ze všech dat)
     const renderTournamentTables = (tournamentKey) => {
       currentTournament = tournamentKey;
 
       const filteredCards = (tournamentKey === "ALL")
-        ? sortedAll.slice()
+        ? modeRows.slice()
         : (groups.get(tournamentKey) ? groups.get(tournamentKey).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0)) : []);
 
       const filterOptions = [`<option value="ALL">Všechny turnaje</option>`]
@@ -1012,15 +1032,30 @@ async function loadPlayerDetail(playerObj){
       if (!btns.length || !panels.length) return;
 
       const setMode = (mode) => {
+        const normalized = (mode === "elo") ? "elo" : "dcpr";
+
         for (const b of btns){
-          const isOn = (b.getAttribute("data-hero-mode") === mode);
+          const isOn = (b.getAttribute("data-hero-mode") === normalized);
           b.classList.toggle("isActive", isOn);
           b.setAttribute("aria-selected", isOn ? "true" : "false");
         }
         for (const p of panels){
-          const isOn = (p.getAttribute("data-hero-panel") === mode);
+          const isOn = (p.getAttribute("data-hero-panel") === normalized);
           p.classList.toggle("isHidden", !isOn);
         }
+
+        // Apply mode to the rest of the card (chart + tournaments)
+        applyMode(normalized);
+
+        // Re-render chart
+        try{ renderChartAndMeta(); }catch(e){}
+
+        // Re-render tournaments and keep selection if possible
+        const desired = (currentTournament && currentTournament !== "ALL" && groups.has(currentTournament))
+          ? currentTournament
+          : "ALL";
+        renderTournamentTables(desired);
+
       };
 
       // default
@@ -1031,29 +1066,37 @@ async function loadPlayerDetail(playerObj){
       }
     });
 
-    // Graf (vždy ze všech dat)
-    const chartEl = document.getElementById("eloChart");
-    const chartMeta = document.getElementById("chartMeta");
-    const allPoints = sortedAll
-      .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
-      .map(r => ({ matchId:r.matchId, elo:r.elo }));
+    // Graf + meta (depends on current mode)
+    const renderChartAndMeta = () => {
+      const chartEl = document.getElementById("eloChart");
+      const chartMeta = document.getElementById("chartMeta");
+      const chartTitle = document.getElementById("chartTitle");
 
-    if (chartEl){
-      chartEl.innerHTML = buildSvgLineChartEqualX(allPoints);
-    }
-
-    if (chartMeta){
-      if (allPoints.length){
-        const last = allPoints[allPoints.length - 1];
-        chartMeta.textContent = `zápasů: ${allPoints.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
-      } else {
-        chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
-        if (chartEl) chartEl.innerHTML = `<div class="muted">${t("chart_no_data")}</div>`;
+      if (chartTitle){
+        chartTitle.textContent = (currentMode === "dcpr") ? t("dcpr_evolution") : t("elo_evolution");
       }
-    }
 
+      const points = modeRows
+        .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
+        .map(r => ({ matchId:r.matchId, elo:r.elo }));
 
-    // Výchozí stav: všechny turnaje
+      if (chartEl){
+        chartEl.innerHTML = buildSvgLineChartEqualX(points);
+      }
+
+      if (chartMeta){
+        if (points.length){
+          const last = points[points.length - 1];
+          chartMeta.textContent = `zápasů: ${points.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
+        } else {
+          chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
+          if (chartEl) chartEl.innerHTML = `<div class="muted">${t("chart_no_data")}</div>`;
+        }
+      }
+    };
+
+    renderChartAndMeta();
+// Výchozí stav: všechny turnaje
     renderTournamentTables("ALL");
 
   } catch (e){
