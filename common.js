@@ -277,6 +277,12 @@ function flagFor(lang){
   return "🇨🇿";
 }
 
+function codeFor(lang){
+  if (lang === "en") return "GB";
+  if (lang === "fr") return "FR";
+  return "CZ";
+}
+
 function labelFor(lang){
   if (lang === "en") return "English";
   if (lang === "fr") return "Français";
@@ -304,15 +310,15 @@ function renderLangUi(){
   if (!langBtn || !langPanel) return;
 
   const cur = getLang();
-  langBtn.textContent = flagFor(cur);
-  langBtn.setAttribute("aria-label", "Language");
+  langBtn.innerHTML = `<span class="langCurrent"><span class="langCode">${codeFor(cur)}</span><span class="langCircle" aria-hidden="true">${flagFor(cur)}</span></span>`;
+langBtn.setAttribute("aria-label", "Language");
   langBtn.setAttribute("title", "Language");
 
   // show other two languages (requested: CZ shows EN+FR)
   const options = ["cs", "en", "fr"].filter((l) => l !== cur);
   langPanel.innerHTML = options
     .map((l) =>
-      `<button class="langItem" type="button" data-lang="${l}"><span class="langFlag">${flagFor(l)}</span><span class="langName">${labelFor(l)}</span></button>`
+      `<button class="langItem" type="button" data-lang="${l}"><span class="langCircle" aria-hidden="true">${flagFor(l)}</span><span class="langName">${labelFor(l)}</span></button>`
     )
     .join("");
 

@@ -81,6 +81,11 @@ body{
   --toggle-on-bg: rgba(90, 180, 130, .45);
   --toggle-thumb: rgba(255,255,255,.92);
 }
+
+
+/* Keep links from changing color after being visited */
+a{ color: var(--accent); }
+a:visited{ color: var(--accent); }
 html[data-theme="light"] body{
   background:
     radial-gradient(900px 420px at 10% 0%, rgba(255,255,255,.80), transparent 55%),
@@ -951,6 +956,9 @@ html[data-theme="light"] .btnOpponents{
   letter-spacing:.02em;
   border:1px solid currentColor;
   line-height:1.1;
+  align-self:flex-start;
+  width:fit-content;
+  max-width:100%;
 }
 .heroVT.classA{ background:var(--classA-bg); color:var(--classA-fg); }
 .heroVT.classB{ background:var(--classB-bg); color:var(--classB-fg); }
@@ -1885,3 +1893,36 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   border-color: rgba(205,127,50,.58);
   color: rgba(255,200,150,1);
 }
+
+
+/* Language switcher (code + circular flag) */
+.langCurrent{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.langCode{
+  font-size:12px;
+  opacity:.92;
+}
+.langCircle{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  line-height:1;
+  border:1px solid var(--border);
+  background:var(--chip);
+  overflow:hidden;
+}
+.langItem .langCircle{
+  width:16px;
+  height:16px;
+  font-size:12px;
+}
+
