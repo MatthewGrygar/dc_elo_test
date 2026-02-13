@@ -1117,7 +1117,7 @@ html[data-theme="light"] .heroRank.rank2{
   font-weight:900;
   letter-spacing:.08em;
   text-transform:uppercase;
-  font-size:12px;
+  font-size: 14px;
   color:var(--muted);
 }
 .heroColRank{
@@ -1919,6 +1919,14 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   border:1px solid var(--border);
   background:var(--chip);
   overflow:hidden;
+}
+
+.langFlagImg{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  border-radius:50%;
 }
 .langItem .langCircle{
   width:16px;

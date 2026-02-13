@@ -272,9 +272,9 @@ const langBtn = document.getElementById("langBtn");
 const langPanel = document.getElementById("langPanel");
 
 function flagFor(lang){
-  if (lang === "en") return "🇬🇧";
-  if (lang === "fr") return "🇫🇷";
-  return "🇨🇿";
+  const src = (lang === "en") ? "eng.png" : (lang === "fr") ? "fr.png" : "cz.png";
+  const alt = (lang === "en") ? "GB" : (lang === "fr") ? "FR" : "CZ";
+  return `<img class="langFlagImg" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
 
 function codeFor(lang){
