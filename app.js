@@ -742,33 +742,43 @@ function buildHero(playerName, tournamentObj, eloObj, summary){
     <div class="heroGrid">
       <div class="box boxPad leftPanel">
         <div class="leftTop">
-          <div class="heroName">${escapeHtml(playerName)}</div>
+          <div class="heroNameRow">
+            <div class="heroName">${escapeHtml(playerName)}</div>
+            <div class="heroModeToggle" role="tablist" aria-label="Rating mode">
+              <button class="heroModeBtn isActive" type="button" data-hero-mode="dcpr" role="tab" aria-selected="true">DCPR</button>
+              <button class="heroModeBtn" type="button" data-hero-mode="elo" role="tab" aria-selected="false">ELO</button>
+            </div>
+          </div>
           ${vt ? `<div class="heroVT ${vtToClass(vt)}">${escapeHtml(vtDetailText(vt))}</div>` : ""}
 
-          <div class="heroSplit">
-            <div class="heroCol">
-              <div class="heroColHead">
-                <div class="heroColTitle">DCPR</div>
-                <div class="heroColRank">${dcprRank ? `#${dcprRank}` : ""}</div>
-              </div>
-              <div class="heroColValue">
-                <div class="heroColNumber">${Number.isFinite(tournamentObj?.rating) ? tournamentObj.rating.toFixed(0) : "—"}</div>
-              </div>
-              <div class="heroColStats">
-                ${heroMiniStatsHtml(tournamentObj)}
+          <div class="heroModePanels">
+            <div class="heroModePanel" data-hero-panel="dcpr">
+              <div class="heroCol">
+                <div class="heroColHead">
+                  <div class="heroColTitle">DCPR</div>
+                  <div class="heroColRank">${dcprRank ? `#${dcprRank}` : ""}</div>
+                </div>
+                <div class="heroColValue">
+                  <div class="heroColNumber">${Number.isFinite(tournamentObj?.rating) ? tournamentObj.rating.toFixed(0) : "—"}</div>
+                </div>
+                <div class="heroColStats">
+                  ${heroMiniStatsHtml(tournamentObj)}
+                </div>
               </div>
             </div>
 
-            <div class="heroCol">
-              <div class="heroColHead">
-                <div class="heroColTitle">ELO</div>
-                <div class="heroColRank">${eloRank ? `#${eloRank}` : ""}</div>
-              </div>
-              <div class="heroColValue">
-                <div class="heroColNumber">${Number.isFinite(eloObj?.rating) ? eloObj.rating.toFixed(0) : "—"}</div>
-              </div>
-              <div class="heroColStats">
-                ${heroMiniStatsHtml(eloObj)}
+            <div class="heroModePanel isHidden" data-hero-panel="elo">
+              <div class="heroCol">
+                <div class="heroColHead">
+                  <div class="heroColTitle">ELO</div>
+                  <div class="heroColRank">${eloRank ? `#${eloRank}` : ""}</div>
+                </div>
+                <div class="heroColValue">
+                  <div class="heroColNumber">${Number.isFinite(eloObj?.rating) ? eloObj.rating.toFixed(0) : "—"}</div>
+                </div>
+                <div class="heroColStats">
+                  ${heroMiniStatsHtml(eloObj)}
+                </div>
               </div>
             </div>
           </div>
@@ -994,6 +1004,32 @@ async function loadPlayerDetail(playerObj){
         <div id="tournamentTables"></div>
       `
     );
+
+    // Toggle DCPR/ELO (only one panel visible at a time)
+    queueMicrotask(() => {
+      const btns = Array.from(document.querySelectorAll(".heroModeBtn[data-hero-mode]"));
+      const panels = Array.from(document.querySelectorAll(".heroModePanel[data-hero-panel]"));
+      if (!btns.length || !panels.length) return;
+
+      const setMode = (mode) => {
+        for (const b of btns){
+          const isOn = (b.getAttribute("data-hero-mode") === mode);
+          b.classList.toggle("isActive", isOn);
+          b.setAttribute("aria-selected", isOn ? "true" : "false");
+        }
+        for (const p of panels){
+          const isOn = (p.getAttribute("data-hero-panel") === mode);
+          p.classList.toggle("isHidden", !isOn);
+        }
+      };
+
+      // default
+      setMode("dcpr");
+
+      for (const b of btns){
+        b.addEventListener("click", () => setMode(b.getAttribute("data-hero-mode") || "dcpr"));
+      }
+    });
 
     // Graf (vždy ze všech dat)
     const chartEl = document.getElementById("eloChart");
