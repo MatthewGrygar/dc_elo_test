@@ -58,7 +58,7 @@ export function openModal({ title, subtitle, html, fullscreen }) {
   overlay.querySelector("#modalBody").innerHTML = html || "";
   const actions = overlay.querySelector("#modalActions");
   if (actions) actions.innerHTML = "";
-  overlay.style.display = "block";
+  overlay.style.display = "flex";
   document.body.style.overflow = "hidden";
 }
 

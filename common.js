@@ -31,19 +31,16 @@ function openSupportModal(){
         <div class="supportTagline">${t("support_hero_tag")}</div>
       </div>
 
-      <div class="supportSwitch" role="tablist" aria-label="${t("support_method_switch_aria")}">
+      <div class="payment-tabs supportSwitch" role="tablist" aria-label="${t("support_method_switch_aria")}">
         <button class="supportSwitchBtn" type="button" data-method="bank" role="tab" aria-selected="false">${t("support_method_bank")}</button>
         <button class="supportSwitchBtn" type="button" data-method="paypal" role="tab" aria-selected="false">${t("support_method_paypal")}</button>
       </div>
 
-      <div class="supportBody">
-        <div class="supportQrWrap">
-        <img class="supportQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
-      </div>
-
+            <div class="payment-content supportPayContent">
+        <div class="qr-section supportQrWrap">
+          <img class="supportQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
         </div>
-
-        <div class="supportInfo" aria-label="${t("support_acc_aria")}">
+<div class="account-info supportInfo" aria-label="${t("support_acc_aria")}">
         <div class="supportInfoSection" data-section="bank" hidden>
           
           <div class="supportInfoTitle">${t("support_acc_title")}</div>
@@ -93,6 +90,7 @@ function openSupportModal(){
 
         </div>
         </div>
+      </div>
       </div>
 
       <div class="supportNote" aria-label="${t("support_thanks_aria")}">
