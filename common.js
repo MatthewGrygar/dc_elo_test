@@ -20,6 +20,9 @@ function isMobileModal(){
 
 // -------------------- PODPOŘIT --------------------
 function openSupportModal(){
+  const lang = getLang();
+  const defaultMethod = (lang === "cs") ? "bank" : "paypal";
+
   const bodyHtml = `
     <div class="supportModal">
       <div class="supportHero">
@@ -28,34 +31,56 @@ function openSupportModal(){
         <div class="supportTagline">${t("support_hero_tag")}</div>
       </div>
 
+      <div class="supportSwitch" role="tablist" aria-label="${t("support_method_switch_aria")}">
+        <button class="supportSwitchBtn" type="button" data-method="bank" role="tab" aria-selected="false">${t("support_method_bank")}</button>
+        <button class="supportSwitchBtn" type="button" data-method="paypal" role="tab" aria-selected="false">${t("support_method_paypal")}</button>
+      </div>
+
       <div class="supportQrWrap">
-        <img class="supportQr" src="assets/images/support/QR.png" alt="QR kód" loading="lazy" />
+        <img class="supportQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
       </div>
 
-      <div class="supportInfo" aria-label="Informace o účtu">
-        <div class="supportInfoTitle">${t("support_acc_title")}</div>
+      <div class="supportInfo" aria-label="${t("support_acc_aria")}">
+        <div class="supportInfoSection" data-section="bank" hidden>
+          <div class="supportInfoTitle">${t("support_acc_title")}</div>
 
-        <div class="supportInfoLine">
-          <b>${t("support_acc_number")}</b>
-          <span class="supportCopy" role="button" tabindex="0" data-copy="2640017029/3030">2640017029/3030</span>
-          <span class="supportCopyFeedback" aria-live="polite"></span>
+          <div class="supportInfoLine">
+            <b>${t("support_acc_name")}</b>
+            <span class="supportValue">${t("support_acc_name_value")}</span>
+          </div>
+
+          <div class="supportInfoLine">
+            <b>${t("support_acc_number")}</b>
+            <span class="supportCopy supportValueMono" role="button" tabindex="0" data-copy="2640017029/3030">2640017029 / 3030</span>
+            <span class="supportCopyFeedback" aria-live="polite"></span>
+          </div>
+
+          <div class="supportInfoLine">
+            <b>${t("support_iban")}</b>
+            <span class="supportCopy supportValueMono" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">CZ03 3030 0000 0026 4001 7029</span>
+            <span class="supportCopyFeedback" aria-live="polite"></span>
+          </div>
+
+          <div class="supportInfoLine">
+            <b>${t("support_bic")}</b>
+            <span class="supportCopy supportValueMono" role="button" tabindex="0" data-copy="AIRACZP">AIRACZP</span>
+            <span class="supportCopyFeedback" aria-live="polite"></span>
+          </div>
         </div>
 
-        <div class="supportInfoLine">
-          <b>${t("support_iban")}</b>
-          <span class="supportCopy" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">CZ03 3030 0000 0026 4001 7029</span>
-          <span class="supportCopyFeedback" aria-live="polite"></span>
-        </div>
-
-        <div class="supportInfoLine">
-          <b>${t("support_bic")}</b>
-          <span class="supportCopy" role="button" tabindex="0" data-copy="AIRACZP">AIRACZP</span>
-          <span class="supportCopyFeedback" aria-live="polite"></span>
+        <div class="supportInfoSection" data-section="paypal" hidden>
+          <div class="supportInfoTitle">${t("support_paypal_title")}</div>
+          <div class="supportInfoLine">
+            <b>${t("support_paypal_me")}</b>
+            <a class="supportLink" href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer">https://paypal.me/GrailSeriesELO</a>
+            <span class="supportCopy supportCopyInline" role="button" tabindex="0" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</span>
+            <span class="supportCopyFeedback" aria-live="polite"></span>
+          </div>
         </div>
       </div>
 
-      <div class="supportNote" aria-label="Poděkování">
-        ${t("support_thanks")}
+      <div class="supportNote" aria-label="${t("support_thanks_aria")}">
+        <span class="supportThanks">${t("support_thanks")}</span>
       </div>
     </div>
   `;
@@ -72,6 +97,40 @@ function openSupportModal(){
   if (!overlayEl) return;
   const rootEl = overlayEl.querySelector(".supportModal");
   if (!rootEl) return;
+
+  const qrImg = rootEl.querySelector(".supportQr");
+  const btns = rootEl.querySelectorAll(".supportSwitchBtn");
+  const sections = rootEl.querySelectorAll(".supportInfoSection");
+
+  const setMethod = (method) => {
+    btns.forEach((b) => {
+      const on = (b.getAttribute("data-method") === method);
+      b.classList.toggle("isActive", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.setAttribute("tabindex", on ? "0" : "-1");
+    });
+
+    sections.forEach((s) => {
+      const on = (s.getAttribute("data-section") === method);
+      s.hidden = !on;
+    });
+
+    if (qrImg){
+      qrImg.src = (method === "paypal")
+        ? "assets/images/support/QR2.png"
+        : "assets/images/support/QR.png";
+    }
+  };
+
+  btns.forEach((b) => {
+    b.addEventListener("click", () => setMethod(b.getAttribute("data-method")));
+    b.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " "){
+        ev.preventDefault();
+        setMethod(b.getAttribute("data-method"));
+      }
+    });
+  });
 
   const doCopy = async (text) => {
     try{
@@ -108,7 +167,7 @@ function openSupportModal(){
   const binds = rootEl.querySelectorAll(".supportCopy");
   binds.forEach((el) => {
     const text = el.getAttribute("data-copy") || "";
-    const wrap = el.closest(".supportInfoLine");
+    const wrap = el.closest(".supportInfoLine") || el.parentElement;
 
     const handler = async () => {
       if (!text) return;
@@ -124,6 +183,9 @@ function openSupportModal(){
       }
     });
   });
+
+  // initial state (CZ -> bank, EN/FR -> PayPal)
+  setMethod(defaultMethod);
 }
 
 // -------------------- THEME --------------------

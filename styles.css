@@ -804,6 +804,37 @@ a.btnPrimary{
   line-height: 1.45;
   color: var(--muted);
 }
+
+.supportSwitch{
+  width:100%;
+  max-width:380px;
+  display:flex;
+  gap:10px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+.supportSwitchBtn{
+  flex:1;
+  border-radius: 14px;
+  padding: 10px 12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor:pointer;
+  transition: transform .08s ease, filter .15s ease, background .15s ease;
+}
+html[data-theme="light"] .supportSwitchBtn{
+  border:1px solid rgba(0,0,0,.12);
+}
+.supportSwitchBtn:hover{ filter: brightness(1.08); }
+.supportSwitchBtn:active{ transform: translateY(1px); }
+.supportSwitchBtn.isActive{
+  border:1px solid rgba(60, 200, 120, .55);
+  background: rgba(60, 200, 120, .18);
+}
 .supportQrWrap{
   width:100%;
   display:flex;
@@ -1800,12 +1831,30 @@ html[data-theme="light"] .tournamentFilter select option{
 /* click-to-copy values */
 .supportCopy {
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: opacity 0.15s ease;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  transition: transform 0.08s ease, filter 0.15s ease;
 }
 .supportCopy:hover {
-  opacity: 0.75;
+  filter: brightness(1.08);
+}
+.supportCopy:active{ transform: translateY(1px); }
+.supportCopyInline{
+  padding: 5px 10px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.supportValue{ font-weight: 800; }
+.supportValueMono{ font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.supportLink{
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* subtle feedback */
@@ -1821,12 +1870,17 @@ html[data-theme="light"] .tournamentFilter select option{
 
 /* green box becomes "Děkujeme" */
 .supportNote {
-  background: #dff5e6;
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 16px;
+  padding: 14px 16px;
   text-align: center;
-  font-weight: 600;
-  font-size: 1.6rem;
+  font-weight: 900;
+  font-size: 1.25rem;
+  border: 1px solid rgba(60, 200, 120, .36);
+  background: rgba(60, 200, 120, .18);
+}
+html[data-theme="light"] .supportNote{
+  border:1px solid rgba(20, 140, 70, .30);
+  background: rgba(20, 140, 70, .12);
 }
 
 
