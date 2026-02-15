@@ -24,7 +24,7 @@ function openSupportModal(){
   const defaultMethod = (lang === "cs") ? "bank" : "paypal";
 
   const bodyHtml = `
-    <div class="supportModal">
+    <div class="supportModal support-container">
       <div class="supportHero">
         <div class="supportTitle">${t("support_hero_title")}</div>
         <div class="supportBrand">${t("support_hero_brand")}</div>
@@ -36,71 +36,70 @@ function openSupportModal(){
         <button class="supportSwitchBtn" type="button" data-method="paypal" role="tab" aria-selected="false">${t("support_method_paypal")}</button>
       </div>
 
-            <div class="payment-content supportPayContent">
+      <div class="payment-content supportStack">
         <div class="qr-section supportQrWrap">
           <img class="supportQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
         </div>
-<div class="account-info supportInfo" aria-label="${t("support_acc_aria")}">
-        <div class="supportInfoSection" data-section="bank" hidden>
-          
-          <div class="supportInfoTitle">${t("support_acc_title")}</div>
 
-          <div class="supportInfoRow">
-            <div class="supportInfoLabel">${t("support_acc_name")}</div>
-            <div class="supportInfoValue">${t("support_acc_name_value")}</div>
-            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="${t("support_acc_name_value")}">${t("support_copy")}</span>
-            <span class="supportCopyFeedback" aria-live="polite"></span>
-          </div>
+        <div class="supportSpacerSm"></div>
 
-          <div class="supportInfoRow">
-            <div class="supportInfoLabel">${t("support_acc_number")}</div>
-            <div class="supportInfoValue supportInfoMono">2640017029 / 3030</div>
-            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="2640017029 / 3030">${t("support_copy")}</span>
-            <span class="supportCopyFeedback" aria-live="polite"></span>
-          </div>
+        <div class="account-info supportInfo" aria-label="${t("support_acc_aria")}">
+          <div class="supportInfoSection" data-section="bank" hidden>
+            <div class="supportInfoTitle">${t("support_acc_title")}</div>
 
-          <div class="supportInfoRow">
-            <div class="supportInfoLabel">${t("support_iban")}</div>
-            <div class="supportInfoValue supportInfoMono">CZ03 3030 0000 0026 4001 7029</div>
-            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">${t("support_copy")}</span>
-            <span class="supportCopyFeedback" aria-live="polite"></span>
-          </div>
-
-          <div class="supportInfoRow">
-            <div class="supportInfoLabel">${t("support_bic")}</div>
-            <div class="supportInfoValue supportInfoMono">AIRACZP</div>
-            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="AIRACZP">${t("support_copy")}</span>
-            <span class="supportCopyFeedback" aria-live="polite"></span>
-          </div>
-
-        </div>
-
-        <div class="supportInfoSection" data-section="paypal" hidden>
-          
-          <div class="supportInfoTitle">${t("support_paypal_title")}</div>
-          <div class="supportTableRow">
-            <span>PayPal e-mail:</span>
-            <span class="value">matthew.grygar@seznam.cz</span>
-            <button class="copyBtn" data-copy="matthew.grygar@seznam.cz">KOPÍROVAT</button>
-          </div>
-
-
-          <div class="supportInfoRow">
-            <div class="supportInfoLabel">${t("support_paypal_me")}</div>
-            <div class="supportInfoValue">
-              <a class="supportLink" href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer">https://paypal.me/GrailSeriesELO</a>
+            <div class="supportInfoRow">
+              <div class="supportInfoLabel">${t("support_acc_name")}</div>
+              <div class="supportInfoValue">${t("support_acc_name_value")}</div>
+              <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="${t("support_acc_name_value")}">${t("support_copy")}</span>
+              <span class="supportCopyFeedback" aria-live="polite"></span>
             </div>
-            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</span>
-            <span class="supportCopyFeedback" aria-live="polite"></span>
+
+            <div class="supportInfoRow">
+              <div class="supportInfoLabel">${t("support_acc_number")}</div>
+              <div class="supportInfoValue supportInfoMono">2640017029 / 3030</div>
+              <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="2640017029 / 3030">${t("support_copy")}</span>
+              <span class="supportCopyFeedback" aria-live="polite"></span>
+            </div>
+
+            <div class="supportInfoRow">
+              <div class="supportInfoLabel">${t("support_iban")}</div>
+              <div class="supportInfoValue supportInfoMono">CZ03 3030 0000 0026 4001 7029</div>
+              <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">${t("support_copy")}</span>
+              <span class="supportCopyFeedback" aria-live="polite"></span>
+            </div>
+
+            <div class="supportInfoRow">
+              <div class="supportInfoLabel">${t("support_bic")}</div>
+              <div class="supportInfoValue supportInfoMono">AIRACZP</div>
+              <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="AIRACZP">${t("support_copy")}</span>
+              <span class="supportCopyFeedback" aria-live="polite"></span>
+            </div>
           </div>
 
-        </div>
-        </div>
-      </div>
-      </div>
+          <div class="supportInfoSection" data-section="paypal" hidden>
+            <div class="supportInfoTitle">${t("support_paypal_title")}</div>
 
-      <div class="supportNote" aria-label="${t("support_thanks_aria")}">
-        <span class="supportThanks">${t("support_thanks")}</span>
+            <div class="supportInfoRow">
+              <div class="supportInfoLabel">${t("support_paypal_email")}</div>
+              <div class="supportInfoValue">matthew.grygar@seznam.cz</div>
+              <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="matthew.grygar@seznam.cz">${t("support_copy")}</span>
+              <span class="supportCopyFeedback" aria-live="polite"></span>
+            </div>
+
+            <div class="supportInfoRow">
+              <div class="supportInfoLabel">${t("support_paypal_me")}</div>
+              <div class="supportInfoValue">
+                <a class="supportLink" href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer">https://paypal.me/GrailSeriesELO</a>
+              </div>
+              <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</span>
+              <span class="supportCopyFeedback" aria-live="polite"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="supportSpacerLg"></div>
+
+        <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
       </div>
     </div>
   `;

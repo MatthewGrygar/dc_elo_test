@@ -2227,3 +2227,67 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
     padding:0 14px;
   }
 }
+
+
+/* ===== Support modal (stacked, clean) ===== */
+.support-container{
+  max-width: 620px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.supportStack{
+  width:100%;
+  max-width: 320px; /* QR width = table width = thanks width */
+  margin: 10px auto 0 auto;
+}
+
+.supportSpacerSm{ height: 10px; }
+.supportSpacerLg{ height: 18px; }
+
+.supportQrWrap{ display:flex; justify-content:center; }
+.supportQr{
+  width:100%;
+  max-width:320px;
+  height:auto;
+  display:block;
+  margin:0 auto;
+}
+
+.supportInfo{
+  width:100%;
+  max-width:320px;
+  margin:0 auto;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:color-mix(in srgb, var(--panel) 62%, transparent);
+  backdrop-filter: blur(8px);
+  padding:12px;
+}
+
+.supportThanksBox{
+  width:100%;
+  max-width:320px;
+  margin:0 auto;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#e6f4ea;
+  color:#14532d;
+  text-align:center;
+  font-weight:800;
+  letter-spacing:.01em;
+}
+
+/* Remove any pill styling inside old thanks */
+.supportNote, .supportThanks{ background:transparent !important; padding:0 !important; border:0 !important; }
+
+/* Tabs: desktop side-by-side, mobile stacked */
+@media (max-width: 768px){
+  .support-container{ padding: 0 12px; }
+  .supportSwitch{ flex-direction:column; }
+  .supportSwitchBtn{ width:100%; }
+  .supportStack{ max-width: 260px; }
+  .supportQr{ max-width:260px; }
+  .supportInfo{ max-width:260px; }
+  .supportThanksBox{ max-width:260px; }
+}
