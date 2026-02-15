@@ -2386,3 +2386,55 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
     max-width: 260px;
   }
 }
+
+
+/* ===== Desktop proportion tweak: 1/3 QR | 2/3 Table ===== */
+@media (min-width: 992px){
+  .supportColumns{
+    max-width: 960px;
+    gap: 40px;
+  }
+
+  .supportColQr{
+    flex: 0 0 33%;
+    display:flex;
+    justify-content:center;
+  }
+
+  .supportColInfo{
+    flex: 0 0 67%;
+    display:flex;
+    align-items:center;
+  }
+
+  .supportQr{
+    max-width: 340px;
+  }
+
+  .supportInfo{
+    max-width: 100%;
+  }
+
+  /* Force rows to single line on desktop */
+  .supportInfoRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+
+  .supportInfoLabel{
+    white-space:nowrap;
+    min-width: 140px;
+  }
+
+  .supportInfoValue{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .supportThanksBox{
+    margin-top: 24px;
+  }
+}
