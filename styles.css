@@ -702,7 +702,7 @@ footer{
 /* Kompaktní varianta modalu – používá se pouze pro titulní stránku (Podpořit) */
 .modalOverlay.isSupport .modal{
   width:100%;
-  max-width:820px;
+  max-width:1200px;
   max-height:90vh;
   height:auto;
   border-radius:20px;
@@ -2436,5 +2436,38 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
   .supportThanksBox{
     margin-top: 24px;
+  }
+}
+
+
+/* ===== Make Support full width on desktop ===== */
+@media (min-width: 992px){
+  .supportColumns{
+    max-width: 1200px;
+    width: 100%;
+    gap: 60px;
+    justify-content: space-between;
+  }
+
+  .supportColQr{
+    flex: 0 0 35%;
+  }
+
+  .supportColInfo{
+    flex: 0 0 65%;
+    align-items: stretch;
+  }
+
+  .supportQr{
+    max-width: 420px;
+  }
+
+  .supportInfo{
+    max-width: 100%;
+  }
+
+  .supportThanksBox{
+    width: 100%;
+    margin-top: 28px;
   }
 }
