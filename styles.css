@@ -775,7 +775,8 @@ a.btnPrimary{
   align-items:center;
   gap:10px;
   width:100%;
-  max-width:390px;
+  /* make the support card slimmer */
+  max-width:340px;
   margin:0 auto;
 }
 
@@ -807,7 +808,7 @@ a.btnPrimary{
 
 .supportSwitch{
   width:100%;
-  max-width:380px;
+  max-width:330px;
   display:flex;
   gap:10px;
   margin-top: 6px;
@@ -842,13 +843,13 @@ html[data-theme="light"] .supportSwitchBtn{
 }
 .supportQr{
   /* kompaktnější, stále dobře skenovatelné */
-  width:min(310px, 86vw);
+  width:min(270px, 84vw);
   max-width:100%;
   height:auto;
   border-radius:14px;
   border:1px solid rgba(255,255,255,.10);
   background:color-mix(in srgb, var(--panel) 70%, transparent);
-  padding:10px;
+  padding:8px;
   box-shadow:0 14px 38px rgba(0,0,0,.22);
 }
 html[data-theme="light"] .supportQr{
@@ -857,12 +858,12 @@ html[data-theme="light"] .supportQr{
 }
 .supportInfo{
   width:100%;
-  max-width:380px;
+  max-width:330px;
   border:1px solid rgba(255,255,255,.10);
   border-radius:16px;
   background:color-mix(in srgb, var(--panel) 62%, transparent);
   backdrop-filter: blur(8px);
-  padding:12px 14px;
+  padding:10px 12px;
   line-height:1.45;
 }
 html[data-theme="light"] .supportInfo{
@@ -892,7 +893,7 @@ html[data-theme="light"] .supportInfo{
 
 .supportNote{
   width:100%;
-  max-width:380px;
+  max-width:330px;
   border-radius:14px;
   padding:10px 14px;
   border:1px solid rgba(60, 200, 120, .28);
@@ -1811,18 +1812,20 @@ html[data-theme="light"] .tournamentFilter select option{
 
 /* 3) Support modal: account block + copy + green thank-you box */
 .supportInfo {
-  padding: 18px 18px;
+  /* keep it slim + compact */
+  padding: 12px 12px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.03);
 }
 /* better spacing between lines */
 .supportInfoLine {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: baseline;
-  padding: 6px 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 4px 0;
 }
 .supportInfoTitle {
   margin-bottom: 10px;
@@ -1834,7 +1837,7 @@ html[data-theme="light"] .tournamentFilter select option{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding: 6px 10px;
+  padding: 4px 9px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.14);
   background: color-mix(in srgb, var(--panel) 70%, transparent);
@@ -1844,23 +1847,34 @@ html[data-theme="light"] .tournamentFilter select option{
   filter: brightness(1.08);
 }
 .supportCopy:active{ transform: translateY(1px); }
-.supportCopyInline{
-  padding: 5px 10px;
-  font-weight: 800;
-  letter-spacing: .02em;
+.supportCopyBtn{
+  justify-self: end;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 .supportValue{ font-weight: 800; }
-.supportValueMono{ font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.supportValueMono{
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  font-weight: 850;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
 .supportLink{
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 3px;
+  overflow-wrap: anywhere;
 }
 
 /* subtle feedback */
 .supportCopyFeedback {
-  margin-left: 6px;
-  font-size: 0.8rem;
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin: 0;
+  font-size: 12px;
   opacity: 0;
   transition: opacity 0.15s ease;
 }

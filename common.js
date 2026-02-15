@@ -51,19 +51,22 @@ function openSupportModal(){
 
           <div class="supportInfoLine">
             <b>${t("support_acc_number")}</b>
-            <span class="supportCopy supportValueMono" role="button" tabindex="0" data-copy="2640017029/3030">2640017029 / 3030</span>
+            <span class="supportValueMono">2640017029 / 3030</span>
+            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="2640017029/3030">${t("support_copy")}</span>
             <span class="supportCopyFeedback" aria-live="polite"></span>
           </div>
 
           <div class="supportInfoLine">
             <b>${t("support_iban")}</b>
-            <span class="supportCopy supportValueMono" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">CZ03 3030 0000 0026 4001 7029</span>
+            <span class="supportValueMono">CZ03 3030 0000 0026 4001 7029</span>
+            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">${t("support_copy")}</span>
             <span class="supportCopyFeedback" aria-live="polite"></span>
           </div>
 
           <div class="supportInfoLine">
             <b>${t("support_bic")}</b>
-            <span class="supportCopy supportValueMono" role="button" tabindex="0" data-copy="AIRACZP">AIRACZP</span>
+            <span class="supportValueMono">AIRACZP</span>
+            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="AIRACZP">${t("support_copy")}</span>
             <span class="supportCopyFeedback" aria-live="polite"></span>
           </div>
         </div>
@@ -73,7 +76,7 @@ function openSupportModal(){
           <div class="supportInfoLine">
             <b>${t("support_paypal_me")}</b>
             <a class="supportLink" href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer">https://paypal.me/GrailSeriesELO</a>
-            <span class="supportCopy supportCopyInline" role="button" tabindex="0" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</span>
+            <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</span>
             <span class="supportCopyFeedback" aria-live="polite"></span>
           </div>
         </div>
