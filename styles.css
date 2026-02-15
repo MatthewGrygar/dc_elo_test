@@ -2167,3 +2167,63 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 @media (max-width: 768px){
   #search{ width: 100%; max-width: none; }
 }
+
+
+/* ===== Support Container (narrower layout) ===== */
+.support-container{
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.supportQr{
+  width: 100%;
+  max-width: 320px;
+  display:block;
+  margin:0 auto;
+}
+
+.supportTable{
+  width:100%;
+  max-width:320px;
+  margin: 12px auto 0 auto;
+  background: var(--panel2);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.supportTable h3{
+  margin-bottom: 12px;
+}
+
+.supportTableRow{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.supportTableRow span.value{
+  font-weight:600;
+  word-break: break-word;
+}
+
+.supportThanks{
+  max-width:320px;
+  margin:20px auto 0 auto;
+  padding:14px;
+  border-radius:14px;
+  background:#e6f4ea;
+  color:#14532d;
+  text-align:center;
+  font-weight:600;
+}
+
+/* Mobile */
+@media (max-width: 768px){
+  .support-container{
+    padding:0 14px;
+  }
+}

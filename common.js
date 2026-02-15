@@ -78,6 +78,12 @@ function openSupportModal(){
         <div class="supportInfoSection" data-section="paypal" hidden>
           
           <div class="supportInfoTitle">${t("support_paypal_title")}</div>
+          <div class="supportTableRow">
+            <span>PayPal e-mail:</span>
+            <span class="value">matthew.grygar@seznam.cz</span>
+            <button class="copyBtn" data-copy="matthew.grygar@seznam.cz">KOPÍROVAT</button>
+          </div>
+
 
           <div class="supportInfoRow">
             <div class="supportInfoLabel">${t("support_paypal_me")}</div>
