@@ -2527,10 +2527,27 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
 /* ===== Make Support full width on desktop ===== */
 @media (min-width: 992px){
+  .modalOverlay.isSupport .modal{
+    height: calc(100vh - 36px);
+    max-height: none;
+  }
+
+  .modalOverlay.isSupport .modalBody{
+    overflow: hidden !important; /* no scrolling on desktop */
+  }
+
+  /* Force the support content to use the whole modal width (override older narrow rules) */
+  .modalOverlay.isSupport .supportModal.support-container{
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .supportColumns{
-    max-width: 1200px;
-    width: 100%;
-    gap: 60px;
+    max-width: none !important;
+    width: 100% !important;
+    gap: 34px;
     justify-content: space-between;
   }
 
@@ -2544,11 +2561,11 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   }
 
   .supportQr{
-    max-width: 420px;
+    max-width: none !important;
   }
 
   .supportInfo{
-    max-width: 100%;
+    max-width: none !important;
   }
 
   .supportThanksBox{
