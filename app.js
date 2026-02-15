@@ -7,7 +7,9 @@ const ELO_SHEET_NAME = "Elo standings";
 const TOURNAMENT_ELO_SHEET_NAME = "Tournament_Elo";
 const DATA_SHEET_NAME = "Data";
 const PLAYER_CARDS_SHEET_NAME = "Player cards (CSV)";
+const PLAYER_CARDS_TOURNAMENT_SHEET_NAME = "Player cards (CSV) - Tournament";
 const PLAYER_SUMMARY_SHEET_NAME = "Player summary";
+const PLAYER_SUMMARY_TOURNAMENT_SHEET_NAME = "Player summary - Tournament";
 
 const ELO_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(ELO_SHEET_NAME)}`;
@@ -17,8 +19,12 @@ const DATA_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(DATA_SHEET_NAME)}`;
 const PLAYER_CARDS_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_CARDS_SHEET_NAME)}`;
+const PLAYER_CARDS_TOURNAMENT_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_CARDS_TOURNAMENT_SHEET_NAME)}`;
 const PLAYER_SUMMARY_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_SUMMARY_SHEET_NAME)}`;
+const PLAYER_SUMMARY_TOURNAMENT_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_SUMMARY_TOURNAMENT_SHEET_NAME)}`;
 
 function buildCsvUrlForSheet(sheetName){
   // Build a fresh URL for the requested sheet.
@@ -46,8 +52,8 @@ const themeLabel = document.getElementById("themeLabel");
 
 let allRows = [];
 let lastTournamentText = "";
-let playerCardsCache = null;
-let playerSummaryCache = null;
+let playerCardsCache = { elo: null, dcpr: null };
+let playerSummaryCache = { elo: null, dcpr: null };
 
 // Prevent race conditions when switching sources (e.g., toggling "Pouze DCPR").
 // Only the latest loadStandings() call is allowed to update UI/state.
@@ -794,10 +800,12 @@ async function loadStandings(forceDcprMode){
   }
 }
 
-async function loadPlayerCards(){
-  if (playerCardsCache) return playerCardsCache;
+async function loadPlayerCards(mode){
+  const normalized = (mode === "dcpr") ? "dcpr" : "elo";
+  if (playerCardsCache?.[normalized]) return playerCardsCache[normalized];
 
-  const u = new URL(PLAYER_CARDS_CSV_URL);
+  const baseUrl = (normalized === "dcpr") ? PLAYER_CARDS_TOURNAMENT_CSV_URL : PLAYER_CARDS_CSV_URL;
+  const u = new URL(baseUrl);
   u.searchParams.set("_", Date.now().toString());
   const { res, text } = await fetchUtf8Text(u.toString());
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -818,14 +826,16 @@ async function loadPlayerCards(){
     elo: toNumber((r[8] ?? "").toString().trim())
   })).filter(x => x.player);
 
-  playerCardsCache = items;
+  playerCardsCache[normalized] = items;
   return items;
 }
 
-async function loadPlayerSummary(){
-  if (playerSummaryCache) return playerSummaryCache;
+async function loadPlayerSummary(mode){
+  const normalized = (mode === "dcpr") ? "dcpr" : "elo";
+  if (playerSummaryCache?.[normalized]) return playerSummaryCache[normalized];
 
-  const u = new URL(PLAYER_SUMMARY_CSV_URL);
+  const baseUrl = (normalized === "dcpr") ? PLAYER_SUMMARY_TOURNAMENT_CSV_URL : PLAYER_SUMMARY_CSV_URL;
+  const u = new URL(baseUrl);
   u.searchParams.set("_", Date.now().toString());
   const { res, text } = await fetchUtf8Text(u.toString());
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -842,12 +852,12 @@ async function loadPlayerSummary(){
     lossStreak: toNumber((r[14] ?? "").toString().trim())
   })).filter(x => x.player);
 
-  playerSummaryCache = items;
+  playerSummaryCache[normalized] = items;
   return items;
 }
 
-async function getSummaryForPlayer(playerName){
-  const list = await loadPlayerSummary();
+async function getSummaryForPlayer(playerName, mode){
+  const list = await loadPlayerSummary(mode);
   const wanted = playerName.trim();
   return list.find(x => x.player.trim() === wanted) || null;
 }
@@ -912,10 +922,20 @@ function buildSvgLineChartEqualX(points){
   `;
 }
 
-function buildHero(playerName, tournamentObj, eloObj, summary){
-  const avgOpp = summary && Number.isFinite(summary.avgOpp) ? summary.avgOpp.toFixed(0) : "—";
-  const winStreak = summary && Number.isFinite(summary.winStreak) ? summary.winStreak.toFixed(0) : "—";
-  const lossStreak = summary && Number.isFinite(summary.lossStreak) ? summary.lossStreak.toFixed(0) : "—";
+function buildHero(playerName, tournamentObj, eloObj, summaryDcpr, summaryElo){
+  // Summary stats are mode-specific:
+  // - DCPR uses "Player summary - Tournament"
+  // - ELO uses "Player summary"
+  const sDcpr = summaryDcpr || null;
+  const sElo = summaryElo || null;
+
+  const dcprAvgOpp = sDcpr && Number.isFinite(sDcpr.avgOpp) ? sDcpr.avgOpp.toFixed(0) : "—";
+  const dcprWinStreak = sDcpr && Number.isFinite(sDcpr.winStreak) ? sDcpr.winStreak.toFixed(0) : "—";
+  const dcprLossStreak = sDcpr && Number.isFinite(sDcpr.lossStreak) ? sDcpr.lossStreak.toFixed(0) : "—";
+
+  const eloAvgOpp = sElo && Number.isFinite(sElo.avgOpp) ? sElo.avgOpp.toFixed(0) : "—";
+  const eloWinStreak = sElo && Number.isFinite(sElo.winStreak) ? sElo.winStreak.toFixed(0) : "—";
+  const eloLossStreak = sElo && Number.isFinite(sElo.lossStreak) ? sElo.lossStreak.toFixed(0) : "—";
 
   const vt = tournamentObj?.vt || null;
 
@@ -979,9 +999,9 @@ function buildHero(playerName, tournamentObj, eloObj, summary){
         </div>
 
         <div class="metaBoxRow">
-          <div class="stat"><b>average opponent rating</b><span>${avgOpp}</span></div>
-          <div class="stat statWin"><b>longest win streak</b><span>${winStreak} 🔥</span></div>
-          <div class="stat statLoss"><b>longest loss streak</b><span>${lossStreak}</span></div>
+          <div class="stat"><b>average opponent rating</b><span id="avgOppVal" data-dcpr="${escapeHtml(dcprAvgOpp)}" data-elo="${escapeHtml(eloAvgOpp)}">${escapeHtml(dcprAvgOpp)}</span></div>
+          <div class="stat statWin"><b>longest win streak</b><span id="winStreakVal" data-dcpr="${escapeHtml(dcprWinStreak)}" data-elo="${escapeHtml(eloWinStreak)}">${escapeHtml(dcprWinStreak)} 🔥</span></div>
+          <div class="stat statLoss"><b>longest loss streak</b><span id="lossStreakVal" data-dcpr="${escapeHtml(dcprLossStreak)}" data-elo="${escapeHtml(eloLossStreak)}">${escapeHtml(dcprLossStreak)}</span></div>
         </div>
       </div>
     </div>
@@ -1082,25 +1102,31 @@ async function loadPlayerDetail(playerObj){
   setModalContent(`<div class="muted">${t("loading")}</div>`);
 
   try{
-    const [allCards, summary, dcprStanding, eloStanding] = await Promise.all([
-      loadPlayerCards(),
-      getSummaryForPlayer(playerObj.player),
+    const [eloCardsAll, dcprCardsAll, eloSummary, dcprSummary, dcprStanding, eloStanding] = await Promise.all([
+      loadPlayerCards("elo"),
+      loadPlayerCards("dcpr"),
+      getSummaryForPlayer(playerObj.player, "elo"),
+      getSummaryForPlayer(playerObj.player, "dcpr"),
       getPlayerStandingFromSheet(TOURNAMENT_ELO_SHEET_NAME, true, playerObj.player).catch(() => null),
       getPlayerStandingFromSheet(ELO_SHEET_NAME, false, playerObj.player).catch(() => null)
     ]);
     const wanted = playerObj.player.trim();
-    const cards = allCards.filter(r => r.player.trim() === wanted);
+    const cardsElo = (eloCardsAll || []).filter(r => r.player.trim() === wanted);
+    const cardsDcpr = (dcprCardsAll || []).filter(r => r.player.trim() === wanted);
+    // Keep a combined view for features like "Protihráči".
+    // (Mode-specific views below use cardsElo / cardsDcpr separately.)
+    const cardsAny = [...cardsElo, ...cardsDcpr];
 
-    if (!cards.length){
+    if (!cardsAny.length){
       currentPlayerDetail = null;
       setModalActions("");
-      setModalContent(buildHero(playerObj.player, dcprStanding, eloStanding, summary) +
+      setModalContent(buildHero(playerObj.player, dcprStanding, eloStanding, dcprSummary, eloSummary) +
         `<div class="bigError"><div class="icon">❌</div> ${t("player_not_found")}</div>`);
       return;
     }
 
     // Uložíme pro Protihráče
-    currentPlayerDetail = { playerObj, cards };
+    currentPlayerDetail = { playerObj, cards: cardsAny };
 
     // Tlačítko "Protihráči" v horní liště (vedle Zavřít)
     setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">${t("opponents")}</button>`);
@@ -1111,7 +1137,7 @@ async function loadPlayerDetail(playerObj){
         // Otevře "stránku" Protihráči v rámci stejného modalu
         openOpponentsModal({
           playerName: playerObj.player,
-          cards,
+          cards: cardsAny,
           onBack: () => {
             openModal({ title: playerObj.player, subtitle: t("player_detail"), html: `<div class="muted">${t("loading")}</div>` });
             loadPlayerDetail(playerObj);
@@ -1120,9 +1146,8 @@ async function loadPlayerDetail(playerObj){
       });
     });
 
-    const sortedAllAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
-
-    const isFNM = (row) => ((row?.tournament || "").toString().trim().toUpperCase() === "FNM");
+    const sortedEloAll = cardsElo.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
+    const sortedDcprAll = cardsDcpr.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
 
     // Current mode affects chart + tournament list below.
     let currentMode = "dcpr"; // default
@@ -1140,10 +1165,7 @@ async function loadPlayerDetail(playerObj){
       }
     };
 
-    const rowsForMode = (mode) => {
-      if (mode === "dcpr") return sortedAllAll.filter(r => !isFNM(r));
-      return sortedAllAll.slice();
-    };
+    const rowsForMode = (mode) => (mode === "dcpr") ? sortedDcprAll.slice() : sortedEloAll.slice();
 
     const applyMode = (mode) => {
       currentMode = (mode === "elo") ? "elo" : "dcpr";
@@ -1203,7 +1225,7 @@ let currentTournament = "ALL";
 
     // Postav obsah modalu: hero (ALL data) + filtr (níže) + tabulky
     setModalContent(
-      buildHero(playerObj.player, dcprStanding, eloStanding, summary)
+      buildHero(playerObj.player, dcprStanding, eloStanding, dcprSummary, eloSummary)
       + `
         <div id="tournamentTables"></div>
       `
@@ -1230,6 +1252,23 @@ let currentTournament = "ALL";
 
         // Apply mode to the rest of the card (chart + tournaments)
         applyMode(normalized);
+
+        // Update summary stats (avg opp, streaks)
+        try{
+          const avgEl = document.getElementById("avgOppVal");
+          const winEl = document.getElementById("winStreakVal");
+          const lossEl = document.getElementById("lossStreakVal");
+          if (avgEl){
+            avgEl.textContent = (avgEl.getAttribute(`data-${normalized}`) || "—").toString();
+          }
+          if (winEl){
+            const v = (winEl.getAttribute(`data-${normalized}`) || "—").toString();
+            winEl.textContent = `${v} 🔥`;
+          }
+          if (lossEl){
+            lossEl.textContent = (lossEl.getAttribute(`data-${normalized}`) || "—").toString();
+          }
+        }catch(e){}
 
         // Re-render chart
         try{ renderChartAndMeta(); }catch(e){}
@@ -1293,8 +1332,8 @@ let currentTournament = "ALL";
 async function loadAll(){
   // Preload BOTH standings datasets to avoid UI "jump" when switching modes.
   await Promise.all([preloadStandingsOnInit(), loadLastData()]);
-  playerCardsCache = null;
-  playerSummaryCache = null;
+  playerCardsCache = { elo: null, dcpr: null };
+  playerSummaryCache = { elo: null, dcpr: null };
 }
 
 /* THEME + LOGO swap */
