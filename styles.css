@@ -782,7 +782,6 @@ a.btnPrimary{
 }
 
 /* Podpořit modal (titulní stránka) */
-.
 /* === Support payment layout (responsive) === */
 .supportPayContent{
   padding: 0 6px;
@@ -824,7 +823,8 @@ a.btnPrimary{
   .supportSwitch{ flex-direction:column; gap:8px; }
   .supportSwitchBtn{ width:100%; }
 }
-supportModal{
+/* NOTE: was missing leading dot -> styles didn't apply */
+.supportModal{
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -2436,6 +2436,91 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
   .supportThanksBox{
     margin-top: 24px;
+  }
+}
+
+
+/* ===== Support: larger QR + table, fill viewport (no scroll on desktop) ===== */
+@media (min-width: 992px){
+  /* Make the support modal use the whole available viewport height */
+  .modalOverlay.isSupport .modal{
+    height: calc(100vh - 36px);
+    max-height: calc(100vh - 36px);
+  }
+  /* Prevent outer modal body scrolling; layout inside will fit */
+  .modalOverlay.isSupport .modalBody{
+    overflow: hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+
+  /* Allow the support content to stretch */
+  .modalOverlay.isSupport .supportModal.support-container{
+    max-width: 1400px;
+    width:100%;
+    height:100%;
+    min-height:0;
+    padding: 0;
+    margin: 0 auto;
+  }
+
+  /* Main two-column layout that fills remaining height */
+  .modalOverlay.isSupport .supportColumns{
+    flex: 1 1 auto;
+    min-height:0;
+    width:100%;
+    display:grid;
+    grid-template-columns: minmax(420px, 1fr) minmax(520px, 1.25fr);
+    gap: 28px;
+    align-items: stretch;
+    margin-top: 10px;
+    max-width: none;
+  }
+
+  .modalOverlay.isSupport .supportColQr{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    min-height:0;
+  }
+
+  .modalOverlay.isSupport .supportQrWrap{
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:0;
+  }
+
+  .modalOverlay.isSupport .supportQr{
+    width:100%;
+    max-width:none;
+    height:auto;
+    max-height:100%;
+    padding: 14px;
+  }
+
+  .modalOverlay.isSupport .supportColInfo{
+    display:flex;
+    flex-direction:column;
+    align-items: stretch;
+    min-height:0;
+  }
+
+  .modalOverlay.isSupport .supportInfo{
+    flex: 1 1 auto;
+    min-height:0;
+    max-width:none;
+    padding: 14px 16px;
+  }
+
+  .modalOverlay.isSupport .supportThanksBox{
+    max-width:none;
+    width:100%;
+    margin-top: 14px;
+    padding: 14px 18px;
   }
 }
 
