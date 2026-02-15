@@ -29,6 +29,15 @@ const DICT = {
       "Systém ELO pro spravedlivé a transparentní hodnocení hráčů Duel Commanderu.",
     anon_line: "Nechcete mít na webu uvedené své jméno? ",
     anon_link: "Klikněte sem",
+    anon_modal_title: "Anonymizace",
+    anon_modal_h1: "Nechcete být na webu uvedeni?",
+    anon_modal_p1: "Rozumíme tomu.",
+    anon_modal_p2:
+      "Zveřejňovaná data pocházejí z veřejně dostupných zdrojů, od organizátorů turnajů a lig nebo od heren, které s námi spolupracují. Projekt slouží k přehlednému zobrazování těchto informací na jednom místě.",
+    anon_modal_p3:
+      "Pokud si nepřejete být na webu dohledatelní pod svým jménem, vaše údaje kompletně anonymizujeme, takže vás podle nich již nebude možné identifikovat. Pro anonymizaci vyplňte následující formulář.",
+    anon_modal_btn: "Přejít na formulář",
+
 
     // Carousel
     carousel_prev: "Předchozí slide",
@@ -98,11 +107,11 @@ const DICT = {
     support_method_bank: "BANKOVNÍ ÚČET",
     support_method_paypal: "PAYPAL",
     support_qr_alt: "QR kód pro platbu",
-    support_acc_name: "Název účtu:",
+    support_acc_name: "NÁZEV ÚČTU",
     support_acc_name_value: "GRAIL SERIES",
-    support_acc_number: "Číslo účtu:",
-    support_iban: "IBAN:",
-    support_bic: "BIC (SWIFT):",
+    support_acc_number: "ČÍSLO ÚČTU",
+    support_iban: "IBAN",
+    support_bic: "BIC(SWIFT)",
     support_paypal_title: "PAYPAL:",
     support_paypal_me: "PayPal.me:",
     support_copy: "Kopírovat",
@@ -163,6 +172,15 @@ const DICT = {
       "An ELO system for fair and transparent Duel Commander player ratings.",
     anon_line: "Don’t want your name shown on the website? ",
     anon_link: "Click here",
+    anon_modal_title: "Anonymization",
+    anon_modal_h1: "Don’t want to appear on the website?",
+    anon_modal_p1: "We understand.",
+    anon_modal_p2:
+      "The published data comes from publicly available sources, tournament and league organizers, or stores that cooperate with us. This project helps display this information clearly in one place.",
+    anon_modal_p3:
+      "If you don’t want to be searchable on the website under your name, we can fully anonymize your data so you can’t be identified. To request anonymization, please fill out the form below.",
+    anon_modal_btn: "Open the form",
+
 
     carousel_prev: "Previous slide",
     carousel_next: "Next slide",
@@ -224,11 +242,11 @@ const DICT = {
     support_method_bank: "BANK ACCOUNT",
     support_method_paypal: "PAYPAL",
     support_qr_alt: "Payment QR code",
-    support_acc_name: "Account name:",
+    support_acc_name: "ACCOUNT NAME",
     support_acc_name_value: "GRAIL SERIES",
-    support_acc_number: "Account number:",
-    support_iban: "IBAN:",
-    support_bic: "BIC (SWIFT):",
+    support_acc_number: "ACCOUNT NUMBER",
+    support_iban: "IBAN",
+    support_bic: "BIC(SWIFT)",
     support_paypal_title: "PAYPAL:",
     support_paypal_me: "PayPal.me:",
     support_copy: "Copy",
@@ -288,6 +306,15 @@ const DICT = {
       "Un système ELO pour une évaluation juste et transparente des joueurs de Duel Commander.",
     anon_line: "Vous ne voulez pas que votre nom apparaisse sur le site ? ",
     anon_link: "Cliquez ici",
+    anon_modal_title: "Anonymisation",
+    anon_modal_h1: "Vous ne voulez pas apparaître sur le site ?",
+    anon_modal_p1: "Nous comprenons.",
+    anon_modal_p2:
+      "Les données publiées proviennent de sources publiques, des organisateurs de tournois et de ligues, ou des boutiques qui coopèrent avec nous. Ce projet permet d’afficher clairement ces informations en un seul endroit.",
+    anon_modal_p3:
+      "Si vous ne souhaitez pas être recherché sur le site sous votre nom, nous pouvons anonymiser complètement vos données afin qu’elles ne permettent plus de vous identifier. Pour demander l’anonymisation, veuillez remplir le formulaire ci-dessous.",
+    anon_modal_btn: "Ouvrir le formulaire",
+
 
     carousel_prev: "Diapositive précédente",
     carousel_next: "Diapositive suivante",
@@ -349,11 +376,11 @@ const DICT = {
     support_method_bank: "COMPTE BANCAIRE",
     support_method_paypal: "PAYPAL",
     support_qr_alt: "QR code de paiement",
-    support_acc_name: "Nom du compte :",
+    support_acc_name: "NOM DU COMPTE",
     support_acc_name_value: "GRAIL SERIES",
-    support_acc_number: "Numéro de compte :",
-    support_iban: "IBAN :",
-    support_bic: "BIC (SWIFT) :",
+    support_acc_number: "NUMÉRO DE COMPTE",
+    support_iban: "IBAN",
+    support_bic: "BIC(SWIFT)",
     support_paypal_title: "PAYPAL :",
     support_paypal_me: "PayPal.me :",
     support_copy: "Copier",

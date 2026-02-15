@@ -362,7 +362,7 @@ main{ max-width:1150px; margin:0 auto; padding:16px; }
   transform:translateX(-50%);
   display:flex;
   gap:8px;
-  padding:6px 10px;
+  padding:5px 8px;
   border-radius:999px;
   background:rgba(0,0,0,.18);
   border:1px solid rgba(255,255,255,.14);
@@ -776,7 +776,7 @@ a.btnPrimary{
   gap:10px;
   width:100%;
   /* make the support card slimmer */
-  max-width:380px;
+  max-width:360px;
   margin:0 auto;
 }
 
@@ -808,7 +808,7 @@ a.btnPrimary{
 
 .supportSwitch{
   width:100%;
-  max-width:360px;
+  max-width:340px;
   display:flex;
   gap:10px;
   margin-top: 6px;
@@ -858,7 +858,7 @@ html[data-theme="light"] .supportQr{
 }
 .supportInfo{
   width:100%;
-  max-width:360px;
+  max-width:340px;
   border:1px solid rgba(255,255,255,.10);
   border-radius:16px;
   background:color-mix(in srgb, var(--panel) 62%, transparent);
@@ -873,7 +873,7 @@ html[data-theme="light"] .supportInfo{
 
 .supportInfoRow{
   display:grid;
-  grid-template-columns: 140px 1fr auto;
+  grid-template-columns: 120px 1fr auto;
   align-items:center;
   column-gap:10px;
   row-gap:2px;
@@ -886,14 +886,14 @@ html[data-theme="light"] .supportInfoRow{
 .supportInfoRow:first-of-type{ border-top:0; padding-top:2px; }
 
 .supportInfoLabel{
-  font-size:11px;
+  font-size:10px;
   letter-spacing:.06em;
   text-transform:uppercase;
   opacity:.85;
   font-weight:800;
 }
 .supportInfoValue{
-  font-size:14px;
+  font-size:13px;
   font-weight:700;
   letter-spacing:.01em;
   word-break: break-word;
@@ -908,8 +908,8 @@ html[data-theme="light"] .supportInfoRow{
   font-weight:950;
   letter-spacing:.06em;
   text-transform:uppercase;
-  padding:6px 10px;
-  border-radius:12px;
+  padding:5px 8px;
+  border-radius:10px;
   border:1px solid rgba(255,255,255,.12);
   background: color-mix(in srgb, var(--panel) 70%, transparent);
   cursor:pointer;
@@ -949,7 +949,7 @@ html[data-theme="light"] .supportCopy{
 
 .supportNote{
   width:100%;
-  max-width:360px;
+  max-width:340px;
   border-radius:14px;
   padding:8px 10px;
   border:1px solid rgba(60, 200, 120, .28);
@@ -1165,7 +1165,7 @@ html[data-theme="light"] .heroRank.rank2{
   color:var(--muted);
   font-weight:900;
   letter-spacing:.04em;
-  padding:6px 10px;
+  padding:5px 8px;
   border-radius:999px;
   cursor:pointer;
   font-size:12px;
@@ -1478,11 +1478,11 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     justify-self:end;
     width:auto;
     padding:8px 10px;
-    border-radius:12px;
+    border-radius:10px;
     font-size:12px;
   }
 
-  button{ padding:8px 10px; border-radius:12px; font-size:12px; }
+  button{ padding:8px 10px; border-radius:10px; font-size:12px; }
 
   /* info panels narrower */
   .container{ padding:0 12px; }
@@ -1519,11 +1519,11 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   input[type="search"]{
     width:100%;
     padding:9px 10px;
-    border-radius:12px;
+    border-radius:10px;
     min-width:0;
   }
   .right{ flex:0 0 auto; }
-  #refresh{ padding:9px 10px; border-radius:12px; }
+  #refresh{ padding:9px 10px; border-radius:10px; }
 
   /* Mobile standings table: show Rank + Player + Rating */
   .tableWrap{ overflow-x:hidden; }
@@ -1703,7 +1703,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   background:var(--panel);
   color:var(--text);
   padding:8px 10px;
-  border-radius:12px;
+  border-radius:10px;
   font-weight:800;
   min-width:220px;
 }

@@ -141,6 +141,8 @@
 
 <script type="module" src="modal.js"></script>
 <script type="module">
+  import { t } from './i18n.js';
+
   const isMobileModal = () => window.matchMedia('(max-width: 760px)').matches;
 
   // Carousel (placeholder images)
@@ -280,23 +282,18 @@
 
       const bodyHtml = `
         <div class="anonModal">
-          <h1 class="anonH1">Nechcete být na webu uvedeni?</h1>
-          <p>Rozumíme tomu.</p>
-          <p>
-            Zveřejňovaná data pocházejí z veřejně dostupných zdrojů, od organizátorů turnajů a lig nebo od heren, které s námi spolupracují. Projekt slouží k přehlednému zobrazování těchto informací na jednom místě.
-          </p>
-          <p>
-            Pokud si nepřejete být na webu dohledatelní pod svým jménem, vaše údaje kompletně anonimizujeme, takže vás podle nich již nebude možné identifikovat. Pro anonymizaci vyplňte následující formulář.
-          </p>
+          <h1 class="anonH1">${t("anon_modal_h1")}</h1>
+          <p>${t("anon_modal_p1")}</p>
+          <p>${t("anon_modal_p2")}</p>
+          <p>${t("anon_modal_p3")}</p>
           <div class="anonActions">
-            <a class="btnPrimary btnAnon" href="https://docs.google.com/forms/d/e/1FAIpQLSfwFbnvW9SnOvGZ3KGhk4mHx61GIrWdQBSIp8vGovC1xr9wDg/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">Přejít na formulář</a>
+            <a class="btnPrimary btnAnon" href="https://docs.google.com/forms/d/e/1FAIpQLSfwFbnvW9SnOvGZ3KGhk4mHx61GIrWdQBSIp8vGovC1xr9wDg/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">${t("anon_modal_btn")}</a>
           </div>
         </div>
       `;
-
-      // Modal header
+// Modal header
       if (window.openModal) {
-        window.openModal({ title: 'Anonimizace', subtitle: '', html: bodyHtml, fullscreen: mobile });
+        window.openModal({ title: t("anon_modal_title"), subtitle: '', html: bodyHtml, fullscreen: mobile });
       }
 
       // Visual tuning for the anonymizace modal only (kept local to the homepage)
