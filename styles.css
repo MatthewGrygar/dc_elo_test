@@ -776,7 +776,7 @@ a.btnPrimary{
   gap:10px;
   width:100%;
   /* make the support card slimmer */
-  max-width:420px;
+  max-width:380px;
   margin:0 auto;
 }
 
@@ -808,7 +808,7 @@ a.btnPrimary{
 
 .supportSwitch{
   width:100%;
-  max-width:410px;
+  max-width:360px;
   display:flex;
   gap:10px;
   margin-top: 6px;
@@ -858,7 +858,7 @@ html[data-theme="light"] .supportQr{
 }
 .supportInfo{
   width:100%;
-  max-width:410px;
+  max-width:360px;
   border:1px solid rgba(255,255,255,.10);
   border-radius:16px;
   background:color-mix(in srgb, var(--panel) 62%, transparent);
@@ -949,9 +949,9 @@ html[data-theme="light"] .supportCopy{
 
 .supportNote{
   width:100%;
-  max-width:410px;
+  max-width:360px;
   border-radius:14px;
-  padding:10px 14px;
+  padding:8px 10px;
   border:1px solid rgba(60, 200, 120, .28);
   background: rgba(60, 200, 120, .14);
   color: var(--text);
@@ -2057,3 +2057,10 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   font-size:12px;
 }
 
+
+
+/* === Language flag fix === */
+.langFlag{
+  background-size: cover;
+  background-position: center;
+}
