@@ -776,7 +776,7 @@ a.btnPrimary{
   gap:10px;
   width:100%;
   /* make the support card slimmer */
-  max-width:360px;
+  max-width: 620px;
   margin:0 auto;
 }
 
@@ -808,7 +808,7 @@ a.btnPrimary{
 
 .supportSwitch{
   width:100%;
-  max-width:340px;
+  max-width: 600px;
   display:flex;
   gap:10px;
   margin-top: 6px;
@@ -836,6 +836,24 @@ html[data-theme="light"] .supportSwitchBtn{
   border:1px solid rgba(60, 200, 120, .55);
   background: rgba(60, 200, 120, .18);
 }
+.supportBody{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+@media (min-width: 720px){
+  .supportBody{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  .supportQr{
+    width:100%;
+    max-width:260px;
+  }
+}
 .supportQrWrap{
   width:100%;
   display:flex;
@@ -858,8 +876,7 @@ html[data-theme="light"] .supportQr{
 }
 .supportInfo{
   width:100%;
-  max-width:340px;
-  border:1px solid rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.10);
   border-radius:16px;
   background:color-mix(in srgb, var(--panel) 62%, transparent);
   backdrop-filter: blur(8px);
@@ -949,7 +966,7 @@ html[data-theme="light"] .supportCopy{
 
 .supportNote{
   width:100%;
-  max-width:340px;
+  max-width: 600px;
   border-radius:14px;
   padding:8px 10px;
   border:1px solid rgba(60, 200, 120, .28);
@@ -2051,6 +2068,12 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   background:var(--chip);
   overflow:hidden;
 }
+.langCircle img{
+  width:100%;
+  height:100%;
+  object-fit: contain;
+  transform: scale(.92);
+}
 .langItem .langCircle{
   width:16px;
   height:16px;
@@ -2064,3 +2087,5 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   background-size: cover;
   background-position: center;
 }
+
+.langFlagImg{ width:100%; height:100%; object-fit: contain; }
