@@ -2291,3 +2291,43 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   .supportInfo{ max-width:260px; }
   .supportThanksBox{ max-width:260px; }
 }
+
+
+/* ===== Center everything in Support ===== */
+.support-container{
+  text-align:center;
+}
+
+.supportSwitch{
+  justify-content:center;
+  gap:8px;
+}
+
+.supportSwitchBtn{
+  padding:6px 14px;
+  font-size:13px;
+  border-radius:14px;
+}
+
+/* Narrow whole stack to 110% QR width */
+.supportStack{
+  max-width: 352px; /* 320px QR * 1.1 ≈ 352px */
+}
+
+.supportInfo{
+  max-width: 352px;
+}
+
+.supportThanksBox{
+  max-width: 352px;
+  background:#1f6f43;
+  color:#ffffff;
+  font-weight:700;
+  border:none;
+}
+
+/* Remove any previous light styling */
+.supportThanksBox::before,
+.supportThanksBox::after{
+  display:none;
+}
