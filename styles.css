@@ -782,6 +782,7 @@ a.btnPrimary{
 }
 
 /* Podpořit modal (titulní stránka) */
+.
 /* === Support payment layout (responsive) === */
 .supportPayContent{
   padding: 0 6px;
@@ -823,8 +824,7 @@ a.btnPrimary{
   .supportSwitch{ flex-direction:column; gap:8px; }
   .supportSwitchBtn{ width:100%; }
 }
-/* NOTE: was missing leading dot -> styles didn't apply */
-.supportModal{
+supportModal{
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -2267,8 +2267,8 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
 .supportThanksBox{
   width:100%;
-  max-width:320px;
-  margin:0 auto;
+  max-width:520px;
+  margin:0;
   padding:12px 14px;
   border-radius:14px;
   background:#e6f4ea;
@@ -2339,12 +2339,15 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
 .supportColumns{
   width:100%;
-  max-width: 860px;
+  max-width:none;
   margin: 14px auto 0 auto;
+  padding: 0 28px;
+  box-sizing:border-box;
   display:flex;
+  flex-wrap:wrap;
   gap: 28px;
   align-items:flex-start;
-  justify-content:center;
+  justify-content:space-between;
 }
 
 .supportCol{
@@ -2363,14 +2366,23 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   align-items:center;
 }
 
+.supportThanksRow{
+  flex: 0 0 100%;
+  display:flex;
+  justify-content:center;
+  margin-top: 8px;
+}
+
 .supportInfo,
 .supportThanksBox{
   width: 100%;
-  max-width: 360px; /* pleasant width on desktop */
+  max-width: 520px; /* larger on desktop */
 }
 
 .supportQr{
-  max-width: 360px;
+  width:100%;
+  max-width: 520px;
+  height:auto;
 }
 
 .supportSpacerSm{ height: 10px; }
@@ -2440,114 +2452,12 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 }
 
 
-/* ===== Support: larger QR + table, fill viewport (no scroll on desktop) ===== */
-@media (min-width: 992px){
-  /* Make the support modal use the whole available viewport height */
-  .modalOverlay.isSupport .modal{
-    height: calc(100vh - 36px);
-    max-height: calc(100vh - 36px);
-  }
-  /* Prevent outer modal body scrolling; layout inside will fit */
-  .modalOverlay.isSupport .modalBody{
-    overflow: hidden;
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-  }
-
-  /* Allow the support content to stretch */
-  .modalOverlay.isSupport .supportModal.support-container{
-    max-width: 1400px;
-    width:100%;
-    height:100%;
-    min-height:0;
-    padding: 0;
-    margin: 0 auto;
-  }
-
-  /* Main two-column layout that fills remaining height */
-  .modalOverlay.isSupport .supportColumns{
-    flex: 1 1 auto;
-    min-height:0;
-    width:100%;
-    display:grid;
-    grid-template-columns: minmax(420px, 1fr) minmax(520px, 1.25fr);
-    gap: 28px;
-    align-items: stretch;
-    margin-top: 10px;
-    max-width: none;
-  }
-
-  .modalOverlay.isSupport .supportColQr{
-    display:flex;
-    align-items: center;
-    justify-content: center;
-    min-height:0;
-  }
-
-  .modalOverlay.isSupport .supportQrWrap{
-    width:100%;
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:0;
-  }
-
-  .modalOverlay.isSupport .supportQr{
-    width:100%;
-    max-width:none;
-    height:auto;
-    max-height:100%;
-    padding: 14px;
-  }
-
-  .modalOverlay.isSupport .supportColInfo{
-    display:flex;
-    flex-direction:column;
-    align-items: stretch;
-    min-height:0;
-  }
-
-  .modalOverlay.isSupport .supportInfo{
-    flex: 1 1 auto;
-    min-height:0;
-    max-width:none;
-    padding: 14px 16px;
-  }
-
-  .modalOverlay.isSupport .supportThanksBox{
-    max-width:none;
-    width:100%;
-    margin-top: 14px;
-    padding: 14px 18px;
-  }
-}
-
-
 /* ===== Make Support full width on desktop ===== */
 @media (min-width: 992px){
-  .modalOverlay.isSupport .modal{
-    height: calc(100vh - 36px);
-    max-height: none;
-  }
-
-  .modalOverlay.isSupport .modalBody{
-    overflow: hidden !important; /* no scrolling on desktop */
-  }
-
-  /* Force the support content to use the whole modal width (override older narrow rules) */
-  .modalOverlay.isSupport .supportModal.support-container{
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
   .supportColumns{
-    max-width: none !important;
-    width: 100% !important;
-    gap: 34px;
+    max-width: 1200px;
+    width: 100%;
+    gap: 60px;
     justify-content: space-between;
   }
 
@@ -2561,11 +2471,11 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   }
 
   .supportQr{
-    max-width: none !important;
+    max-width: 420px;
   }
 
   .supportInfo{
-    max-width: none !important;
+    max-width: 100%;
   }
 
   .supportThanksBox{

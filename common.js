@@ -100,10 +100,10 @@ function openSupportModal(){
               </div>
             </div>
           </div>
-
-          <div class="supportSpacerLg"></div>
+        <div class="supportThanksRow">
           <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
         </div>
+</div>
       </div>
     </div>
   `;
