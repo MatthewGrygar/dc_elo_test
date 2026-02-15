@@ -776,7 +776,7 @@ a.btnPrimary{
   gap:10px;
   width:100%;
   /* make the support card slimmer */
-  max-width:340px;
+  max-width:420px;
   margin:0 auto;
 }
 
@@ -808,7 +808,7 @@ a.btnPrimary{
 
 .supportSwitch{
   width:100%;
-  max-width:330px;
+  max-width:410px;
   display:flex;
   gap:10px;
   margin-top: 6px;
@@ -858,7 +858,7 @@ html[data-theme="light"] .supportQr{
 }
 .supportInfo{
   width:100%;
-  max-width:330px;
+  max-width:410px;
   border:1px solid rgba(255,255,255,.10);
   border-radius:16px;
   background:color-mix(in srgb, var(--panel) 62%, transparent);
@@ -870,6 +870,65 @@ html[data-theme="light"] .supportInfo{
   border:1px solid rgba(0,0,0,.10);
   background:color-mix(in srgb, var(--panel) 82%, transparent);
 }
+
+.supportInfoRow{
+  display:grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items:center;
+  column-gap:10px;
+  row-gap:2px;
+  padding:6px 0;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+html[data-theme="light"] .supportInfoRow{
+  border-top:1px solid rgba(0,0,0,.06);
+}
+.supportInfoRow:first-of-type{ border-top:0; padding-top:2px; }
+
+.supportInfoLabel{
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.85;
+  font-weight:800;
+}
+.supportInfoValue{
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.01em;
+  word-break: break-word;
+}
+.supportInfoMono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight:700;
+}
+.supportCopy{
+  justify-self:end;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:6px 10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+}
+html[data-theme="light"] .supportCopy{
+  border:1px solid rgba(0,0,0,.12);
+}
+.supportCopy:hover{ filter: brightness(1.08); }
+
+.supportCopyFeedback{
+  grid-column: 1 / -1;
+  justify-self:end;
+  font-size:12px;
+  color: var(--muted);
+  min-height: 14px;
+  padding-top:2px;
+}
 .supportInfoTitle{
   font-weight:950;
   letter-spacing:.06em;
@@ -878,10 +937,7 @@ html[data-theme="light"] .supportInfo{
   margin-bottom:6px;
   color:var(--muted);
 }
-.supportInfoLine{
-  margin:0 0 6px;
-  color:var(--text);
-}
+.supportInfoLine{ margin:0; color:var(--text); }
 .supportInfoLine b{
   display:inline-block;
   font-size:11px;
@@ -893,7 +949,7 @@ html[data-theme="light"] .supportInfo{
 
 .supportNote{
   width:100%;
-  max-width:330px;
+  max-width:410px;
   border-radius:14px;
   padding:10px 14px;
   border:1px solid rgba(60, 200, 120, .28);
