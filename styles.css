@@ -2331,3 +2331,58 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 .supportThanksBox::after{
   display:none;
 }
+
+
+/* ===== Support desktop: two columns (QR | table+thanks) ===== */
+.supportHero{ text-align:center; }
+.supportSwitch{ justify-content:center; }
+
+.supportColumns{
+  width:100%;
+  max-width: 860px;
+  margin: 14px auto 0 auto;
+  display:flex;
+  gap: 28px;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.supportCol{
+  flex: 1 1 0;
+  min-width: 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.supportColQr{
+  justify-content:flex-start;
+}
+
+.supportColInfo{
+  align-items:center;
+}
+
+.supportInfo,
+.supportThanksBox{
+  width: 100%;
+  max-width: 360px; /* pleasant width on desktop */
+}
+
+.supportQr{
+  max-width: 360px;
+}
+
+.supportSpacerSm{ height: 10px; }
+.supportSpacerLg{ height: 18px; }
+
+@media (max-width: 768px){
+  .supportColumns{
+    flex-direction:column;
+    gap: 14px;
+    max-width: 260px;
+  }
+  .supportInfo, .supportThanksBox, .supportQr{
+    max-width: 260px;
+  }
+}
