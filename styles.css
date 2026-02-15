@@ -2159,6 +2159,13 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   align-items:center;
   gap:10px;
   flex-wrap:wrap;
+  flex: 1 1 auto;
+}
+
+/* Push the "DCPR only / Pouze DCPR" toggle to the right in the toolbar row */
+.toolbarLeft .ratedToggle{
+  margin-left: auto;
+  align-items: center;
 }
 #search{
   width: 220px;
@@ -2484,6 +2491,14 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 }
 
 @media (min-width: 761px){
+  /* Center the BANK ACCOUNT / PAYPAL switch */
+  .modalOverlay.isSupport .supportSwitch{
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+    max-width: 720px;
+  }
+
   .modalOverlay.isSupport .support-container{
     max-width: none !important;
     width: 100%;
@@ -2500,7 +2515,7 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   .modalOverlay.isSupport .supportColumns{
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 22px;
+    gap: 18px;
     align-items: stretch;
     width: 100%;
     max-width: none;
@@ -2511,17 +2526,25 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
     display:flex;
     flex-direction:column;
     justify-content:center;
+    align-items:center;
     min-width: 0;
   }
 
   .modalOverlay.isSupport .supportQr{
-    max-width: 520px !important;
-    width: min(520px, 100%);
+    /* Slightly smaller so everything fits nicely */
+    max-width: 440px !important;
+    width: min(440px, 100%);
   }
 
   .modalOverlay.isSupport .supportTable{
     max-width: none !important;
     width: 100%;
+  }
+
+  /* Make the info box a bit tighter so it doesn't look oversized */
+  .modalOverlay.isSupport .supportTable{
+    max-width: 520px !important;
+    padding: 14px;
   }
 
   .modalOverlay.isSupport .supportThanksRow{
@@ -2548,7 +2571,8 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
 @media (min-width: 760px){
   .articlesGrid{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Keep single-column layout so the article preview spans full width */
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
@@ -2605,12 +2629,27 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
 
 .articleHeroImg{
   width: 100%;
-  height: 260px;
+  /* Match the homepage slider aspect ratio */
+  aspect-ratio: 4400 / 1585;
+  height: auto;
   object-fit: cover;
   border-radius: 18px;
   border:1px solid var(--border);
   display:block;
   margin-bottom: 14px;
+}
+
+/* Articles modal/page should use the full available width */
+.pageModal.articlesPage{
+  max-width: none;
+  width: 100%;
+}
+
+/* Slightly smaller, cleaner article title */
+.articleModal .articleH2{
+  font-size: 22px;
+  line-height: 1.15;
+  margin: 10px 0 12px;
 }
 
 .articleContent{
