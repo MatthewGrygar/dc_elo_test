@@ -100,10 +100,13 @@ function openSupportModal(){
               </div>
             </div>
           </div>
-        <div class="supportThanksRow">
-          <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
+
+          <div class="supportSpacerLg"></div>
         </div>
-</div>
+      </div>
+
+      <div class="supportThanksRow">
+        <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
       </div>
     </div>
   `;
@@ -115,8 +118,12 @@ function openSupportModal(){
     fullscreen: isMobileModal()
   });
 
-  // Copy-to-clipboard (support modal) – binding after modal render
+  // Mark overlay so Support-specific CSS can apply
   const overlayEl = document.getElementById("modalOverlay");
+  if (overlayEl) overlayEl.classList.add("isSupport");
+
+  // Copy-to-clipboard (support modal) – binding after modal render
+  
   if (!overlayEl) return;
   const rootEl = overlayEl.querySelector(".supportModal");
   if (!rootEl) return;
@@ -347,6 +354,25 @@ function openMenuDestination({ title, subtitle, html }){
   }
 }
 
+
+// -------------------- ČLÁNKY: první článek --------------------
+function openArticleEloModal(){
+  openModal({
+    title: t("article_elo_title"),
+    subtitle: t("articles_sub"),
+    html: `
+      <div class="articleModal">
+        <div class="articleHero">
+          <img class="articleHeroImg" src="${t("article_elo_image")}" alt="${t("article_elo_title")}" loading="lazy" />
+        </div>
+        <h2 class="articleH2">${t("article_elo_title")}</h2>
+        <div class="articleContent">${t("article_elo_body")}</div>
+      </div>
+    `,
+    fullscreen: isMobileModal()
+  });
+}
+
 // -------------------- MENU --------------------
 const supportBtn = document.getElementById("supportBtn");
 const menuBtn = document.getElementById("menuBtn");
@@ -537,14 +563,26 @@ if (managementBtn){
       title: t("management_title"),
       subtitle: t("management_sub"),
       html: `
-        <div class="pageModal">
-          <h2>${t("menu_management")}</h2>
-          <p class="muted">${t("management_body")}</p>
+        <div class="pageModal managementPage">
+          <div class="managementGrid">
+            <div class="leaderCard">
+              <div class="leaderName">Matthew Grygar</div>
+              <img class="leaderPhoto" src="assets/images/management/matthew_grygar.png" alt="Matthew Grygar" loading="lazy" />
+              <div class="leaderRole">${t("leader_matthew_role")}</div>
+            </div>
+
+            <div class="leaderCard">
+              <div class="leaderName">Ervin Kuč</div>
+              <img class="leaderPhoto" src="assets/images/management/ervin_kuc.png" alt="Ervin Kuč" loading="lazy" />
+              <div class="leaderRole">${t("leader_ervin_role")}</div>
+            </div>
+          </div>
         </div>
       `
     });
   });
 }
+
 
 // ČLÁNKY
 if (articlesBtn){
@@ -554,14 +592,29 @@ if (articlesBtn){
       title: t("articles_title"),
       subtitle: t("articles_sub"),
       html: `
-        <div class="pageModal">
-          <h2>${t("menu_articles")}</h2>
-          <p class="muted">${t("articles_body")}</p>
+        <div class="pageModal articlesPage">
+          <div class="articlesGrid">
+            <button class="articleCard" type="button" data-article="elo">
+              <img class="articleCardImg" src="${t("article_elo_image")}" alt="${t("article_elo_title")}" loading="lazy" />
+              <div class="articleCardBody">
+                <div class="articleCardTitle">${t("article_elo_title")}</div>
+                <div class="articleCardExcerpt">${t("article_elo_excerpt")}</div>
+                <div class="articleCardCta">${t("article_read")}</div>
+              </div>
+            </button>
+          </div>
         </div>
       `
     });
+
+    const overlay = document.getElementById("modalOverlay");
+    if (!overlay) return;
+    const btn = overlay.querySelector('[data-article="elo"]');
+    if (!btn) return;
+    btn.addEventListener("click", () => openArticleEloModal());
   });
 }
+
 
 // TITULY
 if (titlesBtn){
