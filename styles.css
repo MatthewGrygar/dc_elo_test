@@ -3285,7 +3285,27 @@ html[data-theme="light"] .supportXCopy{
   /* Push the language+menu group to the right */
   .headerRightTop .langWrap{ margin-left:auto; }
   /* Make Support sit visually on the left edge */
-  .btnSupport{ justify-content:flex-start; }
+  /* Keep the button itself on the left, but center its label inside */
+  .btnSupport{ justify-content:center; }
+}
+
+/* ===== Support modal – ensure table + Thanks fit full width on touch phones (incl. landscape) ===== */
+@media (hover: none) and (pointer: coarse) and (max-width: 1024px){
+  .supportXWrap{ max-width: 100%; }
+  .supportXGrid{ grid-template-columns: 1fr; gap: 14px; }
+  .supportXColQr{ justify-content: center; }
+  .supportXRow{
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .supportXCopy{ width: 100%; }
+  .supportXCard,
+  .supportXThanks{
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 /* ===== PATCH 4c: Support modal on phones – true full-screen + safe scrolling ===== */
