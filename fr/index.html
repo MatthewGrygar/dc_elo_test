@@ -136,7 +136,8 @@
 
 <script type="module" src="../modal.js"></script>
 <script type="module">
-  import { t } from './i18n.js';
+  // NOTE: i18n lives in the repository root, language pages are in /cz, /eng, /fr
+  import { t } from '../i18n.js';
 
   const isMobileModal = () => window.matchMedia('(max-width: 760px)').matches;
 

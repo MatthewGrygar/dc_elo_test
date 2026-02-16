@@ -2990,10 +2990,11 @@ html[data-theme="light"] .supportXCopy{
 .managementWrap{ width: 100%; }
 .managementGrid{
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Compact, centered cards (future-proof for more members) */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+  justify-content: center;
   gap: 16px;
-  /* Member cards should stay compact and centered as more people are added */
-  max-width: 820px;
+  max-width: 760px;
   margin: 0 auto;
 }
 .managementCard{
