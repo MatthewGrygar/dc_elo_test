@@ -36,7 +36,6 @@ function openSupportModal(){
         <button class="supportSwitchBtn" type="button" data-method="paypal" role="tab" aria-selected="false">${t("support_method_paypal")}</button>
       </div>
 
-      
       <div class="payment-content supportColumns">
         <div class="supportCol supportColQr">
           <div class="qr-section supportQrWrap">
@@ -45,8 +44,6 @@ function openSupportModal(){
         </div>
 
         <div class="supportCol supportColInfo">
-          <div class="supportSpacerSm"></div>
-
           <div class="account-info supportInfo" aria-label="${t("support_acc_aria")}">
             <div class="supportInfoSection" data-section="bank" hidden>
               <div class="supportInfoTitle">${t("support_acc_title")}</div>
@@ -101,12 +98,10 @@ function openSupportModal(){
             </div>
           </div>
 
-          <div class="supportSpacerLg"></div>
+          <div class="supportThanksRow">
+            <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
+          </div>
         </div>
-      </div>
-
-      <div class="supportThanksRow">
-        <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
       </div>
     </div>
   `;

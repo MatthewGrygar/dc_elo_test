@@ -2530,6 +2530,55 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
     min-width: 0;
   }
 
+  /* Make columns behave as two equal-height panels */
+  .modalOverlay.isSupport .supportCol{
+    justify-content: stretch;
+    align-items: stretch;
+  }
+  .modalOverlay.isSupport .supportColQr{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+  .modalOverlay.isSupport .supportColInfo{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between; /* table top, thank-you bottom */
+    align-items:stretch;
+    padding-left: 28px;  /* extra breathing room between QR and table */
+    padding-right: 10px;
+  }
+
+  /* Align COPY buttons in one clean column */
+  .modalOverlay.isSupport .supportInfoRow{
+    display:grid;
+    grid-template-columns: 170px 1fr 118px;
+    align-items:center;
+    column-gap: 16px;
+    row-gap: 6px;
+  }
+  .modalOverlay.isSupport .supportCopyBtn{
+    justify-self:end;
+    min-width: 110px;
+  }
+  .modalOverlay.isSupport .supportCopyFeedback{
+    grid-column: 1 / -1;
+    margin-top: 2px;
+  }
+
+  /* Keep the info box nicely sized inside the right column */
+  .modalOverlay.isSupport .supportInfo{
+    width: min(520px, 100%);
+    margin: 0; /* padding-left on the column handles spacing */
+  }
+  .modalOverlay.isSupport .supportThanksRow{
+    margin-top: 14px;
+  }
+  .modalOverlay.isSupport .supportThanksBox{
+    width: min(520px, 100%);
+    margin: 0;
+  }
+
   .modalOverlay.isSupport .supportQr{
     /* Slightly smaller so everything fits nicely */
     max-width: 440px !important;
