@@ -23,7 +23,23 @@ function applyLangToSlides(lang){
   imgs.forEach((img, k) => {
     const idx = k + 1;
     img.src = srcFor(lang, idx);
+    if (idx === 1){
+      // First slide: decode sooner to reduce visible swap/flicker
+      try{ img.decoding = "async"; }catch(e){}
+    }
   });
+}
+
+function preloadLangImages(lang){
+  // Preload the 3 slide images for the current language.
+  // This reduces the "blank/flicker" feeling on slower connections.
+  try{
+    for (let i = 1; i <= 3; i++){
+      const im = new Image();
+      im.decoding = "async";
+      im.src = srcFor(lang, i);
+    }
+  }catch(e){}
 }
 
 function openSlideLink(k){
@@ -198,5 +214,9 @@ const initialLang = (() => {
 })();
 
 applyLangToSlides(initialLang);
-onLangChange((lang) => applyLangToSlides(lang));
+preloadLangImages(initialLang);
+onLangChange((lang) => {
+  applyLangToSlides(lang);
+  preloadLangImages(lang);
+});
 initCarousel();

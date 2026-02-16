@@ -888,8 +888,10 @@ function openArticleList(push=true){
       <img class="articleBanner" src="${assetUrl(a.banner)}" alt="${a.title[lang] || a.title.en}" loading="lazy" />
       <div class="articleInner">
         <h3 class="articleH">${a.title[lang] || a.title.en}</h3>
-        <p class="muted articleP">${a.teaser[lang] || a.teaser.en}</p>
-        <button class="btnPrimary articleReadBtn" type="button" data-article="${a.slug}">${t("articles_read")}</button>
+        <div class="articleTeaserRow">
+          <p class="muted articleP">${a.teaser[lang] || a.teaser.en}</p>
+          <button class="btnPrimary articleReadBtn" type="button" data-article="${a.slug}">${t("articles_read")}</button>
+        </div>
       </div>
     </article>
   `).join("");

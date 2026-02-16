@@ -121,7 +121,7 @@ const DICT = {
     management_body: "",
 
     articles_title: "Články",
-    articles_sub: "Placeholder",
+    articles_sub: "",
     articles_read: "Číst článek",
     articles_body: "Obsah bude doplněn.",
 
@@ -240,7 +240,7 @@ const DICT = {
     tip_click_player: "Tip: Click a player's name to view details.",
     version: "version",
 
-    menu_news: "NEWS",
+    menu_news: "UPDATE",
     menu_management: "MANAGEMENT",
     menu_articles: "ARTICLES",
     menu_titles: "TITLES",
@@ -253,14 +253,14 @@ const DICT = {
     upload_desc: "Data is submitted via a Google Form.",
     upload_open: "Open form",
 
-    news_title: "News",
+    news_title: "Update",
 
     management_title: "DCPR Commission",
     management_sub: "Organizational and methodological body of the DC ELO project",
     management_body: "",
 
     articles_title: "Articles",
-    articles_sub: "Placeholder",
+    articles_sub: "",
     articles_read: "Číst článek",
     articles_read: "Read article",
     articles_body: "Content will be added.",
@@ -398,7 +398,7 @@ const DICT = {
     management_body: "",
 
     articles_title: "Articles",
-    articles_sub: "Placeholder",
+    articles_sub: "",
     articles_read: "Číst článek",
     articles_read: "Lire l’article",
     articles_body: "Le contenu sera ajouté.",

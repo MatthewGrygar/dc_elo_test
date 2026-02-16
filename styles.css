@@ -197,15 +197,16 @@ button:hover{ filter: brightness(1.06); }
 @media (max-width: 520px){
   header .wrap{ align-items:flex-start; }
   .headerRight{ gap:8px; }
+  /* Phone header: keep Support left, language + menu right, always in one row */
   .headerRightTop{
     flex-wrap:nowrap;
     gap:8px;
-    display:grid;
-    grid-template-columns: 1fr auto auto;
+    display:flex;
     align-items:center;
   }
   .headerRightTop > *{ min-width:0; }
   .btnSupport{
+    margin-right:auto; /* push language + hamburger to the right */
     padding:0 10px;
     border-radius:14px;
     max-width:160px;
@@ -3008,6 +3009,20 @@ html[data-theme="light"] .supportXCopy{
 .articleP{
   margin: 0 0 12px;
   line-height: 1.55;
+}
+
+/* Teaser row: text + right-aligned CTA */
+.articleTeaserRow{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.articleTeaserRow .articleP{ margin:0; flex:1 1 auto; }
+.articleTeaserRow .articleReadBtn{ flex:0 0 auto; align-self:center; }
+
+@media (max-width: 560px){
+  .articleTeaserRow{ flex-direction:column; align-items:stretch; }
+  .articleTeaserRow .articleReadBtn{ width:100%; }
 }
 .articleDetail .articleInner h3{
   margin-top: 18px;

@@ -54,7 +54,17 @@ export function openModal({ title, subtitle, html, fullscreen }) {
     modalEl.classList.toggle('modalFullscreen', !!fullscreen);
   }
   overlay.querySelector("#modalName").textContent = title || "Hráč";
-  overlay.querySelector("#modalSub").textContent = subtitle || "Detail hráče";
+  const subEl = overlay.querySelector("#modalSub");
+  const subText = (subtitle == null) ? "" : String(subtitle);
+  if (subEl){
+    if (subText.trim()){
+      subEl.textContent = subText;
+      subEl.style.display = "block";
+    }else{
+      subEl.textContent = "";
+      subEl.style.display = "none";
+    }
+  }
   overlay.querySelector("#modalBody").innerHTML = html || "";
   const actions = overlay.querySelector("#modalActions");
   if (actions) actions.innerHTML = "";
@@ -96,7 +106,19 @@ export function setModalContent(html) {
 export function setModalHeaderMeta({ title, subtitle }){
   const overlay = ensureModal();
   if (title != null) overlay.querySelector("#modalName").textContent = title;
-  if (subtitle != null) overlay.querySelector("#modalSub").textContent = subtitle;
+  if (subtitle != null){
+    const subEl = overlay.querySelector("#modalSub");
+    const subText = String(subtitle);
+    if (subEl){
+      if (subText.trim()){
+        subEl.textContent = subText;
+        subEl.style.display = "block";
+      }else{
+        subEl.textContent = "";
+        subEl.style.display = "none";
+      }
+    }
+  }
 }
 
 // Nastaví/změní akční tlačítka vpravo v horní liště modalu (vedle Zavřít)
