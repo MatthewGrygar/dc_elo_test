@@ -1,4 +1,8 @@
-import { getLang, onLangChange } from "../i18n.js";
+import { getLang, onLangChange, detectLangFromPath } from "../i18n.js";
+
+// Persist current slide between language namespace navigations (/cz <-> /eng <-> /fr)
+// so the carousel stays on the same slide when switching language.
+const CAROUSEL_IDX_KEY = "dc_elo_carousel_idx";
 
 const LANG_PREFIX = { cs: "cz", en: "eng", fr: "fr" };
 
@@ -53,7 +57,13 @@ function initCarousel(){
   const imgs = Array.from(track.querySelectorAll(".carouselImg"));
   if (imgs.length < 2) return;
 
+  // Restore last known index (sessionStorage survives a full reload but not a new session)
   let i = 0;
+  try{
+    const raw = sessionStorage.getItem(CAROUSEL_IDX_KEY);
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0) i = Math.floor(n);
+  }catch(e){}
   let timer = null;
 
   // Dots (clickable)
@@ -87,6 +97,9 @@ function initCarousel(){
   const setActive = (idx) => {
     imgs.forEach((img, k) => img.classList.toggle("isActive", k === idx));
     if (dots.length) dots.forEach((d, k) => d.classList.toggle("isActive", k === idx));
+
+    // Persist index for language switch
+    try{ sessionStorage.setItem(CAROUSEL_IDX_KEY, String(idx)); }catch(e){}
   };
 
   const go = (idx) => {
@@ -170,10 +183,20 @@ function initCarousel(){
   hero.addEventListener("mouseenter", stopAuto);
   hero.addEventListener("mouseleave", startAuto);
 
+  // Ensure the restored index is within bounds and apply immediately.
+  go(i);
   startAuto();
 }
 
 // Init
-applyLangToSlides(getLang());
+// common.js calls initI18n(), but carousel.js is loaded before common.js on
+// language namespace pages (/cz, /eng, /fr). Using getLang() here would return the
+// module default and overwrite the correct <img src> from HTML (visible flicker).
+// Prefer the language detected from the URL path.
+const initialLang = (() => {
+  try{ return detectLangFromPath() || getLang(); }catch(e){ return getLang(); }
+})();
+
+applyLangToSlides(initialLang);
 onLangChange((lang) => applyLangToSlides(lang));
 initCarousel();
