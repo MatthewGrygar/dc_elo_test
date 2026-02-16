@@ -1581,14 +1581,29 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .ratedToggleText .labelShort{ display:inline; }
   /* mobile header: row1 = loaded + toggle, row2 = request button right */
   .headerRight{ width:100%; align-items:stretch; gap:8px; }
+  /* Mobile: keep Support + Language + Hamburger on ONE row */
   .headerRightTop{
     width:100%;
-    display:grid;
-    grid-template-columns: 1fr auto;
+    display:flex;
+    flex-wrap:nowrap;
     gap:8px;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-end;
   }
+  .btnSupport{
+    flex: 1 1 auto;
+    min-width: 0; /* allow ellipsis */
+    padding: 8px 10px;
+  }
+  .btnSupportText{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    letter-spacing: .02em;
+  }
+  .langWrap{ flex: 0 0 auto; }
+  #menuBtn{ flex: 0 0 auto; }
   .badge{ font-size:11px; padding:6px 8px; }
   .themeToggle{ font-size:11px; padding:6px 8px; }
 
@@ -3138,5 +3153,45 @@ html[data-theme="light"] .supportXCopy{
 
 .managementBottomSpacer{ height: 26px; }
 @media (max-width: 900px){
+  .managementBottomSpacer{ height: calc(90px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 900px){
   .managementGrid{ grid-template-columns: 1fr; }
+}
+
+
+/* ===== PATCH 4b: Support modal on phones - full width/height and no overflow ===== */
+@media (max-width: 600px){
+  .modalOverlay.isSupport{
+    padding: 0;
+  }
+  .modalOverlay.isSupport .modal{
+    height: 100vh;
+    max-width: none;
+    border-radius: 0;
+  }
+  .modalOverlay.isSupport .modalBody{
+    padding: 14px 12px calc(18px + env(safe-area-inset-bottom));
+  }
+  .supportXWrap{
+    max-width: none;
+  }
+  .supportXGrid{
+    grid-template-columns: 1fr;
+  }
+  .supportXRow{
+    width: 100%;
+    max-width: 100%;
+  }
+  .supportXVal{
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .supportXCopy{
+    width: 100%;
+  }
+  .supportXThanks{
+    width: 100%;
+    max-width: 100%;
+  }
 }
