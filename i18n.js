@@ -8,6 +8,34 @@ const STORAGE_KEY = "dc_elo_lang";
 
 /** @type {const} */
 export const LANGS = ["cs", "en", "fr"];
+/** URL namespace segments */
+export const LANG_SEGMENTS = { cs: "cz", en: "eng", fr: "fr" };
+
+export function langToSegment(lang){
+  return LANG_SEGMENTS[LANGS.includes(lang) ? lang : "en"];
+}
+
+export function segmentToLang(seg){
+  if (seg === "cz") return "cs";
+  if (seg === "fr") return "fr";
+  if (seg === "eng") return "en";
+  return null;
+}
+
+export function detectLangFromPath(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const seg = parts[1] || "";
+  return segmentToLang(seg);
+}
+
+export function detectPreferredLang(){
+  const nav = (navigator.languages && navigator.languages.length ? navigator.languages[0] : navigator.language) || "";
+  const v = nav.toLowerCase();
+  if (v.startsWith("cs") || v.startsWith("sk") || v.startsWith("cz")) return "cs";
+  if (v.startsWith("fr")) return "fr";
+  return "en";
+}
+
 
 /** @type {Record<string, Record<string, string>>} */
 const DICT = {
@@ -468,8 +496,15 @@ export function setLang(lang){
 export function initI18n(){
   let saved = null;
   try{ saved = localStorage.getItem(STORAGE_KEY); }catch(e){}
-  const initial = LANGS.includes(saved) ? saved : (document.documentElement.getAttribute("lang") || "cs");
-  current = LANGS.includes(initial) ? initial : "cs";
+
+  const fromPath = (() => { try{ return detectLangFromPath(); }catch(e){ return null; } })();
+  const fromStorage = LANGS.includes(saved) ? saved : null;
+  const fromHtml = (document.documentElement.getAttribute("lang") || "").toLowerCase();
+  const fromHtmlNorm = LANGS.includes(fromHtml) ? fromHtml : null;
+  const preferred = detectPreferredLang();
+
+  const initial = fromPath || fromStorage || fromHtmlNorm || preferred;
+  current = LANGS.includes(initial) ? initial : "en";
   document.documentElement.setAttribute("lang", current);
   applyI18n(document);
 }

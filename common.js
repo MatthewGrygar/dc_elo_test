@@ -1,9 +1,28 @@
 // common.js – menu ovládání + mobilní "stránky" + přepínač režimu
 import { openModal, closeModal } from "./modal.js";
 import { openNewsModal, buildNewsHtml } from "./aktuality.js";
-import { initI18n, t, setLang, getLang, onLangChange } from "./i18n.js";
+import { initI18n, t, setLang, getLang, onLangChange, langToSegment } from "./i18n.js";
 
 const htmlEl = document.documentElement;
+
+function getRepoBase(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  return parts.length ? `/${parts[0]}/` : "/";
+}
+function getLangSegment(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const seg = parts[1] || "";
+  return (seg === "eng" || seg === "cz" || seg === "fr") ? seg : null;
+}
+function getBasePath(){
+  const repoBase = getRepoBase();
+  const seg = getLangSegment();
+  return seg ? `${repoBase}${seg}/` : repoBase;
+}
+function assetUrl(rel){
+  // rel like "assets/..."
+  return getRepoBase() + rel.replace(/^\/+/, "");
+}
 const logoImg = document.getElementById("logoImg");
 
 // Init i18n early
@@ -24,7 +43,7 @@ function openSupportModal(){
   const defaultMethod = (lang === "cs") ? "bank" : "paypal";
 
   const bodyHtml = `
-    <div class="supportX">
+    <div class="supportXWrap"><div class="supportX">
       <div class="supportXHero">
         <div class="supportXTitle">${t("support_hero_title")}</div>
         <div class="supportXBrand">${t("support_hero_brand")}</div>
@@ -39,7 +58,7 @@ function openSupportModal(){
       <div class="supportXGrid">
         <div class="supportXCol supportXColQr">
           <div class="supportXQrCard">
-            <img class="supportXQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
+            <img class="supportXQr" src="${assetUrl(assetUrl("assets/images/support/QR.png"))}" alt="${t("support_qr_alt")}" loading="lazy" />
           </div>
         </div>
 
@@ -96,6 +115,7 @@ function openSupportModal(){
         </div>
       </div>
     </div>
+    </div>
   `;
 
   openModal({
@@ -131,8 +151,8 @@ function openSupportModal(){
 
     if (qrImg){
       qrImg.src = (method === "paypal")
-        ? "assets/images/support/QR2.png"
-        : "assets/images/support/QR.png";
+        ? assetUrl("assets/images/support/QR2.png")
+        : assetUrl("assets/images/support/QR.png");
     }
   };
 
@@ -163,7 +183,7 @@ function openSupportModal(){
 function syncLogo(){
   if (!logoImg) return;
   const theme = htmlEl.getAttribute("data-theme") || "dark";
-  logoImg.src = (theme === "dark") ? "assets/images/logos/logo.png" : "assets/images/logos/logo2.png";
+  logoImg.src = (theme === "dark") ? assetUrl("assets/images/logos/logo.png") : assetUrl("assets/images/logos/logo2.png");
 }
 
 function setTheme(theme){
@@ -305,7 +325,7 @@ const langBtn = document.getElementById("langBtn");
 const langPanel = document.getElementById("langPanel");
 
 function flagFor(lang){
-  const src = (lang === "en") ? "assets/images/flags/eng.png" : (lang === "fr") ? "assets/images/flags/fr.png" : "assets/images/flags/cz.png";
+  const src = (lang === "en") ? assetUrl("assets/images/flags/eng.png") : (lang === "fr") ? assetUrl("assets/images/flags/fr.png") : assetUrl("assets/images/flags/cz.png");
   const alt = (lang === "en") ? "GB" : (lang === "fr") ? "FR" : "CZ";
   return `<img class="langFlagImg" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
@@ -362,6 +382,23 @@ langBtn.setAttribute("aria-label", "Language");
       closeLang();
       setLang(l);
       renderLangUi();
+
+      // Switch URL namespace as well: /<repo>/<lang>/
+      try{
+        const repoBase = getRepoBase();
+        const currentSeg = getLangSegment();
+        const targetSeg = langToSegment(l);
+
+        // Keep current route (player/article slug) but swap language prefix.
+        let rest = window.location.pathname.slice(repoBase.length);
+        if (currentSeg){
+          rest = rest.slice(currentSeg.length);
+        }
+        rest = rest.replace(/^\/+/, ""); // slug...
+        const target = `${repoBase}${targetSeg}/` + (rest ? rest : "");
+        window.location.assign(target + window.location.search + window.location.hash);
+        return;
+      }catch(e){}
     });
   });
 }
@@ -485,34 +522,169 @@ if (managementBtn){
       title: t("management_title"),
       subtitle: t("management_sub"),
       html: `
-        <div class="pageModal">
-          <h2>${t("menu_management")}</h2>
-          <p class="muted">${t("management_body")}</p>
-        </div>
-      `
-    });
-  });
-}
+        <div class="pageModal managementWrap">
+          <div class="managementGrid">
+            <section class="managementCard">
+              <h3 class="managementName">Matthew Grygar</h3>
+              <img class="managementPhoto" src="${assetUrl("assets/images/management/matthew_grygar.png")}" alt="Matthew Grygar" loading="lazy" />
+              <div class="managementRole">
+                <div>Předseda a zakladatel DCPR komise</div>
+                <div>Spoluzakladatel Grail Series</div>
+                <div>Spoluzakladatel ELO projektu</div>
+              </div>
+            </section>
 
-// ČLÁNKY
-if (articlesBtn){
-  articlesBtn.addEventListener("click", () => {
-    closeMenu();
-    openMenuDestination({
-      title: t("articles_title"),
-      subtitle: t("articles_sub"),
-      html: `
-        <div class="pageModal articleCard">
-          <img class="articleHero" src="assets/images/articles/elo_article_cover.png" alt="Article cover" loading="lazy" />
-          <div class="articleRow">
-            <div class="articleTitle">Jak počítáme Elo a výkonostní třídy v Duel Commanders komunitě.</div>
-            <a class="btnPrimary articleBtn" href="https://grailseries.cz/" target="_blank" rel="noopener">${t("articles_read")}</a>
+            <section class="managementCard">
+              <h3 class="managementName">Ervin Kuč</h3>
+              <img class="managementPhoto" src="${assetUrl("assets/images/management/ervin_kuc.png")}" alt="Ervin Kuč" loading="lazy" />
+              <div class="managementRole">
+                <div>Člen DCPR komise</div>
+                <div>Spoluzakladatel Grail Series</div>
+                <div>Spoluzakladatel ELO projektu</div>
+                <div>Architekt datového řešení DC ELO</div>
+              </div>
+            </section>
           </div>
         </div>
       `
     });
   });
 }
+
+
+// ČLÁNKY
+const ARTICLES = [
+  {
+    slug: "article1",
+    banner: "assets/images/articles/articles1.png",
+    title: {
+      cs: "Jak počítáme Elo a výkonostní třídy v Duel Commanders komunitě",
+      en: "How we calculate Elo and performance tiers in the Duel Commanders community",
+      fr: "Comment nous calculons l’Elo et les catégories de performance dans la communauté Duel Commanders"
+    },
+    teaser: {
+      cs: "Krátké vysvětlení, co znamená Elo v DC komunitě, jak se počítá a proč jsme zvolili výkonostní třídy.",
+      en: "A short overview of what Elo means in DC, how we calculate it, and why we use performance tiers.",
+      fr: "Un aperçu de ce que signifie l’Elo en DC, comment nous le calculons et pourquoi nous utilisons des catégories de performance."
+    },
+    content: {
+      cs: `
+        <p><strong>Elo</strong> je bodové hodnocení, které odhaduje aktuální sílu hráče na základě výsledků zápasů.</p>
+        <p>V DC ELO projektu používáme turnajová data a každému zápasu přiřazujeme změnu podle očekávaného výsledku (silnější hráč získá méně bodů, slabší více).</p>
+        <h3>Výkonostní třídy</h3>
+        <p>Aby šlo žebříček lépe číst, rozdělujeme hráče do výkonostních tříd. Třídy se odvíjejí od rozsahu Elo a průběžně je ladíme podle velikosti komunity.</p>
+        <p class="muted">Pozn.: Tento článek je zatím „v1“ – text můžeme kdykoli rozšířit, jakmile doplníte finální znění.</p>
+      `,
+      en: `
+        <p><strong>Elo</strong> is a rating system that estimates a player’s current strength based on match results.</p>
+        <p>In DC ELO we use tournament data and adjust ratings using expected outcome (a stronger player gains fewer points; an underdog gains more).</p>
+        <h3>Performance tiers</h3>
+        <p>To make the ladder easier to read, we group players into performance tiers based on rating ranges. We fine-tune the ranges as the community grows.</p>
+        <p class="muted">Note: This is a v1 draft — we can replace it with your final wording anytime.</p>
+      `,
+      fr: `
+        <p><strong>Elo</strong> est un système de classement qui estime la force actuelle d’un joueur à partir des résultats.</p>
+        <p>Dans DC ELO, nous utilisons les données de tournois et ajustons le classement selon le résultat attendu (un joueur plus fort gagne moins de points ; l’outsider en gagne plus).</p>
+        <h3>Catégories de performance</h3>
+        <p>Pour rendre le classement plus lisible, nous regroupons les joueurs en catégories selon des plages d’Elo. Les plages peuvent évoluer avec la communauté.</p>
+        <p class="muted">Remarque : version v1 — nous pouvons remplacer ce texte par votre version finale à tout moment.</p>
+      `
+    }
+  }
+];
+
+function getArticleBySlug(slug){
+  return ARTICLES.find(a => a.slug === slug) || null;
+}
+
+function openArticleList(){
+  const lang = getLang();
+  const listHtml = ARTICLES.map(a => `
+    <article class="articleCardFull">
+      <img class="articleBanner" src="${assetUrl(a.banner)}" alt="${a.title[lang] || a.title.en}" loading="lazy" />
+      <div class="articleInner">
+        <h3 class="articleH">${a.title[lang] || a.title.en}</h3>
+        <p class="muted articleP">${a.teaser[lang] || a.teaser.en}</p>
+        <button class="btnPrimary articleReadBtn" type="button" data-article="${a.slug}">${t("articles_read")}</button>
+      </div>
+    </article>
+  `).join("");
+
+  openMenuDestination({
+    title: t("articles_title"),
+    subtitle: t("articles_sub"),
+    html: `<div class="pageModal articlesWrap">${listHtml}</div>`
+  });
+
+  // wire buttons
+  setTimeout(() => {
+    document.querySelectorAll(".articleReadBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const slug = btn.getAttribute("data-article");
+        if (slug) openArticle(slug, true);
+      });
+    });
+  }, 0);
+}
+
+function openArticle(slug, push){
+  const article = getArticleBySlug(slug);
+  if (!article) return;
+
+  const lang = getLang();
+  const title = article.title[lang] || article.title.en;
+
+  if (push){
+    const url = getBasePath() + slug;
+    history.pushState({ __articleSlug: slug }, "", url);
+  }
+
+  openMenuDestination({
+    title,
+    subtitle: t("articles_sub"),
+    html: `
+      <div class="pageModal articleDetail">
+        <img class="articleBanner" src="${assetUrl(article.banner)}" alt="${title}" loading="lazy" />
+        <div class="articleInner">
+          ${article.content[lang] || article.content.en}
+        </div>
+      </div>
+    `
+  });
+}
+
+if (articlesBtn){
+  articlesBtn.addEventListener("click", () => {
+    closeMenu();
+    openArticleList();
+  });
+}
+
+// Restore article deep link
+function tryOpenArticleFromUrl(){
+  const base = getBasePath();
+  const rel = window.location.pathname.startsWith(base) ? window.location.pathname.slice(base.length) : "";
+  const slug = rel.replace(/^\/+/, "").split("/")[0];
+  const article = getArticleBySlug(slug);
+  if (article){
+    openArticle(article.slug, false);
+    return true;
+  }
+  return false;
+}
+
+// Also handle back/forward navigation for article routes
+window.addEventListener("popstate", () => {
+  try{
+    if (history.state && history.state.__articleSlug){
+      openArticle(history.state.__articleSlug, false);
+      return;
+    }
+    // If URL points to an article (e.g. user refreshed and navigated back), open it.
+    if (tryOpenArticleFromUrl()) return;
+  }catch(e){}
+});
+
 
 // TITULY
 if (titlesBtn){

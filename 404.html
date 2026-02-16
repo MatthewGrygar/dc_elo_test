@@ -1,22 +1,33 @@
 <!doctype html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DC ELO žebříček</title>
+  <title>DC ELO</title>
 </head>
 <body>
 <script>
   // GitHub Pages SPA fallback.
-  // When a user refreshes /<repo>/<slug>, GitHub Pages serves 404.html.
-  // We redirect to /<repo>/?r=<slug> and the app restores the URL via history.replaceState.
+  // - /<repo>/<lang>/<slug>  -> /<repo>/<lang>/?r=<slug>
+  // - /<repo>/<slug>         -> /<repo>/?r=<slug> (root index redirects to preferred language)
   (function(){
     var path = window.location.pathname || "/";
     var parts = path.split("/").filter(Boolean);
-    var base = parts.length ? ("/" + parts[0] + "/") : "/";
-    var rest = path.indexOf(base) === 0 ? path.slice(base.length) : "";
-    rest = rest.replace(/^\/+/, "");
-    var target = base + "?r=" + encodeURIComponent(rest);
+
+    var repo = parts[0] || "";
+    var base = repo ? ("/" + repo + "/") : "/";
+
+    var restParts = parts.slice(1); // after repo
+    var first = restParts[0] || "";
+    var isLang = (first === "eng" || first === "cz" || first === "fr");
+
+    var lang = isLang ? first : "";
+    var slugParts = isLang ? restParts.slice(1) : restParts;
+    var slug = slugParts.join("/");
+
+    var target = isLang ? (base + lang + "/") : base;
+    target += "?r=" + encodeURIComponent(slug);
+
     window.location.replace(target);
   })();
 </script>

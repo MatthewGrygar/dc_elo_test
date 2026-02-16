@@ -169,11 +169,28 @@ async function loadVtByPlayer(){
 let slugToPlayer = new Map();
 let pendingSlugToOpen = null;
 
-function getBasePath(){
+function getRepoBase(){
   // GitHub Pages project site base: /<repo>/
   const parts = window.location.pathname.split("/").filter(Boolean);
-  // If served from root (local dev), parts[0] may be undefined
   return parts.length ? `/${parts[0]}/` : "/";
+}
+
+function getLangSegment(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const seg = parts[1] || "";
+  return (seg === "eng" || seg === "cz" || seg === "fr") ? seg : null;
+}
+
+function getBasePath(){
+  // Base for SPA routes inside a language namespace: /<repo>/<lang>/
+  const repoBase = getRepoBase();
+  const langSeg = getLangSegment();
+  return langSeg ? `${repoBase}${langSeg}/` : repoBase;
+}
+
+function getStaticBase(){
+  // Where shared static files live (assets, css, js): /<repo>/
+  return getRepoBase();
 }
 
 function stripDiacritics(s){
@@ -280,8 +297,17 @@ function normalizeSpaRedirectIfPresent(){
   const params = new URLSearchParams(window.location.search);
   const r = params.get("r") || params.get("redirect");
   if (!r) return;
+
   const base = getBasePath();
-  const clean = r.toString().replace(/^\/+/, "").replace(/\/+$/, "");
+  let clean = r.toString().replace(/^\/+/,"").replace(/\/+$/,"");
+
+  // If redirect contains a language prefix but we're already inside that language namespace,
+  // drop the prefix to avoid /eng/eng/... duplicates.
+  const langSeg = getLangSegment();
+  if (langSeg && (clean === langSeg || clean.startsWith(langSeg + "/"))){
+    clean = clean === langSeg ? "" : clean.slice(langSeg.length + 1);
+  }
+
   history.replaceState(history.state || {}, "", base + clean);
 }
 
@@ -301,10 +327,8 @@ function applyRoute(){
   }
 
   const playerObj = slugToPlayer.get(slug);
-  if (!playerObj){
-    try{ __closeModalRaw?.(); }catch(e){}
-    return;
-  }
+  // If the slug doesn't belong to a player, do nothing here (it can be an article route handled elsewhere).
+  if (!playerObj) return;
 
   openPlayerModal(playerObj);
 }
@@ -1339,7 +1363,7 @@ async function loadAll(){
 /* THEME + LOGO swap */
 function syncLogo(){
   const theme = htmlEl.getAttribute("data-theme") || "dark";
-  logoImg.src = (theme === "light") ? "assets/images/logos/logo2.png" : "assets/images/logos/logo.png";
+  logoImg.src = (theme === "light") ? getStaticBase() + "assets/images/logos/logo2.png" : getStaticBase() + "assets/images/logos/logo.png";
 }
 function setTheme(theme){
   htmlEl.setAttribute("data-theme", theme);

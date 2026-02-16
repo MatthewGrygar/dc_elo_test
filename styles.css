@@ -2587,6 +2587,12 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   width: 100%;
 }
 
+.supportXWrap{
+  width: 100%;
+  max-width: 860px; /* similar to player card width */
+  margin: 0 auto;
+}
+
 /* Header */
 .supportXHero{
   text-align: center;
@@ -2642,7 +2648,7 @@ html[data-theme="light"] .supportXTab{
 .supportXGrid{
   margin-top: 18px;
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr; /* QR a little smaller than table */
+  grid-template-columns: 1fr 2fr; /* 1/3 QR, 2/3 table */
   gap: 28px;
   align-items: start;
 }
@@ -2698,7 +2704,7 @@ html[data-theme="light"] .supportXQrCard{
 /* Rows (single line on desktop) */
 .supportXRow{
   display: grid;
-  grid-template-columns: 160px 1fr auto;
+  grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
   padding: 9px 0;
@@ -2720,10 +2726,10 @@ html[data-theme="light"] .supportXRow{
 .supportXVal{
   font-size: 16px;
   font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+
 .supportXMono{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
@@ -2896,4 +2902,81 @@ html[data-theme="light"] .supportXCopy{
     padding: 12px 14px;
     margin-top: 14px;
   }
+}
+
+
+/* ===== Articles (full-width cards) ===== */
+.articlesWrap{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.articleCardFull{
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  overflow: hidden;
+}
+.articleBanner{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.articleInner{
+  padding: 14px 14px 16px;
+}
+.articleH{
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 950;
+}
+.articleP{
+  margin: 0 0 12px;
+}
+.articleDetail .articleInner h3{
+  margin-top: 18px;
+}
+@media (max-width: 768px){
+  .articleH{ font-size: 18px; }
+  .articleInner{ padding: 12px; }
+}
+
+/* ===== Management ===== */
+.managementWrap{ width: 100%; }
+.managementGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.managementCard{
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  padding: 14px;
+}
+.managementName{
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 950;
+  text-align: center;
+}
+.managementPhoto{
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid var(--border2);
+  display: block;
+  background: rgba(255,255,255,.06);
+}
+.managementRole{
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+  font-weight: 750;
+  opacity: .95;
+}
+@media (max-width: 900px){
+  .managementGrid{ grid-template-columns: 1fr; }
 }
