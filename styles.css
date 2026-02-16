@@ -2850,7 +2850,15 @@ html[data-theme="light"] .supportXCopy{
   .supportXTitle{ font-size: 30px; }
   .supportXGrid{ grid-template-columns: 1fr; }
   .supportXColQr{ justify-content: center; }
+  .supportXQrCard{ max-width: var(--supportXCardMax); }
   .supportXQrCard{ max-width: 360px; }
+  /* Keep info card + Thanks aligned to the same width as the QR on mobile */
+  .supportXCard,
+  .supportXThanks{
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+  }
   .supportXRow{
     grid-template-columns: 1fr;
     gap: 8px;
@@ -3291,7 +3299,7 @@ html[data-theme="light"] .supportXCopy{
 
 /* ===== Support modal – ensure table + Thanks fit full width on touch phones (incl. landscape) ===== */
 @media (hover: none) and (pointer: coarse) and (max-width: 1024px){
-  .supportXWrap{ max-width: 100%; }
+  .supportXWrap{ max-width: 100%; --supportXCardMax: 360px; }
   .supportXGrid{ grid-template-columns: 1fr; gap: 14px; }
   .supportXColQr{ justify-content: center; }
   .supportXRow{
@@ -3303,7 +3311,9 @@ html[data-theme="light"] .supportXCopy{
   .supportXCard,
   .supportXThanks{
     width: 100%;
-    max-width: 100%;
+    max-width: var(--supportXCardMax);
+    margin-left: auto;
+    margin-right: auto;
     box-sizing: border-box;
   }
 }
