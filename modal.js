@@ -39,7 +39,7 @@ export function ensureModal() {
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.style.display === "block") (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal());
+    if (e.key === "Escape" && overlay.style.display !== "none") (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal());
   });
 
   overlay.querySelector("#closeModalBtn").addEventListener("click", () => (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal()));
@@ -68,6 +68,9 @@ export function closeModal() {
   const modalEl = overlay.querySelector('.modal');
   if (modalEl) modalEl.classList.remove('modalFullscreen');
   overlay.style.display = "none";
+  overlay.classList.remove("isSupport");
+  overlay.classList.remove("isAnon");
+
   document.body.style.overflow = "";
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";

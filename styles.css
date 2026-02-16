@@ -1745,7 +1745,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 }
 .pageModal{
   padding: 4px 2px 14px;
-  max-width: 920px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -2811,4 +2811,44 @@ html[data-theme="light"] .supportXCopy{
   .supportXVal{
     font-size: 15px;
   }
+}
+
+
+/* ===== SupportX FIX: tight, responsive, no weird gaps ===== */
+.modalOverlay.isSupport .modalBody{
+  padding: 18px 18px 20px;
+}
+
+.supportXGrid{
+  width: 100%;
+  max-width: none;
+  grid-template-columns: 1fr 1.55fr;
+  gap: 16px; /* remove big gap between QR and table */
+}
+
+.supportXColQr{ justify-content: flex-start; }
+.supportXColInfo{ align-items: stretch; }
+
+/* QR card fits QR perfectly */
+.supportXQrCard{
+  max-width: none;
+  padding: 10px;
+}
+.supportXQr{
+  border-radius: 12px;
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+}
+
+/* Table uses all available width and hugs right edge (within modal padding) */
+.supportXCard,
+.supportXThanks{
+  width: 100%;
+}
+
+@media (max-width: 900px){
+  .supportXGrid{ grid-template-columns: 1fr; gap: 14px; }
+  .supportXQrCard{ padding: 10px; }
 }
