@@ -68,7 +68,6 @@ export function closeModal() {
   const modalEl = overlay.querySelector('.modal');
   if (modalEl) modalEl.classList.remove('modalFullscreen');
   overlay.style.display = "none";
-  overlay.className = "modalOverlay";
   document.body.style.overflow = "";
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";
