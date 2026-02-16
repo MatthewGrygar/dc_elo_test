@@ -24,85 +24,75 @@ function openSupportModal(){
   const defaultMethod = (lang === "cs") ? "bank" : "paypal";
 
   const bodyHtml = `
-    <div class="supportModal support-container">
-      <div class="supportHero">
-        <div class="supportTitle">${t("support_hero_title")}</div>
-        <div class="supportBrand">${t("support_hero_brand")}</div>
-        <div class="supportTagline">${t("support_hero_tag")}</div>
+    <div class="supportX">
+      <div class="supportXHero">
+        <div class="supportXTitle">${t("support_hero_title")}</div>
+        <div class="supportXBrand">${t("support_hero_brand")}</div>
+        <div class="supportXTagline">${t("support_hero_tag")}</div>
       </div>
 
-      <div class="payment-tabs supportSwitch" role="tablist" aria-label="${t("support_method_switch_aria")}">
-        <button class="supportSwitchBtn" type="button" data-method="bank" role="tab" aria-selected="false">${t("support_method_bank")}</button>
-        <button class="supportSwitchBtn" type="button" data-method="paypal" role="tab" aria-selected="false">${t("support_method_paypal")}</button>
+      <div class="supportXTabs" role="tablist" aria-label="${t("support_method_switch_aria")}">
+        <button class="supportXTab" type="button" data-method="bank" role="tab" aria-selected="false">${t("support_method_bank")}</button>
+        <button class="supportXTab" type="button" data-method="paypal" role="tab" aria-selected="false">${t("support_method_paypal")}</button>
       </div>
 
-      
-      <div class="payment-content supportColumns">
-        <div class="supportCol supportColQr">
-          <div class="qr-section supportQrWrap">
-            <img class="supportQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
+      <div class="supportXGrid">
+        <div class="supportXCol supportXColQr">
+          <div class="supportXQrCard">
+            <img class="supportXQr" src="assets/images/support/QR.png" alt="${t("support_qr_alt")}" loading="lazy" />
           </div>
         </div>
 
-        <div class="supportCol supportColInfo">
-          <div class="supportSpacerSm"></div>
+        <div class="supportXCol supportXColInfo">
+          <div class="supportXCard" aria-label="${t("support_acc_aria")}">
+            <div class="supportXSection" data-section="bank" hidden>
+              <div class="supportXCardTitle">${t("support_acc_title")}</div>
 
-          <div class="account-info supportInfo" aria-label="${t("support_acc_aria")}">
-            <div class="supportInfoSection" data-section="bank" hidden>
-              <div class="supportInfoTitle">${t("support_acc_title")}</div>
-
-              <div class="supportInfoRow">
-                <div class="supportInfoLabel">${t("support_acc_name")}</div>
-                <div class="supportInfoValue">${t("support_acc_name_value")}</div>
-                <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="${t("support_acc_name_value")}">${t("support_copy")}</span>
-                <span class="supportCopyFeedback" aria-live="polite"></span>
+              <div class="supportXRow">
+                <div class="supportXKey">${t("support_acc_name")}</div>
+                <div class="supportXVal">${t("support_acc_name_value")}</div>
+                <button class="supportXCopy" type="button" data-copy="${t("support_acc_name_value")}">${t("support_copy")}</button>
               </div>
 
-              <div class="supportInfoRow">
-                <div class="supportInfoLabel">${t("support_acc_number")}</div>
-                <div class="supportInfoValue supportInfoMono">2640017029 / 3030</div>
-                <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="2640017029 / 3030">${t("support_copy")}</span>
-                <span class="supportCopyFeedback" aria-live="polite"></span>
+              <div class="supportXRow">
+                <div class="supportXKey">${t("support_acc_number")}</div>
+                <div class="supportXVal supportXMono">2640017029 / 3030</div>
+                <button class="supportXCopy" type="button" data-copy="2640017029 / 3030">${t("support_copy")}</button>
               </div>
 
-              <div class="supportInfoRow">
-                <div class="supportInfoLabel">${t("support_iban")}</div>
-                <div class="supportInfoValue supportInfoMono">CZ03 3030 0000 0026 4001 7029</div>
-                <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="CZ03 3030 0000 0026 4001 7029">${t("support_copy")}</span>
-                <span class="supportCopyFeedback" aria-live="polite"></span>
+              <div class="supportXRow">
+                <div class="supportXKey">${t("support_iban")}</div>
+                <div class="supportXVal supportXMono">CZ03 3030 0000 0026 4001 7029</div>
+                <button class="supportXCopy" type="button" data-copy="CZ03 3030 0000 0026 4001 7029">${t("support_copy")}</button>
               </div>
 
-              <div class="supportInfoRow">
-                <div class="supportInfoLabel">${t("support_bic")}</div>
-                <div class="supportInfoValue supportInfoMono">AIRACZP</div>
-                <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="AIRACZP">${t("support_copy")}</span>
-                <span class="supportCopyFeedback" aria-live="polite"></span>
+              <div class="supportXRow">
+                <div class="supportXKey">${t("support_bic")}</div>
+                <div class="supportXVal supportXMono">AIRACZP</div>
+                <button class="supportXCopy" type="button" data-copy="AIRACZP">${t("support_copy")}</button>
               </div>
             </div>
 
-            <div class="supportInfoSection" data-section="paypal" hidden>
-              <div class="supportInfoTitle">${t("support_paypal_title")}</div>
+            <div class="supportXSection" data-section="paypal" hidden>
+              <div class="supportXCardTitle">${t("support_paypal_title")}</div>
 
-              <div class="supportInfoRow">
-                <div class="supportInfoLabel">${t("support_paypal_email")}</div>
-                <div class="supportInfoValue">matthew.grygar@seznam.cz</div>
-                <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="matthew.grygar@seznam.cz">${t("support_copy")}</span>
-                <span class="supportCopyFeedback" aria-live="polite"></span>
+              <div class="supportXRow">
+                <div class="supportXKey">${t("support_paypal_email")}</div>
+                <div class="supportXVal">matthew.grygar@seznam.cz</div>
+                <button class="supportXCopy" type="button" data-copy="matthew.grygar@seznam.cz">${t("support_copy")}</button>
               </div>
 
-              <div class="supportInfoRow">
-                <div class="supportInfoLabel">${t("support_paypal_me")}</div>
-                <div class="supportInfoValue">
-                  <a class="supportLink" href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer">https://paypal.me/GrailSeriesELO</a>
+              <div class="supportXRow">
+                <div class="supportXKey">${t("support_paypal_me")}</div>
+                <div class="supportXVal">
+                  <a class="supportXLink" href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer">https://paypal.me/GrailSeriesELO</a>
                 </div>
-                <span class="supportCopy supportCopyBtn" role="button" tabindex="0" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</span>
-                <span class="supportCopyFeedback" aria-live="polite"></span>
+                <button class="supportXCopy" type="button" data-copy="https://paypal.me/GrailSeriesELO">${t("support_copy")}</button>
               </div>
             </div>
           </div>
 
-          <div class="supportSpacerLg"></div>
-          <div class="supportThanksBox" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
+          <div class="supportXThanks" aria-label="${t("support_thanks_aria")}">${t("support_thanks")}</div>
         </div>
       </div>
     </div>
@@ -112,30 +102,31 @@ function openSupportModal(){
     title: t("support_modal_title"),
     subtitle: "",
     html: bodyHtml,
-    fullscreen: isMobileModal()
+    fullscreen: false
   });
 
-  // Copy-to-clipboard (support modal) – binding after modal render
+  try{ document.getElementById("modalOverlay")?.classList.add("isSupport"); }catch(_e){}
+
+
   const overlayEl = document.getElementById("modalOverlay");
   if (!overlayEl) return;
-  const rootEl = overlayEl.querySelector(".supportModal");
+  const rootEl = overlayEl.querySelector(".supportX");
   if (!rootEl) return;
 
-  const qrImg = rootEl.querySelector(".supportQr");
-  const btns = rootEl.querySelectorAll(".supportSwitchBtn");
-  const sections = rootEl.querySelectorAll(".supportInfoSection");
+  const qrImg = rootEl.querySelector(".supportXQr");
+  const tabBtns = rootEl.querySelectorAll(".supportXTab");
+  const sections = rootEl.querySelectorAll(".supportXSection");
+  const copyBtns = rootEl.querySelectorAll(".supportXCopy");
 
   const setMethod = (method) => {
-    btns.forEach((b) => {
+    tabBtns.forEach((b) => {
       const on = (b.getAttribute("data-method") === method);
       b.classList.toggle("isActive", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
-      b.setAttribute("tabindex", on ? "0" : "-1");
     });
 
     sections.forEach((s) => {
-      const on = (s.getAttribute("data-section") === method);
-      s.hidden = !on;
+      s.hidden = (s.getAttribute("data-section") !== method);
     });
 
     if (qrImg){
@@ -145,69 +136,26 @@ function openSupportModal(){
     }
   };
 
-  btns.forEach((b) => {
+  tabBtns.forEach((b) => {
     b.addEventListener("click", () => setMethod(b.getAttribute("data-method")));
-    b.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " "){
-        ev.preventDefault();
-        setMethod(b.getAttribute("data-method"));
+  });
+
+  // Copy buttons
+  copyBtns.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const val = btn.getAttribute("data-copy") || "";
+      try{
+        await navigator.clipboard.writeText(val);
+        const prev = btn.textContent;
+        btn.textContent = t("support_copied") || "ZKOPÍROVÁNO";
+        btn.classList.add("isCopied");
+        setTimeout(() => { btn.textContent = prev; btn.classList.remove("isCopied"); }, 1400);
+      }catch(_e){
+        // fallback: do nothing
       }
     });
   });
 
-  const doCopy = async (text) => {
-    try{
-      if (navigator.clipboard && navigator.clipboard.writeText){
-        await navigator.clipboard.writeText(text);
-        return true;
-      }
-    }catch(e){}
-
-    // Fallback
-    try{
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      return !!ok;
-    }catch(e){
-      return false;
-    }
-  };
-
-  const flash = (wrapEl, msg) => {
-    const feedback = wrapEl?.querySelector?.(".supportCopyFeedback");
-    if (!feedback) return;
-    feedback.textContent = msg;
-    window.setTimeout(() => { feedback.textContent = ""; }, 1200);
-  };
-
-  const binds = rootEl.querySelectorAll(".supportCopy");
-  binds.forEach((el) => {
-    const text = el.getAttribute("data-copy") || "";
-    const wrap = el.closest(".supportInfoRow") || el.parentElement;
-
-    const handler = async () => {
-      if (!text) return;
-      const ok = await doCopy(text);
-      flash(wrap, ok ? t("copied") : t("copy_fail"));
-    };
-
-    el.addEventListener("click", handler);
-    el.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " "){
-        ev.preventDefault();
-        handler();
-      }
-    });
-  });
-
-  // initial state (CZ -> bank, EN/FR -> PayPal)
   setMethod(defaultMethod);
 }
 

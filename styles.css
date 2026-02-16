@@ -2562,3 +2562,224 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
     max-width: none;
   }
 }
+
+
+/* =========================================================
+   SUPPORT MODAL (REWRITE) — clean, stable layout
+   ========================================================= */
+.modalOverlay.isSupport .modal{
+  width: 100%;
+  max-width: 1280px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modalOverlay.isSupport .modalBody{
+  padding: 22px 22px 24px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Root */
+.supportX{
+  width: 100%;
+}
+
+/* Header */
+.supportXHero{
+  text-align: center;
+  margin-top: 4px;
+}
+.supportXTitle{
+  font-size: 38px;
+  font-weight: 950;
+  letter-spacing: .02em;
+}
+.supportXBrand{
+  margin-top: 4px;
+  font-size: 13px;
+  letter-spacing: .18em;
+  opacity: .85;
+}
+.supportXTagline{
+  margin-top: 10px;
+  font-size: 15px;
+  opacity: .9;
+}
+
+/* Tabs */
+.supportXTabs{
+  margin: 18px auto 0;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  max-width: 760px;
+}
+.supportXTab{
+  flex: 1 1 0;
+  max-width: 360px;
+  border-radius: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  color: inherit;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+html[data-theme="light"] .supportXTab{
+  border: 1px solid rgba(0,0,0,.12);
+}
+.supportXTab.isActive{
+  background: rgba(30, 120, 70, .35);
+  border-color: rgba(60, 220, 140, .35);
+}
+
+/* Grid */
+.supportXGrid{
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr; /* QR a little smaller than table */
+  gap: 28px;
+  align-items: start;
+}
+.supportXCol{
+  min-width: 0;
+}
+.supportXColQr{
+  display: flex;
+  justify-content: flex-start; /* pushes QR left */
+}
+.supportXColInfo{
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* QR */
+.supportXQrCard{
+  width: 100%;
+  max-width: 520px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.20);
+  padding: 14px;
+}
+html[data-theme="light"] .supportXQrCard{
+  background: rgba(255,255,255,.65);
+}
+.supportXQr{
+  width: 100%;
+  display: block;
+  border-radius: 14px;
+  background: #fff;
+}
+
+/* Table card */
+.supportXCard{
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: color-mix(in srgb, var(--panel) 62%, transparent);
+  padding: 14px 14px 10px;
+}
+.supportXCardTitle{
+  text-align: center;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .9;
+  margin: 2px 0 10px;
+}
+
+/* Rows (single line on desktop) */
+.supportXRow{
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+html[data-theme="light"] .supportXRow{
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+.supportXRow:first-of-type{ border-top: 0; padding-top: 4px; }
+
+.supportXKey{
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .85;
+  white-space: nowrap;
+}
+.supportXVal{
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.supportXMono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.supportXLink{
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Copy button */
+.supportXCopy{
+  border-radius: 999px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: inherit;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+html[data-theme="light"] .supportXCopy{
+  border: 1px solid rgba(0,0,0,.14);
+  background: rgba(0,0,0,.04);
+}
+.supportXCopy:hover{ filter: brightness(1.08); }
+.supportXCopy.isCopied{ background: rgba(30, 120, 70, .35); border-color: rgba(60, 220, 140, .35); }
+
+/* Thanks */
+.supportXThanks{
+  margin-top: 18px;
+  width: 100%;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: #1f6f43;
+  color: #fff;
+  font-weight: 950;
+  text-align: center;
+  letter-spacing: .02em;
+}
+
+/* Responsive */
+@media (max-width: 900px){
+  .supportXTitle{ font-size: 30px; }
+  .supportXGrid{ grid-template-columns: 1fr; }
+  .supportXColQr{ justify-content: center; }
+  .supportXQrCard{ max-width: 360px; }
+  .supportXRow{
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 0;
+  }
+  .supportXKey, .supportXVal{ white-space: normal; }
+  .supportXCopy{ width: 100%; }
+  .supportXTabs{ flex-direction: column; max-width: 420px; }
+  .supportXTab{ max-width: none; width: 100%; }
+}
