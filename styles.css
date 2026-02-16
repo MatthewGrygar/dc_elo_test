@@ -530,6 +530,8 @@ input[type="search"]:focus{
   align-items:center;
   gap:10px;
   user-select:none;
+  /* On homepage toolbar, keep the toggle pinned to the right */
+  margin-left: auto;
 }
 .ratedToggleText{
   font-size:13px;
@@ -2159,6 +2161,7 @@ html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
   align-items:center;
   gap:10px;
   flex-wrap:wrap;
+  width: 100%;
 }
 #search{
   width: 220px;
@@ -2925,6 +2928,9 @@ html[data-theme="light"] .supportXCopy{
 }
 .articleInner{
   padding: 14px 14px 16px;
+  /* Keep full-width card, but make long text comfortably readable */
+  max-width: 980px;
+  margin: 0 auto;
 }
 .articleH{
   margin: 0 0 6px;
@@ -2933,6 +2939,7 @@ html[data-theme="light"] .supportXCopy{
 }
 .articleP{
   margin: 0 0 12px;
+  line-height: 1.55;
 }
 .articleDetail .articleInner h3{
   margin-top: 18px;
@@ -2955,22 +2962,23 @@ html[data-theme="light"] .supportXCopy{
   border: 1px solid var(--border2);
   background: color-mix(in srgb, var(--panel) 72%, transparent);
   border-radius: 16px;
-  padding: 12px 12px 10px;
-  margin: 14px 0;
+  padding: 10px 10px 8px;
+  margin: 12px 0;
 }
 .articleCalloutH{
   font-weight: 950;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .articleMath{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 14px;
-  padding: 10px 10px;
+  padding: 8px 10px;
   border-radius: 12px;
   border: 1px dashed var(--border2);
   background: color-mix(in srgb, var(--panel) 55%, transparent);
   overflow-x: auto;
   white-space: nowrap;
+  line-height: 1.25;
 }
 @media (max-width: 768px){
   .articleH{ font-size: 18px; }
@@ -2984,6 +2992,9 @@ html[data-theme="light"] .supportXCopy{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  /* Member cards should stay compact and centered as more people are added */
+  max-width: 820px;
+  margin: 0 auto;
 }
 .managementCard{
   border-radius: 18px;
@@ -3032,6 +3043,9 @@ html[data-theme="light"] .supportXCopy{
   border: 1px solid var(--border2);
   background: color-mix(in srgb, var(--panel) 65%, transparent);
   padding: 14px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .managementActsTitle{
   margin: 0 0 10px;
@@ -3051,7 +3065,7 @@ html[data-theme="light"] .supportXCopy{
 }
 .managementActP{
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.55;
 }
 
 .managementCoop{
@@ -3060,6 +3074,9 @@ html[data-theme="light"] .supportXCopy{
   border: 1px solid var(--border2);
   background: color-mix(in srgb, var(--panel) 65%, transparent);
   padding: 14px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .managementCoopTitle{
   margin: 0 0 10px;

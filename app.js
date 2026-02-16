@@ -36,6 +36,7 @@ const tbody = document.getElementById("tbody");
 const searchEl = document.getElementById("search");
 const ratedOnlyEl = document.getElementById("ratedOnly");
 const refreshBtn = document.getElementById("refresh");
+const setRefreshDisabled = (v) => { if (refreshBtn) refreshBtn.disabled = !!v; };
 
 const avgEloEl = document.getElementById("avgElo");
 const avgWinrateEl = document.getElementById("avgWinrate");
@@ -699,7 +700,7 @@ async function fetchStandingsRows(dcprMode, vtMap){
 }
 
 async function preloadStandingsOnInit(){
-  refreshBtn.disabled = true;
+  setRefreshDisabled(true);
   tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("loading")}</td></tr>`;
   try{
     const vtMap = await loadVtByPlayer();
@@ -723,14 +724,14 @@ async function preloadStandingsOnInit(){
     if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("data_load_failed")}</td></tr>`;
   } finally {
-    refreshBtn.disabled = false;
+    setRefreshDisabled(false);
   }
 }
 
 
 async function loadStandings(forceDcprMode){
   const seq = ++standingsLoadSeq;
-  refreshBtn.disabled = true;
+  setRefreshDisabled(true);
 
   // Clear previous table immediately so old data doesn't linger while reloading.
   allRows = [];
@@ -820,7 +821,7 @@ async function loadStandings(forceDcprMode){
     if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("data_load_failed")}</td></tr>`;
   } finally {
-    refreshBtn.disabled = false;
+    setRefreshDisabled(false);
   }
 }
 
@@ -1383,7 +1384,7 @@ if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click",
 });
 
 /* Events */
-refreshBtn.addEventListener("click", loadAll);
+if (refreshBtn) refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 if (ratedOnlyEl){
   // Toggle "Pouze DCPR" should not refetch — we pre-load both datasets on page load.

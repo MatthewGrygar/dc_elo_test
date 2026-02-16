@@ -8,7 +8,8 @@ function prefixFor(lang){
 
 function srcFor(lang, idx){
   const p = prefixFor(lang);
-  return `assets/images/slider/carousel_${p}_${idx}.png`;
+  // Resolve from this module's location so it works from /cz, /eng, /fr pages (GitHub Pages)
+  return new URL(`../assets/images/slider/carousel_${p}_${idx}.png`, import.meta.url).toString();
 }
 
 function applyLangToSlides(lang){
