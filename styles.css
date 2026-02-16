@@ -2937,9 +2937,45 @@ html[data-theme="light"] .supportXCopy{
 .articleDetail .articleInner h3{
   margin-top: 18px;
 }
+
+.articleLead{
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.articleList{
+  margin: 10px 0 14px;
+  padding-left: 18px;
+}
+.articleList li{
+  margin: 6px 0;
+}
+
+.articleCallout{
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  border-radius: 16px;
+  padding: 12px 12px 10px;
+  margin: 14px 0;
+}
+.articleCalloutH{
+  font-weight: 950;
+  margin-bottom: 8px;
+}
+.articleMath{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px dashed var(--border2);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  overflow-x: auto;
+  white-space: nowrap;
+}
 @media (max-width: 768px){
   .articleH{ font-size: 18px; }
   .articleInner{ padding: 12px; }
+  .articleMath{ font-size: 13px; }
 }
 
 /* ===== Management ===== */
@@ -2957,9 +2993,12 @@ html[data-theme="light"] .supportXCopy{
 }
 .managementName{
   margin: 0 0 10px;
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 950;
   text-align: center;
+}
+.managementIntro{
+  margin-bottom: 14px;
 }
 .managementPhoto{
   width: 100%;
@@ -2976,6 +3015,55 @@ html[data-theme="light"] .supportXCopy{
   gap: 6px;
   font-weight: 750;
   opacity: .95;
+  font-size: 13px;
+}
+
+.managementContact{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border2);
+  font-size: 13px;
+  text-align: center;
+}
+
+.managementActs{
+  margin-top: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  padding: 14px;
+}
+.managementActsTitle{
+  margin: 0 0 10px;
+  font-weight: 950;
+}
+.managementAct{
+  padding: 10px 0;
+  border-top: 1px solid var(--border2);
+}
+.managementAct:first-of-type{
+  border-top: none;
+  padding-top: 0;
+}
+.managementActH{
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.managementActP{
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.managementCoop{
+  margin-top: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  padding: 14px;
+}
+.managementCoopTitle{
+  margin: 0 0 10px;
+  font-weight: 950;
 }
 @media (max-width: 900px){
   .managementGrid{ grid-template-columns: 1fr; }

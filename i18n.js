@@ -116,9 +116,9 @@ const DICT = {
 
     news_title: "Aktuality",
 
-    management_title: "Vedení",
-    management_sub: "Placeholder",
-    management_body: "Obsah bude doplněn.",
+    management_title: "DCPR komise",
+    management_sub: "Organizační a metodický orgán projektu DC ELO",
+    management_body: "",
 
     articles_title: "Články",
     articles_sub: "Placeholder",
@@ -255,9 +255,9 @@ const DICT = {
 
     news_title: "News",
 
-    management_title: "Management",
-    management_sub: "Placeholder",
-    management_body: "Content will be added.",
+    management_title: "DCPR Commission",
+    management_sub: "Organizational and methodological body of the DC ELO project",
+    management_body: "",
 
     articles_title: "Articles",
     articles_sub: "Placeholder",
@@ -393,9 +393,9 @@ const DICT = {
 
     news_title: "Actualités",
 
-    management_title: "Équipe",
-    management_sub: "Placeholder",
-    management_body: "Le contenu sera ajouté.",
+    management_title: "Commission DCPR",
+    management_sub: "Organe organisationnel et méthodologique du projet DC ELO",
+    management_body: "",
 
     articles_title: "Articles",
     articles_sub: "Placeholder",
