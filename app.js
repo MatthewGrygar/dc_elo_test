@@ -618,11 +618,11 @@ function renderStandings(rows){
       <td class="rank colRank">${rankCellHtml(displayRank)}</td>
       <td class="playerCol"><span class="nameWrap"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}</button>${vtBadgeHtml(r.vt)}</span></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
-      <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
       <td class="num colWin">${safeInt(r.win)}</td>
       <td class="num colLoss">${safeInt(r.loss)}</td>
       <td class="num colDraw">${safeInt(r.draw)}</td>
+      <td class="num colPeak">${peakText}</td>
       <td class="num colWinrate">${escapeHtml(r.winrate || "")}</td>
     `;
     tr.querySelector(".playerBtn")._playerObj = r;

@@ -3335,3 +3335,49 @@ html[data-theme="light"] .supportXCopy{
     -webkit-overflow-scrolling:touch;
   }
 }
+
+
+/* ===== SupportX mobile width fixes v3 ===== */
+
+/* Make Support (QR + table + thanks) never exceed viewport on phones,
+   and keep COPY buttons compact (not full-width). */
+@media (max-width: 900px){
+  .supportXQrCard,
+  .supportXCard,
+  .supportXThanks{
+    width: 100%;
+    max-width: min(360px, calc(100vw - 48px));
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .supportXCopy{
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Phones/tablets in landscape can exceed 900px width – keep the same mobile behavior. */
+@media (hover: none) and (pointer: coarse) and (max-width: 1024px){
+  .supportXQrCard,
+  .supportXCard,
+  .supportXThanks{
+    width: 100%;
+    max-width: min(360px, calc(100vw - 48px));
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .supportXCopy{
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
