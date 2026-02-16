@@ -3,7 +3,7 @@ import { openModal } from "./modal.js";
 // HTML obsah "Aktuality" – sdílený pro modal i mobilní "stránku"
 export function buildNewsHtml(){
   return `
-
+    <div class="newsWrap">
       <div class="box boxPad">
         <img
           src="verze 1.1.0.png"
@@ -134,6 +134,7 @@ export function buildNewsHtml(){
         </ul>
       </div>
       <div class="endSpacer"></div>
+    </div>
   `;
 }
 

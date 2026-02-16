@@ -193,6 +193,25 @@ button:hover{ filter: brightness(1.06); }
 .btnSupportText{ font-weight:900; letter-spacing:.02em; }
 .btnSupport:hover{ filter: brightness(1.06); }
 
+/* ===== Header actions on phones: keep Support + Language + Menu on one row ===== */
+@media (max-width: 520px){
+  header .wrap{ align-items:flex-start; }
+  .headerRight{ gap:8px; }
+  .headerRightTop{
+    flex-wrap:nowrap;
+    gap:8px;
+  }
+  .btnSupport{
+    padding:0 10px;
+    border-radius:14px;
+  }
+  /* On small screens keep the row compact */
+  .btnSupportText{ display:none; }
+  .btnIcon{ width:40px; height:40px; border-radius:14px; }
+  .btnLang{ min-width:64px; padding:0 10px; }
+  .langCode{ font-size:12px; }
+}
+
 .headerRightTop{
   display:flex;
   justify-content:flex-end;
@@ -995,6 +1014,27 @@ html[data-theme="light"] .supportCopy{
 }
 .supportCopy:hover{ filter: brightness(1.08); }
 
+/* Mobile: make support "table" fit screen and place Copy under value */
+@media (max-width: 520px){
+  .supportInfo{ padding:10px 10px; }
+  .supportInfoRow{
+    grid-template-columns: 1fr;
+    row-gap:6px;
+    padding:10px 0;
+  }
+  .supportInfoLabel{ font-size:10px; }
+  .supportInfoValue{ font-size:13px; }
+  .supportCopy{
+    justify-self:start;
+    width:100%;
+    text-align:center;
+    padding:8px 10px;
+    border-radius:12px;
+  }
+  .supportCopyFeedback{ justify-self:start; width:100%; text-align:right; }
+  .supportNote{ max-width:100%; }
+}
+
 .supportCopyFeedback{
   grid-column: 1 / -1;
   justify-self:end;
@@ -1090,6 +1130,10 @@ html[data-theme="light"] .btnOpponents{
   overflow:hidden;
 }
 .boxPad{ padding:10px 12px; }
+
+/* Aktuality: add spacing between blocks */
+.newsWrap .box{ margin-bottom: 16px; }
+.newsWrap .box:last-child{ margin-bottom: 0; }
 
 .leftPanel{
   display:flex;
@@ -3083,6 +3127,16 @@ html[data-theme="light"] .supportXCopy{
   margin: 0 0 10px;
   font-weight: 950;
 }
+
+/* Mobile readability tweaks for Management */
+@media (max-width: 768px){
+  .managementIntro .muted{ font-size: 16px; line-height: 1.65; }
+  .managementRole{ font-size: 12.5px; line-height: 1.55; }
+  .managementActP{ font-size: 14px; line-height: 1.65; }
+  .managementActs, .managementCoop{ padding: 12px; }
+}
+
+.managementBottomSpacer{ height: 26px; }
 @media (max-width: 900px){
   .managementGrid{ grid-template-columns: 1fr; }
 }

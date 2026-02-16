@@ -285,9 +285,18 @@ function openMobilePage({ title, subtitle, html }){
   page.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 
-  // "oddělená stránka" – push do historie
-  if (!history.state || !history.state.__mobilePage){
-    history.pushState({ __mobilePage: true }, "");
+  // "oddělená stránka" – historie
+  // Pokud už jsme předtím pushnuli konkrétní route (např. článek / hráč),
+  // nechceme přidávat další historii navíc (rozbíjí to "Zpět" na mobilu).
+  // Místo toho přidáme flag do aktuálního stavu přes replaceState.
+  const st = history.state || {};
+  if (!st.__mobilePage){
+    const merged = { ...st, __mobilePage: true };
+    if (st.__articleSlug || st.__playerSlug || st.__view){
+      history.replaceState(merged, "", window.location.href);
+    } else {
+      history.pushState(merged, "", window.location.href);
+    }
   }
 }
 
@@ -617,6 +626,8 @@ if (managementBtn){
             <h3 class="managementCoopTitle">${coopTitle[lang] || coopTitle.en}</h3>
             <p class="muted">${(coopBody[lang] || coopBody.en).replace(/\n\n/g, "</p><p class=\"muted\">").replace(/\n/g, "<br>")}</p>
           </div>
+
+          <div class="managementBottomSpacer" aria-hidden="true"></div>
         </div>
       `
     });
@@ -870,7 +881,7 @@ function getArticleBySlug(slug){
   return ARTICLES.find(a => a.slug === slug) || null;
 }
 
-function openArticleList(){
+function openArticleList(push=true){
   const lang = getLang();
   const listHtml = ARTICLES.map(a => `
     <article class="articleCardFull">
@@ -882,6 +893,17 @@ function openArticleList(){
       </div>
     </article>
   `).join("");
+
+  // Mobile: ensure there is a dedicated history entry for the list view
+  if (push && isNarrowMobile()){
+    try{
+      const st = history.state || {};
+      // Avoid spamming history if we're already in the list view
+      if (st.__view !== "articles"){
+        history.pushState({ ...st, __mobilePage: true, __view: "articles" }, "", getBasePath());
+      }
+    }catch(e){}
+  }
 
   openMenuDestination({
     title: t("articles_title"),
@@ -909,7 +931,8 @@ function openArticle(slug, push){
 
   if (push){
     const url = getBasePath() + slug;
-    history.pushState({ __articleSlug: slug }, "", url);
+    const st = history.state || {};
+    history.pushState({ ...st, __mobilePage: true, __view: "article", __articleSlug: slug }, "", url);
   }
 
   openMenuDestination({
@@ -929,7 +952,7 @@ function openArticle(slug, push){
 if (articlesBtn){
   articlesBtn.addEventListener("click", () => {
     closeMenu();
-    openArticleList();
+    openArticleList(true);
   });
 }
 
@@ -949,6 +972,11 @@ function tryOpenArticleFromUrl(){
 // Also handle back/forward navigation for article routes
 window.addEventListener("popstate", () => {
   try{
+    // Mobile list view
+    if (history.state && history.state.__view === "articles"){
+      openArticleList(false);
+      return;
+    }
     if (history.state && history.state.__articleSlug){
       openArticle(history.state.__articleSlug, false);
       return;
