@@ -200,13 +200,22 @@ button:hover{ filter: brightness(1.06); }
   .headerRightTop{
     flex-wrap:nowrap;
     gap:8px;
+    display:grid;
+    grid-template-columns: 1fr auto auto;
+    align-items:center;
   }
+  .headerRightTop > *{ min-width:0; }
   .btnSupport{
     padding:0 10px;
     border-radius:14px;
+    max-width:160px;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
   }
+  .btnSupportIcon{ margin-right:6px; }
   /* On small screens keep the row compact */
-  .btnSupportText{ display:none; }
+  .btnSupportText{ display:inline; font-size:12px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:72px; }
   .btnIcon{ width:40px; height:40px; border-radius:14px; }
   .btnLang{ min-width:64px; padding:0 10px; }
   .langCode{ font-size:12px; }
@@ -3193,5 +3202,56 @@ html[data-theme="light"] .supportXCopy{
   .supportXThanks{
     width: 100%;
     max-width: 100%;
+  }
+}
+
+
+/* ===== Support modal – mobile full-screen + responsive table ===== */
+@media (max-width: 520px){
+  .modalOverlay.isSupport{ padding:0; }
+  .modalOverlay.isSupport .modal{
+    max-width:none;
+    width:100vw;
+    height:100vh;
+    max-height:none;
+    border-radius:0;
+  }
+  .modalOverlay.isSupport .modalBody{
+    padding:12px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .supportXWrap{
+    max-width: 100%;
+    margin: 0;
+  }
+  .supportXTitle{ font-size: 30px; }
+  .supportXTabs{ margin-top:14px; gap:10px; }
+  .supportXGrid{
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .supportXColQr{ justify-content:center; }
+  .supportXQrCard{ max-width: 320px; margin:0 auto; }
+  .supportXCard{ border-radius:16px; }
+  .supportXRow{
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .supportXKey{ font-size: 12px; opacity:.9; }
+  .supportXVal{
+    font-size: 14px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .supportXCopy{
+    width:100%;
+    justify-content:center;
+    padding: 10px 12px;
+  }
+  .supportXThanks{
+    width:100%;
+    border-radius:16px;
+    margin-bottom: calc(10px + env(safe-area-inset-bottom));
   }
 }
