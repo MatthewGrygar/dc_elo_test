@@ -3255,3 +3255,38 @@ html[data-theme="light"] .supportXCopy{
     margin-bottom: calc(10px + env(safe-area-inset-bottom));
   }
 }
+
+/* ===== PATCH 4c: Header buttons on phones (Support left, Language+Menu right) ===== */
+@media (max-width: 520px){
+  .headerRight{ width:100%; align-items:stretch; }
+  .headerRightTop{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
+    width:100%;
+    justify-content:space-between;
+    gap:8px;
+  }
+  /* Push the language+menu group to the right */
+  .headerRightTop .langWrap{ margin-left:auto; }
+  /* Make Support sit visually on the left edge */
+  .btnSupport{ justify-content:flex-start; }
+}
+
+/* ===== PATCH 4c: Support modal on phones – true full-screen + safe scrolling ===== */
+@media (max-width: 600px){
+  .modalOverlay.isSupport{
+    align-items:stretch;
+    justify-content:stretch;
+  }
+  .modalOverlay.isSupport .modal{
+    width:100vw;
+    height:100dvh;
+    max-height:100dvh;
+    margin:0;
+  }
+  .modalOverlay.isSupport .modalBody{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+}
