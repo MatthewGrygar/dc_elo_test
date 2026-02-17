@@ -20,7 +20,21 @@ function RedirectRestorer() {
     // Then navigate to the original path.
     try {
       const url = new URL(redirect, window.location.origin)
-      nav(url.pathname + url.search + url.hash, { replace: true })
+
+      // If we're hosted under a subpath (e.g. GitHub Pages /<repo>/),
+      // strip it so React Router's basename can handle it.
+      const base = (() => {
+        const { hostname, pathname } = window.location
+        if (hostname.endsWith('github.io')) {
+          const parts = pathname.split('/').filter(Boolean)
+          return parts.length > 0 ? `/${parts[0]}` : ''
+        }
+        return ''
+      })()
+
+      const restoredPath = url.pathname.startsWith(base) ? url.pathname.slice(base.length) || '/' : url.pathname
+
+      nav(restoredPath + url.search + url.hash, { replace: true })
     } catch {
       // ignore
     }

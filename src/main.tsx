@@ -19,12 +19,38 @@ const queryClient = new QueryClient({
   },
 })
 
+/**
+ * Determine SPA basename at runtime.
+ *
+ * Goals:
+ * - Works on GitHub Pages project sites: https://user.github.io/<repo>/
+ * - Works on GitHub Pages user sites / custom domains: https://example.com/
+ * - Keeps the repo portable (no hardcoded repo name).
+ */
+function getBasename() {
+  const { hostname, pathname } = window.location
+
+  // Local dev / previews typically run at root.
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return ''
+
+  // GitHub Pages project site: /<repo>/...
+  if (hostname.endsWith('github.io')) {
+    const parts = pathname.split('/').filter(Boolean)
+    // If there is at least one segment, treat the first one as the repo.
+    // For user pages, parts might be empty -> root.
+    return parts.length > 0 ? `/${parts[0]}` : ''
+  }
+
+  // Custom domains are generally served from root.
+  return ''
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter basename={getBasename()}>
-      <App />
-    </BrowserRouter>
+        <App />
+      </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,
 )

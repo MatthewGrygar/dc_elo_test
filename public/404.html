@@ -10,7 +10,12 @@
       // GitHub Pages SPA redirect
       // Keeps the path in a querystring so the app can restore it.
       var l = window.location;
-      var base = l.pathname.split('/').slice(0, 2).join('/');
+      // For project pages: /<repo>/..., for custom domains: /
+      var base = '';
+      if (l.hostname.endsWith('github.io')) {
+        var parts = l.pathname.split('/').filter(Boolean);
+        base = parts.length > 0 ? '/' + parts[0] : '';
+      }
       var path = l.pathname + l.search + l.hash;
       l.replace(base + '/?redirect=' + encodeURIComponent(path));
     </script>
