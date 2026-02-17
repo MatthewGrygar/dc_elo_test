@@ -815,10 +815,9 @@ const classCuts = useMemo(() => {
 
               <div className="mt-3 text-xs text-slate-400 leading-relaxed">
                 Výběr je z posledních ~45 dní: nejvyšší součet ELO a největší rozdíl ELO.
-              </div>
-            </div>
-            </div>
-          </div>
+	            </div>
+	          </div>
+	        </div>
         </div>
 
         <div className="mt-8 -mx-6 sm:-mx-10">
