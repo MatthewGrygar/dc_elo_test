@@ -13,8 +13,6 @@ import {
   Brush,
   BarChart,
   LineChart,
-  ScatterChart,
-  Scatter,
 } from 'recharts'
 import { ExternalLink, Filter, X } from 'lucide-react'
 import { useI18n } from '../../features/i18n/i18n'
@@ -258,16 +256,65 @@ export default function PlayerProfileModalContent({
     return bins
   }, [filteredEnriched])
 
-  const winVsOppScatter = useMemo(() => {
-    const outToNum = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
-    return filteredEnriched
-      .map((m) => ({
-        opp: m.oppEloBefore,
-        res: outToNum(m.outcome),
-        label: `${fmtDate(m.date)} • ${m.opponent}`,
-      }))
-      .filter((x) => x.opp !== null && x.res !== null)
-      .map((x) => ({ opp: x.opp as number, res: x.res as number, label: x.label }))
+  const winrateVsDiffData = useMemo(() => {
+    // Empirická winrate vs ELO difference (před zápasem) + teoretická expected winrate dle ELO
+    const outToPoints = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
+
+    const minX = -500
+    const maxX = 500
+    const step = 50
+    const minMatches = 30
+
+    type BucketAgg = { from: number; to: number; center: number; n: number; sum: number }
+    const buckets: BucketAgg[] = []
+    for (let a = minX; a < maxX; a += step) {
+      buckets.push({ from: a, to: a + step, center: a + step / 2, n: 0, sum: 0 })
+    }
+
+    for (const m of filteredEnriched) {
+      if (m.oppEloBefore === null) continue
+      const diff = m.eloBefore - m.oppEloBefore
+      if (!Number.isFinite(diff)) continue
+      if (diff < minX || diff > maxX) continue
+      const pts = outToPoints(m.outcome)
+      if (pts === null) continue
+      const idx = Math.min(buckets.length - 1, Math.max(0, Math.floor((diff - minX) / step)))
+      buckets[idx].n += 1
+      buckets[idx].sum += pts
+    }
+
+    const empiricalByCenter = new Map<number, { winrate: number; n: number }>()
+    for (const b of buckets) {
+      if (b.n < minMatches) continue
+      empiricalByCenter.set(b.center, { winrate: b.sum / b.n, n: b.n })
+    }
+
+    const expected = (d: number) => 1 / (1 + Math.pow(10, -d / 400))
+
+    // Dense x-axis for smooth expected curve; empirical is shown only on bucket centers
+    const denseStep = 10
+    const out: { diff: number; expected: number; empirical?: number; n?: number }[] = []
+    for (let d = minX; d <= maxX; d += denseStep) {
+      const row: { diff: number; expected: number; empirical?: number; n?: number } = {
+        diff: d,
+        expected: expected(d),
+      }
+      const hit = empiricalByCenter.get(d)
+      if (hit) {
+        row.empirical = hit.winrate
+        row.n = hit.n
+      }
+      out.push(row)
+    }
+
+    // If no centers align to denseStep, add explicit points for centers
+    for (const [center, hit] of empiricalByCenter.entries()) {
+      if (!out.some((r) => r.diff === center)) {
+        out.push({ diff: center, expected: expected(center), empirical: hit.winrate, n: hit.n })
+      }
+    }
+
+    return out.sort((a, b) => a.diff - b.diff)
   }, [filteredEnriched])
 
 
@@ -679,80 +726,78 @@ export default function PlayerProfileModalContent({
 
         <div className="lg:col-span-12 rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold text-white">Winrate vs ELO soupeře</div>
-            <div className="text-xs text-slate-400">Osa X: ELO soupeře • Osa Y: výsledek (0/1)</div>
+            <div className="text-sm font-semibold text-white">Winrate vs ELO Difference</div>
+            <div className="text-xs text-slate-400">Empirická winrate vs expected křivka (ELO)</div>
           </div>
-          <div className="mt-4 h-64">
+          <div className="mt-4 h-72">
             {loading ? (
               <Skeleton className="h-full w-full rounded-2xl" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
-                  <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-                  <XAxis dataKey="opp" type="number" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }} axisLine={false} tickLine={false} name="Opp ELO" />
-                  <YAxis dataKey="res" type="number" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }} axisLine={false} tickLine={false} domain={[0, 1]} />
-                  <Tooltip content={({ active, payload }: any) => {
-                    if (!active || !payload?.length) return null
-                    const p = payload[0].payload
-                    return (
-                      <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
-                        <div className="text-slate-200 font-semibold">{p.label}</div>
-                        <div className="mt-1 text-slate-300">
-                          Opp: <span className="text-slate-100 font-semibold">{Math.round(p.opp)}</span> • Res:{' '}
-                          <span className="text-slate-100 font-semibold">{p.res}</span>
+                <LineChart data={winrateVsDiffData} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis
+                    dataKey="diff"
+                    type="number"
+                    domain={[-500, 500]}
+                    tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => `${v}`}
+                  />
+                  <YAxis
+                    tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={46}
+                    domain={[0, 1]}
+                    tickFormatter={(v) => `${Math.round(Number(v) * 100)}%`}
+                  />
+                  <Tooltip
+                    content={({ active, payload }: any) => {
+                      if (!active || !payload?.length) return null
+                      const p = payload[0]?.payload
+                      if (!p) return null
+                      const emp = typeof p.empirical === 'number' ? `${Math.round(p.empirical * 100)}%` : '—'
+                      const exp = typeof p.expected === 'number' ? `${Math.round(p.expected * 100)}%` : '—'
+                      return (
+                        <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
+                          <div className="text-slate-200 font-semibold">ΔELO: {p.diff}</div>
+                          <div className="mt-1 text-slate-300">
+                            Empirical: <span className="text-slate-100 font-semibold">{emp}</span>
+                            {typeof p.n === 'number' ? <span className="text-slate-400"> • n={p.n}</span> : null}
+                          </div>
+                          <div className="text-slate-300">
+                            Expected: <span className="text-slate-100 font-semibold">{exp}</span>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  }} />
-                  <Scatter data={winVsOppScatter} fill="rgba(251,191,36,0.55)" />
-                </ScatterChart>
+                      )
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="expected"
+                    stroke="rgba(34,211,238,0.9)"
+                    dot={false}
+                    isAnimationActive
+                    animationDuration={900}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="empirical"
+                    stroke="rgba(251,191,36,0.95)"
+                    dot={{ r: 3 }}
+                    connectNulls={false}
+                    isAnimationActive
+                    animationDuration={900}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Matches */}
-      <div className="rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-white">{t('profile_matches') || 'Zápasy'}</div>
-          <div className="text-xs text-slate-400">{tournamentFilter === 'ALL' ? (t('all') || 'Vše') : tournamentFilter}</div>
-        </div>
-
-        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-          <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200">
-            <div className="col-span-2">{t('date') || 'Datum'}</div>
-            <div className="col-span-3">{t('tournament') || 'Turnaj'}</div>
-            <div className="col-span-3">{t('opponent') || 'Soupeř'}</div>
-            <div className="col-span-2 text-right">{t('result') || 'Výsledek'}</div>
-            <div className="col-span-2 text-right">Δ</div>
-          </div>
-          <div className="max-h-72 overflow-auto divide-y divide-white/5">
-            {loading ? (
-              <div className="p-3 space-y-2">
-                {[...Array(8)].map((_, i) => (
-                  <Skeleton key={i} className="h-9 w-full rounded-xl" />
-                ))}
-              </div>
-            ) : filteredCards.length ? (
-              filteredCards
-                .slice()
-                .reverse()
-                .map((c: PlayerCard) => (
-                  <div key={c.matchId} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-                    <div className="col-span-2 text-slate-400">{fmtDate(c.date)}</div>
-                    <div className="col-span-3 font-semibold">{c.tournament || '—'}</div>
-                    <div className="col-span-3">{c.opponent}</div>
-                    <div className="col-span-2 text-right">{c.result}</div>
-                    <div className="col-span-2 text-right text-slate-300">{c.delta}</div>
-                  </div>
-                ))
-            ) : (
-              <div className="px-3 py-6 text-sm text-slate-400">{t('no_data') || 'Žádná data.'}</div>
-            )}
+          <div className="mt-2 text-xs text-slate-500">
+            Buckety: −500..+500 (step 50). Zobrazují se jen buckety s ≥ 30 zápasy. Expected: 1 / (1 + 10^(−Δ/400)).
           </div>
         </div>
-      </div>
-    </div>
   )
 }
