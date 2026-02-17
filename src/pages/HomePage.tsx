@@ -136,6 +136,10 @@ export default function HomePage() {
   const lastTournament = useLastTournamentLabel()
   const cardsMode = usePlayerCards(mode)
 
+  // IMPORTANT: define rows BEFORE any hooks that reference it.
+  // Otherwise we can hit a TDZ runtime error in production builds.
+  const rows = standings.data ?? []
+
 
   // Open player profile modal when route contains /player/:slug
   useEffect(() => {
@@ -159,10 +163,6 @@ export default function HomePage() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, rows.length, mode])
-
-
-
-  const rows = standings.data ?? []
   const filtered = useMemo(() => {
     const q = normalizeKey(query)
     if (!q) return rows
