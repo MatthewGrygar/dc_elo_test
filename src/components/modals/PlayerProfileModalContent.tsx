@@ -800,5 +800,6 @@ export default function PlayerProfileModalContent({
           </div>
         </div>
     </div>
+  </div>
   )
 }
