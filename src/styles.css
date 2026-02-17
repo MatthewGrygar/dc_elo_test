@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+/* Smooth scrolling and crisp text */
+html { scroll-behavior: smooth; }
+
+/* Fancy selection */
+::selection { background: rgba(99, 102, 241, .35); }
+
+/* Gradient background helper */
+.bg-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(148,163,184,.14) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* Scrollbars (best-effort) */
+*::-webkit-scrollbar { height: 10px; width: 10px; }
+*::-webkit-scrollbar-thumb { background: rgba(148,163,184,.25); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }

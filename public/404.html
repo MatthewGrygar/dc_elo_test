@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DC ELO</title>
+  </head>
+  <body>
+    <script>
+      // GitHub Pages SPA redirect
+      // Keeps the path in a querystring so the app can restore it.
+      var l = window.location;
+      var base = l.pathname.split('/').slice(0, 2).join('/');
+      var path = l.pathname + l.search + l.hash;
+      l.replace(base + '/?redirect=' + encodeURIComponent(path));
+    </script>
+  </body>
+</html>

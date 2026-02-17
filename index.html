@@ -1,33 +1,14 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DC ELO</title>
-</head>
-<body>
-<script>
-(function(){
-  var params = new URLSearchParams(window.location.search || "");
-  var r = params.get("r") || params.get("redirect") || "";
-  var nav = (navigator.languages && navigator.languages.length ? navigator.languages[0] : navigator.language) || "";
-  nav = (nav || "").toLowerCase();
-
-  var seg = "eng";
-  if (nav.indexOf("fr") === 0) seg = "fr";
-  else if (nav.indexOf("cs") === 0 || nav.indexOf("sk") === 0 || nav.indexOf("cz") === 0) seg = "cz";
-
-  // Project base: /<repo>/
-  var path = window.location.pathname || "/";
-  var parts = path.split("/").filter(Boolean);
-  var base = parts.length ? ("/" + parts[0] + "/") : "/";
-
-  var target = base + seg + "/";
-  if (r){
-    target += "?r=" + encodeURIComponent(r.replace(/^\/+/, ""));
-  }
-  window.location.replace(target);
-})();
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0f19" />
+    <title>DC ELO</title>
+    <link rel="icon" type="image/png" href="./assets/images/logos/logo.png" />
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
