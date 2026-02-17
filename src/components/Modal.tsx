@@ -9,6 +9,8 @@ type ModalState = {
   subtitle?: string
   content?: React.ReactNode
   fullscreen?: boolean
+  size?: 'md' | 'lg' | 'xl' | '2xl'
+  onClose?: () => void
 }
 
 type ModalApi = {
@@ -23,13 +25,13 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
   const api = useMemo<ModalApi>(() => ({
     openModal: (s) => setState({ open: true, ...s }),
-    closeModal: () => setState({ open: false }),
+    closeModal: () => setState((prev) => { prev.onClose?.(); return { open: false } }),
   }), [])
 
   return (
     <Ctx.Provider value={api}>
       {children}
-      <ModalView state={state} onClose={() => setState({ open: false })} />
+      <ModalView state={state} onClose={() => setState((prev) => { prev.onClose?.(); return { open: false } })} />
     </Ctx.Provider>
   )
 }
@@ -43,6 +45,17 @@ export function useModal() {
 function ModalView({ state, onClose }: { state: ModalState; onClose: () => void }) {
   if (typeof document === 'undefined') return null
 
+
+  const sizeClass =
+    state.size === 'md'
+      ? 'max-w-xl'
+      : state.size === 'lg'
+      ? 'max-w-3xl'
+      : state.size === 'xl'
+      ? 'max-w-4xl'
+      : state.size === '2xl'
+      ? 'max-w-6xl'
+      : 'max-w-3xl'
   return createPortal(
     <AnimatePresence>
       {state.open && (
@@ -67,7 +80,7 @@ function ModalView({ state, onClose }: { state: ModalState; onClose: () => void 
             className={
               state.fullscreen
                 ? 'relative z-10 h-[92vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-soft'
-                : 'relative z-10 w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-soft'
+                : `relative z-10 w-full ${sizeClass} overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-soft`
             }
             initial={{ y: 22, scale: 0.98, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}

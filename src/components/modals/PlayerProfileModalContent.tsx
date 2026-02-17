@@ -11,6 +11,10 @@ import {
   ComposedChart,
   Bar,
   Brush,
+  BarChart,
+  LineChart,
+  ScatterChart,
+  Scatter,
 } from 'recharts'
 import { ExternalLink, Filter, X } from 'lucide-react'
 import { useI18n } from '../../features/i18n/i18n'
@@ -63,13 +67,12 @@ function parseWinrateText(winrateText: string) {
   return Number.isFinite(n) ? n : Number.NaN
 }
 
-type Period = 'ALL' | '30D' | '90D' | '180D' | '365D' | 'YTD'
+type Period = 'ALL' | '30D' | '90D' | '180D' | '365D'
 
 function periodCutoff(p: Period) {
   const now = new Date()
   if (p === 'ALL') return null
-  if (p === 'YTD') return new Date(now.getFullYear(), 0, 1)
-  const days = p === '30D' ? 30 : p === '90D' ? 90 : p === '180D' ? 180 : 365
+    const days = p === '30D' ? 30 : p === '90D' ? 90 : p === '180D' ? 180 : 365
   const d = new Date(now)
   d.setDate(d.getDate() - days)
   return d
@@ -94,6 +97,69 @@ export default function PlayerProfileModalContent({
     const all = cards.data ?? []
     return all.filter((c) => c.player.trim() === player.player.trim()).sort((a, b) => a.matchId - b.matchId)
   }, [cards.data, player.player])
+
+  const enrichedMatches = useMemo(() => {
+    const all = cards.data ?? []
+    const byMatch = new Map<number, PlayerCard[]>()
+    for (const c of all) {
+      if (!Number.isFinite(c.matchId)) continue
+      const arr = byMatch.get(c.matchId) ?? []
+      arr.push(c)
+      byMatch.set(c.matchId, arr)
+    }
+
+    const list: {
+      matchId: number
+      date: string
+      tournament: string
+      opponent: string
+      outcome: 'W' | 'L' | 'D' | 'U'
+      delta: number
+      eloAfter: number
+      eloBefore: number
+      oppEloBefore: number | null
+      oppEloAfter: number | null
+      isUnderdog: boolean | null
+      isUpsetWin: boolean
+    }[] = []
+
+    for (const [matchId, group] of byMatch.entries()) {
+      const me = group.find((g) => g.player.trim() === player.player.trim())
+      if (!me) continue
+      const opp = group.find((g) => g.player.trim() !== player.player.trim()) || null
+
+      const delta = parseDelta(me.delta)
+      const eloAfter = me.elo
+      const eloBefore = eloAfter - delta
+
+      const outcome = parseOutcome(me.result)
+      const oppDelta = opp ? parseDelta(opp.delta) : 0
+      const oppEloAfter = opp ? opp.elo : null
+      const oppEloBefore = opp ? opp.elo - oppDelta : null
+
+      const isUnderdog = oppEloBefore !== null ? eloBefore < oppEloBefore : null
+      const isUpsetWin = outcome === 'W' && isUnderdog === true
+
+      list.push({
+        matchId,
+        date: me.date,
+        tournament: me.tournament,
+        opponent: me.opponent,
+        outcome,
+        delta,
+        eloAfter,
+        eloBefore,
+        oppEloBefore,
+        oppEloAfter,
+        isUnderdog,
+        isUpsetWin,
+      })
+    }
+
+    return list.sort((a, b) => a.matchId - b.matchId)
+  }, [cards.data, player.player])
+
+
 
   const s = useMemo(() => {
     const all = summary.data ?? []
@@ -124,6 +190,20 @@ export default function PlayerProfileModalContent({
     return list
   }, [playerCards, tournamentFilter, period])
 
+  const filteredEnriched = useMemo(() => {
+    let list = enrichedMatches
+    if (tournamentFilter !== 'ALL') list = list.filter((c) => c.tournament === tournamentFilter)
+    const cutoff = periodCutoff(period)
+    if (cutoff) {
+      list = list.filter((c) => {
+        const d = new Date(c.date)
+        return !Number.isNaN(d.getTime()) && d >= cutoff
+      })
+    }
+    return list
+  }, [enrichedMatches, tournamentFilter, period])
+
+
   const chartData = useMemo(() => {
     return filteredCards
       .filter((c) => Number.isFinite(c.matchId) && Number.isFinite(c.elo))
@@ -144,10 +224,167 @@ export default function PlayerProfileModalContent({
       .sort((a, b) => a.x - b.x)
   }, [filteredCards])
 
+  const winrateSeries = useMemo(() => {
+    const list = filteredEnriched
+    const window = 10
+    const outToNum = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
+    const series: { x: number; label: string; winrate: number }[] = []
+    for (let i = 0; i < list.length; i++) {
+      const slice = list.slice(Math.max(0, i - window + 1), i + 1)
+      const nums = slice.map((m) => outToNum(m.outcome)).filter((v): v is number => v !== null)
+      if (!nums.length) continue
+      const wr = (nums.reduce((a, b) => a + b, 0) / nums.length) * 100
+      const d = new Date(list[i].date)
+      const x = Number.isNaN(d.getTime()) ? list[i].matchId : d.getTime()
+      series.push({ x, label: fmtDate(list[i].date), winrate: wr })
+    }
+    return series
+  }, [filteredEnriched])
+
+  const deltaDistribution = useMemo(() => {
+    const list = filteredEnriched
+    const step = 5
+    const deltas = list.map((m) => m.delta).filter((n) => Number.isFinite(n))
+    if (!deltas.length) return []
+    const min = Math.floor(Math.min(...deltas) / step) * step
+    const max = Math.ceil(Math.max(...deltas) / step) * step
+    const bins: { bucket: string; from: number; to: number; count: number }[] = []
+    for (let a = min; a < max; a += step) bins.push({ bucket: `${a}..${a + step}`, from: a, to: a + step, count: 0 })
+    for (const d of deltas) {
+      const idx = Math.min(bins.length - 1, Math.max(0, Math.floor((d - min) / step)))
+      bins[idx].count += 1
+    }
+    return bins
+  }, [filteredEnriched])
+
+  const winVsOppScatter = useMemo(() => {
+    const outToNum = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
+    return filteredEnriched
+      .map((m) => ({
+        opp: m.oppEloBefore,
+        res: outToNum(m.outcome),
+        label: `${fmtDate(m.date)} • ${m.opponent}`,
+      }))
+      .filter((x) => x.opp !== null && x.res !== null)
+      .map((x) => ({ opp: x.opp as number, res: x.res as number, label: x.label }))
+  }, [filteredEnriched])
+
+
   const winrateNum = useMemo(() => {
     const n = parseWinrateText(player.winrate)
     return Number.isFinite(n) ? n : null
   }, [player.winrate])
+
+  const metrics = useMemo(() => {
+    const list = enrichedMatches
+    if (!list.length) {
+      return {
+        minElo: null,
+        avgDeltaAbs: null,
+        avgDeltaSigned: null,
+        avgOpp: s ? Math.round(s.avgOpp) : null,
+        maxDefeated: null,
+        maxLostTo: null,
+        elo7: null,
+        elo30: null,
+        games7: 0,
+        stability: null,
+        momentum20: null,
+        clutch: null,
+        upsetRate: null,
+        mostOpponent: null,
+        bestBeaten: null,
+        bestThatBeatYou: null,
+      }
+    }
+
+    const minElo = Math.min(...list.map((x) => x.eloAfter).filter((n) => Number.isFinite(n)))
+    const deltas = list.map((x) => x.delta)
+    const avgDeltaSigned = deltas.reduce((a, b) => a + b, 0) / deltas.length
+    const avgDeltaAbs = deltas.reduce((a, b) => a + Math.abs(b), 0) / deltas.length
+
+    const opps = list.map((x) => x.oppEloBefore).filter((n): n is number => n !== null && Number.isFinite(n))
+    const avgOpp = opps.length ? Math.round(opps.reduce((a, b) => a + b, 0) / opps.length) : (s ? Math.round(s.avgOpp) : null)
+
+    // Highest defeated / that beat you (based on opp pre-rating)
+    let bestBeaten = -Infinity
+    let bestThatBeatYou = -Infinity
+    for (const m of list) {
+      if (m.oppEloBefore === null) continue
+      if (m.outcome === 'W') bestBeaten = Math.max(bestBeaten, m.oppEloBefore)
+      if (m.outcome === 'L') bestThatBeatYou = Math.max(bestThatBeatYou, m.oppEloBefore)
+    }
+
+    // Peak already from standings; but we compute maxDefeated etc.
+    const maxDefeated = bestBeaten === -Infinity ? null : Math.round(bestBeaten)
+    const maxLostTo = bestThatBeatYou === -Infinity ? null : Math.round(bestThatBeatYou)
+
+    // ELO change 7/30 days: compare latest eloAfter to eloBefore at cutoff
+    const now = new Date()
+    const cutoff7 = new Date(now); cutoff7.setDate(cutoff7.getDate() - 7)
+    const cutoff30 = new Date(now); cutoff30.setDate(cutoff30.getDate() - 30)
+
+    const latest = list[list.length - 1]
+    const atOrBefore = (cutoff: Date) => {
+      const eligible = list.filter((m) => {
+        const d = new Date(m.date)
+        return !Number.isNaN(d.getTime()) && d <= cutoff
+      })
+      return eligible.length ? eligible[eligible.length - 1] : null
+    }
+
+    const before7 = atOrBefore(cutoff7)
+    const before30 = atOrBefore(cutoff30)
+    const elo7 = before7 ? latest.eloAfter - before7.eloAfter : null
+    const elo30 = before30 ? latest.eloAfter - before30.eloAfter : null
+
+    const games7 = list.filter((m) => {
+      const d = new Date(m.date)
+      return !Number.isNaN(d.getTime()) && d >= cutoff7
+    }).length
+
+    // Stability index: scaled stdev of deltas (0-100)
+    const mean = avgDeltaSigned
+    const variance = deltas.reduce((acc, v) => acc + (v - mean) * (v - mean), 0) / deltas.length
+    const stdev = Math.sqrt(variance)
+    const stability = Math.max(0, Math.min(100, 100 - stdev * 6)) // heuristic
+
+    // Momentum: avg delta last 20 games scaled to 0-100
+    const last20 = list.slice(-20)
+    const mom = last20.length ? last20.reduce((a, b) => a + b.delta, 0) / last20.length : 0
+    const momentum20 = Math.max(0, Math.min(100, 50 + mom * 5)) // heuristic
+
+    // Clutch: winrate as underdog (vs stronger)
+    const underdogGames = list.filter((m) => m.isUnderdog === true && (m.outcome === 'W' || m.outcome === 'L'))
+    const clutch = underdogGames.length ? (underdogGames.filter((m) => m.outcome === 'W').length / underdogGames.length) * 100 : null
+    const upsetRate = underdogGames.length ? clutch : null
+
+    // Most frequent opponent
+    const freq = new Map<string, number>()
+    for (const m of list) freq.set(m.opponent, (freq.get(m.opponent) ?? 0) + 1)
+    const mostOpponent = Array.from(freq.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+
+    return {
+      minElo: Number.isFinite(minElo) ? Math.round(minElo) : null,
+      avgDeltaAbs: Number.isFinite(avgDeltaAbs) ? avgDeltaAbs : null,
+      avgDeltaSigned: Number.isFinite(avgDeltaSigned) ? avgDeltaSigned : null,
+      avgOpp,
+      maxDefeated,
+      maxLostTo,
+      elo7,
+      elo30,
+      games7,
+      stability,
+      momentum20,
+      clutch,
+      upsetRate,
+      mostOpponent,
+      bestBeaten: maxDefeated,
+      bestThatBeatYou: maxLostTo,
+    }
+  }, [enrichedMatches, s])
+
+
 
   const loading = cards.isLoading || summary.isLoading
 
@@ -181,9 +418,9 @@ export default function PlayerProfileModalContent({
       </div>
 
       {/* Summary */}
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">Rating</div>
+          <div className="text-xs text-slate-400">Aktuální ELO</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.rating}</div>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -191,7 +428,11 @@ export default function PlayerProfileModalContent({
           <div className="mt-1 text-2xl font-semibold text-white">{player.peak}</div>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">Games</div>
+          <div className="text-xs text-slate-400">Nejnižší ELO</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.minElo ?? '—'}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Počet her</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.games}</div>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -200,22 +441,87 @@ export default function PlayerProfileModalContent({
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">W / L / D</div>
+          <div className="text-xs text-slate-400">Výhry / prohry / remízy</div>
           <div className="mt-1 text-2xl font-semibold text-white">
             {player.win} / {player.loss} / {player.draw}
           </div>
         </div>
+
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">Avg opponent</div>
-          <div className="mt-1 text-2xl font-semibold text-white">{s ? Math.round(s.avgOpp) : '—'}</div>
+          <div className="text-xs text-slate-400">Prům. ΔELO / zápas</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.avgDeltaAbs !== null ? metrics.avgDeltaAbs.toFixed(1) : '—'}</div>
         </div>
+
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">Longest win streak</div>
+          <div className="text-xs text-slate-400">Nejdelší win streak</div>
           <div className="mt-1 text-2xl font-semibold text-white">{s ? s.winStreak : '—'}</div>
         </div>
+
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">Longest loss streak</div>
+          <div className="text-xs text-slate-400">Nejdelší lose streak</div>
           <div className="mt-1 text-2xl font-semibold text-white">{s ? s.lossStreak : '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Průměrné ELO soupeřů</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.avgOpp ?? '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Nejvyšší poražené ELO</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.bestBeaten ?? '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Nejvyšší ELO, co tě porazilo</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.bestThatBeatYou ?? '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">ELO změna (7 dní)</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.elo7 !== null ? (metrics.elo7 >= 0 ? `+${metrics.elo7}` : `${metrics.elo7}`) : '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">ELO změna (30 dní)</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.elo30 !== null ? (metrics.elo30 >= 0 ? `+${metrics.elo30}` : `${metrics.elo30}`) : '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Her za týden</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.games7}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 xl:col-span-2">
+          <div className="text-xs text-slate-400">Indexy</div>
+          <div className="mt-2 grid gap-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-300">Stability</span>
+              <span className="text-slate-100 font-semibold">{metrics.stability !== null ? Math.round(metrics.stability) : '—'}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+              <div className="h-2 bg-white/20" style={{ width: `${metrics.stability ?? 0}%` }} />
+            </div>
+
+            <div className="flex items-center justify-between text-sm mt-2">
+              <span className="text-slate-300">Momentum (20 her)</span>
+              <span className="text-slate-100 font-semibold">{metrics.momentum20 !== null ? Math.round(metrics.momentum20) : '—'}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+              <div className="h-2 bg-white/20" style={{ width: `${metrics.momentum20 ?? 0}%` }} />
+            </div>
+
+            <div className="flex items-center justify-between text-sm mt-2">
+              <span className="text-slate-300">Clutch / Upset rate</span>
+              <span className="text-slate-100 font-semibold">{metrics.clutch !== null ? `${metrics.clutch.toFixed(1)}%` : '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 xl:col-span-3">
+          <div className="text-xs text-slate-400">Nejčastější soupeř</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{metrics.mostOpponent ?? '—'}</div>
+          <div className="mt-1 text-xs text-slate-400">Upset rate: {metrics.upsetRate !== null ? `${metrics.upsetRate.toFixed(1)}%` : '—'}</div>
         </div>
       </div>
 
@@ -248,8 +554,7 @@ export default function PlayerProfileModalContent({
               { value: '90D', label: '90d' },
               { value: '180D', label: '180d' },
               { value: '365D', label: '1y' },
-              { value: 'YTD', label: 'YTD' },
-            ]}
+              ]}
           />
         </div>
 
@@ -312,6 +617,97 @@ export default function PlayerProfileModalContent({
 
         <div className="mt-3 text-xs text-slate-400">
           {t('profile_chart_hint') || 'Tip: přetáhni spodní lištu pro zoom do části sezóny.'}
+        </div>
+      </div>
+
+
+      {/* Extra charts */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-6 rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-white">Winrate v čase</div>
+            <div className="text-xs text-slate-400">rolling (10 zápasů)</div>
+          </div>
+          <div className="mt-4 h-56">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={winrateSeries} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis
+                    dataKey="x"
+                    tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v) => {
+                      const d = new Date(Number(v))
+                      return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' })
+                    }}
+                  />
+                  <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={40} domain={[0, 100]} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Line type="monotone" dataKey="winrate" stroke="rgba(34,211,238,0.9)" dot={false} isAnimationActive animationDuration={900} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-6 rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-white">Distribuce ELO změn</div>
+            <div className="text-xs text-slate-400">kolik zápasů bylo v pásmu Δ</div>
+          </div>
+          <div className="mt-4 h-56">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={deltaDistribution} margin={{ left: 6, right: 6, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="bucket" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} interval={Math.max(0, Math.floor(deltaDistribution.length / 8) - 1)} />
+                  <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Bar dataKey="count" radius={[10, 10, 0, 0]} fill="rgba(99,102,241,0.55)" isAnimationActive animationDuration={900} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-12 rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold text-white">Winrate vs ELO soupeře</div>
+            <div className="text-xs text-slate-400">Osa X: ELO soupeře • Osa Y: výsledek (0/1)</div>
+          </div>
+          <div className="mt-4 h-64">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="opp" type="number" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }} axisLine={false} tickLine={false} name="Opp ELO" />
+                  <YAxis dataKey="res" type="number" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }} axisLine={false} tickLine={false} domain={[0, 1]} />
+                  <Tooltip content={({ active, payload }: any) => {
+                    if (!active || !payload?.length) return null
+                    const p = payload[0].payload
+                    return (
+                      <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
+                        <div className="text-slate-200 font-semibold">{p.label}</div>
+                        <div className="mt-1 text-slate-300">
+                          Opp: <span className="text-slate-100 font-semibold">{Math.round(p.opp)}</span> • Res:{' '}
+                          <span className="text-slate-100 font-semibold">{p.res}</span>
+                        </div>
+                      </div>
+                    )
+                  }} />
+                  <Scatter data={winVsOppScatter} fill="rgba(251,191,36,0.55)" />
+                </ScatterChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
       </div>
 

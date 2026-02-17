@@ -2,10 +2,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Search, SlidersHorizontal, Trophy, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react'
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, CartesianGrid } from 'recharts'
+import { Search, SlidersHorizontal, Trophy, TrendingUp, Users, Sparkles, ArrowRight, CalendarDays, Activity, Gauge, Zap } from 'lucide-react'
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, CartesianGrid, LineChart, Line, Legend } from 'recharts'
 import { useI18n } from '../features/i18n/i18n'
-import { useLastTournamentLabel, useStandings, type StandingsRow } from '../features/elo/hooks'
+import { useLastTournamentLabel, useStandings, usePlayerCards, type StandingsRow, type PlayerCard } from '../features/elo/hooks'
 import { normalizeKey } from '../lib/csv'
 import { useModal } from '../components/Modal'
 import PlayerProfileModalContent from '../components/modals/PlayerProfileModalContent'
@@ -32,6 +32,34 @@ function parseWinrate(winrateText: string) {
   return Number.isFinite(n) ? n : Number.NaN
 }
 
+
+function parseDelta(s: string) {
+  const v = Number(String(s ?? '').replace(',', '.'))
+  return Number.isFinite(v) ? v : 0
+}
+
+type MatchOutcome = 'W' | 'L' | 'D' | 'U'
+
+function parseOutcome(result: string): MatchOutcome {
+  const s = String(result ?? '').trim().toUpperCase()
+  if (!s) return 'U'
+  if (s.startsWith('W') || s === '1') return 'W'
+  if (s.startsWith('L') || s === '0') return 'L'
+  if (s.startsWith('D') || s.startsWith('T')) return 'D'
+  return 'U'
+}
+
+function toDayKey(dateStr: string) {
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString().slice(0, 10)
+}
+
+function toMonthKey(dateStr: string) {
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
 function buildDistribution(ratings: number[]) {
   if (!ratings.length) return []
   const min = Math.min(...ratings)
@@ -98,10 +126,16 @@ export default function HomePage() {
   const [mode, setMode] = useState<'elo' | 'dcpr'>('elo')
   const [query, setQuery] = useState('')
 
+  const [matchQuery, setMatchQuery] = useState('')
+  const [matchTournament, setMatchTournament] = useState('ALL')
+
+
   const standingsElo = useStandings('elo')
   const standingsDcpr = useStandings('dcpr')
   const standings = mode === 'elo' ? standingsElo : standingsDcpr
   const lastTournament = useLastTournamentLabel()
+  const cardsMode = usePlayerCards(mode)
+
 
   const rows = standings.data ?? []
   const filtered = useMemo(() => {
@@ -114,10 +148,8 @@ export default function HomePage() {
 
   const stats = useMemo(() => {
     const eloRows = standingsElo.data ?? []
-    const dcprRows = standingsDcpr.data ?? []
 
     const eloRatings = eloRows.map((r) => r.rating).filter((n) => Number.isFinite(n))
-    const dcprRatings = dcprRows.map((r) => r.rating).filter((n) => Number.isFinite(n))
 
     const totalGames = eloRows
       .map((r) => r.games)
@@ -125,14 +157,241 @@ export default function HomePage() {
       .reduce((a, b) => a + b, 0)
 
     return {
-      players: eloRows.length || rows.length,
+      uniquePlayers: eloRows.length || rows.length,
       medianElo: Math.round(median(eloRatings) || 0),
-      medianDcpr: Math.round(median(dcprRatings) || 0),
       totalGames,
     }
-  }, [rows.length, standingsElo.data, standingsDcpr.data])
+  }, [rows.length, standingsElo.data])
 
-  const classCuts = useMemo(() => {
+  
+  const matchStats = useMemo(() => {
+    const cards = cardsMode.data ?? []
+    const now = new Date()
+    const cutoff7 = new Date(now); cutoff7.setDate(cutoff7.getDate() - 7)
+    const cutoff30 = new Date(now); cutoff30.setDate(cutoff30.getDate() - 30)
+
+    const byMatch = new Map<number, PlayerCard[]>()
+    for (const c of cards) {
+      if (!Number.isFinite(c.matchId)) continue
+      const arr = byMatch.get(c.matchId) ?? []
+      arr.push(c)
+      byMatch.set(c.matchId, arr)
+    }
+
+    const uniquePlayersAll = new Set<string>()
+    const uniquePlayers7 = new Set<string>()
+    const uniquePlayers30 = new Set<string>()
+    const firstSeen = new Map<string, number>()
+    const matchesByDay = new Map<string, number>()
+    const matchesByMonthPlayers = new Map<string, Set<string>>()
+
+    let sumAbsDelta = 0
+    let deltaCount = 0
+
+    let upsetWins = 0
+    let decidedMatches = 0
+
+    const diffBins: Record<string, { from: number; to: number; favWins: number; total: number }> = {}
+    const binStep = 50
+    const binKey = (d: number) => {
+      const a = Math.floor(d / binStep) * binStep
+      return `${a}–${a + binStep}`
+    }
+
+    for (const [mid, group] of byMatch.entries()) {
+      // Match-level stats
+      // Determine date from first valid row
+      const dateStr = group.find((g) => g.date)?.date || ''
+      const d = new Date(dateStr)
+      const dOk = !Number.isNaN(d.getTime())
+
+      // Count match per day
+      if (dOk) {
+        const k = toDayKey(dateStr)
+        matchesByDay.set(k, (matchesByDay.get(k) ?? 0) + 1)
+
+        const mk = toMonthKey(dateStr)
+        if (mk) {
+          const set = matchesByMonthPlayers.get(mk) ?? new Set<string>()
+          for (const g of group) if (g.player) set.add(g.player)
+          matchesByMonthPlayers.set(mk, set)
+        }
+      }
+
+      // Need exactly two sides for upset + diff winrate
+      const sides = group.slice(0, 2)
+      if (sides.length === 2) {
+        const a = sides[0]
+        const b = sides[1]
+        const aDelta = parseDelta(a.delta)
+        const bDelta = parseDelta(b.delta)
+        const aPre = a.elo - aDelta
+        const bPre = b.elo - bDelta
+
+        const aOut = parseOutcome(a.result)
+        const bOut = parseOutcome(b.result)
+
+        // Determine winner by outcomes; ignore draws/unknown
+        let winner: 'A' | 'B' | null = null
+        if (aOut === 'W' || bOut === 'L') winner = 'A'
+        else if (bOut === 'W' || aOut === 'L') winner = 'B'
+        else winner = null
+
+        if (winner) {
+          decidedMatches += 1
+          const fav = aPre >= bPre ? 'A' : 'B'
+          const diff = Math.abs(aPre - bPre)
+          const key = binKey(diff)
+          diffBins[key] = diffBins[key] ?? { from: Math.floor(diff / binStep) * binStep, to: Math.floor(diff / binStep) * binStep + binStep, favWins: 0, total: 0 }
+          diffBins[key].total += 1
+          if (winner === fav) diffBins[key].favWins += 1
+
+          // Upset: underdog wins
+          if (winner !== fav) upsetWins += 1
+        }
+      }
+    }
+
+    for (const c of cards) {
+      if (!c.player) continue
+      uniquePlayersAll.add(c.player)
+      const d = new Date(c.date)
+      if (!Number.isNaN(d.getTime())) {
+        if (d >= cutoff7) uniquePlayers7.add(c.player)
+        if (d >= cutoff30) uniquePlayers30.add(c.player)
+        const ts = d.getTime()
+        const prev = firstSeen.get(c.player)
+        if (prev === undefined || ts < prev) firstSeen.set(c.player, ts)
+      }
+      sumAbsDelta += Math.abs(parseDelta(c.delta))
+      deltaCount += 1
+    }
+
+    const newPlayers30 = Array.from(firstSeen.entries()).filter(([, ts]) => ts >= cutoff30.getTime()).length
+
+    // Matches/day and matches/week averages from last 30 days and last 7 days
+    const matchDays30 = 30
+    const matchesLast30 = Array.from(matchesByDay.entries()).reduce((acc, [k, v]) => {
+      const d = new Date(k)
+      return !Number.isNaN(d.getTime()) && d >= cutoff30 ? acc + v : acc
+    }, 0)
+    const matchesLast7 = Array.from(matchesByDay.entries()).reduce((acc, [k, v]) => {
+      const d = new Date(k)
+      return !Number.isNaN(d.getTime()) && d >= cutoff7 ? acc + v : acc
+    }, 0)
+
+    const avgPerDay = matchesLast30 / matchDays30
+    const avgPerWeek = matchesLast30 / (matchDays30 / 7)
+
+    const upsetPct = decidedMatches ? (upsetWins / decidedMatches) * 100 : 0
+
+    const activityTable = Array.from(matchesByMonthPlayers.entries())
+      .map(([month, set]) => ({ month, players: set.size }))
+      .sort((a, b) => a.month.localeCompare(b.month))
+
+    const winrateByDiff = Object.entries(diffBins)
+      .map(([bucket, v]) => ({ bucket, from: v.from, to: v.to, winrate: v.total ? (v.favWins / v.total) * 100 : 0, total: v.total }))
+      .sort((a, b) => a.from - b.from)
+
+    return {
+      active7: uniquePlayers7.size,
+      active30: uniquePlayers30.size,
+      newPlayers30,
+      matchesPerDay: avgPerDay,
+      matchesPerWeek: avgPerWeek,
+      avgAbsDelta: deltaCount ? sumAbsDelta / deltaCount : 0,
+      upsetPct,
+      activityTable,
+      winrateByDiff,
+    }
+  }, [cardsMode.data, mode])
+
+  const matchPairs = useMemo(() => {
+    const cards = cardsMode.data ?? []
+    const byMatch = new Map<number, PlayerCard[]>()
+    for (const c of cards) {
+      if (!Number.isFinite(c.matchId)) continue
+      const arr = byMatch.get(c.matchId) ?? []
+      arr.push(c)
+      byMatch.set(c.matchId, arr)
+    }
+
+    const pairs: {
+      matchId: number
+      date: string
+      tournament: string
+      a: string
+      b: string
+      aPre: number
+      bPre: number
+      winner: string | null
+      upset: boolean
+      diff: number
+    }[] = []
+
+    for (const [matchId, group] of byMatch.entries()) {
+      const sides = group.slice(0, 2)
+      if (sides.length !== 2) continue
+      const A = sides[0]
+      const B = sides[1]
+      const aDelta = parseDelta(A.delta)
+      const bDelta = parseDelta(B.delta)
+      const aPre = A.elo - aDelta
+      const bPre = B.elo - bDelta
+      const aOut = parseOutcome(A.result)
+      const bOut = parseOutcome(B.result)
+
+      let winner: string | null = null
+      if (aOut === 'W' || bOut === 'L') winner = A.player
+      else if (bOut === 'W' || aOut === 'L') winner = B.player
+
+      const fav = aPre >= bPre ? A.player : B.player
+      const diff = Math.abs(aPre - bPre)
+      const upset = winner ? winner !== fav : false
+
+      pairs.push({
+        matchId,
+        date: A.date || B.date,
+        tournament: A.tournament || B.tournament,
+        a: A.player,
+        b: B.player,
+        aPre,
+        bPre,
+        winner,
+        upset,
+        diff,
+      })
+    }
+
+    return pairs
+      .filter((p) => p.date)
+      .sort((a, b) => {
+        const da = new Date(a.date).getTime()
+        const db = new Date(b.date).getTime()
+        if (!Number.isNaN(da) && !Number.isNaN(db)) return db - da
+        return b.matchId - a.matchId
+      })
+  }, [cardsMode.data])
+
+  const matchTournaments = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of matchPairs) if (p.tournament) set.add(p.tournament)
+    return ['ALL', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
+  }, [matchPairs])
+
+  const filteredMatches = useMemo(() => {
+    const q = normalizeKey(matchQuery)
+    let list = matchPairs
+    if (matchTournament !== 'ALL') list = list.filter((m) => m.tournament === matchTournament)
+    if (q) {
+      list = list.filter((m) => normalizeKey(m.a).includes(q) || normalizeKey(m.b).includes(q) || normalizeKey(m.tournament).includes(q))
+    }
+    return list
+  }, [matchPairs, matchTournament, matchQuery])
+
+
+
+const classCuts = useMemo(() => {
     const ratings = rows
       .map((r) => r.rating)
       .filter((n) => Number.isFinite(n))
@@ -145,6 +404,37 @@ export default function HomePage() {
   }, [rows])
 
   const distribution = useMemo(() => buildDistribution(rows.map((r) => r.rating).filter(Number.isFinite)), [rows])
+
+  const avgEloByMonth = useMemo(() => {
+    const cards = cardsMode.data ?? []
+    const bucket = new Map<string, { sum: number; n: number }>()
+    for (const c of cards) {
+      if (!Number.isFinite(c.elo)) continue
+      const mk = toMonthKey(c.date)
+      if (!mk) continue
+      const cur = bucket.get(mk) ?? { sum: 0, n: 0 }
+      cur.sum += c.elo
+      cur.n += 1
+      bucket.set(mk, cur)
+    }
+    return Array.from(bucket.entries())
+      .map(([month, v]) => ({ month, avgElo: v.n ? v.sum / v.n : 0 }))
+      .sort((a, b) => a.month.localeCompare(b.month))
+  }, [cardsMode.data])
+
+  const playersByClass = useMemo(() => {
+    const ratings = rows.map((r) => r.rating).filter((n) => Number.isFinite(n))
+    const sorted = [...ratings].sort((a, b) => a - b)
+    const q25 = quantile(sorted, 0.25)
+    const q50 = quantile(sorted, 0.5)
+    const q75 = quantile(sorted, 0.75)
+    const counts: Record<'A' | 'B' | 'C' | 'D', number> = { A: 0, B: 0, C: 0, D: 0 }
+    for (const r of rows) {
+      counts[classForRating(r.rating, q25, q50, q75)] += 1
+    }
+    return (['A', 'B', 'C', 'D'] as const).map((cls) => ({ cls, count: counts[cls] }))
+  }, [rows])
+
 
   const sparkleSeries = useMemo(() => {
     // A small “sparkline” feel: top 12 ratings as a curve
@@ -170,7 +460,7 @@ export default function HomePage() {
     nav(`/${seg || 'cz'}/player/${p.slug}`)
   }
 
-  const loading = standings.isLoading || standingsElo.isLoading || standingsDcpr.isLoading || lastTournament.isLoading
+  const loading = standings.isLoading || standingsElo.isLoading || standingsDcpr.isLoading || lastTournament.isLoading || cardsMode.isLoading
 
   return (
     <div className="space-y-10">
@@ -188,15 +478,14 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200"
             >
               <Sparkles className="h-4 w-4 text-indigo-300" />
-              <span>{t('hero_badge') || 'Živý žebříček • rychlé vyhledávání • moderní grafy'}</span>
+              <span>{t('hero_badge') || 'DC ELO Ranking'}</span>
             </motion.div>
 
             <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {t('hero_title') || 'DC ELO — přehledně, rychle a krásně'}
+              {t('hero_title') || 'DC ELO Ranking'}
             </h1>
             <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">
-              {t('hero_subtitle') ||
-                'Sleduj formu hráčů, vývoj ratingu a výsledky turnajů. Přepni ELO/DCPR a otevři profil hráče s interaktivním grafem.'}
+              {t('hero_subtitle') || 'BY GRAIL SERIES'}
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -234,33 +523,81 @@ export default function HomePage() {
             <div className="mt-4 grid gap-3 sm:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Users className="h-4 w-4" /> {t('stat_players') || 'Hráčů'}
-                </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.players}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <TrendingUp className="h-4 w-4" /> {t('stat_median_elo') || 'Medián ELO'}
+                  <TrendingUp className="h-4 w-4" /> MEDIAN ELO
                 </div>
                 <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Trophy className="h-4 w-4" /> {t('stat_median_dcpr') || 'Medián DCPR'}
+                  <SlidersHorizontal className="h-4 w-4" /> TOTAL GAMES
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.medianDcpr}</div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <SlidersHorizontal className="h-4 w-4" /> {t('stat_total_games') || 'Total games'}
+                  <Users className="h-4 w-4" /> UNIQUE PLAYERS
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <CalendarDays className="h-4 w-4" /> LATEST DATA
+                </div>
+                <div className="mt-1 text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Activity className="h-4 w-4" /> Active players (7d)
+                </div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Activity className="h-4 w-4" /> Active players (30d)
+                </div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Users className="h-4 w-4" /> New players (30d)
+                </div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Gauge className="h-4 w-4" /> Matches / day
+                </div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesPerDay.toFixed(1)}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Gauge className="h-4 w-4" /> Matches / week
+                </div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesPerWeek.toFixed(1)}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-2">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Zap className="h-4 w-4" /> Avg ΔELO / match
+                </div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-3">
+                <div className="flex items-center gap-2 text-slate-300 text-xs">
+                  <Trophy className="h-4 w-4" /> Upset %
+                </div>
+                <div className="mt-1 flex items-baseline justify-between">
+                  <div className="text-2xl font-semibold text-white">{loading ? '—' : `${matchStats.upsetPct.toFixed(1)}%`}</div>
+                  <div className="text-xs text-slate-400">výhra slabšího nad silnějším</div>
+                </div>
               </div>
             </div>
 
             <div className="text-xs text-slate-400">
-              {t('latest_data') || 'Latest data:'}{' '}
-              <span className="text-slate-200">{lastTournament.data || (loading ? 'načítám…' : '—')}</span>
+              {'Zdroj: Google Sheets • '}
+              <span className="text-slate-200">{loading ? 'načítám…' : (lastTournament.data || '—')}</span>
             </div>
           </div>
 
@@ -298,36 +635,70 @@ export default function HomePage() {
               </div>
             </div>
 
+            
             <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white">{t('news_title') || 'Novinky & články'}</div>
-                <div className="text-xs text-slate-400">{t('news_sub') || 'Rychlé info ze scény'}</div>
+                <div className="text-sm font-semibold text-white">Aktivita hráčů</div>
+                <div className="text-xs text-slate-400">unikátní hráči / měsíc</div>
               </div>
-              <div className="mt-4">
-                <NewsCarousel
-                  items={[
-                    {
-                      tag: 'Update',
-                      title: 'Vylepšené grafy a rychlejší profil hráče',
-                      date: lastTournament.data || '—',
-                      excerpt: 'Nový interaktivní graf: zoom, delta sloupce a filtry podle období.',
-                    },
-                    {
-                      tag: 'Turnaje',
-                      title: 'Jak číst ELO/DCPR po turnajích',
-                      date: 'Tip',
-                      excerpt: 'ELO je citlivé na soupeře. DCPR víc vyhlazuje výkyvy. Přepínač nahoře ti ukáže obě perspektivy.',
-                    },
-                    {
-                      tag: 'Insight',
-                      title: 'Rozložení ratingu: kde je největší “tlačenice”',
-                      date: 'Statistika',
-                      excerpt: 'Histogram ukáže, ve kterých pásmech je nejvíc hráčů a kde se rozhoduje o třídách A–D.',
-                    },
-                  ]}
-                />
+              <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+                <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200">
+                  <div className="col-span-7">Měsíc</div>
+                  <div className="col-span-5 text-right">Hráčů</div>
+                </div>
+                <div className="max-h-56 overflow-auto divide-y divide-white/5">
+                  {(loading ? [] : matchStats.activityTable.slice().reverse()).map((r) => (
+                    <div key={r.month} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
+                      <div className="col-span-7 text-slate-300">{r.month}</div>
+                      <div className="col-span-5 text-right font-semibold text-white">{r.players}</div>
+                    </div>
+                  ))}
+                  {loading ? (
+                    <div className="p-3 space-y-2">
+                      {[...Array(6)].map((_, i) => (
+                        <Skeleton key={i} className="h-9 w-full rounded-xl" />
+                      ))}
+                    </div>
+                  ) : null}
+                  {!loading && !matchStats.activityTable.length ? (
+                    <div className="px-3 py-6 text-sm text-slate-400">Žádná data.</div>
+                  ) : null}
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-8 -mx-6 sm:-mx-10">
+          <div className="px-6 sm:px-10">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-white">Novinky & články</div>
+              <div className="text-xs text-slate-400">Rychlé info ze scény</div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <NewsCarousel
+              items={[
+                {
+                  tag: 'Update',
+                  title: 'Vylepšené grafy a rychlejší profil hráče',
+                  date: lastTournament.data || '—',
+                  excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
+                },
+                {
+                  tag: 'Insight',
+                  title: 'Jak číst ELO: upsety a rozdíly ratingu',
+                  date: 'Statistika',
+                  excerpt: 'Graf “Winrate podle ELO rozdílu” ukáže, kdy favorit skutečně vyhrává.',
+                },
+                {
+                  tag: 'Tip',
+                  title: 'Filtruj období: 30/90/180 dní nebo all-life',
+                  date: 'Profil',
+                  excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
+                },
+              ]}
+            />
           </div>
         </div>
       </section>
@@ -401,6 +772,110 @@ export default function HomePage() {
         </div>
       </section>
 
+
+      {/* Extra charts */}
+      <section id="stats" className="grid gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-6 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">Ranking Class (A–D)</div>
+              <div className="text-xs text-slate-400">Kolik hráčů spadá do tříd podle ratingu</div>
+            </div>
+            <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
+          </div>
+          <div className="mt-5 h-56">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={playersByClass} margin={{ left: 6, right: 6, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="cls" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Bar dataKey="count" radius={[10, 10, 0, 0]} fill="rgba(14,165,233,0.55)" isAnimationActive animationDuration={900} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-6 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">Průměrné ELO v čase</div>
+              <div className="text-xs text-slate-400">Průměr post-match ratingů podle měsíce</div>
+            </div>
+            <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
+          </div>
+          <div className="mt-5 h-56">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={avgEloByMonth} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} interval={Math.max(0, Math.floor(avgEloByMonth.length / 6) - 1)} />
+                  <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={40} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Line type="monotone" dataKey="avgElo" stroke="rgba(129,140,248,0.9)" dot={false} isAnimationActive animationDuration={900} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-6 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">Aktivní hráči podle měsíce</div>
+              <div className="text-xs text-slate-400">Kolik unikátních hráčů hrálo v měsíci</div>
+            </div>
+            <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
+          </div>
+          <div className="mt-5 h-56">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={matchStats.activityTable} margin={{ left: 6, right: 6, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} interval={Math.max(0, Math.floor(matchStats.activityTable.length / 6) - 1)} />
+                  <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={32} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Bar dataKey="players" radius={[10, 10, 0, 0]} fill="rgba(34,197,94,0.45)" isAnimationActive animationDuration={900} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-6 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold text-white">Winrate podle ELO rozdílu</div>
+              <div className="text-xs text-slate-400">Osa X: rozdíl ratingu (favorit vs underdog) • Osa Y: % výher favorita</div>
+            </div>
+            <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
+          </div>
+          <div className="mt-5 h-56">
+            {loading ? (
+              <Skeleton className="h-full w-full rounded-2xl" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={matchStats.winrateByDiff} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                  <XAxis dataKey="bucket" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} interval={1} height={46} />
+                  <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={40} domain={[0, 100]} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Line type="monotone" dataKey="winrate" stroke="rgba(251,191,36,0.9)" dot={false} isAnimationActive animationDuration={900} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Leaderboard */}
       <section id="leaderboard" className="rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -470,7 +945,94 @@ export default function HomePage() {
       </section>
 
       {/* Footer-style section */}
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-950/40 via-indigo-500/10 to-slate-950/40 p-6 shadow-soft">
+      
+      {/* All matches */}
+      <section id="matches" className="rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-sm font-semibold text-white">Všechny zápasy</div>
+            <div className="text-xs text-slate-400">Filtruj DCPR/ELO, turnaj a hráče</div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="h-10 min-w-[220px]">
+              <div className="flex h-10 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 text-slate-200">
+                <Search className="h-4 w-4 text-slate-300" />
+                <input
+                  value={matchQuery}
+                  onChange={(e) => setMatchQuery(e.target.value)}
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                  placeholder="Hráč / turnaj…"
+                />
+              </div>
+            </div>
+            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm text-slate-200">
+              <span className="text-slate-400">Turnaj</span>
+              <select
+                value={matchTournament}
+                onChange={(e) => setMatchTournament(e.target.value)}
+                className="bg-transparent text-slate-100 outline-none"
+              >
+                {matchTournaments.map((x) => (
+                  <option key={x} value={x} className="bg-slate-950">
+                    {x === 'ALL' ? 'Vše' : x}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+          <div className="overflow-x-auto">
+            <div className="min-w-[980px]">
+              <div className="grid grid-cols-[120px_220px_1.3fr_140px_120px_120px] bg-white/5 px-4 py-3 text-xs font-semibold text-slate-200">
+                <div>Datum</div>
+                <div>Turnaj</div>
+                <div>Hráči</div>
+                <div>Vítěz</div>
+                <div className="text-right">ΔELO</div>
+                <div className="text-right">Upset</div>
+              </div>
+              <div className="divide-y divide-white/5 max-h-[520px] overflow-auto">
+                {loading ? (
+                  <div className="p-4 space-y-2">
+                    {[...Array(10)].map((_, i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : filteredMatches.length ? (
+                  filteredMatches.map((m) => (
+                    <div key={m.matchId} className="grid grid-cols-[120px_220px_1.3fr_140px_120px_120px] items-center px-4 py-3 text-sm text-slate-200 hover:bg-white/5">
+                      <div className="text-slate-400">{m.date ? new Date(m.date).toLocaleDateString() : '—'}</div>
+                      <div className="font-semibold">{m.tournament || '—'}</div>
+                      <div className="min-w-0">
+                        <span className="truncate">{m.a}</span>
+                        <span className="text-slate-400"> vs </span>
+                        <span className="truncate">{m.b}</span>
+                      </div>
+                      <div className="font-semibold text-slate-100">{m.winner || '—'}</div>
+                      <div className="text-right text-slate-300">{Math.round(m.diff)}</div>
+                      <div className="text-right">
+                        {m.winner ? (
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.upset ? 'border-amber-400/30 bg-amber-400/10 text-amber-200' : 'border-white/10 bg-white/5 text-slate-200'}`}>
+                            {m.upset ? 'YES' : 'NO'}
+                          </span>
+                        ) : (
+                          <span className="text-slate-500">—</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-10 text-sm text-slate-400">Žádné zápasy pro aktuální filtr.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+<section className="rounded-3xl border border-white/10 bg-gradient-to-r from-slate-950/40 via-indigo-500/10 to-slate-950/40 p-6 shadow-soft">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm font-semibold text-white">{t('cta_title') || 'Chceš to ještě víc vylepšit?'}</div>
