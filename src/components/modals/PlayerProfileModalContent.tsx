@@ -799,5 +799,6 @@ export default function PlayerProfileModalContent({
             Buckety: −500..+500 (step 50). Zobrazují se jen buckety s ≥ 30 zápasy. Expected: 1 / (1 + 10^(−Δ/400)).
           </div>
         </div>
+    </div>
   )
 }
