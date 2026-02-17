@@ -21,6 +21,7 @@ import { useI18n } from '../../features/i18n/i18n'
 import { usePlayerCards, usePlayerSummary, type PlayerCard, type StandingsRow } from '../../features/elo/hooks'
 import Segmented from '../ui/Segmented'
 import Skeleton from '../ui/Skeleton'
+import { parseOutcome } from '../../lib/outcome'
 
 function fmtDate(s: string) {
   const d = new Date(s)

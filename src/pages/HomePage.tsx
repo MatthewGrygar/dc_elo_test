@@ -13,6 +13,7 @@ import Button from '../components/ui/Button'
 import Segmented from '../components/ui/Segmented'
 import Skeleton from '../components/ui/Skeleton'
 import NewsCarousel from '../components/NewsCarousel'
+import { parseOutcome } from '../lib/outcome'
 
 function median(values: number[]) {
   if (!values.length) return Number.NaN
@@ -36,17 +37,6 @@ function parseWinrate(winrateText: string) {
 function parseDelta(s: string) {
   const v = Number(String(s ?? '').replace(',', '.'))
   return Number.isFinite(v) ? v : 0
-}
-
-type MatchOutcome = 'W' | 'L' | 'D' | 'U'
-
-function parseOutcome(result: string): MatchOutcome {
-  const s = String(result ?? '').trim().toUpperCase()
-  if (!s) return 'U'
-  if (s.startsWith('W') || s === '1') return 'W'
-  if (s.startsWith('L') || s === '0') return 'L'
-  if (s.startsWith('D') || s.startsWith('T')) return 'D'
-  return 'U'
 }
 
 function toDayKey(dateStr: string) {
@@ -832,21 +822,22 @@ const classCuts = useMemo(() => {
               items={[
                 {
                   tag: 'Update',
-                  image: '/assets/images/slider/carousel_cz_1.png',
+                  image: '/assets/slider/placeholder-1.svg',
                   title: 'Vylepšené grafy a rychlejší profil hráče',
                   date: lastTournament.data || '—',
                   excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
                 },
                 {
                   tag: 'Insight',
-                  image: '/assets/images/slider/carousel_cz_2.png',
+                  image: '/assets/slider/placeholder-2.svg',
                   title: 'Jak číst ELO: upsety a rozdíly ratingu',
                   date: 'Statistika',
                   excerpt: 'Graf “Winrate podle ELO rozdílu” ukáže, kdy favorit skutečně vyhrává.',
                 },
                 {
                   tag: 'Tip',
-                  title: 'Filtruj období: 30/90/180 dní nebo all-life',
+                  image: '/assets/slider/placeholder-3.svg',
+                                    title: 'Filtruj období: 30/90/180 dní nebo all-life',
                   date: 'Profil',
                   excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
                 },
