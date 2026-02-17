@@ -257,22 +257,31 @@ export default function PlayerProfileModalContent({
   }, [filteredEnriched])
 
   const winrateVsDiffData = useMemo(() => {
-    // Empirická winrate vs ELO difference (před zápasem) + teoretická expected winrate dle ELO
-    const outToPoints = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
+    // Winrate vs ELO difference (před zápasem): zobrazujeme VŠECHNY buckety + expected křivku.
+    // Spolehlivost indikujeme stylem podle n (>=30 / 10-29 / <10) + volitelný Wilson CI pás.
 
     const minX = -500
     const maxX = 500
     const step = 50
-    // Spec recommends >=30 matches per bucket for statistical validity.
-    // On a single-player profile that can be too strict (you'd often see no empirical points).
-    // We adapt the threshold so the chart always shows something, while still preferring 30.
-    const total = filteredEnriched.length
-    const minMatches = total >= 300 ? 30 : total >= 120 ? 15 : total >= 60 ? 10 : 5
 
-    type BucketAgg = { from: number; to: number; center: number; n: number; sum: number }
+    const expected = (d: number) => 1 / (1 + Math.pow(10, -d / 400))
+
+    const outToPoints = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
+
+    type BucketAgg = {
+      from: number
+      to: number
+      center: number
+      n: number
+      wins: number
+      losses: number
+      draws: number
+      sum: number
+    }
+
     const buckets: BucketAgg[] = []
     for (let a = minX; a < maxX; a += step) {
-      buckets.push({ from: a, to: a + step, center: a + step / 2, n: 0, sum: 0 })
+      buckets.push({ from: a, to: a + step, center: a + step / 2, n: 0, wins: 0, losses: 0, draws: 0, sum: 0 })
     }
 
     for (const m of filteredEnriched) {
@@ -282,43 +291,70 @@ export default function PlayerProfileModalContent({
       if (diff < minX || diff > maxX) continue
       const pts = outToPoints(m.outcome)
       if (pts === null) continue
+
       const idx = Math.min(buckets.length - 1, Math.max(0, Math.floor((diff - minX) / step)))
-      buckets[idx].n += 1
-      buckets[idx].sum += pts
+      const b = buckets[idx]
+      b.n += 1
+      b.sum += pts
+      if (m.outcome === 'W') b.wins += 1
+      else if (m.outcome === 'L') b.losses += 1
+      else if (m.outcome === 'D') b.draws += 1
     }
 
-    const empiricalByCenter = new Map<number, { winrate: number; n: number }>()
-    for (const b of buckets) {
-      if (b.n < minMatches) continue
-      empiricalByCenter.set(b.center, { winrate: b.sum / b.n, n: b.n })
+    // Wilson interval (binomial) – pro D bereme 0.5 bodu, ber to jako aproximaci.
+    const wilson = (p: number, n: number, z = 1.96) => {
+      if (n <= 0) return { lo: 0, hi: 1 }
+      const z2 = z * z
+      const denom = 1 + z2 / n
+      const center = (p + z2 / (2 * n)) / denom
+      const half = (z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n)) / denom
+      return { lo: Math.max(0, center - half), hi: Math.min(1, center + half) }
     }
 
-    const expected = (d: number) => 1 / (1 + Math.pow(10, -d / 400))
-
-    // Dense x-axis for smooth expected curve; empirical is shown only on bucket centers
+    // Expected křivka (hladká): dense step
     const denseStep = 10
-    const out: { diff: number; expected: number; empirical?: number; n?: number }[] = []
+    const byDiff = new Map<number, any>()
     for (let d = minX; d <= maxX; d += denseStep) {
-      const row: { diff: number; expected: number; empirical?: number; n?: number } = {
-        diff: d,
-        expected: expected(d),
-      }
-      const hit = empiricalByCenter.get(d)
-      if (hit) {
-        row.empirical = hit.winrate
-        row.n = hit.n
-      }
-      out.push(row)
+      byDiff.set(d, { diff: d, expected: expected(d) })
     }
 
-    // If no centers align to denseStep, add explicit points for centers
-    for (const [center, hit] of empiricalByCenter.entries()) {
-      if (!out.some((r) => r.diff === center)) {
-        out.push({ diff: center, expected: expected(center), empirical: hit.winrate, n: hit.n })
+    // Empirické body na středech bucketů (bez filtrování)
+    for (const b of buckets) {
+      if (b.n === 0) {
+        // i prázdné buckety necháme bez empirických hodnot
+        const key = b.center
+        if (!byDiff.has(key)) byDiff.set(key, { diff: key, expected: expected(key) })
+        continue
       }
+      const p = b.sum / b.n
+      const { lo, hi } = wilson(p, b.n)
+      const key = b.center
+      const row = byDiff.get(key) || { diff: key, expected: expected(key) }
+
+      // styl podle n
+      const strong = b.n >= 30
+      const mid = b.n >= 10 && b.n < 30
+      const low = b.n < 10
+
+      row.empiricalStrong = strong ? p : null
+      row.empiricalMid = mid ? p : null
+      row.empiricalLow = low ? p : null
+      row.empirical = p
+      row.n = b.n
+      row.wins = b.wins
+      row.losses = b.losses
+      row.draws = b.draws
+
+      // CI band
+      row.ciLower = lo
+      row.ciUpper = hi
+      row.ciBand = hi - lo
+
+      byDiff.set(key, row)
     }
 
-    return out.sort((a, b) => a.diff - b.diff)
+    const out = Array.from(byDiff.values()).sort((a, b) => a.diff - b.diff)
+    return out
   }, [filteredEnriched])
 
 
@@ -738,7 +774,7 @@ export default function PlayerProfileModalContent({
               <Skeleton className="h-full w-full rounded-2xl" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={winrateVsDiffData} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                <ComposedChart data={winrateVsDiffData} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
                   <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
                   <XAxis
                     dataKey="diff"
@@ -764,13 +800,22 @@ export default function PlayerProfileModalContent({
                       if (!p) return null
                       const emp = typeof p.empirical === 'number' ? `${Math.round(p.empirical * 100)}%` : '—'
                       const exp = typeof p.expected === 'number' ? `${Math.round(p.expected * 100)}%` : '—'
+                      const n = typeof p.n === 'number' ? p.n : null
+                      const w = typeof p.wins === 'number' ? p.wins : null
+                      const l = typeof p.losses === 'number' ? p.losses : null
+                      const d = typeof p.draws === 'number' ? p.draws : null
                       return (
                         <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
                           <div className="text-slate-200 font-semibold">ΔELO: {p.diff}</div>
                           <div className="mt-1 text-slate-300">
                             Empirical: <span className="text-slate-100 font-semibold">{emp}</span>
-                            {typeof p.n === 'number' ? <span className="text-slate-400"> • n={p.n}</span> : null}
+                            {n !== null ? <span className="text-slate-400"> • n={n}</span> : null}
                           </div>
+                          {n !== null ? (
+                            <div className="text-slate-400 text-xs">
+                              W:{w ?? 0} • L:{l ?? 0} • D:{d ?? 0}
+                            </div>
+                          ) : null}
                           <div className="text-slate-300">
                             Expected: <span className="text-slate-100 font-semibold">{exp}</span>
                           </div>
@@ -778,6 +823,20 @@ export default function PlayerProfileModalContent({
                       )
                     }}
                   />
+
+                  {/* Wilson CI band (aproximace) */}
+                  <Area type="monotone" dataKey="ciLower" stackId="ci" stroke="none" fill="rgba(0,0,0,0)" isAnimationActive={false} />
+                  <Area
+                    type="monotone"
+                    dataKey="ciBand"
+                    stackId="ci"
+                    stroke="none"
+                    fill="rgba(251,191,36,0.10)"
+                    isAnimationActive
+                    animationDuration={700}
+                  />
+
+                  {/* Expected křivka */}
                   <Line
                     type="monotone"
                     dataKey="expected"
@@ -786,21 +845,42 @@ export default function PlayerProfileModalContent({
                     isAnimationActive
                     animationDuration={900}
                   />
+
+                  {/* Empirická winrate (všechny buckety) – styl podle n */}
                   <Line
                     type="monotone"
-                    dataKey="empirical"
+                    dataKey="empiricalStrong"
                     stroke="rgba(251,191,36,0.95)"
                     dot={{ r: 3 }}
                     connectNulls={false}
                     isAnimationActive
                     animationDuration={900}
                   />
-                </LineChart>
+                  <Line
+                    type="monotone"
+                    dataKey="empiricalMid"
+                    stroke="rgba(251,191,36,0.65)"
+                    dot={{ r: 3 }}
+                    connectNulls={false}
+                    isAnimationActive
+                    animationDuration={900}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="empiricalLow"
+                    stroke="rgba(251,191,36,0.30)"
+                    strokeDasharray="4 4"
+                    dot={{ r: 3 }}
+                    connectNulls={false}
+                    isAnimationActive
+                    animationDuration={900}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </div>
           <div className="mt-2 text-xs text-slate-500">
-            Buckety: −500..+500 (step 50). Empirické body se zobrazují jen pro buckety s dostatečným počtem zápasů. Expected: 1 / (1 + 10^(−Δ/400)).
+            Buckety: −500..+500 (step 50). Empirická křivka zobrazuje všechny buckety; spolehlivost naznačuje styl (n≥30 / 10–29 / <10) a jemný CI pás. Expected: 1 / (1 + 10^(−Δ/400)).
           </div>
         </div>
     </div>
