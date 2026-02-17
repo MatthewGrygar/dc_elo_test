@@ -263,7 +263,11 @@ export default function PlayerProfileModalContent({
     const minX = -500
     const maxX = 500
     const step = 50
-    const minMatches = 30
+    // Spec recommends >=30 matches per bucket for statistical validity.
+    // On a single-player profile that can be too strict (you'd often see no empirical points).
+    // We adapt the threshold so the chart always shows something, while still preferring 30.
+    const total = filteredEnriched.length
+    const minMatches = total >= 300 ? 30 : total >= 120 ? 15 : total >= 60 ? 10 : 5
 
     type BucketAgg = { from: number; to: number; center: number; n: number; sum: number }
     const buckets: BucketAgg[] = []
@@ -796,7 +800,7 @@ export default function PlayerProfileModalContent({
             )}
           </div>
           <div className="mt-2 text-xs text-slate-500">
-            Buckety: −500..+500 (step 50). Zobrazují se jen buckety s ≥ 30 zápasy. Expected: 1 / (1 + 10^(−Δ/400)).
+            Buckety: −500..+500 (step 50). Empirické body se zobrazují jen pro buckety s dostatečným počtem zápasů. Expected: 1 / (1 + 10^(−Δ/400)).
           </div>
         </div>
     </div>
