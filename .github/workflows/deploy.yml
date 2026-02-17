@@ -25,10 +25,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          # NOTE: We intentionally do not enable dependency caching here because
+          # GitHub Actions' npm cache expects a lockfile (package-lock.json, etc.).
+          # This repo is lockfile-free by design, so enabling cache would fail the build.
 
       - name: Install
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
