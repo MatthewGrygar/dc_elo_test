@@ -6,7 +6,6 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  AreaChart,
   Area,
   Line,
   ComposedChart,
@@ -53,6 +52,29 @@ function parseDelta(s: string) {
   return Number.isFinite(v) ? v : 0
 }
 
+function parseWinrateText(winrateText: string) {
+  const s = (winrateText || '').toString().trim()
+  if (!s) return Number.NaN
+  if (s.includes('%')) {
+    const n = Number(s.replace('%', '').trim())
+    return Number.isFinite(n) ? n : Number.NaN
+  }
+  const n = Number(s)
+  return Number.isFinite(n) ? n : Number.NaN
+}
+
+type Period = 'ALL' | '30D' | '90D' | '180D' | '365D' | 'YTD'
+
+function periodCutoff(p: Period) {
+  const now = new Date()
+  if (p === 'ALL') return null
+  if (p === 'YTD') return new Date(now.getFullYear(), 0, 1)
+  const days = p === '30D' ? 30 : p === '90D' ? 90 : p === '180D' ? 180 : 365
+  const d = new Date(now)
+  d.setDate(d.getDate() - days)
+  return d
+}
+
 export default function PlayerProfileModalContent({
   player,
   mode,
@@ -87,25 +109,45 @@ export default function PlayerProfileModalContent({
   }, [playerCards])
 
   const [tournamentFilter, setTournamentFilter] = useState('ALL')
+  const [period, setPeriod] = useState<Period>('ALL')
 
   const filteredCards = useMemo(() => {
-    if (tournamentFilter === 'ALL') return playerCards
-    return playerCards.filter((c) => c.tournament === tournamentFilter)
-  }, [playerCards, tournamentFilter])
+    let list = playerCards
+    if (tournamentFilter !== 'ALL') list = list.filter((c) => c.tournament === tournamentFilter)
+    const cutoff = periodCutoff(period)
+    if (cutoff) {
+      list = list.filter((c) => {
+        const d = new Date(c.date)
+        return !Number.isNaN(d.getTime()) && d >= cutoff
+      })
+    }
+    return list
+  }, [playerCards, tournamentFilter, period])
 
   const chartData = useMemo(() => {
     return filteredCards
       .filter((c) => Number.isFinite(c.matchId) && Number.isFinite(c.elo))
-      .map((c) => ({
-        x: c.matchId,
-        label: `${fmtDate(c.date)} • ${c.tournament || ''}`.trim(),
-        elo: c.elo,
-        delta: parseDelta(c.delta),
-        opponent: c.opponent,
-        result: c.result,
-        tournament: c.tournament,
-      }))
+      .map((c) => {
+        const d = new Date(c.date)
+        const time = Number.isNaN(d.getTime()) ? c.matchId : d.getTime()
+        return {
+          x: time,
+          label: `${fmtDate(c.date)} • ${c.tournament || ''}`.trim(),
+          elo: c.elo,
+          delta: parseDelta(c.delta),
+          opponent: c.opponent,
+          result: c.result,
+          tournament: c.tournament,
+          date: c.date,
+        }
+      })
+      .sort((a, b) => a.x - b.x)
   }, [filteredCards])
+
+  const winrateNum = useMemo(() => {
+    const n = parseWinrateText(player.winrate)
+    return Number.isFinite(n) ? n : null
+  }, [player.winrate])
 
   const loading = cards.isLoading || summary.isLoading
 
@@ -139,18 +181,41 @@ export default function PlayerProfileModalContent({
       </div>
 
       {/* Summary */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">{t('profile_rating') || 'Aktuální rating'}</div>
+          <div className="text-xs text-slate-400">Rating</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.rating}</div>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">{t('profile_peak') || 'Peak'}</div>
+          <div className="text-xs text-slate-400">Peak</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.peak}</div>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-xs text-slate-400">{t('profile_avg_opp') || 'Prům. soupeř'}</div>
+          <div className="text-xs text-slate-400">Games</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{player.games}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Winrate</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{winrateNum !== null ? `${winrateNum}%` : player.winrate || '—'}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">W / L / D</div>
+          <div className="mt-1 text-2xl font-semibold text-white">
+            {player.win} / {player.loss} / {player.draw}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Avg opponent</div>
           <div className="mt-1 text-2xl font-semibold text-white">{s ? Math.round(s.avgOpp) : '—'}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Longest win streak</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{s ? s.winStreak : '—'}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">Longest loss streak</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{s ? s.lossStreak : '—'}</div>
         </div>
       </div>
 
@@ -170,6 +235,22 @@ export default function PlayerProfileModalContent({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-2 py-1.5">
+          <span className="px-2 text-sm text-slate-400">Období</span>
+          <Segmented
+            value={period}
+            onChange={(v) => setPeriod(v as Period)}
+            options={[
+              { value: 'ALL', label: 'All' },
+              { value: '30D', label: '30d' },
+              { value: '90D', label: '90d' },
+              { value: '180D', label: '180d' },
+              { value: '365D', label: '1y' },
+              { value: 'YTD', label: 'YTD' },
+            ]}
+          />
         </div>
 
         <a
@@ -208,6 +289,10 @@ export default function PlayerProfileModalContent({
                   tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
+                  tickFormatter={(v) => {
+                    const d = new Date(Number(v))
+                    return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleDateString(undefined, { month: '2-digit', day: '2-digit' })
+                  }}
                 />
                 <YAxis
                   tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }}
