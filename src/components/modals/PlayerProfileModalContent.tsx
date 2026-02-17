@@ -1,13 +1,57 @@
+
 import { useMemo, useState } from 'react'
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
+import {
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  AreaChart,
+  Area,
+  Line,
+  ComposedChart,
+  Bar,
+  Brush,
+} from 'recharts'
 import { ExternalLink, Filter, X } from 'lucide-react'
 import { useI18n } from '../../features/i18n/i18n'
-import {
-  usePlayerCards,
-  usePlayerSummary,
-  type PlayerCard,
-  type StandingsRow,
-} from '../../features/elo/hooks'
+import { usePlayerCards, usePlayerSummary, type PlayerCard, type StandingsRow } from '../../features/elo/hooks'
+import Segmented from '../ui/Segmented'
+import Skeleton from '../ui/Skeleton'
+
+function fmtDate(s: string) {
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return s
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+function GlassTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  const p0 = payload.find((p: any) => p.dataKey === 'elo') || payload[0]
+  const p1 = payload.find((p: any) => p.dataKey === 'delta')
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
+      <div className="text-slate-200 font-semibold">{label}</div>
+      <div className="mt-1 space-y-1 text-slate-300">
+        <div>
+          <span className="text-slate-400 mr-2">Rating</span>
+          <span className="font-semibold text-slate-100">{p0?.value}</span>
+        </div>
+        {p1 ? (
+          <div>
+            <span className="text-slate-400 mr-2">Δ</span>
+            <span className="font-semibold text-slate-100">{p1.value}</span>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function parseDelta(s: string) {
+  const v = Number(String(s ?? '').replace(',', '.'))
+  return Number.isFinite(v) ? v : 0
+}
 
 export default function PlayerProfileModalContent({
   player,
@@ -34,215 +78,199 @@ export default function PlayerProfileModalContent({
     return all.find((x) => x.player.trim() === player.player.trim()) || null
   }, [summary.data, player.player])
 
-  const chartData = useMemo(() => {
-    return playerCards
-      .filter((c) => Number.isFinite(c.matchId) && Number.isFinite(c.elo))
-      .map((c) => ({ matchId: c.matchId, elo: c.elo }))
-  }, [playerCards])
-
   const tournaments = useMemo(() => {
     const set = new Set<string>()
     for (const c of playerCards) {
       if (c.tournament) set.add(c.tournament)
     }
-    return Array.from(set).sort()
+    return ['ALL', ...Array.from(set).sort((a, b) => a.localeCompare(b))]
   }, [playerCards])
 
-  const [tFilter, setTFilter] = useState<string>('')
+  const [tournamentFilter, setTournamentFilter] = useState('ALL')
 
   const filteredCards = useMemo(() => {
-    if (!tFilter) return playerCards
-    return playerCards.filter((c) => c.tournament === tFilter)
-  }, [playerCards, tFilter])
+    if (tournamentFilter === 'ALL') return playerCards
+    return playerCards.filter((c) => c.tournament === tournamentFilter)
+  }, [playerCards, tournamentFilter])
+
+  const chartData = useMemo(() => {
+    return filteredCards
+      .filter((c) => Number.isFinite(c.matchId) && Number.isFinite(c.elo))
+      .map((c) => ({
+        x: c.matchId,
+        label: `${fmtDate(c.date)} • ${c.tournament || ''}`.trim(),
+        elo: c.elo,
+        delta: parseDelta(c.delta),
+        opponent: c.opponent,
+        result: c.result,
+        tournament: c.tournament,
+      }))
+  }, [filteredCards])
+
+  const loading = cards.isLoading || summary.isLoading
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 lg:flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-indigo-500/15 px-2.5 py-1 text-xs font-semibold text-indigo-200">
-              {localMode === 'dcpr' ? 'DCPR' : 'ELO'}
-            </span>
-            <span className="text-sm text-slate-300">#{player.rank}</span>
-          </div>
-
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Stat label={t('th_rating')} value={Number.isFinite(player.rating) ? player.rating.toFixed(0) : '—'} />
-            <Stat label={t('th_peak')} value={Number.isFinite(player.peak) ? player.peak.toFixed(0) : '—'} />
-            <Stat label={t('th_games')} value={Number.isFinite(player.games) ? player.games.toFixed(0) : '—'} />
-            <Stat label={t('th_winrate')} value={player.winrate || '—'} />
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <Chip label={t('th_win')} value={Number.isFinite(player.win) ? player.win.toFixed(0) : '—'} />
-            <Chip label={t('th_loss')} value={Number.isFinite(player.loss) ? player.loss.toFixed(0) : '—'} />
-            <Chip label={t('th_draw')} value={Number.isFinite(player.draw) ? player.draw.toFixed(0) : '—'} />
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              className={
-                localMode === 'elo'
-                  ? 'rounded-2xl bg-indigo-500 px-3 py-2 text-sm font-semibold text-white'
-                  : 'rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10'
-              }
-              onClick={() => setLocalMode('elo')}
-              type="button"
-            >
-              ELO
-            </button>
-            <button
-              className={
-                localMode === 'dcpr'
-                  ? 'rounded-2xl bg-indigo-500 px-3 py-2 text-sm font-semibold text-white'
-                  : 'rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10'
-              }
-              onClick={() => setLocalMode('dcpr')}
-              type="button"
-            >
-              DCPR
-            </button>
-
-            <button
-              className="ml-auto inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10"
-              onClick={onClose}
-              type="button"
-            >
-              <X className="h-4 w-4" />
-              {t('close')}
-            </button>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <div className="text-2xl font-semibold tracking-tight text-white">{player.player}</div>
+          <div className="text-sm text-slate-400">
+            {t('profile_sub') || 'Detail hráče'} • <span className="text-slate-200 font-semibold">{localMode.toUpperCase()}</span>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 lg:w-[360px]">
-          <div className="text-sm font-semibold">{t('player_overview')}</div>
-          <div className="mt-3 space-y-2 text-sm text-slate-300">
-            <Row label="Avg opp" value={s && Number.isFinite(s.avgOpp) ? s.avgOpp.toFixed(0) : '—'} />
-            <Row label="Win streak" value={s && Number.isFinite(s.winStreak) ? s.winStreak.toFixed(0) : '—'} />
-            <Row label="Loss streak" value={s && Number.isFinite(s.lossStreak) ? s.lossStreak.toFixed(0) : '—'} />
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/60 p-3 text-xs text-slate-400">
-            Tip: filtrování turnajů + graf vývoje jsou generované z <span className="font-semibold">Player cards</span>
-            listu.
-          </div>
+        <div className="flex items-center gap-2">
+          <Segmented
+            value={localMode}
+            onChange={(v) => setLocalMode(v as any)}
+            options={[
+              { value: 'elo', label: 'ELO' },
+              { value: 'dcpr', label: 'DCPR' },
+            ]}
+          />
+          <button
+            onClick={onClose}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            aria-label="close"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-semibold">{t('player_chart')}</div>
-            <span className="text-xs text-slate-400">matchId → elo</span>
-          </div>
+      {/* Summary */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">{t('profile_rating') || 'Aktuální rating'}</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{player.rating}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">{t('profile_peak') || 'Peak'}</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{player.peak}</div>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-xs text-slate-400">{t('profile_avg_opp') || 'Prům. soupeř'}</div>
+          <div className="mt-1 text-2xl font-semibold text-white">{s ? Math.round(s.avgOpp) : '—'}</div>
+        </div>
+      </div>
 
-          <div className="mt-3 h-64 rounded-2xl border border-white/10 bg-slate-950/60 p-3">
-            {cards.isLoading ? (
-              <div className="grid h-full place-items-center text-sm text-slate-300">Loading…</div>
-            ) : chartData.length < 2 ? (
-              <div className="grid h-full place-items-center text-sm text-slate-300">No data</div>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
+          <Filter className="h-4 w-4 text-slate-300" />
+          <span className="text-slate-400">{t('profile_filter') || 'Turnaj:'}</span>
+          <select
+            value={tournamentFilter}
+            onChange={(e) => setTournamentFilter(e.target.value)}
+            className="bg-transparent text-slate-100 outline-none"
+          >
+            {tournaments.map((x) => (
+              <option key={x} value={x} className="bg-slate-950">
+                {x === 'ALL' ? (t('all') || 'Vše') : x}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <a
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+          href="https://docs.google.com/spreadsheets/d/1Y0kSHYcYqfT-qqiDPtnd-KhOVd5wG2QW9nyx2Y0oT3o/edit"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <ExternalLink className="h-4 w-4" />
+          {t('open_sheet') || 'Otevřít sheet'}
+        </a>
+      </div>
+
+      {/* Chart */}
+      <div className="rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-white">{t('profile_chart') || 'Vývoj ratingu'}</div>
+          <div className="text-xs text-slate-400">{chartData.length ? `${chartData.length} zápasů` : '—'}</div>
+        </div>
+
+        <div className="mt-4 h-72">
+          {loading ? (
+            <Skeleton className="h-full w-full rounded-2xl" />
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="ratingFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgb(99 102 241 / 0.50)" />
+                    <stop offset="100%" stopColor="rgb(99 102 241 / 0)" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis
+                  dataKey="x"
+                  tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={40}
+                />
+                <Tooltip content={<GlassTooltip />} />
+                <Area type="monotone" dataKey="elo" stroke="rgba(129,140,248,0.9)" fill="url(#ratingFill)" isAnimationActive animationDuration={900} />
+                <Line type="monotone" dataKey="elo" stroke="rgba(224,231,255,0.85)" dot={false} isAnimationActive animationDuration={900} />
+                <Bar dataKey="delta" barSize={10} fill="rgba(34,211,238,0.35)" isAnimationActive animationDuration={900} />
+                <Brush dataKey="x" height={18} stroke="rgba(99,102,241,0.9)" travellerWidth={10} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="mt-3 text-xs text-slate-400">
+          {t('profile_chart_hint') || 'Tip: přetáhni spodní lištu pro zoom do části sezóny.'}
+        </div>
+      </div>
+
+      {/* Matches */}
+      <div className="rounded-3xl border border-white/10 bg-slate-950/40 p-5 shadow-soft">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-white">{t('profile_matches') || 'Zápasy'}</div>
+          <div className="text-xs text-slate-400">{tournamentFilter === 'ALL' ? (t('all') || 'Vše') : tournamentFilter}</div>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+          <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200">
+            <div className="col-span-2">{t('date') || 'Datum'}</div>
+            <div className="col-span-3">{t('tournament') || 'Turnaj'}</div>
+            <div className="col-span-3">{t('opponent') || 'Soupeř'}</div>
+            <div className="col-span-2 text-right">{t('result') || 'Výsledek'}</div>
+            <div className="col-span-2 text-right">Δ</div>
+          </div>
+          <div className="max-h-72 overflow-auto divide-y divide-white/5">
+            {loading ? (
+              <div className="p-3 space-y-2">
+                {[...Array(8)].map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : filteredCards.length ? (
+              filteredCards
+                .slice()
+                .reverse()
+                .map((c: PlayerCard) => (
+                  <div key={c.matchId} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
+                    <div className="col-span-2 text-slate-400">{fmtDate(c.date)}</div>
+                    <div className="col-span-3 font-semibold">{c.tournament || '—'}</div>
+                    <div className="col-span-3">{c.opponent}</div>
+                    <div className="col-span-2 text-right">{c.result}</div>
+                    <div className="col-span-2 text-right text-slate-300">{c.delta}</div>
+                  </div>
+                ))
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-                  <XAxis dataKey="matchId" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} domain={['auto', 'auto']} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="elo" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="px-3 py-6 text-sm text-slate-400">{t('no_data') || 'Žádná data.'}</div>
             )}
           </div>
         </div>
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm font-semibold">{t('player_matches')}</div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-slate-400" />
-              <select
-                className="rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2 text-sm"
-                value={tFilter}
-                onChange={(e) => setTFilter(e.target.value)}
-              >
-                <option value="">All tournaments</option>
-                {tournaments.map((x) => (
-                  <option value={x} key={x}>
-                    {x}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-3 overflow-hidden rounded-2xl border border-white/10">
-            <div className="max-h-[20rem] overflow-auto">
-              {cards.isLoading ? (
-                <div className="p-4 text-sm text-slate-300">Loading…</div>
-              ) : !filteredCards.length ? (
-                <div className="p-4 text-sm text-slate-300">No matches.</div>
-              ) : (
-                <ul className="divide-y divide-white/10">
-                  {filteredCards.slice().reverse().slice(0, 120).map((c) => (
-                    <li key={`${c.matchId}-${c.opponent}-${c.date}`} className="p-3 hover:bg-white/5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold">
-                            vs {c.opponent || '—'} <span className="text-slate-400">•</span> {c.result || '—'}
-                          </div>
-                          <div className="mt-0.5 text-xs text-slate-400">
-                            {c.date || '—'} • {c.tournament || '—'}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold tabular-nums">{Number.isFinite(c.elo) ? c.elo.toFixed(0) : '—'}</div>
-                          <div className="text-xs text-slate-400 tabular-nums">{c.delta || ''}</div>
-                        </div>
-                      </div>
-                      {c.tournamentDetail ? (
-                        <a
-                          className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-indigo-200 hover:text-indigo-100"
-                          href={c.tournamentDetail}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Details <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-3">
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</div>
-      <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
-    </div>
-  )
-}
-
-function Chip({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2">
-      <div className="text-xs text-slate-400">{label}</div>
-      <div className="text-sm font-semibold tabular-nums">{value}</div>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="text-slate-400">{label}</div>
-      <div className="font-semibold tabular-nums text-slate-100">{value}</div>
     </div>
   )
 }

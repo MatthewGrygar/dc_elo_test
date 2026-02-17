@@ -25,3 +25,9 @@ V nastavení repozitáře nastav:
 
 ## Routing
 Používáme `HashRouter` (funguje spolehlivě na GitHub Pages bez server-side rewrites).
+
+
+## Co je nové ve v2.1
+- PWA (offline cache + install)
+- Modernější landing + statistiky + rozložení ratingu
+- Vylepšený profil hráče (zoom/brush + delta bar chart)

@@ -1,15 +1,24 @@
-import { Outlet, useNavigate, useParams } from 'react-router-dom'
+
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, Menu, MoonStar, Sun, Globe, Sparkles } from 'lucide-react'
+import { ChevronDown, Menu, MoonStar, Sun, Globe, Sparkles, LayoutGrid, BarChart3 } from 'lucide-react'
 import { ModalProvider, useModal } from './Modal'
 import { useI18n, langToSegment, segmentToLang } from '../features/i18n/i18n'
 import SupportModalContent from './modals/SupportModalContent'
 import UpdatesModalContent from './modals/UpdatesModalContent'
 import SimpleContentModal from './modals/SimpleContentModal'
+import clsx from 'clsx'
+
+function scrollToId(id: string) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 function Header() {
   const { seg } = useParams()
+  const loc = useLocation()
   const nav = useNavigate()
   const { lang, t, setLang } = useI18n()
   const { openModal } = useModal()
@@ -54,184 +63,218 @@ function Header() {
               className="inline-flex items-center justify-center rounded-2xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-soft hover:bg-indigo-400"
               href="https://docs.google.com/forms/d/e/1FAIpQLSfwFbnvW9SnOvGZ3KGhk4mHx61GIrWdQBSIp8vGovC1xr9wDg/viewform?usp=dialog"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="noreferrer"
             >
-              {t('anon_modal_btn')}
+              {t('anon_modal_cta')}
             </a>
           </div>
         </div>
       ),
+      size: 'md',
     })
   }
 
-  return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <img
-            src="./assets/images/logos/logo.png"
-            alt="DC ELO"
-            className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 p-1"
-          />
-          <div className="hidden sm:block">
-            <div className="flex items-center gap-2">
-              <div className="text-base font-semibold tracking-tight">{t('site_title')}</div>
-              <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs font-semibold text-indigo-200">
-                v2
-              </span>
-            </div>
-            <div className="text-xs text-slate-300">{t('project_desc')}</div>
-          </div>
-        </div>
+  const openUpdates = () => {
+    openModal({ title: t('updates_title'), content: <UpdatesModalContent />, size: 'md' })
+  }
 
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            className="hidden sm:inline-flex items-center gap-2 rounded-2xl bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
-            onClick={() => openModal({ title: t('support_modal_title'), content: <SupportModalContent /> })}
-          >
+  const openSupport = () => {
+    openModal({ title: t('support_title'), content: <SupportModalContent />, size: 'md' })
+  }
+
+  const navItems = [
+    { id: 'leaderboard', label: t('nav_leaderboard') || 'Žebříček', icon: LayoutGrid },
+    { id: 'distribution', label: t('nav_stats') || 'Statistiky', icon: BarChart3 },
+  ]
+
+  const isHome = useMemo(() => !loc.pathname.includes('/player/'), [loc.pathname])
+
+  const goSection = (id: string) => {
+    setMenuOpen(false)
+    if (!isHome) nav(`/${safeSeg || 'cz'}`)
+    setTimeout(() => scrollToId(id), 0)
+  }
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-white/5 bg-slate-950/60 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <button
+          onClick={() => nav(`/${safeSeg || 'cz'}`)}
+          className="group inline-flex items-center gap-2 text-left"
+        >
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-200 ring-1 ring-white/10">
             <Sparkles className="h-4 w-4" />
-            {t('support')}
+          </span>
+          <div>
+            <div className="text-sm font-semibold text-white leading-tight">DC ELO</div>
+            <div className="text-[11px] text-slate-400 leading-tight">{t('header_sub') || 'moderní žebříček'}</div>
+          </div>
+        </button>
+
+        <nav className="hidden items-center gap-1 md:flex">
+          {navItems.map((it) => (
+            <button
+              key={it.id}
+              onClick={() => goSection(it.id)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/0 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/5"
+            >
+              <it.icon className="h-4 w-4 text-slate-300" />
+              {it.label}
+            </button>
+          ))}
+          <button
+            onClick={openUpdates}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/0 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/5"
+          >
+            {t('updates_button')}
+          </button>
+          <button
+            onClick={openSupport}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/0 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/5"
+          >
+            {t('support_button')}
+          </button>
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            aria-label="theme"
+          >
+            {theme === 'dark' ? <MoonStar className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
 
           <div className="relative">
             <button
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
-              onClick={() => setLangOpen((v) => !v)}
+              onClick={() => setLangOpen((s) => !s)}
+              className="inline-flex h-10 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm font-semibold text-slate-200 hover:bg-white/10"
+              aria-label="language"
             >
               <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">{safeSeg?.toUpperCase() ?? '—'}</span>
-              <ChevronDown className="h-4 w-4" />
+              <span className="hidden sm:inline">{lang.toUpperCase()}</span>
+              <ChevronDown className="h-4 w-4 opacity-70" />
             </button>
 
             <AnimatePresence>
-              {langOpen && (
+              {langOpen ? (
                 <motion.div
-                  className="absolute right-0 mt-2 w-40 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-soft"
-                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.98 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  className="absolute right-0 mt-2 w-40 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/90 shadow-soft backdrop-blur"
                 >
-                  <button className="w-full px-3 py-2 text-left text-sm hover:bg-white/5" onClick={() => changeLang('cs')}>
-                    🇨🇿 Čeština
-                  </button>
-                  <button className="w-full px-3 py-2 text-left text-sm hover:bg-white/5" onClick={() => changeLang('en')}>
-                    🇬🇧 English
-                  </button>
-                  <button className="w-full px-3 py-2 text-left text-sm hover:bg-white/5" onClick={() => changeLang('fr')}>
-                    🇫🇷 Français
-                  </button>
+                  {(['cs', 'en', 'fr'] as const).map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => changeLang(l)}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-white/5"
+                    >
+                      {l.toUpperCase()}
+                    </button>
+                  ))}
                 </motion.div>
-              )}
+              ) : null}
             </AnimatePresence>
           </div>
 
           <button
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title={theme === 'dark' ? t('theme_light') : t('theme_dark')}
+            onClick={() => setMenuOpen((s) => !s)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:hidden"
+            aria-label="menu"
           >
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <MoonStar className="h-4 w-4" />}
-            <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            <Menu className="h-4 w-4" />
           </button>
+        </div>
+      </div>
 
-          <div className="relative">
-            <button
-              className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 p-2 text-slate-100 hover:bg-white/10"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label={t('menu')}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-soft"
-                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.98 }}
-                >
+      <AnimatePresence>
+        {menuOpen ? (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden"
+          >
+            <div className="mx-auto max-w-6xl px-4 pb-4">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
+                <div className="grid gap-2">
+                  {navItems.map((it) => (
+                    <button
+                      key={it.id}
+                      onClick={() => goSection(it.id)}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/30 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/5"
+                    >
+                      <it.icon className="h-4 w-4 text-slate-300" />
+                      {it.label}
+                    </button>
+                  ))}
                   <button
-                    className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-white/5"
                     onClick={() => {
                       setMenuOpen(false)
-                      openModal({ title: t('updates_title'), content: <UpdatesModalContent /> })
+                      openUpdates()
                     }}
+                    className="rounded-2xl border border-white/10 bg-slate-950/30 px-3 py-2 text-left text-sm font-semibold text-slate-200 hover:bg-white/5"
                   >
-                    {t('menu_news')}
+                    {t('updates_button')}
                   </button>
                   <button
-                    className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-white/5"
                     onClick={() => {
                       setMenuOpen(false)
-                      openModal({
-                        title: t('menu_management'),
-                        content: <SimpleContentModal title={t('menu_management')} />, // placeholder
-                      })
+                      openSupport()
                     }}
+                    className="rounded-2xl border border-white/10 bg-slate-950/30 px-3 py-2 text-left text-sm font-semibold text-slate-200 hover:bg-white/5"
                   >
-                    {t('menu_management')}
+                    {t('support_button')}
                   </button>
                   <button
-                    className="w-full px-4 py-3 text-left text-sm font-semibold hover:bg-white/5"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      openModal({
-                        title: t('menu_articles'),
-                        content: <SimpleContentModal title={t('menu_articles')} />, // placeholder
-                      })
-                    }}
-                  >
-                    {t('menu_articles')}
-                  </button>
-                  <div className="border-t border-white/10" />
-                  <button
-                    className="w-full px-4 py-3 text-left text-sm hover:bg-white/5"
                     onClick={() => {
                       setMenuOpen(false)
                       openAnon()
                     }}
+                    className="rounded-2xl border border-white/10 bg-slate-950/30 px-3 py-2 text-left text-sm font-semibold text-slate-200 hover:bg-white/5"
                   >
-                    {t('anon_modal_title')}
+                    {t('anon_button')}
                   </button>
-                  <button
-                    className="w-full px-4 py-3 text-left text-sm hover:bg-white/5"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      openModal({ title: t('support_modal_title'), content: <SupportModalContent /> })
-                    }}
-                  >
-                    {t('support')}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </header>
+  )
+}
+
+function Footer() {
+  const { t } = useI18n()
+  return (
+    <footer className="mt-10 border-t border-white/5 py-10">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="text-sm text-slate-300 leading-relaxed">
+            <div className="font-semibold text-slate-100">DC ELO</div>
+            <div className="text-slate-400">{t('footer_tag') || 'Moderní přehled ratingu a výsledků.'}</div>
+          </div>
+          <div className="text-sm text-slate-400 sm:text-right">
+            <div>{t('footer_note') || 'Data jsou načítána z Google Sheets (CSV).'}</div>
+            <div className="mt-1 text-xs">v2 • PWA • React + TS</div>
           </div>
         </div>
       </div>
-    </header>
+    </footer>
   )
 }
 
 export default function Shell() {
   return (
     <ModalProvider>
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute inset-0 bg-grid opacity-40" />
-          <div className="absolute -top-24 left-1/2 h-72 w-[44rem] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
-          <div className="absolute -bottom-24 left-1/2 h-72 w-[44rem] -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl" />
-        </div>
+      <div className={clsx('min-h-dvh bg-slate-950 text-slate-100')}>
         <Header />
-        <main className="mx-auto max-w-6xl px-4 py-6">
+        <main className="mx-auto max-w-6xl px-4 py-8">
           <Outlet />
         </main>
-        <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 text-xs text-slate-400">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <span>DC ELO • modern UI build</span>
-            <span className="text-slate-500">Data source: Google Sheets</span>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </ModalProvider>
   )
