@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useMemo } from 'react'
-import { I18nProvider, detectPreferredLang, langToSegment, segmentToLang } from './features/i18n/i18n'
+import { useEffect } from 'react'
+import { I18nProvider } from './features/i18n/i18n'
 import Shell from './components/Shell'
 import HomePage from './pages/HomePage'
 
@@ -30,13 +30,7 @@ function RedirectRestorer() {
   return null
 }
 
-function AutoLangRedirect() {
-  const seg = useMemo(() => langToSegment(detectPreferredLang()), [])
-  return <Navigate to={`/${seg}`} replace />
-}
-
 export default function App() {
-  // Theme boot: keep it super lightweight.
   useEffect(() => {
     const stored = localStorage.getItem('dc_elo_theme')
     const theme = stored === 'light' ? 'light' : 'dark'
@@ -48,20 +42,16 @@ export default function App() {
     <I18nProvider>
       <RedirectRestorer />
       <Routes>
-        <Route path="/" element={<AutoLangRedirect />} />
-        <Route path="/:seg" element={<Shell />}
-        >
+        <Route path="/" element={<Shell />}>
           <Route index element={<HomePage />} />
           <Route path="player/:slug" element={<HomePage />} />
         </Route>
+
+        {/* Back-compat: old language-segment URLs (/#/cz, /cz/player/...) */}
+        <Route path="/:seg/*" element={<Navigate to="/" replace />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </I18nProvider>
   )
-}
-
-// Small safety check for invalid segments is handled inside I18nProvider/Shell.
-export function normalizeSeg(seg: string | undefined) {
-  const lang = segmentToLang(seg || '')
-  return lang ? (seg as 'cz' | 'eng' | 'fr') : null
 }

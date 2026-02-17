@@ -118,10 +118,10 @@ function GlassTooltip({ active, payload, label }: any) {
 }
 
 export default function HomePage() {
-  const { seg, slug } = useParams()
+  const { slug } = useParams()
   const nav = useNavigate()
   const { t } = useI18n()
-  const { openModal } = useModal()
+  const { openModal, closeModal } = useModal()
 
   const [mode, setMode] = useState<'elo' | 'dcpr'>('elo')
   const [query, setQuery] = useState('')
@@ -135,6 +135,31 @@ export default function HomePage() {
   const standings = mode === 'elo' ? standingsElo : standingsDcpr
   const lastTournament = useLastTournamentLabel()
   const cardsMode = usePlayerCards(mode)
+
+
+  // Open player profile modal when route contains /player/:slug
+  useEffect(() => {
+    if (!slug) return
+    const all = [...(standingsElo.data ?? []), ...(standingsDcpr.data ?? [])]
+    const p = all.find((r) => r.slug === slug) || (standings.data ?? []).find((r) => r.slug === slug)
+    if (!p) return
+    openModal({
+      title: p.player,
+      fullscreen: true,
+      content: (
+        <PlayerProfileModalContent
+          player={p}
+          mode={mode}
+          onClose={() => {
+            closeModal()
+            nav('/')
+          }}
+        />
+      ),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, rows.length, mode])
+
 
 
   const rows = standings.data ?? []
@@ -373,6 +398,77 @@ export default function HomePage() {
       })
   }, [cardsMode.data])
 
+
+  const interestingMatches = useMemo(() => {
+    const items = cardsMode.data ?? []
+    const parse = (s: string) => {
+      const v = (s || '').trim()
+      if (!v) return null
+      if (/\d{4}-\d{2}-\d{2}/.test(v)) {
+        const d = new Date(v)
+        return isNaN(d.getTime()) ? null : d
+      }
+      const m = v.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/)
+      if (m) {
+        const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]))
+        return isNaN(d.getTime()) ? null : d
+      }
+      const d = new Date(v)
+      return isNaN(d.getTime()) ? null : d
+    }
+
+    // Deduplicate (the sheet typically contains one row per player per match).
+    type M = { key: string; date: Date; dateStr: string; tournament: string; a: string; b: string; eloA: number; eloB: number }
+    const map = new Map<string, Partial<M> & { aSide?: { p: string; elo: number }; bSide?: { p: string; elo: number }; meta?: { date: Date; dateStr: string; tournament: string } }>()
+
+    // Track latest date to define "recent".
+    let maxTs = 0
+
+    for (const it of items) {
+      const d = parse(it.date)
+      if (!d) continue
+      const ts = d.getTime()
+      if (ts > maxTs) maxTs = ts
+
+      const p1 = it.player.trim()
+      const p2 = it.opponent.trim()
+      if (!p1 || !p2) continue
+
+      const [a, b] = [p1, p2].sort((x, y) => x.localeCompare(y))
+      const key = `${it.matchId}::${it.tournament}::${it.date}::${a}::${b}`
+
+      if (!map.has(key)) map.set(key, {})
+      const entry = map.get(key)!
+      entry.meta = { date: d, dateStr: it.date, tournament: it.tournament }
+      if (p1 === a) entry.aSide = { p: p1, elo: it.elo }
+      else entry.bSide = { p: p1, elo: it.elo }
+    }
+
+    const all: M[] = []
+    for (const [key, e] of map.entries()) {
+      if (!e.meta || !e.aSide || !e.bSide) continue
+      all.push({
+        key,
+        date: e.meta.date,
+        dateStr: e.meta.dateStr,
+        tournament: e.meta.tournament,
+        a: e.aSide.p,
+        b: e.bSide.p,
+        eloA: e.aSide.elo,
+        eloB: e.bSide.elo,
+      })
+    }
+
+    const recentCut = maxTs ? maxTs - 1000 * 60 * 60 * 24 * 45 : 0 // last ~45 days
+    const recent = recentCut ? all.filter((m) => m.date.getTime() >= recentCut) : all
+
+    const topCombined = [...recent].sort((x, y) => (y.eloA + y.eloB) - (x.eloA + x.eloB)).slice(0, 3)
+    const topDiff = [...recent].sort((x, y) => Math.abs(y.eloA - y.eloB) - Math.abs(x.eloA - x.eloB)).slice(0, 3)
+
+    return { topCombined, topDiff }
+  }, [cardsMode.data])
+
+
   const matchTournaments = useMemo(() => {
     const set = new Set<string>()
     for (const p of matchPairs) if (p.tournament) set.add(p.tournament)
@@ -436,11 +532,38 @@ const classCuts = useMemo(() => {
   }, [rows])
 
 
-  const sparkleSeries = useMemo(() => {
-    // A small “sparkline” feel: top 12 ratings as a curve
-    const s = [...rows].sort((a, b) => a.rank - b.rank).slice(0, 12)
-    return s.map((r) => ({ name: r.player.split(' ')[0], rating: r.rating }))
-  }, [rows])
+  const monthlyActiveSeries = useMemo(() => {
+    const items = cardsMode.data ?? []
+    const parse = (s: string) => {
+      const v = (s || '').trim()
+      if (!v) return null
+      // Handles ISO, YYYY-MM-DD, and common CZ formats like DD.MM.YYYY
+      if (/\d{4}-\d{2}-\d{2}/.test(v)) {
+        const d = new Date(v)
+        return isNaN(d.getTime()) ? null : d
+      }
+      const m = v.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/)
+      if (m) {
+        const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]))
+        return isNaN(d.getTime()) ? null : d
+      }
+      const d = new Date(v)
+      return isNaN(d.getTime()) ? null : d
+    }
+
+    const map = new Map<string, Set<string>>()
+    for (const it of items) {
+      const d = parse(it.date)
+      if (!d) continue
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      if (!map.has(key)) map.set(key, new Set())
+      map.get(key)!.add(it.player)
+    }
+
+    return [...map.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, set]) => ({ month, players: set.size }))
+  }, [cardsMode.data])
 
   // Deep link: open player modal if route matches /player/:slug
   useEffect(() => {
@@ -449,15 +572,15 @@ const classCuts = useMemo(() => {
     if (!p) return
     openModal({
       title: p.player,
-      content: <PlayerProfileModalContent player={p} mode={mode} onClose={() => nav(`/${seg || 'cz'}`)} />,
+      content: <PlayerProfileModalContent player={p} mode={mode} onClose={() => nav(`/`)} />,
       size: 'xl',
-      onClose: () => nav(`/${seg || 'cz'}`),
+      onClose: () => nav(`/`),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, rows])
 
   const openPlayer = (p: StandingsRow) => {
-    nav(`/${seg || 'cz'}/player/${p.slug}`)
+    nav(`/player/${p.slug}`)
   }
 
   const loading = standings.isLoading || standingsElo.isLoading || standingsDcpr.isLoading || lastTournament.isLoading || cardsMode.isLoading
@@ -478,11 +601,11 @@ const classCuts = useMemo(() => {
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200"
             >
               <Sparkles className="h-4 w-4 text-indigo-300" />
-              <span>{t('hero_badge') || 'DC ELO Ranking'}</span>
+              <span>{t('hero_badge') || 'DC ELO'}</span>
             </motion.div>
 
             <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {t('hero_title') || 'DC ELO Ranking'}
+              {t('hero_title') || 'DC ELO'}
             </h1>
             <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">
               {t('hero_subtitle') || 'BY GRAIL SERIES'}
@@ -604,7 +727,7 @@ const classCuts = useMemo(() => {
           <div className="lg:col-span-5">
             <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white">{t('hero_chart_title') || 'Top hráči — aktuální rating'}</div>
+                <div className="text-sm font-semibold text-white">{'Aktivní hráči podle měsíce'}</div>
                 <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
               </div>
               <div className="mt-4 h-56">
@@ -612,7 +735,7 @@ const classCuts = useMemo(() => {
                   <Skeleton className="h-full w-full rounded-2xl" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={sparkleSeries} margin={{ left: 4, right: 6, top: 10, bottom: 0 }}>
+                    <AreaChart data={monthlyActiveSeries} margin={{ left: 4, right: 6, top: 10, bottom: 0 }}>
                       <defs>
                         <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="rgb(99 102 241 / 0.55)" />
@@ -620,10 +743,10 @@ const classCuts = useMemo(() => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fill: 'rgba(226,232,240,0.7)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="month" tick={{ fill: 'rgba(226,232,240,0.7)', fontSize: 12 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
                       <Tooltip content={<GlassTooltip />} />
-                      <Area type="monotone" dataKey="rating" stroke="rgba(129,140,248,0.9)" fill="url(#grad)" isAnimationActive animationDuration={900} />
+                      <Area type="monotone" dataKey="players" stroke="rgba(129,140,248,0.9)" fill="url(#grad)" isAnimationActive animationDuration={900} />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
@@ -638,33 +761,62 @@ const classCuts = useMemo(() => {
             
             <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white">Aktivita hráčů</div>
-                <div className="text-xs text-slate-400">unikátní hráči / měsíc</div>
+                <div className="text-sm font-semibold text-white">Zajímavé zápasy</div>
+                <div className="text-xs text-slate-400">poslední týdny</div>
               </div>
+
               <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
                 <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200">
-                  <div className="col-span-7">Měsíc</div>
-                  <div className="col-span-5 text-right">Hráčů</div>
+                  <div className="col-span-5">Zápas</div>
+                  <div className="col-span-3 text-right">ELO</div>
+                  <div className="col-span-4 text-right">Datum / turnaj</div>
                 </div>
-                <div className="max-h-56 overflow-auto divide-y divide-white/5">
-                  {(loading ? [] : matchStats.activityTable.slice().reverse()).map((r) => (
-                    <div key={r.month} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-                      <div className="col-span-7 text-slate-300">{r.month}</div>
-                      <div className="col-span-5 text-right font-semibold text-white">{r.players}</div>
-                    </div>
-                  ))}
-                  {loading ? (
-                    <div className="p-3 space-y-2">
-                      {[...Array(6)].map((_, i) => (
-                        <Skeleton key={i} className="h-9 w-full rounded-xl" />
-                      ))}
-                    </div>
-                  ) : null}
-                  {!loading && !matchStats.activityTable.length ? (
-                    <div className="px-3 py-6 text-sm text-slate-400">Žádná data.</div>
-                  ) : null}
+
+                {/* Nejvyšší součet ELO */}
+                <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-slate-400 bg-slate-950/40 border-t border-white/10">
+                  Nejvyšší součet ELO (oba hráči co nejvýš)
                 </div>
+                {loading ? (
+                  <div className="p-3 space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-9 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : (
+                  (interestingMatches.topCombined.length ? interestingMatches.topCombined : []).map((m) => (
+                    <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
+                      <div className="col-span-5 text-slate-300 truncate">{m.a} vs {m.b}</div>
+                      <div className="col-span-3 text-right font-semibold text-white">{Math.round(m.eloA)} / {Math.round(m.eloB)}</div>
+                      <div className="col-span-4 text-right text-slate-300 truncate">{m.dateStr} · {m.tournament || '—'}</div>
+                    </div>
+                  ))
+                )}
+
+                {/* Největší rozdíl ELO */}
+                <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-slate-400 bg-slate-950/40 border-t border-white/10">
+                  Největší rozdíl ELO (největší mismatch)
+                </div>
+                {loading ? (
+                  <div className="p-3 space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-9 w-full rounded-xl" />
+                    ))}
+                  </div>
+                ) : (
+                  (interestingMatches.topDiff.length ? interestingMatches.topDiff : []).map((m) => (
+                    <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
+                      <div className="col-span-5 text-slate-300 truncate">{m.a} vs {m.b}</div>
+                      <div className="col-span-3 text-right font-semibold text-white">{Math.round(m.eloA)} / {Math.round(m.eloB)}</div>
+                      <div className="col-span-4 text-right text-slate-300 truncate">{m.dateStr} · {m.tournament || '—'}</div>
+                    </div>
+                  ))
+                )}
               </div>
+
+              <div className="mt-3 text-xs text-slate-400 leading-relaxed">
+                Výběr je z posledních ~45 dní: nejvyšší součet ELO a největší rozdíl ELO.
+              </div>
+            </div>
             </div>
           </div>
         </div>
@@ -676,17 +828,19 @@ const classCuts = useMemo(() => {
               <div className="text-xs text-slate-400">Rychlé info ze scény</div>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 max-w-[980px] mx-auto">
             <NewsCarousel
               items={[
                 {
                   tag: 'Update',
+                  image: '/assets/images/slider/carousel_cz_1.png',
                   title: 'Vylepšené grafy a rychlejší profil hráče',
                   date: lastTournament.data || '—',
                   excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
                 },
                 {
                   tag: 'Insight',
+                  image: '/assets/images/slider/carousel_cz_2.png',
                   title: 'Jak číst ELO: upsety a rozdíly ratingu',
                   date: 'Statistika',
                   excerpt: 'Graf “Winrate podle ELO rozdílu” ukáže, kdy favorit skutečně vyhrává.',
@@ -883,7 +1037,18 @@ const classCuts = useMemo(() => {
             <div className="text-sm font-semibold text-white">{t('leaderboard_title') || 'Žebříček'}</div>
             <div className="text-xs text-slate-400">{t('leaderboard_sub') || 'Klikni na hráče pro detail.'}</div>
           </div>
-          <div className="text-xs text-slate-400">{loading ? 'načítám…' : `${filtered.length} hráčů`}</div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-slate-200">
+              <Search className="h-4 w-4 text-slate-300" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-56 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                placeholder={t('search_placeholder') || 'Hledej hráče…'}
+              />
+            </div>
+            <div className="text-xs text-slate-400">{loading ? 'načítám…' : `${filtered.length} hráčů`}</div>
+          </div>
         </div>
 
         <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">

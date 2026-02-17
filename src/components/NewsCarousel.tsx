@@ -7,6 +7,7 @@ export type NewsItem = {
   title: string
   date: string
   excerpt: string
+  image?: string
 }
 
 export default function NewsCarousel({ items }: { items: NewsItem[] }) {
@@ -52,9 +53,19 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -14 }}
             transition={{ duration: 0.35 }}
-            className="p-4"
+            className="p-0"
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="relative aspect-[11/4] w-full">
+              {current.image ? (
+                <img src={current.image} alt={current.title} className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/25 via-slate-950 to-slate-950" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" />
+            </div>
+
+            <div className="p-4">
+              <div className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-200">
                 {current.tag}
               </span>
@@ -62,6 +73,7 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
             </div>
             <div className="mt-2 text-sm font-semibold text-white leading-snug">{current.title}</div>
             <div className="mt-1 text-sm text-slate-300 leading-relaxed">{current.excerpt}</div>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

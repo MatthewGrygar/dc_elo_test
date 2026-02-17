@@ -26,10 +26,8 @@ export function detectPreferredLang(): Lang {
   return 'en'
 }
 
-function detectLangFromPath(pathname: string): Lang | null {
-  const parts = pathname.split('/').filter(Boolean)
-  const seg0 = parts[0] || ''
-  return segmentToLang(seg0)
+function detectLangFromPath(_pathname: string): Lang | null {
+  return null
 }
 
 type I18nCtx = {
@@ -57,13 +55,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, safe)
     setLangState(safe)
   }
-
-  // If the user navigates to a different language segment, sync.
-  React.useEffect(() => {
-    const next = detectLangFromPath(location.pathname)
-    if (next && next !== lang) setLangState(next)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname])
 
   const value = useMemo<I18nCtx>(() => ({
     lang,
