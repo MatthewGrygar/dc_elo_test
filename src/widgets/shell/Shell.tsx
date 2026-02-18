@@ -1,10 +1,10 @@
+import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, MoonStar, Sun } from 'lucide-react'
-import { ModalProvider } from './Modal'
-import Segmented from './ui/Segmented'
-import { EloModeProvider, useEloMode } from '../features/elo/mode'
+import Segmented from '../../shared/ui/Segmented'
+import { useEloMode } from '../../features/elo/mode'
+import { useTheme } from '../../app/theme'
 
 function scrollToId(id: string) {
   const el = document.getElementById(id)
@@ -16,17 +16,10 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function HeaderInner() {
+function Header() {
   const { mode, setMode } = useEloMode()
+  const { theme, toggle } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
-
-  const theme = (document.documentElement.dataset.theme || 'dark') as 'dark' | 'light'
-  const setTheme = (next: 'dark' | 'light') => {
-    localStorage.setItem('dc_elo_theme', next)
-    document.documentElement.classList.toggle('dark', next === 'dark')
-    document.documentElement.dataset.theme = next
-    document.documentElement.style.colorScheme = next
-  }
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-slate-950/70">
@@ -39,7 +32,7 @@ function HeaderInner() {
           <Menu className="h-5 w-5" />
         </button>
 
-        <nav className="flex items-center gap-2">
+        <nav className="hidden md:flex items-center gap-2">
           <button
             onClick={scrollToTop}
             className="px-3 py-2 rounded-xl text-sm font-semibold border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/85"
@@ -72,18 +65,10 @@ function HeaderInner() {
 
           <button
             className="p-2 rounded-xl border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={toggle}
             aria-label="Theme"
           >
             {theme === 'dark' ? <MoonStar className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-          </button>
-
-          <button
-            className="p-2 rounded-xl border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="More"
-          >
-            <Menu className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -96,9 +81,43 @@ function HeaderInner() {
             exit={{ height: 0, opacity: 0 }}
             className="md:hidden border-t border-slate-200/70 dark:border-white/10"
           >
-            <div className="px-4 py-3 text-sm text-slate-600 dark:text-white/70">
-              {/* Placeholder: menu content will be added later */}
-              Menu
+            <div className="px-4 py-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  scrollToTop()
+                  setMenuOpen(false)
+                }}
+                className="px-3 py-2 rounded-xl text-sm font-semibold border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/85"
+              >
+                Domů
+              </button>
+              <button
+                onClick={() => {
+                  scrollToId('charts')
+                  setMenuOpen(false)
+                }}
+                className="px-3 py-2 rounded-xl text-sm font-semibold border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/85"
+              >
+                Grafy
+              </button>
+              <button
+                onClick={() => {
+                  scrollToId('leaderboard')
+                  setMenuOpen(false)
+                }}
+                className="px-3 py-2 rounded-xl text-sm font-semibold border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/85"
+              >
+                Hráči
+              </button>
+              <button
+                onClick={() => {
+                  toggle()
+                  setMenuOpen(false)
+                }}
+                className="px-3 py-2 rounded-xl text-sm font-semibold border border-slate-200/70 bg-white hover:bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/85"
+              >
+                {theme === 'dark' ? 'Světlý režim' : 'Tmavý režim'}
+              </button>
             </div>
           </motion.div>
         )}
@@ -109,15 +128,11 @@ function HeaderInner() {
 
 export default function Shell() {
   return (
-    <ModalProvider>
-      <EloModeProvider>
-        <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white">
-          <HeaderInner />
-          <main className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
-            <Outlet />
-          </main>
-        </div>
-      </EloModeProvider>
-    </ModalProvider>
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white bg-grid">
+      <Header />
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+        <Outlet />
+      </main>
+    </div>
   )
 }

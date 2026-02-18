@@ -2,23 +2,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { Search, SlidersHorizontal, Trophy, TrendingUp, Users, Sparkles, ArrowRight, CalendarDays, Activity, Gauge, Zap } from 'lucide-react'
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, CartesianGrid, LineChart, Line, Legend } from 'recharts'
+import { Search, Trophy, TrendingUp, Users, Sparkles, ArrowRight, CalendarDays, Activity, Gauge, Zap } from 'lucide-react'
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
 import type { TooltipProps } from 'recharts'
-import { useI18n } from '../features/i18n/i18n'
-import { useLastTournamentLabel, useStandings, usePlayerCards, type StandingsRow, type PlayerCard } from '../features/elo/hooks'
-import { useEloMode } from '../features/elo/mode'
-import { normalizeKey } from '../lib/csv'
-import { useModal } from '../components/Modal'
-import PlayerProfileModalContent from '../components/modals/PlayerProfileModalContent'
-import Button from '../components/ui/Button'
-import Skeleton from '../components/ui/Skeleton'
-import NewsCarousel from '../components/NewsCarousel'
-import { parseOutcome } from '../lib/outcome'
-import slider1 from '../assets/slider/slider1.png'
-import slider2 from '../assets/slider/slider2.png'
-import slider3 from '../assets/slider/slider3.png'
+import { useI18n } from '../../features/i18n/i18n'
+import { useLastTournamentLabel, useStandings, usePlayerCards, type StandingsRow, type PlayerCard } from '../../features/elo/hooks'
+import { useEloMode } from '../../features/elo/mode'
+import { normalizeKey } from '../../shared/lib/csv'
+import { useModal } from '../../features/modal/Modal'
+import PlayerProfileModalContent from '../../entities/player/PlayerProfileModalContent'
+import Button from '../../shared/ui/Button'
+import Skeleton from '../../shared/ui/Skeleton'
+import NewsCarousel from '../../widgets/news/NewsCarousel'
+import { parseOutcome } from '../../shared/lib/outcome'
 
 function median(values: number[]) {
   if (!values.length) return Number.NaN
@@ -42,12 +38,6 @@ function parseWinrate(winrateText: string) {
 function parseDelta(s: string) {
   const v = Number(String(s ?? '').replace(',', '.'))
   return Number.isFinite(v) ? v : 0
-}
-
-function toDayKey(dateStr: string) {
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toISOString().slice(0, 10)
 }
 
 function toMonthKey(dateStr: string) {
@@ -80,7 +70,7 @@ function daysAgo(n: number) {
 
 function parseEloFromParen(text: string) {
   // "Name (1500)" -> 1500
-  const m = String(text ?? '').match(/\(([-+]?\d+(?:[\.,]\d+)?)\)/)
+  const m = String(text ?? '').match(/\(([-+]?\d+(?:[.,]\d+)?)\)/)
   if (!m) return Number.NaN
   const v = Number(m[1].replace(',', '.'))
   return Number.isFinite(v) ? v : Number.NaN
@@ -99,23 +89,6 @@ function buildDistribution(ratings: number[]) {
     bins[idx].count += 1
   }
   return bins
-}
-
-function quantile(sortedAsc: number[], q: number) {
-  if (!sortedAsc.length) return Number.NaN
-  const pos = (sortedAsc.length - 1) * q
-  const base = Math.floor(pos)
-  const rest = pos - base
-  if (sortedAsc[base + 1] === undefined) return sortedAsc[base]
-  return sortedAsc[base] + rest * (sortedAsc[base + 1] - sortedAsc[base])
-}
-
-function classForRating(rating: number, cut25: number, cut50: number, cut75: number): 'A' | 'B' | 'C' | 'D' {
-  if (!Number.isFinite(rating)) return 'D'
-  if (rating >= cut75) return 'A'
-  if (rating >= cut50) return 'B'
-  if (rating >= cut25) return 'C'
-  return 'D'
 }
 
 function ClassPill({ cls }: { cls: 'A' | 'B' | 'C' | 'D' }) {
@@ -181,9 +154,9 @@ function MetricFlipCard({
 function GlassTooltip({ active, payload, label }: TooltipProps<number | string, string>) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
-      <div className="text-slate-200 font-semibold">{label}</div>
-      <div className="text-slate-300">{payload[0]?.value as ReactNode}</div>
+    <div className="elev-surface px-3 py-2 text-sm">
+      <div className="text-slate-700 dark:text-slate-200 font-semibold">{label}</div>
+      <div className="text-slate-600 dark:text-slate-300">{payload[0]?.value as ReactNode}</div>
     </div>
   )
 }
@@ -686,7 +659,7 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       {/* Hero */}
-      <section className="panel relative overflow-hidden p-6 sm:p-10">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 p-6 sm:p-10 shadow-xl dark:border-white/12 dark:bg-gradient-to-b dark:from-indigo-500/15 dark:via-slate-950 dark:to-slate-950">
         <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 right-0 h-80 w-80 rounded-full bg-cyan-400/15 blur-3xl" />
 
@@ -718,26 +691,26 @@ export default function HomePage() {
           </div>
 
           {/* Slider (full-width within banner) */}
-          <div className="panel w-full overflow-hidden">
+          <div className="w-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 shadow-xl dark:border-white/12 dark:bg-slate-950/35 dark:shadow-soft">
             <NewsCarousel
               items={[
                 {
                   tag: 'Update',
-                  image: slider1,
+                  image: '/assets/images/slider/slider1.png',
                   title: 'Vylepšené grafy a rychlejší profil hráče',
                   date: lastTournament.data || '—',
                   excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
                 },
                 {
                   tag: 'Insight',
-                  image: slider2,
+                  image: '/assets/images/slider/slider2.png',
                   title: 'Kalibrace ELO: winrate vs rozdíl ratingu',
                   date: 'Validace',
                   excerpt: 'Porovnání empirické winrate a expected křivky podle ELO vzorce.',
                 },
                 {
                   tag: 'Tip',
-                  image: slider3,
+                  image: '/assets/images/slider/slider3.png',
                   title: 'Profil hráče: období, zoom a trendy',
                   date: 'Profil',
                   excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
@@ -804,15 +777,15 @@ export default function HomePage() {
         </div>
       </section>
 
-<div className="mt-6 grid gap-6 lg:grid-cols-12">
-  <div className="panel lg:col-span-7 p-5">
+	<section className="mt-6 grid gap-6 lg:grid-cols-12">
+  <div className="lg:col-span-7 rounded-3xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 p-5 shadow-soft">
     <div className="flex items-center justify-between">
       <div className="text-sm font-semibold text-white">Zajímavé zápasy</div>
       <div className="text-xs text-slate-400">posledních 30 dní • ELO + DCPR</div>
     </div>
 
-    <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-      <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
+    <div className="mt-4 elev-table">
+      <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-700 dark:text-slate-200">
         <div className="col-span-10">Zápas</div>
         <div className="col-span-2 text-right">Zdroj</div>
       </div>
@@ -828,15 +801,15 @@ export default function HomePage() {
         </div>
       ) : (
         (interestingMatches.topCombined.length ? interestingMatches.topCombined : []).map((m) => (
-          <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-            <div className="col-span-10 text-slate-200">
+          <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/5">
+            <div className="col-span-10 text-slate-700 dark:text-slate-200">
               <span className="font-semibold text-white">{m.left}</span>
-              <span className="text-slate-300">, {Math.round(m.leftElo)}</span>
-              <span className="mx-3 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-2 py-0.5 text-xs font-semibold text-slate-100">{m.score || '—'}</span>
-              <span className="text-slate-300">{Math.round(m.rightElo)}, </span>
+              <span className="text-slate-600 dark:text-slate-300">, {Math.round(m.leftElo)}</span>
+              <span className="mx-3 elev-chip text-xs">{m.score || '—'}</span>
+              <span className="text-slate-600 dark:text-slate-300">{Math.round(m.rightElo)}, </span>
               <span className="font-semibold text-white">{m.right}</span>
             </div>
-            <div className="col-span-2 text-right text-slate-300">{m.src}</div>
+            <div className="col-span-2 text-right text-slate-600 dark:text-slate-300">{m.src}</div>
           </div>
         ))
       )}
@@ -852,22 +825,22 @@ export default function HomePage() {
         </div>
       ) : (
         (interestingMatches.topDiff.length ? interestingMatches.topDiff : []).map((m) => (
-          <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-            <div className="col-span-10 text-slate-200">
+          <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/5">
+            <div className="col-span-10 text-slate-700 dark:text-slate-200">
               <span className="font-semibold text-white">{m.left}</span>
-              <span className="text-slate-300">, {Math.round(m.leftElo)}</span>
-              <span className="mx-3 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-2 py-0.5 text-xs font-semibold text-slate-100">{m.score || '—'}</span>
-              <span className="text-slate-300">{Math.round(m.rightElo)}, </span>
+              <span className="text-slate-600 dark:text-slate-300">, {Math.round(m.leftElo)}</span>
+              <span className="mx-3 elev-chip text-xs">{m.score || '—'}</span>
+              <span className="text-slate-600 dark:text-slate-300">{Math.round(m.rightElo)}, </span>
               <span className="font-semibold text-white">{m.right}</span>
             </div>
-            <div className="col-span-2 text-right text-slate-300">{m.src}</div>
+            <div className="col-span-2 text-right text-slate-600 dark:text-slate-300">{m.src}</div>
           </div>
         ))
       )}
     </div>
   </div>
 
-  <div className="panel lg:col-span-5 p-5">
+  <div className="lg:col-span-5 rounded-3xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 p-5 shadow-soft">
     <div className="text-sm font-semibold text-white">Rekordy & highlights</div>
     <div className="mt-1 text-xs text-slate-400">Rychlé zajímavosti pro aktuální režim</div>
 
@@ -885,21 +858,21 @@ export default function HomePage() {
               <div className="text-xs text-slate-400">Nejvíc her</div>
               <div className="mt-1 flex items-baseline justify-between gap-2">
                 <div className="truncate font-semibold text-slate-100">{mostGames?.player || '—'}</div>
-                <div className="text-slate-200 font-semibold">{mostGames ? mostGames.games : '—'}</div>
+                <div className="text-slate-700 dark:text-slate-200 font-semibold">{mostGames ? mostGames.games : '—'}</div>
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 p-4">
               <div className="text-xs text-slate-400">Nejlepší winrate (min. 10 her)</div>
               <div className="mt-1 flex items-baseline justify-between gap-2">
                 <div className="truncate font-semibold text-slate-100">{bestWr?.player || '—'}</div>
-                <div className="text-slate-200 font-semibold">{bestWr?.winrate || '—'}</div>
+                <div className="text-slate-700 dark:text-slate-200 font-semibold">{bestWr?.winrate || '—'}</div>
               </div>
             </div>
             <div className="rounded-2xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 p-4">
               <div className="text-xs text-slate-400">Nejvyšší rating</div>
               <div className="mt-1 flex items-baseline justify-between gap-2">
                 <div className="truncate font-semibold text-slate-100">{topRating?.player || '—'}</div>
-                <div className="text-slate-200 font-semibold">{topRating ? topRating.rating : '—'}</div>
+                <div className="text-slate-700 dark:text-slate-200 font-semibold">{topRating ? topRating.rating : '—'}</div>
               </div>
             </div>
           </>
@@ -907,11 +880,11 @@ export default function HomePage() {
       })()}
     </div>
   </div>
-	</div>
+	</section>
 
         {/* Distribution + Tips */}
       <section id="charts" className="grid gap-6 lg:grid-cols-12">
-        <div className="panel lg:col-span-12 p-6">
+        <div className="lg:col-span-12 elev-surface-solid p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-white">{mode === 'elo' ? 'Rozložení ELO' : 'Rozložení DCPR'}</div>
@@ -941,7 +914,7 @@ export default function HomePage() {
 
       {/* Extra charts */}
       <section id="stats" className="grid gap-6 lg:grid-cols-12">
-        <div className="panel lg:col-span-6 p-6">
+        <div className="lg:col-span-6 elev-surface-solid p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Ranking Class (A–D)</div>
@@ -966,7 +939,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="panel lg:col-span-6 p-6">
+        <div className="lg:col-span-6 elev-surface-solid p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Průměrné ELO v čase</div>
@@ -991,7 +964,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="panel lg:col-span-6 p-6">
+        <div className="lg:col-span-6 elev-surface-solid p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Aktivní hráči podle měsíce</div>
@@ -1023,7 +996,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="panel lg:col-span-6 p-6">
+        <div className="lg:col-span-6 elev-surface-solid p-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-white">Winrate podle ELO rozdílu</div>
@@ -1050,7 +1023,7 @@ export default function HomePage() {
       </section>
 
       {/* Leaderboard */}
-      <section id="leaderboard" className="panel p-6">
+      <section id="leaderboard" className="elev-surface-solid p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-sm font-semibold text-white">{t('leaderboard_title') || 'Žebříček'}</div>
@@ -1058,7 +1031,7 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 px-3 py-2 text-slate-200">
-              <Search className="h-4 w-4 text-slate-300" />
+              <Search className="h-4 w-4 text-slate-600 dark:text-slate-300" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -1070,10 +1043,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+        <div className="mt-5 elev-table">
           <div className="overflow-x-auto">
             <div className="min-w-[980px]">
-              <div className="grid grid-cols-[56px_1.6fr_120px_90px_70px_70px_70px_90px_90px] bg-white/5 px-4 py-3 text-xs font-semibold text-slate-200">
+              <div className="grid grid-cols-[56px_1.6fr_120px_90px_70px_70px_70px_90px_90px] bg-white/5 px-4 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
                 <div>#</div>
                 <div>{t('col_player') || 'Hráč'}</div>
                 <div className="text-right">{mode.toUpperCase()}</div>
@@ -1097,7 +1070,7 @@ export default function HomePage() {
                 <button
                   key={r.slug}
                   onClick={() => openPlayer(r)}
-                  className="group grid w-full grid-cols-[56px_1.6fr_120px_90px_70px_70px_70px_90px_90px] items-center px-4 py-3 text-left text-sm text-slate-200 hover:bg-white/5 focus:bg-white/5 focus:outline-none"
+                  className="group grid w-full grid-cols-[56px_1.6fr_120px_90px_70px_70px_70px_90px_90px] items-center px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-white/5 focus:bg-white/5 focus:outline-none"
                 >
                   <div className="text-slate-400">{r.rank}</div>
                   <div className="min-w-0 font-semibold">
@@ -1108,12 +1081,12 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="text-right font-semibold text-white">{r.rating}</div>
-                  <div className="text-right text-slate-300">{r.games}</div>
-                  <div className="text-right text-slate-300">{r.win}</div>
-                  <div className="text-right text-slate-300">{r.loss}</div>
-                  <div className="text-right text-slate-300">{r.draw}</div>
-                  <div className="text-right text-slate-300">{r.peak}</div>
-                  <div className="text-right text-slate-300">{r.winrate}</div>
+                  <div className="text-right text-slate-600 dark:text-slate-300">{r.games}</div>
+                  <div className="text-right text-slate-600 dark:text-slate-300">{r.win}</div>
+                  <div className="text-right text-slate-600 dark:text-slate-300">{r.loss}</div>
+                  <div className="text-right text-slate-600 dark:text-slate-300">{r.draw}</div>
+                  <div className="text-right text-slate-600 dark:text-slate-300">{r.peak}</div>
+                  <div className="text-right text-slate-600 dark:text-slate-300">{r.winrate}</div>
                 </button>
               ))
             )}
@@ -1131,7 +1104,7 @@ export default function HomePage() {
       {/* Footer-style section */}
       
       {/* All matches */}
-      <section id="matches" className="panel p-6">
+      <section id="matches" className="elev-surface-solid p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-sm font-semibold text-white">Všechny zápasy</div>
@@ -1140,7 +1113,7 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="h-10 min-w-[220px]">
               <div className="flex h-10 items-center gap-2 rounded-2xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 px-3 text-slate-200">
-                <Search className="h-4 w-4 text-slate-300" />
+                <Search className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                 <input
                   value={matchQuery}
                   onChange={(e) => setMatchQuery(e.target.value)}
@@ -1166,10 +1139,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+        <div className="mt-5 elev-table">
           <div className="overflow-x-auto">
             <div className="min-w-[980px]">
-              <div className="grid grid-cols-[120px_220px_1.3fr_140px_120px_120px] bg-white/5 px-4 py-3 text-xs font-semibold text-slate-200">
+              <div className="grid grid-cols-[120px_220px_1.3fr_140px_120px_120px] bg-white/5 px-4 py-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
                 <div>Datum</div>
                 <div>Turnaj</div>
                 <div>Hráči</div>
@@ -1186,7 +1159,7 @@ export default function HomePage() {
                   </div>
                 ) : filteredMatches.length ? (
                   filteredMatches.map((m) => (
-                    <div key={m.matchId} className="grid grid-cols-[120px_220px_1.3fr_140px_120px_120px] items-center px-4 py-3 text-sm text-slate-200 hover:bg-white/5">
+                    <div key={m.matchId} className="grid grid-cols-[120px_220px_1.3fr_140px_120px_120px] items-center px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/5">
                       <div className="text-slate-400">{m.date ? new Date(m.date).toLocaleDateString() : '—'}</div>
                       <div className="font-semibold">{m.tournament || '—'}</div>
                       <div className="min-w-0">
@@ -1195,7 +1168,7 @@ export default function HomePage() {
                         <span className="truncate">{m.b}</span>
                       </div>
                       <div className="font-semibold text-slate-100">{m.winner || '—'}</div>
-                      <div className="text-right text-slate-300">{Math.round(m.diff)}</div>
+                      <div className="text-right text-slate-600 dark:text-slate-300">{Math.round(m.diff)}</div>
                       <div className="text-right">
                         {m.winner ? (
                           <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.upset ? 'border-amber-400/30 bg-amber-400/10 text-amber-200' : 'border-white/10 bg-white/5 text-slate-200'}`}>
@@ -1216,11 +1189,11 @@ export default function HomePage() {
         </div>
       </section>
 
-<section className="panel p-6">
+<section className="elev-header p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-sm font-semibold text-white">{t('cta_title') || 'Chceš to ještě víc vylepšit?'}</div>
-            <div className="text-sm text-slate-300 leading-relaxed">
+            <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {t('cta_sub') ||
                 'Můžeme přidat turnajovou stránku, filtr podle sezóny a sdílení profilu hráče jako kartu.'}
             </div>

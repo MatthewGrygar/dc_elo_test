@@ -30,7 +30,10 @@ export default [
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // React Fast Refresh rule is useful during local dev, but it produces noisy
+      // warnings in CI for common patterns (providers, hooks, utility exports).
+      // Disable it to keep the build output clean.
+      'react-refresh/only-export-components': 'off',
     },
   },
 ]
