@@ -230,7 +230,8 @@ export default function PlayerProfileModalContent({
   const winrateSeries = useMemo(() => {
     const list = filteredEnriched
     const window = 10
-    const outToNum = (o: string) => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
+    // Explicit number typing keeps TS happy (otherwise literals infer as 0|0.5|1 and break predicates/reduce).
+    const outToNum = (o: string): number | null => (o === 'W' ? 1 : o === 'L' ? 0 : o === 'D' ? 0.5 : null)
     const series: { x: number; label: string; winrate: number }[] = []
     for (let i = 0; i < list.length; i++) {
       const slice = list.slice(Math.max(0, i - window + 1), i + 1)
