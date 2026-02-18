@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { DICT, type DictKey, type Lang } from './dict'
 
 const STORAGE_KEY = 'dc_elo_lang'
@@ -37,8 +36,6 @@ type I18nCtx = {
 const Ctx = createContext<I18nCtx | null>(null)
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const location = useLocation()
-
   const stored = (localStorage.getItem(STORAGE_KEY) as Lang | null) || null
   // We no longer infer language from path segments (we use runtime basename for GH Pages).
   const initialLang: Lang = (stored && LANGS.includes(stored) ? stored : detectPreferredLang())

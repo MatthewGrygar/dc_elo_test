@@ -688,160 +688,118 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -bottom-28 right-0 h-80 w-80 rounded-full bg-cyan-400/15 blur-3xl" />
 
         <div className="space-y-6">
-  <div className="flex flex-wrap items-center justify-between gap-4">
-    <div className="flex items-center gap-4">
-      {/* Logo placeholder */}
-      <div
-        className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/30 via-slate-950/40 to-cyan-400/15 shadow-soft"
-        aria-hidden
-      />
-      <div className="pl-1">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">DC ELO</h1>
-        <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">BY GRAIL SERIES</p>
-      </div>
-    </div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {/* Logo placeholder */}
+              <div
+                className="h-14 w-14 shrink-0 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-indigo-500/20 via-white/60 to-cyan-400/10 shadow-soft dark:border-white/10 dark:from-indigo-500/30 dark:via-slate-950/40 dark:to-cyan-400/15"
+                aria-hidden
+              />
+              <div className="pl-1">
+                <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">DC ELO</h1>
+                <p className="max-w-2xl text-pretty text-slate-600 dark:text-slate-300 leading-relaxed">BY GRAIL SERIES</p>
+              </div>
+            </div>
 
-    
+            <Button
+              onClick={() => {
+                const el = document.getElementById('leaderboard')
+                el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }}
+              variant="primary"
+              className="justify-center rounded-3xl px-6"
+            >
+              {'Hráči'}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-  {/* Slider (full-width within banner) */}
-  <div className="w-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 shadow-xl dark:border-white/12 dark:bg-slate-950/35 dark:shadow-soft">
-    <NewsCarousel
-      items={[
-        {
-          tag: 'Update',
-          image: '/assets/images/slider/slider1.png',
-          title: 'Vylepšené grafy a rychlejší profil hráče',
-          date: lastTournament.data || '—',
-          excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
-        },
-        {
-          tag: 'Insight',
-          image: '/assets/images/slider/slider2.png',
-          title: 'Kalibrace ELO: winrate vs rozdíl ratingu',
-          date: 'Validace',
-          excerpt: 'Porovnání empirické winrate a expected křivky podle ELO vzorce.',
-        },
-        {
-          tag: 'Tip',
-          image: '/assets/images/slider/slider3.png',
-          title: 'Profil hráče: období, zoom a trendy',
-          date: 'Profil',
-          excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
-        },
-      ]}
-    />
-  </div>
+          {/* Slider (full-width within banner) */}
+          <div className="w-full overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 shadow-xl dark:border-white/12 dark:bg-slate-950/35 dark:shadow-soft">
+            <NewsCarousel
+              items={[
+                {
+                  tag: 'Update',
+                  image: '/assets/images/slider/slider1.png',
+                  title: 'Vylepšené grafy a rychlejší profil hráče',
+                  date: lastTournament.data || '—',
+                  excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
+                },
+                {
+                  tag: 'Insight',
+                  image: '/assets/images/slider/slider2.png',
+                  title: 'Kalibrace ELO: winrate vs rozdíl ratingu',
+                  date: 'Validace',
+                  excerpt: 'Porovnání empirické winrate a expected křivky podle ELO vzorce.',
+                },
+                {
+                  tag: 'Tip',
+                  image: '/assets/images/slider/slider3.png',
+                  title: 'Profil hráče: období, zoom a trendy',
+                  date: 'Profil',
+                  excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
+                },
+              ]}
+            />
+          </div>
 
-  {/* CTA */}
-  <div className="flex justify-end">
-    <Button
-      onClick={() => {
-        const el = document.getElementById('leaderboard')
-        el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }}
-      variant="primary"
-      className="justify-center rounded-3xl px-6"
-    >
-      {'Hráči'}
-      <ArrowRight className="h-4 w-4" />
-    </Button>
-  </div>
+          {/* Primary stats */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricFlipCard icon={Gauge} label="MEDIAN ELO" value={loading ? '—' : stats.medianElo} detail="Medián ratingu ze standings (sloupec B)." />
+            <MetricFlipCard
+              icon={Activity}
+              label="TOTAL GAMES"
+              value={loading ? '—' : stats.totalGames.toLocaleString()}
+              detail="Součet odehraných her ze standings (sloupec C) děleno 2 (každý zápas je v datech 2×)."
+            />
+            <MetricFlipCard icon={Users} label="UNIQUE PLAYERS" value={loading ? '—' : stats.uniquePlayers} detail="Počet řádků ve standings bez hlavičky." />
+            <MetricFlipCard
+              icon={CalendarDays}
+              label="LATEST DATA"
+              value={loading ? '—' : (lastTournament.data || '—')}
+              detail="Nejnovější datum z listu Data (poslední hodnota ve sloupci B)."
+            />
+          </div>
 
+          {/* Activity & quality stats */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            <MetricFlipCard
+              icon={Users}
+              label="Active Players (7d)"
+              value={loading ? '—' : matchStats.active7}
+              detail="Unikátní hráči, kteří hráli alespoň 1 zápas za posledních 7 dní (Player cards, sloupec A)."
+            />
+            <MetricFlipCard
+              icon={Users}
+              label="Active Players (30d)"
+              value={loading ? '—' : matchStats.active30}
+              detail="Unikátní hráči, kteří hráli alespoň 1 zápas za posledních 30 dní (Player cards, sloupec A)."
+            />
+            <MetricFlipCard
+              icon={Sparkles}
+              label="New Players (30d)"
+              value={loading ? '—' : matchStats.newPlayers30}
+              detail="Hráči aktivní za posledních 30 dní, kteří se nikdy nevyskytli před tímto obdobím."
+            />
+            <MetricFlipCard icon={TrendingUp} label="Matches / week" value={loading ? '—' : matchStats.matchesWeek.toLocaleString()} detail="Počet unikátních Match ID za posledních 7 dní." />
+            <MetricFlipCard icon={TrendingUp} label="Matches / month" value={loading ? '—' : matchStats.matchesMonth.toLocaleString()} detail="Počet unikátních Match ID za posledních 30 dní." />
+            <MetricFlipCard icon={Zap} label="Avg |ΔELO| / match" value={loading ? '—' : matchStats.avgAbsDelta.toFixed(1)} detail="Aritmetický průměr absolutních hodnot Δ (sloupec H) z Player cards." />
+            <MetricFlipCard
+              icon={Trophy}
+              label="Upset %"
+              value={loading ? '—' : `${matchStats.upsetPct.toFixed(1)}%`}
+              note="výhra slabšího nad silnějším"
+              detail="Podíl rozhodnutých zápasů, kde vítěz měl nižší pre‑match ELO než poražený. Počítá se po Match ID (2 řádky na zápas)."
+              className="sm:col-span-2 lg:col-span-6"
+            />
+          </div>
 
-  </div>
-
-  {/* Primary stats */}
-  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    <MetricFlipCard
-      icon={Gauge}
-      label="MEDIAN ELO"
-      value={loading ? '—' : stats.medianElo}
-      detail="Medián ratingu ze standings (sloupec B)."
-    />
-    <MetricFlipCard
-      icon={Activity}
-      label="TOTAL GAMES"
-      value={loading ? '—' : stats.totalGames.toLocaleString()}
-      detail="Součet odehraných her ze standings (sloupec C) děleno 2 (každý zápas je v datech 2×)."
-    />
-    <MetricFlipCard
-      icon={Users}
-      label="UNIQUE PLAYERS"
-      value={loading ? '—' : stats.uniquePlayers}
-      detail="Počet řádků ve standings bez hlavičky."
-    />
-    <MetricFlipCard
-      icon={CalendarDays}
-      label="LATEST DATA"
-      value={loading ? '—' : (lastTournament.data || '—')}
-      detail="Nejnovější datum z listu Data (poslední hodnota ve sloupci B)."
-    />
-  </div>
-
-  {/* Activity & quality stats */}
-  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-    <MetricFlipCard
-      icon={Users}
-      label="Active Players (7d)"
-      value={loading ? '—' : matchStats.active7}
-      detail="Unikátní hráči, kteří hráli alespoň 1 zápas za posledních 7 dní (Player cards, sloupec A)."
-    />
-    <MetricFlipCard
-      icon={Users}
-      label="Active Players (30d)"
-      value={loading ? '—' : matchStats.active30}
-      detail="Unikátní hráči, kteří hráli alespoň 1 zápas za posledních 30 dní (Player cards, sloupec A)."
-    />
-    <MetricFlipCard
-      icon={Sparkles}
-      label="New Players (30d)"
-      value={loading ? '—' : matchStats.newPlayers30}
-      detail="Hráči aktivní za posledních 30 dní, kteří se nikdy nevyskytli před tímto obdobím."
-    />
-    <MetricFlipCard
-      icon={TrendingUp}
-      label="Matches / week"
-      value={loading ? '—' : matchStats.matchesWeek.toLocaleString()}
-      detail="Počet unikátních Match ID za posledních 7 dní."
-    />
-    <MetricFlipCard
-      icon={TrendingUp}
-      label="Matches / month"
-      value={loading ? '—' : matchStats.matchesMonth.toLocaleString()}
-      detail="Počet unikátních Match ID za posledních 30 dní."
-    />
-    <MetricFlipCard
-      icon={Zap}
-      label="Avg |ΔELO| / match"
-      value={loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}
-      detail="Aritmetický průměr absolutních hodnot Δ (sloupec H) z Player cards."
-    />
-
-    <MetricFlipCard
-      icon={Trophy}
-      label="Upset %"
-      value={loading ? '—' : `${matchStats.upsetPct.toFixed(1)}%`}
-      note="výhra slabšího nad silnějším"
-      detail="Podíl rozhodnutých zápasů, kde vítěz měl nižší pre‑match ELO než poražený. Počítá se po Match ID (2 řádky na zápas)."
-      className="sm:col-span-2 lg:col-span-6"
-    />
-  </div>
-
-  <div className="text-xs text-slate-500 dark:text-slate-400">
-    {'Zdroj: Google Sheets • '}
-    <span className="text-slate-700 dark:text-slate-200">{loading ? 'načítám…' : (lastTournament.data || '—')}</span>
-  </div>
-
-  <div className="text-xs text-slate-400">výhra slabšího nad silnějším</div>
-      </div>
-    </div>
-  </div>
-
-  <div className="text-xs text-slate-400">
-    {'Zdroj: Google Sheets • '}
-    <span className="text-slate-200">{loading ? 'načítám…' : (lastTournament.data || '—')}</span>
-  </div>
-</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            {'Zdroj: Google Sheets • '}
+            <span className="text-slate-700 dark:text-slate-200">{loading ? 'načítám…' : (lastTournament.data || '—')}</span>
+          </div>
+        </div>
+      </section>
 
 <div className="mt-6 grid gap-6 lg:grid-cols-12">
   <div className="lg:col-span-7 rounded-3xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 p-5 shadow-soft">
