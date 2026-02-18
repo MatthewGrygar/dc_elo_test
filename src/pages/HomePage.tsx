@@ -2,9 +2,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { Search, SlidersHorizontal, Trophy, TrendingUp, Users, Sparkles, ArrowRight, CalendarDays, Activity, Gauge, Zap } from 'lucide-react'
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, CartesianGrid, LineChart, Line, Legend } from 'recharts'
+import { Search, Trophy, TrendingUp, Users, Sparkles, ArrowRight, CalendarDays, Activity, Gauge, Zap } from 'lucide-react'
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts'
 import type { TooltipProps } from 'recharts'
 import { useI18n } from '../features/i18n/i18n'
 import { useLastTournamentLabel, useStandings, usePlayerCards, type StandingsRow, type PlayerCard } from '../features/elo/hooks'
@@ -41,12 +40,6 @@ function parseDelta(s: string) {
   return Number.isFinite(v) ? v : 0
 }
 
-function toDayKey(dateStr: string) {
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toISOString().slice(0, 10)
-}
-
 function toMonthKey(dateStr: string) {
   const d = parseLooseDate(dateStr)
   if (!d) return ''
@@ -77,7 +70,7 @@ function daysAgo(n: number) {
 
 function parseEloFromParen(text: string) {
   // "Name (1500)" -> 1500
-  const m = String(text ?? '').match(/\(([-+]?\d+(?:[\.,]\d+)?)\)/)
+  const m = String(text ?? '').match(/\(([-+]?\d+(?:[.,]\d+)?)\)/)
   if (!m) return Number.NaN
   const v = Number(m[1].replace(',', '.'))
   return Number.isFinite(v) ? v : Number.NaN
@@ -96,23 +89,6 @@ function buildDistribution(ratings: number[]) {
     bins[idx].count += 1
   }
   return bins
-}
-
-function quantile(sortedAsc: number[], q: number) {
-  if (!sortedAsc.length) return Number.NaN
-  const pos = (sortedAsc.length - 1) * q
-  const base = Math.floor(pos)
-  const rest = pos - base
-  if (sortedAsc[base + 1] === undefined) return sortedAsc[base]
-  return sortedAsc[base] + rest * (sortedAsc[base + 1] - sortedAsc[base])
-}
-
-function classForRating(rating: number, cut25: number, cut50: number, cut75: number): 'A' | 'B' | 'C' | 'D' {
-  if (!Number.isFinite(rating)) return 'D'
-  if (rating >= cut75) return 'A'
-  if (rating >= cut50) return 'B'
-  if (rating >= cut25) return 'C'
-  return 'D'
 }
 
 function ClassPill({ cls }: { cls: 'A' | 'B' | 'C' | 'D' }) {
