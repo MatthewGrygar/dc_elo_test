@@ -509,7 +509,7 @@ export default function HomePage() {
       if (r.ratingClass) counts[r.ratingClass] += 1
     }
     return (['A', 'B', 'C', 'D'] as const).map((cls) => ({ cls, count: counts[cls] }))
-  }, [rows]ws])
+  }, [rows])
 
 
   const monthlyActiveSeries = useMemo(() => {
