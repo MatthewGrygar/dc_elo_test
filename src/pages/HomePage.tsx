@@ -163,11 +163,30 @@ export default function HomePage() {
   // Otherwise we can hit a TDZ runtime error in production builds.
   const rows = standings.data ?? []
 
+  // Rating classes should always be sourced from the DCPR (Tournament_Elo) sheet
+  // and applied consistently across both modes.
+  const ratingClassByPlayer = useMemo(() => {
+    const map = new Map<string, StandingsRow['ratingClass']>()
+    for (const r of (standingsDcpr.data ?? [])) {
+      const key = normalizeKey(r.player)
+      if (!key) continue
+      if (r.ratingClass) map.set(key, r.ratingClass)
+    }
+    return map
+  }, [standingsDcpr.data])
+
+  const rowsWithUnifiedClass: StandingsRow[] = useMemo(() => {
+    return (rows ?? []).map((r) => {
+      const cls = ratingClassByPlayer.get(normalizeKey(r.player)) ?? null
+      return { ...r, ratingClass: cls }
+    })
+  }, [rows, ratingClassByPlayer])
+
 
   // Open player profile modal when route contains /player/:slug
   useEffect(() => {
     if (!slug) return
-    const all = [...(standingsElo.data ?? []), ...(standingsDcpr.data ?? [])]
+    const all = rowsWithUnifiedClass
     const p = all.find((r) => r.slug === slug) || (standings.data ?? []).find((r) => r.slug === slug)
     if (!p) return
     openModal({
@@ -185,12 +204,13 @@ export default function HomePage() {
       ),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, rows.length, mode])
+  }, [slug, rowsWithUnifiedClass.length, mode])
+
   const filtered = useMemo(() => {
     const q = normalizeKey(query)
-    if (!q) return rows
-    return rows.filter((r) => normalizeKey(r.player).includes(q))
-  }, [rows, query])
+    if (!q) return rowsWithUnifiedClass
+    return rowsWithUnifiedClass.filter((r) => normalizeKey(r.player).includes(q))
+  }, [rowsWithUnifiedClass, query])
 
   const top = useMemo(() => filtered.slice(0, 50), [filtered])
 
@@ -505,11 +525,11 @@ export default function HomePage() {
 
   const playersByClass = useMemo(() => {
     const counts: Record<'A' | 'B' | 'C' | 'D', number> = { A: 0, B: 0, C: 0, D: 0 }
-    for (const r of rows) {
+    for (const r of rowsWithUnifiedClass) {
       if (r.ratingClass) counts[r.ratingClass] += 1
     }
     return (['A', 'B', 'C', 'D'] as const).map((cls) => ({ cls, count: counts[cls] }))
-  }, [rows])
+  }, [rowsWithUnifiedClass])
 
 
   const monthlyActiveSeries = useMemo(() => {
@@ -611,6 +631,9 @@ export default function HomePage() {
 
   const loading = standings.isLoading || standingsElo.isLoading || standingsDcpr.isLoading || lastTournament.isLoading || cardsMode.isLoading
 
+  // Hover helper for metric cards (shows details below the grid on desktop)
+  const [metricHelp, setMetricHelp] = useState<string>('')
+
   return (
     <div className="space-y-10">
       {/* Hero */}
@@ -643,49 +666,48 @@ export default function HomePage() {
       />
     </div>
 
-  {/* Slider + CTA */}
-  <div className="grid gap-4 lg:grid-cols-12 items-stretch">
-    <div className="lg:col-span-10 overflow-hidden rounded-3xl border border-white/10 bg-slate-950/35 shadow-soft">
-      <NewsCarousel
-        items={[
-          {
-            tag: 'Update',
-            image: '/assets/images/slider/placeholder-1.svg',
-            title: 'Vylepšené grafy a rychlejší profil hráče',
-            date: lastTournament.data || '—',
-            excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
-          },
-          {
-            tag: 'Insight',
-            image: '/assets/images/slider/placeholder-2.svg',
-            title: 'Kalibrace ELO: winrate vs rozdíl ratingu',
-            date: 'Validace',
-            excerpt: 'Porovnání empirické winrate a expected křivky podle ELO vzorce.',
-          },
-          {
-            tag: 'Tip',
-            image: '/assets/images/slider/placeholder-3.svg',
-            title: 'Profil hráče: období, zoom a trendy',
-            date: 'Profil',
-            excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
-          },
-        ]}
-      />
-    </div>
+  {/* Slider (full-width within banner) */}
+  <div className="w-full overflow-hidden rounded-3xl border border-white/10 bg-slate-950/35 shadow-soft">
+    <NewsCarousel
+      items={[
+        {
+          tag: 'Update',
+          image: '/assets/images/slider/placeholder-1.svg',
+          title: 'Vylepšené grafy a rychlejší profil hráče',
+          date: lastTournament.data || '—',
+          excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
+        },
+        {
+          tag: 'Insight',
+          image: '/assets/images/slider/placeholder-2.svg',
+          title: 'Kalibrace ELO: winrate vs rozdíl ratingu',
+          date: 'Validace',
+          excerpt: 'Porovnání empirické winrate a expected křivky podle ELO vzorce.',
+        },
+        {
+          tag: 'Tip',
+          image: '/assets/images/slider/placeholder-3.svg',
+          title: 'Profil hráče: období, zoom a trendy',
+          date: 'Profil',
+          excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
+        },
+      ]}
+    />
+  </div>
 
-    <div className="lg:col-span-2 flex">
-      <Button
-        onClick={() => {
-          const el = document.getElementById('leaderboard')
-          el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }}
-        variant="primary"
-        className="w-full justify-center rounded-3xl"
-      >
-        {'Hráči'}
-        <ArrowRight className="h-4 w-4" />
-      </Button>
-    </div>
+  {/* CTA */}
+  <div className="flex justify-end">
+    <Button
+      onClick={() => {
+        const el = document.getElementById('leaderboard')
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }}
+      variant="primary"
+      className="justify-center rounded-3xl px-6"
+    >
+      {'Hráči'}
+      <ArrowRight className="h-4 w-4" />
+    </Button>
   </div>
 
 
@@ -693,27 +715,51 @@ export default function HomePage() {
 
   {/* Primary stats */}
   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Medián ratingu (z hodnot ratingu ve standings).">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Medián ratingu (z hodnot ratingu ve standings)."
+      onMouseEnter={() => setMetricHelp('MEDIAN ELO: Medián ratingu ze standings (sloupec B).')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Gauge className="h-4 w-4" />
+        <span>MEDIAN ELO</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
     </div>
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Součet odehraných her / 2 (každý zápas je v datech 2×).">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Součet odehraných her / 2 (každý zápas je v datech 2×)."
+      onMouseEnter={() => setMetricHelp('TOTAL GAMES: součet her ze standings (sloupec C) / 2.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Activity className="h-4 w-4" />
+        <span>TOTAL GAMES</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
     </div>
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních hráčů ve standings (počet řádků).">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Počet unikátních hráčů ve standings (počet řádků)."
+      onMouseEnter={() => setMetricHelp('UNIQUE PLAYERS: počet řádků ve standings (bez hlavičky).')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Users className="h-4 w-4" />
+        <span>UNIQUE PLAYERS</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
     </div>
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Nejnovější záznam z listu Data (poslední hodnota ve sloupci B).">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Nejnovější záznam z listu Data (poslední hodnota ve sloupci B)."
+      onMouseEnter={() => setMetricHelp('LATEST DATA: poslední hodnota ve sloupci B listu Data.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <CalendarDays className="h-4 w-4" />
+        <span>LATEST DATA</span>
       </div>
       <div className="mt-auto text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
     </div>
@@ -721,49 +767,90 @@ export default function HomePage() {
 
   {/* Activity & quality stats */}
   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních hráčů, kteří hráli alespoň 1 zápas v posledních 7 dnech.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Počet unikátních hráčů, kteří hráli alespoň 1 zápas v posledních 7 dnech."
+      onMouseEnter={() => setMetricHelp('Active Players (7d): unikátní hráči v zápasech za posledních 7 dní (Player cards, sloupec A).')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Users className="h-4 w-4" />
+        <span>Active Players (7d)</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních hráčů, kteří hráli alespoň 1 zápas v posledních 30 dnech.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Počet unikátních hráčů, kteří hráli alespoň 1 zápas v posledních 30 dnech."
+      onMouseEnter={() => setMetricHelp('Active Players (30d): unikátní hráči v zápasech za posledních 30 dní (Player cards, sloupec A).')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Users className="h-4 w-4" />
+        <span>Active Players (30d)</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Hráči, kteří se objevili v posledních 30 dnech a předtím v datech nebyli.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Hráči, kteří se objevili v posledních 30 dnech a předtím v datech nebyli."
+      onMouseEnter={() => setMetricHelp('New Players (30d): hráči aktivní za posledních 30 dní, kteří se nikdy nevyskytli před tímto obdobím.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Sparkles className="h-4 w-4" />
+        <span>New Players (30d)</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních zápasů (Match ID) za posledních 7 dní.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Počet unikátních zápasů (Match ID) za posledních 7 dní."
+      onMouseEnter={() => setMetricHelp('Matches / week: počet unikátních zápasů (Match ID) za posledních 7 dní.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <TrendingUp className="h-4 w-4" />
+        <span>Matches / week</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních zápasů (Match ID) za posledních 30 dní.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Počet unikátních zápasů (Match ID) za posledních 30 dní."
+      onMouseEnter={() => setMetricHelp('Matches / month: počet unikátních zápasů (Match ID) za posledních 30 dní.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <TrendingUp className="h-4 w-4" />
+        <span>Matches / month</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Průměr absolutní hodnoty změny ratingu (|Δ|) na řádek; orientační velikost změn.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]"
+      title="Průměr absolutní hodnoty změny ratingu (|Δ|) na řádek; orientační velikost změn."
+      onMouseEnter={() => setMetricHelp('Avg |ΔELO| / match: aritmetický průměr absolutních hodnot změny ratingu (sloupec H) z Player cards.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        
+        <Zap className="h-4 w-4" />
+        <span>Avg |ΔELO| / match</span>
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2 lg:col-span-6" title="Podíl zápasů, kde hráč s nižším pre-match ELO porazil hráče s vyšším pre-match ELO.">
+    <div
+      className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2 lg:col-span-6"
+      title="Podíl zápasů, kde hráč s nižším pre-match ELO porazil hráče s vyšším pre-match ELO."
+      onMouseEnter={() => setMetricHelp('Upset %: podíl zápasů, kde vítěz měl nižší pre-match ELO než poražený.')}
+      onMouseLeave={() => setMetricHelp('')}
+    >
       <div className="flex items-center gap-2 text-slate-300 text-xs">
         <Trophy className="h-4 w-4" /> Upset %
       </div>
@@ -773,6 +860,12 @@ export default function HomePage() {
       </div>
     </div>
   </div>
+
+  {metricHelp ? (
+    <div className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3 text-sm text-slate-200">
+      {metricHelp}
+    </div>
+  ) : null}
 
   <div className="text-xs text-slate-400">
     {'Zdroj: Google Sheets • '}
