@@ -483,7 +483,6 @@ export default function HomePage() {
 
 
 
-)
 
   const distribution = useMemo(() => buildDistribution(rows.map((r) => r.rating).filter(Number.isFinite)), [rows])
 
