@@ -261,8 +261,8 @@ export default function HomePage() {
     let upsetWins = 0
     let decidedMatches = 0
     for (const group of byMatch.values()) {
-      const wRow = group.find((r) => parseOutcome(r.result).outcome === "W")
-      const lRow = group.find((r) => parseOutcome(r.result).outcome === "L")
+      const wRow = group.find((r) => parseOutcome(r.result) === "W")
+      const lRow = group.find((r) => parseOutcome(r.result) === "L")
       if (!wRow || !lRow) continue
       // Each row stores opponent pre-match ELO in parentheses.
       const winnerPre = parseEloFromParen(lRow.opponent)
@@ -353,81 +353,102 @@ export default function HomePage() {
 
 
   const interestingMatches = useMemo(() => {
-    const cutoff = daysAgo(30)
-    const allItems = [
-      ...(cardsElo.data ?? []).map((x) => ({ ...x, __src: 'ELO' as const })),
-      ...(cardsDcpr.data ?? []).map((x) => ({ ...x, __src: 'DCPR' as const })),
-    ]
+  const cutoff = daysAgo(30)
 
-    type M = {
-      key: string
-      date: Date
-      tournament: string
-      a: string
-      b: string
-      eloA: number
-      eloB: number
-      result: string
-      src: 'ELO' | 'DCPR'
+  const allItems = [
+    ...(cardsElo.data ?? []).map((x) => ({ ...x, __src: 'ELO' as const })),
+    ...(cardsDcpr.data ?? []).map((x) => ({ ...x, __src: 'DCPR' as const })),
+  ]
+
+  type M = {
+    key: string
+    matchId: number
+    date: Date
+    tournament: string
+    left: string
+    right: string
+    leftElo: number
+    rightElo: number
+    score: string
+    src: 'ELO' | 'DCPR'
+    avg: number
+    diff: number
+  }
+
+  const byKey = new Map<string, any[]>()
+  for (const it of allItems) {
+    const d = parseLooseDate(it.date)
+    if (!d || d < cutoff) continue
+    if (!Number.isFinite(it.matchId)) continue
+    const key = `${it.__src}::${it.matchId}`
+    const arr = byKey.get(key) ?? []
+    arr.push({ ...it, __d: d })
+    byKey.set(key, arr)
+  }
+
+  const extractScore = (s: any) => {
+    const str = String(s ?? '')
+    const m = str.match(/(\d+)\s*-\s*(\d+)/)
+    return m ? `${m[1]}-${m[2]}` : str.trim()
+  }
+
+  const matches: M[] = []
+  for (const [key, group] of byKey.entries()) {
+    // Each match has two rows (two perspectives)
+    const winnerRow = group.find((r) => parseOutcome(r.result) === 'W')
+    const loserRow = group.find((r) => parseOutcome(r.result) === 'L')
+    if (!winnerRow || !loserRow) continue
+
+    const matchId = Number(winnerRow.matchId)
+    const src = String(key.split('::')[0]) as 'ELO' | 'DCPR'
+    const date = (winnerRow.__d as Date) || (loserRow.__d as Date)
+    const tournament = String(winnerRow.tournament || loserRow.tournament || '')
+
+    const winner = String(winnerRow.player ?? '').trim()
+    const loser = String(loserRow.player ?? '').trim()
+    if (!winner || !loser) continue
+
+    // Pre-match ELO is stored in opponent cell (in parentheses)
+    const winnerPre = parseEloFromParen(loserRow.opponent)
+    const loserPre = parseEloFromParen(winnerRow.opponent)
+    if (!Number.isFinite(winnerPre) || !Number.isFinite(loserPre)) continue
+
+    const score = extractScore(winnerRow.result)
+
+    matches.push({
+      key,
+      matchId,
+      date,
+      tournament,
+      left: winner,
+      right: loser,
+      leftElo: winnerPre,
+      rightElo: loserPre,
+      score,
+      src,
+      avg: (winnerPre + loserPre) / 2,
+      diff: Math.abs(winnerPre - loserPre),
+    })
+  }
+
+  const pickTopDistinct = (list: M[], scoreFn: (m: M) => number, count: number, usedMatchIds: Set<number>) => {
+    const out: M[] = []
+    const sorted = [...list].sort((a, b) => scoreFn(b) - scoreFn(a))
+    for (const m of sorted) {
+      if (usedMatchIds.has(m.matchId)) continue
+      usedMatchIds.add(m.matchId)
+      out.push(m)
+      if (out.length >= count) break
     }
+    return out
+  }
 
-    const byKey = new Map<string, any[]>()
-    for (const it of allItems) {
-      const d = parseLooseDate(it.date)
-      if (!d || d < cutoff) continue
-      if (!Number.isFinite(it.matchId)) continue
+  const used = new Set<number>()
+  const topCombined = pickTopDistinct(matches, (m) => m.avg, 2, used)
+  const topDiff = pickTopDistinct(matches, (m) => m.diff, 2, used)
 
-      // Prefix key by source to avoid collisions.
-      const key = `${it.__src}::${it.matchId}`
-      const arr = byKey.get(key) ?? []
-      arr.push({ ...it, __d: d })
-      byKey.set(key, arr)
-    }
-
-    const matches: M[] = []
-    for (const [key, group] of byKey.entries()) {
-      const sides = group.slice(0, 2)
-      if (sides.length !== 2) continue
-      const A = sides[0]
-      const B = sides[1]
-
-      const aName = String(A.player ?? '').trim()
-      const bName = String(B.player ?? '').trim()
-      if (!aName || !bName) continue
-
-      // Pre-match ELO for each player is stored in the opponent cell of the OTHER row.
-      const aPre = parseEloFromParen(B.opponent)
-      const bPre = parseEloFromParen(A.opponent)
-      if (!Number.isFinite(aPre) || !Number.isFinite(bPre)) continue
-
-      const outA = parseOutcome(A.result).outcome
-      const outB = parseOutcome(B.result).outcome
-      const result = outA === 'W' ? String(A.result) : outB === 'W' ? String(B.result) : String(A.result || B.result || '')
-
-      const src = String(key.split('::')[0]) as 'ELO' | 'DCPR'
-      matches.push({
-        key,
-        date: A.__d as Date,
-        tournament: String(A.tournament || B.tournament || ''),
-        a: aName,
-        b: bName,
-        eloA: aPre,
-        eloB: bPre,
-        result,
-        src,
-      })
-    }
-
-    const topCombined = [...matches]
-      .sort((x, y) => (y.eloA + y.eloB) - (x.eloA + x.eloB))
-      .slice(0, 2)
-
-    const topDiff = [...matches]
-      .sort((x, y) => Math.abs(y.eloA - y.eloB) - Math.abs(x.eloA - x.eloB))
-      .slice(0, 2)
-
-    return { topCombined, topDiff }
-  }, [cardsElo.data, cardsDcpr.data])
+  return { topCombined, topDiff }
+}, [cardsElo.data, cardsDcpr.data])
 
 
   const matchTournaments = useMemo(() => {
@@ -544,8 +565,8 @@ const classCuts = useMemo(() => {
       const bPre = B.elo - parseDelta(B.delta)
       if (!Number.isFinite(aPre) || !Number.isFinite(bPre)) continue
 
-      const aOut = parseOutcome(A.result).outcome
-      const bOut = parseOutcome(B.result).outcome
+      const aOut = parseOutcome(A.result)
+      const bOut = parseOutcome(B.result)
       let winner: 'A' | 'B' | null = null
       if (aOut === 'W' || bOut === 'L') winner = 'A'
       else if (bOut === 'W' || aOut === 'L') winner = 'B'
@@ -627,74 +648,74 @@ const classCuts = useMemo(() => {
                 }}
                 variant="primary"
               >
-                {'Vyhledat'}
+                {'Hráči'}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
                   <TrendingUp className="h-4 w-4" /> MEDIAN ELO
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
                   <SlidersHorizontal className="h-4 w-4" /> TOTAL GAMES
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
                   <Users className="h-4 w-4" /> UNIQUE PLAYERS
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
                   <CalendarDays className="h-4 w-4" /> LATEST DATA
                 </div>
-                <div className="mt-1 text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
+                <div className="mt-auto text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
               </div>
             </div>
 
             <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Activity className="h-4 w-4" /> Active players (7d)
+                  <Activity className="h-4 w-4" /> Active (7d)
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Activity className="h-4 w-4" /> Active players (30d)
+                  <Activity className="h-4 w-4" /> Active (30d)
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Users className="h-4 w-4" /> New players (30d)
+                  <Users className="h-4 w-4" /> New (30d)
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Gauge className="h-4 w-4" /> Matches / week
+                  <Gauge className="h-4 w-4" /> Matches/week
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Gauge className="h-4 w-4" /> Matches / month
+                  <Gauge className="h-4 w-4" /> Matches/month
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-2">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Zap className="h-4 w-4" /> Avg ΔELO / match
+                  <Zap className="h-4 w-4" /> Avg |Δ|/match
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
+                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-3">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
@@ -755,70 +776,108 @@ const classCuts = useMemo(() => {
             </div>
 
             
-            <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white">Zajímavé zápasy</div>
-                <div className="text-xs text-slate-400">posledních 30 dní</div>
-              </div>
-
-              <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-                <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200">
-                  <div className="col-span-7">Zápas</div>
-                  <div className="col-span-3 text-right">Výsledek</div>
-                  <div className="col-span-2 text-right">Zdroj</div>
-                </div>
-
-                {/* Nejvyšší součet ELO */}
-                <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-slate-400 bg-slate-950/40 border-t border-white/10">
-                  Nejvyšší součet ELO (oba hráči co nejvýš)
-                </div>
-                {loading ? (
-                  <div className="p-3 space-y-2">
-                    {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-9 w-full rounded-xl" />
-                    ))}
-                  </div>
-                ) : (
-                  (interestingMatches.topCombined.length ? interestingMatches.topCombined : []).map((m) => (
-                    <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-                      <div className="col-span-7 text-slate-300 truncate">
-                        {m.a} ({Math.round(m.eloA)}) vs {m.b} ({Math.round(m.eloB)})
-                      </div>
-                      <div className="col-span-3 text-right font-semibold text-white truncate">{m.result || '—'}</div>
-                      <div className="col-span-2 text-right text-slate-300">{m.src}</div>
-                    </div>
-                  ))
-                )}
-
-                {/* Největší rozdíl ELO */}
-                <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-slate-400 bg-slate-950/40 border-t border-white/10">
-                  Největší rozdíl ELO (největší mismatch)
-                </div>
-                {loading ? (
-                  <div className="p-3 space-y-2">
-                    {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-9 w-full rounded-xl" />
-                    ))}
-                  </div>
-                ) : (
-                  (interestingMatches.topDiff.length ? interestingMatches.topDiff : []).map((m) => (
-                    <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-                      <div className="col-span-7 text-slate-300 truncate">
-                        {m.a} ({Math.round(m.eloA)}) vs {m.b} ({Math.round(m.eloB)})
-                      </div>
-                      <div className="col-span-3 text-right font-semibold text-white truncate">{m.result || '—'}</div>
-                      <div className="col-span-2 text-right text-slate-300">{m.src}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="mt-3 text-xs text-slate-400 leading-relaxed">
-                Výběr je z posledních 30 dní: 2× nejvyšší průměrné ELO a 2× největší rozdíl ELO (ELO + DCPR).
-              </div>
-	          </div>
 	        </div>
         </div>
+<div className="mt-6 grid gap-6 lg:grid-cols-12">
+  <div className="lg:col-span-7 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
+    <div className="flex items-center justify-between">
+      <div className="text-sm font-semibold text-white">Zajímavé zápasy</div>
+      <div className="text-xs text-slate-400">posledních 30 dní • ELO + DCPR</div>
+    </div>
+
+    <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+      <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
+        <div className="col-span-10">Zápas</div>
+        <div className="col-span-2 text-right">Zdroj</div>
+      </div>
+
+      <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-slate-400 bg-slate-950/40 border-t border-white/10">
+        Nejvyšší průměrné ELO (oba hráči co nejvýš)
+      </div>
+      {loading ? (
+        <div className="p-3 space-y-2">
+          {[...Array(2)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        (interestingMatches.topCombined.length ? interestingMatches.topCombined : []).map((m) => (
+          <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
+            <div className="col-span-10 text-slate-200">
+              <span className="font-semibold text-white">{m.left}</span> <span className="text-slate-300">({Math.round(m.leftElo)})</span>
+              <span className="mx-3 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-2 py-0.5 text-xs font-semibold text-slate-100">{m.score || '—'}</span>
+              <span className="text-slate-300">({Math.round(m.rightElo)})</span> <span className="font-semibold text-white">{m.right}</span>
+            </div>
+            <div className="col-span-2 text-right text-slate-300">{m.src}</div>
+          </div>
+        ))
+      )}
+
+      <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-slate-400 bg-slate-950/40 border-t border-white/10">
+        Největší rozdíl ELO (největší mismatch)
+      </div>
+      {loading ? (
+        <div className="p-3 space-y-2">
+          {[...Array(2)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        (interestingMatches.topDiff.length ? interestingMatches.topDiff : []).map((m) => (
+          <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
+            <div className="col-span-10 text-slate-200">
+              <span className="font-semibold text-white">{m.left}</span> <span className="text-slate-300">({Math.round(m.leftElo)})</span>
+              <span className="mx-3 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-2 py-0.5 text-xs font-semibold text-slate-100">{m.score || '—'}</span>
+              <span className="text-slate-300">({Math.round(m.rightElo)})</span> <span className="font-semibold text-white">{m.right}</span>
+            </div>
+            <div className="col-span-2 text-right text-slate-300">{m.src}</div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+
+  <div className="lg:col-span-5 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
+    <div className="text-sm font-semibold text-white">Rekordy & highlights</div>
+    <div className="mt-1 text-xs text-slate-400">Rychlé zajímavosti pro aktuální režim</div>
+
+    <div className="mt-4 grid gap-3">
+      {(() => {
+        const rr = rows
+        const mostGames = [...rr].sort((a, b) => b.games - a.games)[0]
+        const bestWr = [...rr]
+          .filter((x) => x.games >= 10)
+          .sort((a, b) => parseWinrate(b.winrate) - parseWinrate(a.winrate))[0]
+        const topRating = [...rr].sort((a, b) => b.rating - a.rating)[0]
+        return (
+          <>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs text-slate-400">Nejvíc her</div>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <div className="truncate font-semibold text-slate-100">{mostGames?.player || '—'}</div>
+                <div className="text-slate-200 font-semibold">{mostGames ? mostGames.games : '—'}</div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs text-slate-400">Nejlepší winrate (min. 10 her)</div>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <div className="truncate font-semibold text-slate-100">{bestWr?.player || '—'}</div>
+                <div className="text-slate-200 font-semibold">{bestWr?.winrate || '—'}</div>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="text-xs text-slate-400">Nejvyšší rating</div>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <div className="truncate font-semibold text-slate-100">{topRating?.player || '—'}</div>
+                <div className="text-slate-200 font-semibold">{topRating ? topRating.rating : '—'}</div>
+              </div>
+            </div>
+          </>
+        )
+      })()}
+    </div>
+  </div>
+</div>
 
         <div className="mt-8 -mx-6 sm:-mx-10">
           <div className="px-6 sm:px-10">
@@ -859,7 +918,7 @@ const classCuts = useMemo(() => {
 
       {/* Distribution + Tips */}
       <section id="distribution" className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-7 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
+        <div className="lg:col-span-12 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-semibold text-white">{t('dist_title') || 'Rozložení ratingu'}</div>
@@ -884,46 +943,6 @@ const classCuts = useMemo(() => {
           </div>
         </div>
 
-        <div className="lg:col-span-5 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
-          <div className="text-sm font-semibold text-white">{t('insights_title') || 'Insights'}</div>
-          <div className="mt-1 text-xs text-slate-400">{t('insights_sub') || 'Rychlé zajímavosti pro aktuální režim'}</div>
-
-          <div className="mt-4 grid gap-3">
-            {(() => {
-              const rr = rows
-              const mostGames = [...rr].sort((a, b) => b.games - a.games)[0]
-              const bestWr = [...rr]
-                .filter((x) => x.games >= 10)
-                .sort((a, b) => parseWinrate(b.winrate) - parseWinrate(a.winrate))[0]
-              const topRating = [...rr].sort((a, b) => b.rating - a.rating)[0]
-              return (
-                <>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-xs text-slate-400">Nejvíc her</div>
-                    <div className="mt-1 flex items-baseline justify-between gap-2">
-                      <div className="truncate font-semibold text-slate-100">{mostGames?.player || '—'}</div>
-                      <div className="text-slate-200 font-semibold">{mostGames ? mostGames.games : '—'}</div>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-xs text-slate-400">Nejlepší winrate (min. 10 her)</div>
-                    <div className="mt-1 flex items-baseline justify-between gap-2">
-                      <div className="truncate font-semibold text-slate-100">{bestWr?.player || '—'}</div>
-                      <div className="text-slate-200 font-semibold">{bestWr?.winrate || '—'}</div>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="text-xs text-slate-400">Nejvyšší rating</div>
-                    <div className="mt-1 flex items-baseline justify-between gap-2">
-                      <div className="truncate font-semibold text-slate-100">{topRating?.player || '—'}</div>
-                      <div className="text-slate-200 font-semibold">{topRating ? topRating.rating : '—'}</div>
-                    </div>
-                  </div>
-                </>
-              )
-            })()}
-          </div>
-        </div>
       </section>
 
 
