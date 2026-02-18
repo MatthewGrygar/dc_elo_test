@@ -14,7 +14,9 @@ export default function Segmented({
   return (
     <div
       className={clsx(
-        'inline-flex h-10 items-center rounded-2xl border border-white/10 bg-white/5 p-1 text-sm',
+        'inline-flex h-10 items-center rounded-2xl border p-1 text-sm',
+        'border-slate-200/70 bg-white text-slate-800',
+        'dark:border-white/10 dark:bg-white/5 dark:text-white',
         className,
       )}
       role="tablist"
@@ -28,7 +30,9 @@ export default function Segmented({
             onClick={() => onChange(opt.value)}
             className={clsx(
               'h-8 rounded-xl px-3 font-semibold transition',
-              active ? 'bg-indigo-500 text-white shadow-soft' : 'text-slate-200 hover:bg-white/5',
+              active
+                ? 'bg-indigo-500 text-white shadow-soft'
+                : 'text-slate-700 hover:bg-slate-100 dark:text-white/80 dark:hover:bg-white/10',
             )}
             role="tab"
             aria-selected={active}

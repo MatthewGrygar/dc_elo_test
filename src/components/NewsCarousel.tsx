@@ -31,21 +31,21 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
       <div className="absolute right-2 top-2 z-10 flex items-center gap-2">
         <button
           onClick={prev}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200/70 bg-white text-slate-800 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
           aria-label="previous"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={next}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200/70 bg-white text-slate-800 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
           aria-label="next"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/30">
+      <div className="overflow-hidden rounded-2xl rounded-2xl border border-slate-200/70 bg-slate-800/70 dark:bg-white/70 dark:border-white/10 dark:bg-slate-950/30">
         <AnimatePresence mode="wait">
           <motion.div
             key={idx}
@@ -61,7 +61,7 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/25 via-slate-950 to-slate-950" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent dark:from-slate-950/85" />
             </div>
 
             <div className="p-4">
@@ -69,10 +69,10 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-200">
                 {current.tag}
               </span>
-              <span className="text-xs text-slate-400">{current.date}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{current.date}</span>
             </div>
-            <div className="mt-2 text-sm font-semibold text-white leading-snug">{current.title}</div>
-            <div className="mt-1 text-sm text-slate-300 leading-relaxed">{current.excerpt}</div>
+            <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-snug">{current.title}</div>
+            <div className="mt-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{current.excerpt}</div>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -83,7 +83,7 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
           <button
             key={i}
             onClick={() => setIdx(i)}
-            className={`h-1.5 w-1.5 rounded-full transition ${i === idx ? 'bg-white/70' : 'bg-white/20 hover:bg-white/35'}`}
+            className={`h-1.5 w-1.5 rounded-full transition ${i === idx ? 'bg-slate-800/70 dark:bg-white/70' : 'bg-slate-400/30 hover:bg-slate-400/45 dark:bg-white/20 dark:hover:bg-white/35'}`}
             aria-label={`go-to-${i}`}
           />
         ))}

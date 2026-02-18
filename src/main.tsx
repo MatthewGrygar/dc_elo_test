@@ -6,6 +6,12 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App'
 import './styles.css'
 
+// Theme boot: default dark, allow persisted preference
+const savedTheme = (localStorage.getItem('dc_elo_theme') as 'dark' | 'light' | null) ?? 'dark'
+document.documentElement.classList.toggle('dark', savedTheme === 'dark')
+document.documentElement.dataset.theme = savedTheme
+document.documentElement.style.colorScheme = savedTheme
+
 // PWA: keep it silent; auto-update in the background.
 registerSW({ immediate: true })
 
