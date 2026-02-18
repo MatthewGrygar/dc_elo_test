@@ -18,9 +18,9 @@ import type { TooltipProps } from 'recharts'
 import { ExternalLink, Filter, X } from 'lucide-react'
 import { useI18n } from '../../features/i18n/i18n'
 import { usePlayerCards, usePlayerSummary, type PlayerCard, type StandingsRow } from '../../features/elo/hooks'
-import Segmented from '../ui/Segmented'
-import Skeleton from '../ui/Skeleton'
-import { parseOutcome } from '../../lib/outcome'
+import Segmented from '../../shared/ui/Segmented'
+import Skeleton from '../../shared/ui/Skeleton'
+import { parseOutcome } from '../../shared/lib/outcome'
 
 function fmtDate(s: string) {
   const d = new Date(s)

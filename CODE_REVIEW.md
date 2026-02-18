@@ -1,27 +1,30 @@
-# Code review notes (Patch 5 stability)
+# Code review notes (rewrite)
 
-This repository is intentionally kept **deployment-stable on GitHub Pages**.
+Cíl: **čistější struktura + stabilní deploy na GitHub Pages**.
 
 ## CI / build
 
-- `npm run build` runs `eslint`, `tsc --noEmit`, then `vite build`.
-- If CI starts failing, first check the build log for the **first** syntax / type error.
+- `npm run build` spouští `eslint`, `tsc --noEmit`, a pak `vite build`.
+- Když CI spadne, vždy řeš první chybu v logu (další jsou často kaskáda).
 
-## Common pitfalls (fixed here)
+## Routing / GitHub Pages
 
-- **JSX tag mismatch** (missing closing tags) can cascade into unrelated-looking errors.
-- Avoid raw `<` inside JSX text; use `&lt;` or `{ '<' }`.
-- Avoid `any` where possible; prefer:
-  - `unknown` + narrowing
-  - specific interfaces for sheet rows
+- Router je v `src/app/router.tsx` (Data Router / `createBrowserRouter`).
+- `basename` se počítá v `src/app/basename.ts` (pro `*.github.io/<repo>/`).
+- `public/404.html` posílá redirect přes query parametr `redirect=...`.
+- `RedirectRestorer` v routeru tenhle redirect bezpečně obnoví.
 
-## Structure
+## Struktura
 
-- Home page: `src/pages/HomePage.tsx`
-- Player modal: `src/components/modals/PlayerProfileModalContent.tsx`
-- Sheet fetching + mapping: `src/features/elo/sheets.ts`, `src/features/elo/hooks.ts`
+- `src/app/*` – app-level wiring (router, providers, theme)
+- `src/features/*` – logika a hooky
+- `src/entities/*` – doménové komponenty
+- `src/widgets/*` – layout a větší bloky UI
+- `src/shared/*` – sdílené UI + utility
 
-## UI conventions
+## UI konvence
 
-- Panels use consistent rounding + shadow so they stand out from the background.
-- Light/Dark mode is toggled from the header and stored in `localStorage`.
+- Preferuj malé komponenty + `useMemo` jen tam, kde je to potřeba.
+- Theme je centralizované v `src/app/theme.tsx`.
+- Na data ze Sheets se sahá přes `@tanstack/react-query`.
+
