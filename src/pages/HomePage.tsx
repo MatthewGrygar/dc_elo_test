@@ -907,8 +907,7 @@ export default function HomePage() {
       })()}
     </div>
   </div>
-</div>
-      </section>
+	</div>
 
         {/* Distribution + Tips */}
       <section id="charts" className="grid gap-6 lg:grid-cols-12">
