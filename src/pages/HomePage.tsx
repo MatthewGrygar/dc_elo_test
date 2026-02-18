@@ -46,9 +46,39 @@ function toDayKey(dateStr: string) {
 }
 
 function toMonthKey(dateStr: string) {
-  const d = new Date(dateStr)
-  if (Number.isNaN(d.getTime())) return ''
+  const d = parseLooseDate(dateStr)
+  if (!d) return ''
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function parseLooseDate(dateStr: string): Date | null {
+  const s = String(dateStr ?? '').trim()
+  if (!s) return null
+  // Common formats in the sheets: "DD.MM.YYYY" or ISO.
+  const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (m) {
+    const dd = Number(m[1])
+    const mm = Number(m[2])
+    const yy = Number(m[3])
+    const d = new Date(Date.UTC(yy, mm - 1, dd))
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  const d = new Date(s)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+function daysAgo(n: number) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return d
+}
+
+function parseEloFromParen(text: string) {
+  // "Name (1500)" -> 1500
+  const m = String(text ?? '').match(/\(([-+]?\d+(?:[\.,]\d+)?)\)/)
+  if (!m) return Number.NaN
+  const v = Number(m[1].replace(',', '.'))
+  return Number.isFinite(v) ? v : Number.NaN
 }
 function buildDistribution(ratings: number[]) {
   if (!ratings.length) return []
@@ -125,6 +155,9 @@ export default function HomePage() {
   const standings = mode === 'elo' ? standingsElo : standingsDcpr
   const lastTournament = useLastTournamentLabel()
   const cardsMode = usePlayerCards(mode)
+  // Shared data (for "Zajímavé zápasy"), regardless of the toggle.
+  const cardsElo = usePlayerCards('elo')
+  const cardsDcpr = usePlayerCards('dcpr')
 
   // IMPORTANT: define rows BEFORE any hooks that reference it.
   // Otherwise we can hit a TDZ runtime error in production builds.
@@ -162,28 +195,36 @@ export default function HomePage() {
   const top = useMemo(() => filtered.slice(0, 50), [filtered])
 
   const stats = useMemo(() => {
-    const eloRows = standingsElo.data ?? []
-
-    const eloRatings = eloRows.map((r) => r.rating).filter((n) => Number.isFinite(n))
-
-    const totalGames = eloRows
-      .map((r) => r.games)
-      .filter((n) => Number.isFinite(n))
-      .reduce((a, b) => a + b, 0)
-
+    // The same logic is used for both modes; the sheet differs by mode.
+    // MEDIAN ELO: median of ratings (column B in the sheet)
+    // TOTAL GAMES: sum of games (column C) divided by 2 (each match counts for both players)
+    // UNIQUE PLAYERS: number of non-empty rows
+    const ratings = rows.map((r) => r.rating).filter((n) => Number.isFinite(n))
+    const gamesSum = rows.map((r) => r.games).filter((n) => Number.isFinite(n)).reduce((a, b) => a + b, 0)
     return {
-      uniquePlayers: eloRows.length || rows.length,
-      medianElo: Math.round(median(eloRatings) || 0),
-      totalGames,
+      uniquePlayers: rows.length,
+      medianElo: Math.round(median(ratings) || 0),
+      totalGames: Math.round(gamesSum / 2),
     }
-  }, [rows.length, standingsElo.data])
+  }, [rows])
 
   
   const matchStats = useMemo(() => {
+    // Data mapping (mode-sensitive): computed from "Player cards (CSV)" sheets.
     const cards = cardsMode.data ?? []
-    const now = new Date()
-    const cutoff7 = new Date(now); cutoff7.setDate(cutoff7.getDate() - 7)
-    const cutoff30 = new Date(now); cutoff30.setDate(cutoff30.getDate() - 30)
+    const cutoff7 = daysAgo(7)
+    const cutoff30 = daysAgo(30)
+
+    const active7 = new Set<string>()
+    const active30 = new Set<string>()
+    const seenBefore30 = new Set<string>()
+    const seenLast30 = new Set<string>()
+
+    const matchIds7 = new Set<number>()
+    const matchIds30 = new Set<number>()
+
+    let sumAbsDelta = 0
+    let deltaCount = 0
 
     const byMatch = new Map<number, PlayerCard[]>()
     for (const c of cards) {
@@ -193,133 +234,55 @@ export default function HomePage() {
       byMatch.set(c.matchId, arr)
     }
 
-    const uniquePlayersAll = new Set<string>()
-    const uniquePlayers7 = new Set<string>()
-    const uniquePlayers30 = new Set<string>()
-    const firstSeen = new Map<string, number>()
-    const matchesByDay = new Map<string, number>()
-    const matchesByMonthPlayers = new Map<string, Set<string>>()
+    for (const c of cards) {
+      const key = normalizeKey(c.player)
+      if (!key) continue
+      const d = parseLooseDate(c.date)
+      if (d) {
+        if (d >= cutoff7) active7.add(key)
+        if (d >= cutoff30) active30.add(key)
+        if (d >= cutoff30) seenLast30.add(key)
+        else seenBefore30.add(key)
 
-    let sumAbsDelta = 0
-    let deltaCount = 0
+        if (d >= cutoff7 && Number.isFinite(c.matchId)) matchIds7.add(c.matchId)
+        if (d >= cutoff30 && Number.isFinite(c.matchId)) matchIds30.add(c.matchId)
+      }
 
+      const dv = parseDelta(c.delta)
+      if (Number.isFinite(dv)) {
+        sumAbsDelta += Math.abs(dv)
+        deltaCount += 1
+      }
+    }
+
+    const newPlayers30 = [...seenLast30].filter((p) => !seenBefore30.has(p)).length
+
+    // Upset %: lower pre-match ELO beats higher pre-match ELO.
     let upsetWins = 0
     let decidedMatches = 0
-
-    const diffBins: Record<string, { from: number; to: number; favWins: number; total: number }> = {}
-    const binStep = 50
-    const binKey = (d: number) => {
-      const a = Math.floor(d / binStep) * binStep
-      return `${a}–${a + binStep}`
+    for (const group of byMatch.values()) {
+      const wRow = group.find((r) => parseOutcome(r.result).outcome === "W")
+      const lRow = group.find((r) => parseOutcome(r.result).outcome === "L")
+      if (!wRow || !lRow) continue
+      // Each row stores opponent pre-match ELO in parentheses.
+      const winnerPre = parseEloFromParen(lRow.opponent)
+      const loserPre = parseEloFromParen(wRow.opponent)
+      if (!Number.isFinite(winnerPre) || !Number.isFinite(loserPre)) continue
+      decidedMatches += 1
+      if (winnerPre < loserPre) upsetWins += 1
     }
-
-    for (const [mid, group] of byMatch.entries()) {
-      // Match-level stats
-      // Determine date from first valid row
-      const dateStr = group.find((g) => g.date)?.date || ''
-      const d = new Date(dateStr)
-      const dOk = !Number.isNaN(d.getTime())
-
-      // Count match per day
-      if (dOk) {
-        const k = toDayKey(dateStr)
-        matchesByDay.set(k, (matchesByDay.get(k) ?? 0) + 1)
-
-        const mk = toMonthKey(dateStr)
-        if (mk) {
-          const set = matchesByMonthPlayers.get(mk) ?? new Set<string>()
-          for (const g of group) if (g.player) set.add(g.player)
-          matchesByMonthPlayers.set(mk, set)
-        }
-      }
-
-      // Need exactly two sides for upset + diff winrate
-      const sides = group.slice(0, 2)
-      if (sides.length === 2) {
-        const a = sides[0]
-        const b = sides[1]
-        const aDelta = parseDelta(a.delta)
-        const bDelta = parseDelta(b.delta)
-        const aPre = a.elo - aDelta
-        const bPre = b.elo - bDelta
-
-        const aOut = parseOutcome(a.result)
-        const bOut = parseOutcome(b.result)
-
-        // Determine winner by outcomes; ignore draws/unknown
-        let winner: 'A' | 'B' | null = null
-        if (aOut === 'W' || bOut === 'L') winner = 'A'
-        else if (bOut === 'W' || aOut === 'L') winner = 'B'
-        else winner = null
-
-        if (winner) {
-          decidedMatches += 1
-          const fav = aPre >= bPre ? 'A' : 'B'
-          const diff = Math.abs(aPre - bPre)
-          const key = binKey(diff)
-          diffBins[key] = diffBins[key] ?? { from: Math.floor(diff / binStep) * binStep, to: Math.floor(diff / binStep) * binStep + binStep, favWins: 0, total: 0 }
-          diffBins[key].total += 1
-          if (winner === fav) diffBins[key].favWins += 1
-
-          // Upset: underdog wins
-          if (winner !== fav) upsetWins += 1
-        }
-      }
-    }
-
-    for (const c of cards) {
-      if (!c.player) continue
-      uniquePlayersAll.add(c.player)
-      const d = new Date(c.date)
-      if (!Number.isNaN(d.getTime())) {
-        if (d >= cutoff7) uniquePlayers7.add(c.player)
-        if (d >= cutoff30) uniquePlayers30.add(c.player)
-        const ts = d.getTime()
-        const prev = firstSeen.get(c.player)
-        if (prev === undefined || ts < prev) firstSeen.set(c.player, ts)
-      }
-      sumAbsDelta += Math.abs(parseDelta(c.delta))
-      deltaCount += 1
-    }
-
-    const newPlayers30 = Array.from(firstSeen.entries()).filter(([, ts]) => ts >= cutoff30.getTime()).length
-
-    // Matches/day and matches/week averages from last 30 days and last 7 days
-    const matchDays30 = 30
-    const matchesLast30 = Array.from(matchesByDay.entries()).reduce((acc, [k, v]) => {
-      const d = new Date(k)
-      return !Number.isNaN(d.getTime()) && d >= cutoff30 ? acc + v : acc
-    }, 0)
-    const matchesLast7 = Array.from(matchesByDay.entries()).reduce((acc, [k, v]) => {
-      const d = new Date(k)
-      return !Number.isNaN(d.getTime()) && d >= cutoff7 ? acc + v : acc
-    }, 0)
-
-    const avgPerDay = matchesLast30 / matchDays30
-    const avgPerWeek = matchesLast30 / (matchDays30 / 7)
-
     const upsetPct = decidedMatches ? (upsetWins / decidedMatches) * 100 : 0
 
-    const activityTable = Array.from(matchesByMonthPlayers.entries())
-      .map(([month, set]) => ({ month, players: set.size }))
-      .sort((a, b) => a.month.localeCompare(b.month))
-
-    const winrateByDiff = Object.entries(diffBins)
-      .map(([bucket, v]) => ({ bucket, from: v.from, to: v.to, winrate: v.total ? (v.favWins / v.total) * 100 : 0, total: v.total }))
-      .sort((a, b) => a.from - b.from)
-
     return {
-      active7: uniquePlayers7.size,
-      active30: uniquePlayers30.size,
+      active7: active7.size,
+      active30: active30.size,
       newPlayers30,
-      matchesPerDay: avgPerDay,
-      matchesPerWeek: avgPerWeek,
+      matchesWeek: matchIds7.size,
+      matchesMonth: matchIds30.size,
       avgAbsDelta: deltaCount ? sumAbsDelta / deltaCount : 0,
       upsetPct,
-      activityTable,
-      winrateByDiff,
     }
-  }, [cardsMode.data, mode])
+  }, [cardsMode.data])
 
   const matchPairs = useMemo(() => {
     const cards = cardsMode.data ?? []
@@ -390,73 +353,81 @@ export default function HomePage() {
 
 
   const interestingMatches = useMemo(() => {
-    const items = cardsMode.data ?? []
-    const parse = (s: string) => {
-      const v = (s || '').trim()
-      if (!v) return null
-      if (/\d{4}-\d{2}-\d{2}/.test(v)) {
-        const d = new Date(v)
-        return isNaN(d.getTime()) ? null : d
-      }
-      const m = v.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/)
-      if (m) {
-        const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]))
-        return isNaN(d.getTime()) ? null : d
-      }
-      const d = new Date(v)
-      return isNaN(d.getTime()) ? null : d
+    const cutoff = daysAgo(30)
+    const allItems = [
+      ...(cardsElo.data ?? []).map((x) => ({ ...x, __src: 'ELO' as const })),
+      ...(cardsDcpr.data ?? []).map((x) => ({ ...x, __src: 'DCPR' as const })),
+    ]
+
+    type M = {
+      key: string
+      date: Date
+      tournament: string
+      a: string
+      b: string
+      eloA: number
+      eloB: number
+      result: string
+      src: 'ELO' | 'DCPR'
     }
 
-    // Deduplicate (the sheet typically contains one row per player per match).
-    type M = { key: string; date: Date; dateStr: string; tournament: string; a: string; b: string; eloA: number; eloB: number }
-    const map = new Map<string, Partial<M> & { aSide?: { p: string; elo: number }; bSide?: { p: string; elo: number }; meta?: { date: Date; dateStr: string; tournament: string } }>()
+    const byKey = new Map<string, any[]>()
+    for (const it of allItems) {
+      const d = parseLooseDate(it.date)
+      if (!d || d < cutoff) continue
+      if (!Number.isFinite(it.matchId)) continue
 
-    // Track latest date to define "recent".
-    let maxTs = 0
-
-    for (const it of items) {
-      const d = parse(it.date)
-      if (!d) continue
-      const ts = d.getTime()
-      if (ts > maxTs) maxTs = ts
-
-      const p1 = it.player.trim()
-      const p2 = it.opponent.trim()
-      if (!p1 || !p2) continue
-
-      const [a, b] = [p1, p2].sort((x, y) => x.localeCompare(y))
-      const key = `${it.matchId}::${it.tournament}::${it.date}::${a}::${b}`
-
-      if (!map.has(key)) map.set(key, {})
-      const entry = map.get(key)!
-      entry.meta = { date: d, dateStr: it.date, tournament: it.tournament }
-      if (p1 === a) entry.aSide = { p: p1, elo: it.elo }
-      else entry.bSide = { p: p1, elo: it.elo }
+      // Prefix key by source to avoid collisions.
+      const key = `${it.__src}::${it.matchId}`
+      const arr = byKey.get(key) ?? []
+      arr.push({ ...it, __d: d })
+      byKey.set(key, arr)
     }
 
-    const all: M[] = []
-    for (const [key, e] of map.entries()) {
-      if (!e.meta || !e.aSide || !e.bSide) continue
-      all.push({
+    const matches: M[] = []
+    for (const [key, group] of byKey.entries()) {
+      const sides = group.slice(0, 2)
+      if (sides.length !== 2) continue
+      const A = sides[0]
+      const B = sides[1]
+
+      const aName = String(A.player ?? '').trim()
+      const bName = String(B.player ?? '').trim()
+      if (!aName || !bName) continue
+
+      // Pre-match ELO for each player is stored in the opponent cell of the OTHER row.
+      const aPre = parseEloFromParen(B.opponent)
+      const bPre = parseEloFromParen(A.opponent)
+      if (!Number.isFinite(aPre) || !Number.isFinite(bPre)) continue
+
+      const outA = parseOutcome(A.result).outcome
+      const outB = parseOutcome(B.result).outcome
+      const result = outA === 'W' ? String(A.result) : outB === 'W' ? String(B.result) : String(A.result || B.result || '')
+
+      const src = String(key.split('::')[0]) as 'ELO' | 'DCPR'
+      matches.push({
         key,
-        date: e.meta.date,
-        dateStr: e.meta.dateStr,
-        tournament: e.meta.tournament,
-        a: e.aSide.p,
-        b: e.bSide.p,
-        eloA: e.aSide.elo,
-        eloB: e.bSide.elo,
+        date: A.__d as Date,
+        tournament: String(A.tournament || B.tournament || ''),
+        a: aName,
+        b: bName,
+        eloA: aPre,
+        eloB: bPre,
+        result,
+        src,
       })
     }
 
-    const recentCut = maxTs ? maxTs - 1000 * 60 * 60 * 24 * 45 : 0 // last ~45 days
-    const recent = recentCut ? all.filter((m) => m.date.getTime() >= recentCut) : all
+    const topCombined = [...matches]
+      .sort((x, y) => (y.eloA + y.eloB) - (x.eloA + x.eloB))
+      .slice(0, 2)
 
-    const topCombined = [...recent].sort((x, y) => (y.eloA + y.eloB) - (x.eloA + x.eloB)).slice(0, 3)
-    const topDiff = [...recent].sort((x, y) => Math.abs(y.eloA - y.eloB) - Math.abs(x.eloA - x.eloB)).slice(0, 3)
+    const topDiff = [...matches]
+      .sort((x, y) => Math.abs(y.eloA - y.eloB) - Math.abs(x.eloA - x.eloB))
+      .slice(0, 2)
 
     return { topCombined, topDiff }
-  }, [cardsMode.data])
+  }, [cardsElo.data, cardsDcpr.data])
 
 
   const matchTournaments = useMemo(() => {
@@ -524,35 +495,81 @@ const classCuts = useMemo(() => {
 
   const monthlyActiveSeries = useMemo(() => {
     const items = cardsMode.data ?? []
-    const parse = (s: string) => {
-      const v = (s || '').trim()
-      if (!v) return null
-      // Handles ISO, YYYY-MM-DD, and common CZ formats like DD.MM.YYYY
-      if (/\d{4}-\d{2}-\d{2}/.test(v)) {
-        const d = new Date(v)
-        return isNaN(d.getTime()) ? null : d
-      }
-      const m = v.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/)
-      if (m) {
-        const d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]))
-        return isNaN(d.getTime()) ? null : d
-      }
-      const d = new Date(v)
-      return isNaN(d.getTime()) ? null : d
+
+    // Last 12 months (including current month)
+    const now = new Date()
+    const months: string[] = []
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+      months.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`)
     }
 
     const map = new Map<string, Set<string>>()
+    for (const m of months) map.set(m, new Set())
+
+    const earliest = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1))
     for (const it of items) {
-      const d = parse(it.date)
+      const d = parseLooseDate(it.date)
       if (!d) continue
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      if (!map.has(key)) map.set(key, new Set())
-      map.get(key)!.add(it.player)
+      if (d < earliest) continue
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+      if (!map.has(key)) continue
+      const p = normalizeKey(it.player)
+      if (!p) continue
+      map.get(key)!.add(p)
     }
 
-    return [...map.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([month, set]) => ({ month, players: set.size }))
+    return months.map((month) => ({ month, players: map.get(month)?.size ?? 0 }))
+  }, [cardsMode.data])
+
+  const winrateByDiffOverall = useMemo(() => {
+    const cards = cardsMode.data ?? []
+    const byMatch = new Map<number, PlayerCard[]>()
+    for (const c of cards) {
+      if (!Number.isFinite(c.matchId)) continue
+      const arr = byMatch.get(c.matchId) ?? []
+      arr.push(c)
+      byMatch.set(c.matchId, arr)
+    }
+
+    const binStep = 50
+    const diffBins = new Map<number, { favWins: number; total: number }>()
+
+    for (const group of byMatch.values()) {
+      const sides = group.slice(0, 2)
+      if (sides.length !== 2) continue
+      const A = sides[0]
+      const B = sides[1]
+      const aPre = A.elo - parseDelta(A.delta)
+      const bPre = B.elo - parseDelta(B.delta)
+      if (!Number.isFinite(aPre) || !Number.isFinite(bPre)) continue
+
+      const aOut = parseOutcome(A.result).outcome
+      const bOut = parseOutcome(B.result).outcome
+      let winner: 'A' | 'B' | null = null
+      if (aOut === 'W' || bOut === 'L') winner = 'A'
+      else if (bOut === 'W' || aOut === 'L') winner = 'B'
+      else winner = null
+      if (!winner) continue
+
+      const fav: 'A' | 'B' = aPre >= bPre ? 'A' : 'B'
+      const diff = Math.abs(aPre - bPre)
+      const from = Math.floor(diff / binStep) * binStep
+      const cur = diffBins.get(from) ?? { favWins: 0, total: 0 }
+      cur.total += 1
+      if (winner === fav) cur.favWins += 1
+      diffBins.set(from, cur)
+    }
+
+    return [...diffBins.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([from, v]) => ({
+        bucket: `${from}–${from + binStep}`,
+        from,
+        to: from + binStep,
+        winrate: v.total ? (v.favWins / v.total) * 100 : 0,
+        total: v.total,
+      }))
   }, [cardsMode.data])
 
   // Deep link: open player modal if route matches /player/:slug
@@ -584,22 +601,15 @@ const classCuts = useMemo(() => {
 
         <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-7 space-y-5">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200"
-            >
-              <Sparkles className="h-4 w-4 text-indigo-300" />
-              <span>{t('hero_badge') || 'DC ELO'}</span>
-            </motion.div>
-
-            <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {t('hero_title') || 'DC ELO'}
-            </h1>
-            <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">
-              {t('hero_subtitle') || 'BY GRAIL SERIES'}
-            </p>
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/30 via-slate-950/40 to-cyan-400/15 shadow-soft" aria-hidden />
+              <div className="pl-1">
+                <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                  DC ELO
+                </h1>
+                <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">BY GRAIL SERIES</p>
+              </div>
+            </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <Segmented
@@ -610,17 +620,6 @@ const classCuts = useMemo(() => {
                   { value: 'dcpr', label: 'DCPR' },
                 ]}
               />
-              <div className="h-10 flex-1 min-w-[220px]">
-                <div className="flex h-10 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 text-slate-200">
-                  <Search className="h-4 w-4 text-slate-300" />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-                    placeholder={t('search_placeholder') || 'Hledej hráče…'}
-                  />
-                </div>
-              </div>
               <Button
                 onClick={() => {
                   const el = document.getElementById('leaderboard')
@@ -628,7 +627,7 @@ const classCuts = useMemo(() => {
                 }}
                 variant="primary"
               >
-                {t('cta_leaderboard') || 'Žebříček'}
+                {'Vyhledat'}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -681,15 +680,15 @@ const classCuts = useMemo(() => {
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Gauge className="h-4 w-4" /> Matches / day
+                  <Gauge className="h-4 w-4" /> Matches / week
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesPerDay.toFixed(1)}</div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Gauge className="h-4 w-4" /> Matches / week
+                  <Gauge className="h-4 w-4" /> Matches / month
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesPerWeek.toFixed(1)}</div>
+                <div className="mt-1 text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-2">
                 <div className="flex items-center gap-2 text-slate-300 text-xs">
@@ -733,7 +732,14 @@ const classCuts = useMemo(() => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                      <XAxis dataKey="month" tick={{ fill: 'rgba(226,232,240,0.7)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fill: 'rgba(226,232,240,0.7)', fontSize: 12 }}
+                        axisLine={false}
+                        tickLine={false}
+                        interval={0}
+                        tickFormatter={(v: any, idx: number) => (idx % 2 === 0 ? String(v).slice(2) : '')}
+                      />
                       <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
                       <Tooltip content={<GlassTooltip />} />
                       <Area type="monotone" dataKey="players" stroke="rgba(129,140,248,0.9)" fill="url(#grad)" isAnimationActive animationDuration={900} />
@@ -752,14 +758,14 @@ const classCuts = useMemo(() => {
             <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold text-white">Zajímavé zápasy</div>
-                <div className="text-xs text-slate-400">poslední týdny</div>
+                <div className="text-xs text-slate-400">posledních 30 dní</div>
               </div>
 
               <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
                 <div className="grid grid-cols-12 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200">
-                  <div className="col-span-5">Zápas</div>
-                  <div className="col-span-3 text-right">ELO</div>
-                  <div className="col-span-4 text-right">Datum / turnaj</div>
+                  <div className="col-span-7">Zápas</div>
+                  <div className="col-span-3 text-right">Výsledek</div>
+                  <div className="col-span-2 text-right">Zdroj</div>
                 </div>
 
                 {/* Nejvyšší součet ELO */}
@@ -775,9 +781,11 @@ const classCuts = useMemo(() => {
                 ) : (
                   (interestingMatches.topCombined.length ? interestingMatches.topCombined : []).map((m) => (
                     <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-                      <div className="col-span-5 text-slate-300 truncate">{m.a} vs {m.b}</div>
-                      <div className="col-span-3 text-right font-semibold text-white">{Math.round(m.eloA)} / {Math.round(m.eloB)}</div>
-                      <div className="col-span-4 text-right text-slate-300 truncate">{m.dateStr} · {m.tournament || '—'}</div>
+                      <div className="col-span-7 text-slate-300 truncate">
+                        {m.a} ({Math.round(m.eloA)}) vs {m.b} ({Math.round(m.eloB)})
+                      </div>
+                      <div className="col-span-3 text-right font-semibold text-white truncate">{m.result || '—'}</div>
+                      <div className="col-span-2 text-right text-slate-300">{m.src}</div>
                     </div>
                   ))
                 )}
@@ -795,17 +803,19 @@ const classCuts = useMemo(() => {
                 ) : (
                   (interestingMatches.topDiff.length ? interestingMatches.topDiff : []).map((m) => (
                     <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
-                      <div className="col-span-5 text-slate-300 truncate">{m.a} vs {m.b}</div>
-                      <div className="col-span-3 text-right font-semibold text-white">{Math.round(m.eloA)} / {Math.round(m.eloB)}</div>
-                      <div className="col-span-4 text-right text-slate-300 truncate">{m.dateStr} · {m.tournament || '—'}</div>
+                      <div className="col-span-7 text-slate-300 truncate">
+                        {m.a} ({Math.round(m.eloA)}) vs {m.b} ({Math.round(m.eloB)})
+                      </div>
+                      <div className="col-span-3 text-right font-semibold text-white truncate">{m.result || '—'}</div>
+                      <div className="col-span-2 text-right text-slate-300">{m.src}</div>
                     </div>
                   ))
                 )}
               </div>
 
               <div className="mt-3 text-xs text-slate-400 leading-relaxed">
-                Výběr je z posledních ~45 dní: nejvyšší součet ELO a největší rozdíl ELO.
-	            </div>
+                Výběr je z posledních 30 dní: 2× nejvyšší průměrné ELO a 2× největší rozdíl ELO (ELO + DCPR).
+              </div>
 	          </div>
 	        </div>
         </div>
@@ -982,9 +992,16 @@ const classCuts = useMemo(() => {
               <Skeleton className="h-full w-full rounded-2xl" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={matchStats.activityTable} margin={{ left: 6, right: 6, top: 10, bottom: 0 }}>
+                <BarChart data={monthlyActiveSeries} margin={{ left: 6, right: 6, top: 10, bottom: 0 }}>
                   <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} interval={Math.max(0, Math.floor(matchStats.activityTable.length / 6) - 1)} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    interval={0}
+                    tickFormatter={(v: any, idx: number) => (idx % 2 === 0 ? String(v).slice(2) : '')}
+                  />
                   <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={32} />
                   <Tooltip content={<GlassTooltip />} />
                   <Bar dataKey="players" radius={[10, 10, 0, 0]} fill="rgba(34,197,94,0.45)" isAnimationActive animationDuration={900} />
@@ -1007,7 +1024,7 @@ const classCuts = useMemo(() => {
               <Skeleton className="h-full w-full rounded-2xl" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={matchStats.winrateByDiff} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
+                <LineChart data={winrateByDiffOverall} margin={{ left: 6, right: 12, top: 10, bottom: 0 }}>
                   <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
                   <XAxis dataKey="bucket" tick={{ fill: 'rgba(226,232,240,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} interval={1} height={46} />
                   <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={40} domain={[0, 100]} />
