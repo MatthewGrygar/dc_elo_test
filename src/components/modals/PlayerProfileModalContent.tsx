@@ -880,7 +880,7 @@ export default function PlayerProfileModalContent({
             )}
           </div>
           <div className="mt-2 text-xs text-slate-500">
-            Buckety: −500..+500 (step 50). Empirická křivka zobrazuje všechny buckety; spolehlivost naznačuje styl (n≥30 / 10–29 / <10) a jemný CI pás. Expected: 1 / (1 + 10^(−Δ/400)).
+            Buckety: −500..+500 (step 50). Empirická křivka zobrazuje všechny buckety; spolehlivost naznačuje styl (n≥30 / 10–29 / méně než 10) a jemný CI pás. Expected: 1 / (1 + 10^(−Δ/400)).
           </div>
         </div>
     </div>
