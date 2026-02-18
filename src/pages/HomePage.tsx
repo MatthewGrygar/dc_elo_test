@@ -801,7 +801,7 @@ export default function HomePage() {
         </div>
       </section>
 
-<div className="mt-6 grid gap-6 lg:grid-cols-12">
+	<section className="mt-6 grid gap-6 lg:grid-cols-12">
   <div className="lg:col-span-7 rounded-3xl border border-slate-200/70 bg-white/70 dark:border-white/12 dark:bg-slate-950/35 p-5 shadow-soft">
     <div className="flex items-center justify-between">
       <div className="text-sm font-semibold text-white">Zajímavé zápasy</div>
@@ -904,8 +904,7 @@ export default function HomePage() {
       })()}
     </div>
   </div>
-</div>
-      </section>
+	</section>
 
         {/* Distribution + Tips */}
       <section id="charts" className="grid gap-6 lg:grid-cols-12">
