@@ -155,7 +155,7 @@ function MetricFlipCard({
         <div className="flip-face absolute inset-0 p-4 flex flex-col justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <Icon className="h-4 w-4" />
-            <span className="tracking-wide">{label}</span
+            <span className="tracking-wide">{label}</span>
           </div>
           <div className="mt-3">
             <div className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{value}</div>
