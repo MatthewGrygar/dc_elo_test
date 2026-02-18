@@ -620,164 +620,131 @@ const classCuts = useMemo(() => {
         <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/25 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 right-0 h-80 w-80 rounded-full bg-cyan-400/15 blur-3xl" />
 
-        <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <div className="lg:col-span-7 space-y-5">
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/30 via-slate-950/40 to-cyan-400/15 shadow-soft" aria-hidden />
-              <div className="pl-1">
-                <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                  DC ELO
-                </h1>
-                <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">BY GRAIL SERIES</p>
-              </div>
-            </div>
+        <div className="space-y-6">
+  <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="flex items-center gap-4">
+      {/* Logo placeholder */}
+      <div
+        className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/30 via-slate-950/40 to-cyan-400/15 shadow-soft"
+        aria-hidden
+      />
+      <div className="pl-1">
+        <h1 className="text-balance text-3xl font-semibold tracking-tight text-white sm:text-4xl">DC ELO</h1>
+        <p className="max-w-2xl text-pretty text-slate-300 leading-relaxed">BY GRAIL SERIES</p>
+      </div>
+    </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <Segmented
-                value={mode}
-                onChange={(v) => setMode(v as any)}
-                options={[
-                  { value: 'elo', label: 'ELO' },
-                  { value: 'dcpr', label: 'DCPR' },
-                ]}
-              />
-              <Button
-                onClick={() => {
-                  const el = document.getElementById('leaderboard')
-                  el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }}
-                variant="primary"
-              >
-                {'Hráči'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+    <div className="flex flex-wrap items-center gap-3">
+      <Segmented
+        value={mode}
+        onChange={(v) => setMode(v as any)}
+        options={[
+          { value: 'elo', label: 'ELO' },
+          { value: 'dcpr', label: 'DCPR' },
+        ]}
+      />
+      <Button
+        onClick={() => {
+          const el = document.getElementById('leaderboard')
+          el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }}
+        variant="primary"
+      >
+        {'Hráči'}
+        <ArrowRight className="h-4 w-4" />
+      </Button>
+    </div>
+  </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <TrendingUp className="h-4 w-4" /> MEDIAN ELO
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <SlidersHorizontal className="h-4 w-4" /> TOTAL GAMES
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Users className="h-4 w-4" /> UNIQUE PLAYERS
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <CalendarDays className="h-4 w-4" /> LATEST DATA
-                </div>
-                <div className="mt-auto text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
-              </div>
-            </div>
+  {/* Primary stats */}
+  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <TrendingUp className="h-4 w-4" /> MEDIAN ELO
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
+    </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <SlidersHorizontal className="h-4 w-4" /> TOTAL GAMES
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
+    </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Users className="h-4 w-4" /> UNIQUE PLAYERS
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
+    </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <CalendarDays className="h-4 w-4" /> LATEST DATA
+      </div>
+      <div className="mt-auto text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
+    </div>
+  </div>
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Activity className="h-4 w-4" /> Active (7d)
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Activity className="h-4 w-4" /> Active (30d)
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Users className="h-4 w-4" /> New (30d)
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Gauge className="h-4 w-4" /> Matches/week
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Gauge className="h-4 w-4" /> Matches/month
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-2">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Zap className="h-4 w-4" /> Avg |Δ|/match
-                </div>
-                <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 lg:col-span-3">
-                <div className="flex items-center gap-2 text-slate-300 text-xs">
-                  <Trophy className="h-4 w-4" /> Upset %
-                </div>
-                <div className="mt-1 flex items-baseline justify-between">
-                  <div className="text-2xl font-semibold text-white">{loading ? '—' : `${matchStats.upsetPct.toFixed(1)}%`}</div>
-                  <div className="text-xs text-slate-400">výhra slabšího nad silnějším</div>
-                </div>
-              </div>
-            </div>
+  {/* Activity & quality stats */}
+  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Activity className="h-4 w-4" /> Active (7d)
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
+    </div>
 
-            <div className="text-xs text-slate-400">
-              {'Zdroj: Google Sheets • '}
-              <span className="text-slate-200">{loading ? 'načítám…' : (lastTournament.data || '—')}</span>
-            </div>
-          </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Activity className="h-4 w-4" /> Active (30d)
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
+    </div>
 
-          <div className="lg:col-span-5">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white">{'Aktivní hráči podle měsíce'}</div>
-                <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
-              </div>
-              <div className="mt-4 h-56">
-                {loading ? (
-                  <Skeleton className="h-full w-full rounded-2xl" />
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={monthlyActiveSeries} margin={{ left: 4, right: 6, top: 10, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="rgb(99 102 241 / 0.55)" />
-                          <stop offset="100%" stopColor="rgb(99 102 241 / 0)" />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fill: 'rgba(226,232,240,0.7)', fontSize: 12 }}
-                        axisLine={false}
-                        tickLine={false}
-                        interval={0}
-                        tickFormatter={(v: any, idx: number) => (idx % 2 === 0 ? String(v).slice(2) : '')}
-                      />
-                      <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={36} />
-                      <Tooltip content={<GlassTooltip />} />
-                      <Area type="monotone" dataKey="players" stroke="rgba(129,140,248,0.9)" fill="url(#grad)" isAnimationActive animationDuration={900} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Users className="h-4 w-4" /> New (30d)
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
+    </div>
 
-              <div className="mt-4 text-xs text-slate-400 leading-relaxed">
-                {t('hero_chart_hint') ||
-                  'Otevři profil hráče a uvidíš detailní graf s vývojem ratingu, filtrováním turnajů a delta bar chart.'}
-              </div>
-            </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Gauge className="h-4 w-4" /> Matches/week
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
+    </div>
 
-            
-	        </div>
-        </div>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Gauge className="h-4 w-4" /> Matches/month
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
+    </div>
+
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Zap className="h-4 w-4" /> Avg |Δ|/match
+      </div>
+      <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
+    </div>
+
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2 lg:col-span-6">
+      <div className="flex items-center gap-2 text-slate-300 text-xs">
+        <Trophy className="h-4 w-4" /> Upset %
+      </div>
+      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
+        <div className="text-2xl font-semibold text-white">{loading ? '—' : `${matchStats.upsetPct.toFixed(1)}%`}</div>
+        <div className="text-xs text-slate-400">výhra slabšího nad silnějším</div>
+      </div>
+    </div>
+  </div>
+
+  <div className="text-xs text-slate-400">
+    {'Zdroj: Google Sheets • '}
+    <span className="text-slate-200">{loading ? 'načítám…' : (lastTournament.data || '—')}</span>
+  </div>
+</div>
+
 <div className="mt-6 grid gap-6 lg:grid-cols-12">
   <div className="lg:col-span-7 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-soft">
     <div className="flex items-center justify-between">
