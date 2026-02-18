@@ -36,9 +36,9 @@ function GlassTooltip({ active, payload, label }: TooltipProps<number | string, 
   const p0 = entries.find((p) => p.dataKey === 'elo') || entries[0]
   const p1 = entries.find((p) => p.dataKey === 'delta')
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
-      <div className="text-slate-200 font-semibold">{label}</div>
-      <div className="mt-1 space-y-1 text-slate-300">
+    <div className="elev-surface px-3 py-2 text-sm">
+      <div className="text-slate-700 dark:text-slate-200 font-semibold">{label}</div>
+      <div className="mt-1 space-y-1 text-slate-600 dark:text-slate-300">
         <div>
           <span className="text-slate-400 mr-2">Rating</span>
           <span className="font-semibold text-slate-100">{p0?.value}</span>
@@ -503,7 +503,7 @@ export default function PlayerProfileModalContent({
         <div className="space-y-1">
           <div className="text-2xl font-semibold tracking-tight text-white">{player.player}</div>
           <div className="text-sm text-slate-400">
-            {t('profile_sub') || 'Detail hráče'} • <span className="text-slate-200 font-semibold">{localMode.toUpperCase()}</span>
+            {t('profile_sub') || 'Detail hráče'} • <span className="text-slate-700 dark:text-slate-200 font-semibold">{localMode.toUpperCase()}</span>
           </div>
         </div>
 
@@ -518,7 +518,7 @@ export default function PlayerProfileModalContent({
           />
           <button
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200/70 bg-white text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
             aria-label="close"
           >
             <X className="h-4 w-4" />
@@ -528,84 +528,84 @@ export default function PlayerProfileModalContent({
 
       {/* Summary */}
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Aktuální ELO</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.rating}</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Peak</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.peak}</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Nejnižší ELO</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.minElo ?? '—'}</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Počet her</div>
           <div className="mt-1 text-2xl font-semibold text-white">{player.games}</div>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Winrate</div>
           <div className="mt-1 text-2xl font-semibold text-white">{winrateNum !== null ? `${winrateNum}%` : player.winrate || '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Výhry / prohry / remízy</div>
           <div className="mt-1 text-2xl font-semibold text-white">
             {player.win} / {player.loss} / {player.draw}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Prům. ΔELO / zápas</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.avgDeltaAbs !== null ? metrics.avgDeltaAbs.toFixed(1) : '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Nejdelší win streak</div>
           <div className="mt-1 text-2xl font-semibold text-white">{s ? s.winStreak : '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Nejdelší lose streak</div>
           <div className="mt-1 text-2xl font-semibold text-white">{s ? s.lossStreak : '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Průměrné ELO soupeřů</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.avgOpp ?? '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Nejvyšší poražené ELO</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.bestBeaten ?? '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Nejvyšší ELO, co tě porazilo</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.bestThatBeatYou ?? '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">ELO změna (7 dní)</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.elo7 !== null ? (metrics.elo7 >= 0 ? `+${metrics.elo7}` : `${metrics.elo7}`) : '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">ELO změna (30 dní)</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.elo30 !== null ? (metrics.elo30 >= 0 ? `+${metrics.elo30}` : `${metrics.elo30}`) : '—'}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="elev-surface p-4">
           <div className="text-xs text-slate-400">Her za týden</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.games7}</div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 xl:col-span-2">
+        <div className="elev-surface p-4 xl:col-span-2">
           <div className="text-xs text-slate-400">Indexy</div>
           <div className="mt-2 grid gap-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-300">Stability</span>
+              <span className="text-slate-600 dark:text-slate-300">Stability</span>
               <span className="text-slate-100 font-semibold">{metrics.stability !== null ? Math.round(metrics.stability) : '—'}</span>
             </div>
             <div className="h-2 rounded-full bg-white/5 overflow-hidden">
@@ -613,7 +613,7 @@ export default function PlayerProfileModalContent({
             </div>
 
             <div className="flex items-center justify-between text-sm mt-2">
-              <span className="text-slate-300">Momentum (20 her)</span>
+              <span className="text-slate-600 dark:text-slate-300">Momentum (20 her)</span>
               <span className="text-slate-100 font-semibold">{metrics.momentum20 !== null ? Math.round(metrics.momentum20) : '—'}</span>
             </div>
             <div className="h-2 rounded-full bg-white/5 overflow-hidden">
@@ -621,13 +621,13 @@ export default function PlayerProfileModalContent({
             </div>
 
             <div className="flex items-center justify-between text-sm mt-2">
-              <span className="text-slate-300">Clutch / Upset rate</span>
+              <span className="text-slate-600 dark:text-slate-300">Clutch / Upset rate</span>
               <span className="text-slate-100 font-semibold">{metrics.clutch !== null ? `${metrics.clutch.toFixed(1)}%` : '—'}</span>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 xl:col-span-3">
+        <div className="elev-surface p-4 xl:col-span-3">
           <div className="text-xs text-slate-400">Nejčastější soupeř</div>
           <div className="mt-1 text-2xl font-semibold text-white">{metrics.mostOpponent ?? '—'}</div>
           <div className="mt-1 text-xs text-slate-400">Upset rate: {metrics.upsetRate !== null ? `${metrics.upsetRate.toFixed(1)}%` : '—'}</div>
@@ -636,8 +636,8 @@ export default function PlayerProfileModalContent({
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
-          <Filter className="h-4 w-4 text-slate-300" />
+        <div className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+          <Filter className="h-4 w-4 text-slate-600 dark:text-slate-300" />
           <span className="text-slate-400">{t('profile_filter') || 'Turnaj:'}</span>
           <select
             value={tournamentFilter}
@@ -668,7 +668,7 @@ export default function PlayerProfileModalContent({
         </div>
 
         <a
-          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-white/10"
           href="https://docs.google.com/spreadsheets/d/1Y0kSHYcYqfT-qqiDPtnd-KhOVd5wG2QW9nyx2Y0oT3o/edit"
           target="_blank"
           rel="noreferrer"
@@ -837,9 +837,9 @@ export default function PlayerProfileModalContent({
                       const l = typeof p.losses === 'number' ? p.losses : null
                       const d = typeof p.draws === 'number' ? p.draws : null
                       return (
-                        <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
-                          <div className="text-slate-200 font-semibold">ΔELO: {p.diff}</div>
-                          <div className="mt-1 text-slate-300">
+                        <div className="elev-surface px-3 py-2 text-sm">
+                          <div className="text-slate-700 dark:text-slate-200 font-semibold">ΔELO: {p.diff}</div>
+                          <div className="mt-1 text-slate-600 dark:text-slate-300">
                             Empirical: <span className="text-slate-100 font-semibold">{emp}</span>
                             {n !== null ? <span className="text-slate-400"> • n={n}</span> : null}
                           </div>
@@ -848,7 +848,7 @@ export default function PlayerProfileModalContent({
                               W:{w ?? 0} • L:{l ?? 0} • D:{d ?? 0}
                             </div>
                           ) : null}
-                          <div className="text-slate-300">
+                          <div className="text-slate-600 dark:text-slate-300">
                             Expected: <span className="text-slate-100 font-semibold">{exp}</span>
                           </div>
                         </div>

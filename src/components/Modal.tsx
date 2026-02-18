@@ -79,21 +79,21 @@ function ModalView({ state, onClose }: { state: ModalState; onClose: () => void 
             aria-modal="true"
             className={
               state.fullscreen
-                ? 'relative z-10 h-[92vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-soft'
-                : `relative z-10 w-full ${sizeClass} overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-soft`
+                ? 'relative z-10 h-[92vh] w-full max-w-5xl overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-soft dark:border-white/10 dark:bg-slate-950'
+                : `relative z-10 w-full ${sizeClass} overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-soft dark:border-white/10 dark:bg-slate-950`
             }
             initial={{ y: 22, scale: 0.98, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 22, scale: 0.98, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 420, damping: 34 }}
           >
-            <div className="flex items-start gap-4 border-b border-white/10 px-5 py-4">
+            <div className="flex items-start gap-4 border-b border-slate-200/70 dark:border-white/10 px-5 py-4">
               <div className="min-w-0 flex-1">
                 {state.title && <div className="text-lg font-semibold tracking-tight">{state.title}</div>}
-                {state.subtitle && <div className="mt-0.5 text-sm text-slate-300">{state.subtitle}</div>}
+                {state.subtitle && <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{state.subtitle}</div>}
               </div>
               <button
-                className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-200 hover:bg-white/10"
+                className="rounded-xl border border-white/10 bg-white p-2 text-slate-700 hover:bg-slate-50 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
                 onClick={onClose}
                 aria-label="Close modal"
               >

@@ -45,7 +45,7 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl rounded-2xl border border-slate-200/70 bg-slate-800/70 dark:bg-white/70 dark:border-white/10 dark:bg-slate-950/30">
+      <div className="elev-surface overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={idx}
@@ -66,7 +66,7 @@ export default function NewsCarousel({ items }: { items: NewsItem[] }) {
 
             <div className="p-4">
               <div className="flex items-center justify-between gap-3">
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-slate-200">
+              <span className="elev-chip">
                 {current.tag}
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400">{current.date}</span>

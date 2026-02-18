@@ -111,7 +111,7 @@ export default function Shell() {
   return (
     <ModalProvider>
       <EloModeProvider>
-        <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white">
+        <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white bg-grid">
           <HeaderInner />
           <main className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
             <Outlet />
