@@ -431,21 +431,34 @@ export default function HomePage() {
     })
   }
 
-  const pickTopDistinct = (list: M[], scoreFn: (m: M) => number, count: number, usedMatchIds: Set<number>) => {
+  const pickTopDistinct = (
+    list: M[],
+    scoreFn: (m: M) => number,
+    count: number,
+    usedMatchKeys: Set<string>,
+    usedPlayers: Set<string>
+  ) => {
     const out: M[] = []
     const sorted = [...list].sort((a, b) => scoreFn(b) - scoreFn(a))
     for (const m of sorted) {
-      if (usedMatchIds.has(m.matchId)) continue
-      usedMatchIds.add(m.matchId)
+      if (usedMatchKeys.has(m.key)) continue
+      const a = normalizeKey(m.left)
+      const b = normalizeKey(m.right)
+      // Avoid repeating the same player across the showcased matches
+      if (usedPlayers.has(a) || usedPlayers.has(b)) continue
+      usedMatchKeys.add(m.key)
+      usedPlayers.add(a)
+      usedPlayers.add(b)
       out.push(m)
       if (out.length >= count) break
     }
     return out
   }
 
-  const used = new Set<number>()
-  const topCombined = pickTopDistinct(matches, (m) => m.avg, 2, used)
-  const topDiff = pickTopDistinct(matches, (m) => m.diff, 2, used)
+  const used = new Set<string>()
+  const usedPlayers = new Set<string>()
+  const topCombined = pickTopDistinct(matches, (m) => m.avg, 2, used, usedPlayers)
+  const topDiff = pickTopDistinct(matches, (m) => m.diff, 2, used, usedPlayers)
 
   return { topCombined, topDiff }
 }, [cardsElo.data, cardsDcpr.data])
@@ -469,17 +482,8 @@ export default function HomePage() {
 
 
 
-const classCuts = useMemo(() => {
-    const ratings = rows
-      .map((r) => r.rating)
-      .filter((n) => Number.isFinite(n))
-      .sort((a, b) => a - b)
-    return {
-      q25: quantile(ratings, 0.25),
-      q50: quantile(ratings, 0.5),
-      q75: quantile(ratings, 0.75),
-    }
-  }, [rows])
+
+)
 
   const distribution = useMemo(() => buildDistribution(rows.map((r) => r.rating).filter(Number.isFinite)), [rows])
 
@@ -501,17 +505,12 @@ const classCuts = useMemo(() => {
   }, [cardsMode.data])
 
   const playersByClass = useMemo(() => {
-    const ratings = rows.map((r) => r.rating).filter((n) => Number.isFinite(n))
-    const sorted = [...ratings].sort((a, b) => a - b)
-    const q25 = quantile(sorted, 0.25)
-    const q50 = quantile(sorted, 0.5)
-    const q75 = quantile(sorted, 0.75)
     const counts: Record<'A' | 'B' | 'C' | 'D', number> = { A: 0, B: 0, C: 0, D: 0 }
     for (const r of rows) {
-      counts[classForRating(r.rating, q25, q50, q75)] += 1
+      if (r.ratingClass) counts[r.ratingClass] += 1
     }
     return (['A', 'B', 'C', 'D'] as const).map((cls) => ({ cls, count: counts[cls] }))
-  }, [rows])
+  }, [rows]ws])
 
 
   const monthlyActiveSeries = useMemo(() => {
@@ -643,12 +642,46 @@ const classCuts = useMemo(() => {
           { value: 'dcpr', label: 'DCPR' },
         ]}
       />
+    </div>
+
+  {/* Slider + CTA */}
+  <div className="grid gap-4 lg:grid-cols-12 items-stretch">
+    <div className="lg:col-span-10 overflow-hidden rounded-3xl border border-white/10 bg-slate-950/35 shadow-soft">
+      <NewsCarousel
+        items={[
+          {
+            tag: 'Update',
+            image: '/assets/images/slider/placeholder-1.svg',
+            title: 'Vylepšené grafy a rychlejší profil hráče',
+            date: lastTournament.data || '—',
+            excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
+          },
+          {
+            tag: 'Insight',
+            image: '/assets/images/slider/placeholder-2.svg',
+            title: 'Kalibrace ELO: winrate vs rozdíl ratingu',
+            date: 'Validace',
+            excerpt: 'Porovnání empirické winrate a expected křivky podle ELO vzorce.',
+          },
+          {
+            tag: 'Tip',
+            image: '/assets/images/slider/placeholder-3.svg',
+            title: 'Profil hráče: období, zoom a trendy',
+            date: 'Profil',
+            excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
+          },
+        ]}
+      />
+    </div>
+
+    <div className="lg:col-span-2 flex">
       <Button
         onClick={() => {
           const el = document.getElementById('leaderboard')
           el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }}
         variant="primary"
+        className="w-full justify-center rounded-3xl"
       >
         {'Hráči'}
         <ArrowRight className="h-4 w-4" />
@@ -656,29 +689,32 @@ const classCuts = useMemo(() => {
     </div>
   </div>
 
+
+  </div>
+
   {/* Primary stats */}
   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Medián ratingu (z hodnot ratingu ve standings).">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <TrendingUp className="h-4 w-4" /> MEDIAN ELO
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.medianElo}</div>
     </div>
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Součet odehraných her / 2 (každý zápas je v datech 2×).">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <SlidersHorizontal className="h-4 w-4" /> TOTAL GAMES
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.totalGames.toLocaleString()}</div>
     </div>
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních hráčů ve standings (počet řádků).">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Users className="h-4 w-4" /> UNIQUE PLAYERS
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : stats.uniquePlayers}</div>
     </div>
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Nejnovější záznam z listu Data (poslední hodnota ve sloupci B).">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <CalendarDays className="h-4 w-4" /> LATEST DATA
+        
       </div>
       <div className="mt-auto text-lg font-semibold text-white">{loading ? '—' : (lastTournament.data || '—')}</div>
     </div>
@@ -686,49 +722,49 @@ const classCuts = useMemo(() => {
 
   {/* Activity & quality stats */}
   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních hráčů, kteří hráli alespoň 1 zápas v posledních 7 dnech.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Activity className="h-4 w-4" /> Active (7d)
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active7}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních hráčů, kteří hráli alespoň 1 zápas v posledních 30 dnech.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Activity className="h-4 w-4" /> Active (30d)
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.active30}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Hráči, kteří se objevili v posledních 30 dnech a předtím v datech nebyli.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Users className="h-4 w-4" /> New (30d)
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.newPlayers30}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních zápasů (Match ID) za posledních 7 dní.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Gauge className="h-4 w-4" /> Matches/week
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesWeek.toLocaleString()}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Počet unikátních zápasů (Match ID) za posledních 30 dní.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Gauge className="h-4 w-4" /> Matches/month
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.matchesMonth.toLocaleString()}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col justify-between min-h-[92px]" title="Průměr absolutní hodnoty změny ratingu (|Δ|) na řádek; orientační velikost změn.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
-        <Zap className="h-4 w-4" /> Avg |Δ|/match
+        
       </div>
       <div className="mt-auto text-2xl font-semibold text-white">{loading ? '—' : matchStats.avgAbsDelta.toFixed(1)}</div>
     </div>
 
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2 lg:col-span-6">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2 lg:col-span-6" title="Podíl zápasů, kde hráč s nižším pre-match ELO porazil hráče s vyšším pre-match ELO.">
       <div className="flex items-center gap-2 text-slate-300 text-xs">
         <Trophy className="h-4 w-4" /> Upset %
       </div>
@@ -771,9 +807,11 @@ const classCuts = useMemo(() => {
         (interestingMatches.topCombined.length ? interestingMatches.topCombined : []).map((m) => (
           <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
             <div className="col-span-10 text-slate-200">
-              <span className="font-semibold text-white">{m.left}</span> <span className="text-slate-300">({Math.round(m.leftElo)})</span>
+              <span className="font-semibold text-white">{m.left}</span>
+              <span className="text-slate-300">, {Math.round(m.leftElo)}</span>
               <span className="mx-3 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-2 py-0.5 text-xs font-semibold text-slate-100">{m.score || '—'}</span>
-              <span className="text-slate-300">({Math.round(m.rightElo)})</span> <span className="font-semibold text-white">{m.right}</span>
+              <span className="text-slate-300">{Math.round(m.rightElo)}, </span>
+              <span className="font-semibold text-white">{m.right}</span>
             </div>
             <div className="col-span-2 text-right text-slate-300">{m.src}</div>
           </div>
@@ -793,9 +831,11 @@ const classCuts = useMemo(() => {
         (interestingMatches.topDiff.length ? interestingMatches.topDiff : []).map((m) => (
           <div key={m.key} className="grid grid-cols-12 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
             <div className="col-span-10 text-slate-200">
-              <span className="font-semibold text-white">{m.left}</span> <span className="text-slate-300">({Math.round(m.leftElo)})</span>
+              <span className="font-semibold text-white">{m.left}</span>
+              <span className="text-slate-300">, {Math.round(m.leftElo)}</span>
               <span className="mx-3 inline-flex items-center rounded-full border border-white/10 bg-slate-950/40 px-2 py-0.5 text-xs font-semibold text-slate-100">{m.score || '—'}</span>
-              <span className="text-slate-300">({Math.round(m.rightElo)})</span> <span className="font-semibold text-white">{m.right}</span>
+              <span className="text-slate-300">{Math.round(m.rightElo)}, </span>
+              <span className="font-semibold text-white">{m.right}</span>
             </div>
             <div className="col-span-2 text-right text-slate-300">{m.src}</div>
           </div>
@@ -846,49 +886,12 @@ const classCuts = useMemo(() => {
   </div>
 </div>
 
-        <div className="mt-8 -mx-6 sm:-mx-10">
-          <div className="px-6 sm:px-10">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-white">Novinky & články</div>
-              <div className="text-xs text-slate-400">Rychlé info ze scény</div>
-            </div>
-          </div>
-          <div className="mt-4 max-w-[980px] mx-auto">
-            <NewsCarousel
-              items={[
-                {
-                  tag: 'Update',
-                  image: '/assets/slider/placeholder-1.svg',
-                  title: 'Vylepšené grafy a rychlejší profil hráče',
-                  date: lastTournament.data || '—',
-                  excerpt: 'Nové metriky (upsety, aktivita), více grafů a přehlednější profil.',
-                },
-                {
-                  tag: 'Insight',
-                  image: '/assets/slider/placeholder-2.svg',
-                  title: 'Jak číst ELO: upsety a rozdíly ratingu',
-                  date: 'Statistika',
-                  excerpt: 'Graf “Winrate podle ELO rozdílu” ukáže, kdy favorit skutečně vyhrává.',
-                },
-                {
-                  tag: 'Tip',
-                  image: '/assets/slider/placeholder-3.svg',
-                                    title: 'Filtruj období: 30/90/180 dní nebo all-life',
-                  date: 'Profil',
-                  excerpt: 'Každý hráč má přepínač období a zoom pro detailní průběh.',
-                },
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Distribution + Tips */}
+        {/* Distribution + Tips */}
       <section id="distribution" className="grid gap-6 lg:grid-cols-12">
         <div className="lg:col-span-12 rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold text-white">{t('dist_title') || 'Rozložení ratingu'}</div>
+              <div className="text-sm font-semibold text-white">{mode === 'elo' ? 'Rozložení ELO' : 'Rozložení DCPR'}</div>
               <div className="text-xs text-slate-400">{t('dist_sub') || 'Kolik hráčů je v jednotlivých pásmech'}</div>
             </div>
             <div className="text-xs text-slate-400">{mode.toUpperCase()}</div>
@@ -1078,7 +1081,7 @@ const classCuts = useMemo(() => {
                     <div className="flex items-center gap-2">
                       <span className="truncate">{r.player}</span>
                       {r.rank === 1 ? <Trophy className="h-4 w-4 shrink-0 text-yellow-300" /> : null}
-                      <ClassPill cls={classForRating(r.rating, classCuts.q25, classCuts.q50, classCuts.q75)} />
+                      {r.ratingClass ? <ClassPill cls={r.ratingClass} /> : null}
                     </div>
                   </div>
                   <div className="text-right font-semibold text-white">{r.rating}</div>

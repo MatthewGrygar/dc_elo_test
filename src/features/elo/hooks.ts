@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchCsv, toNumber, normalizeKey, buildDeterministicSlugs } from '../../lib/csv'
 import { sheetCsvUrl, SHEETS } from './sheets'
 
+export type RatingClass = 'A' | 'B' | 'C' | 'D'
+
 export type StandingsRow = {
   rank: number
   player: string
@@ -13,7 +15,7 @@ export type StandingsRow = {
   draw: number
   peak: number
   winrate: string
-  vt?: string | null
+  ratingClass?: RatingClass | null
 }
 
 export type PlayerCard = {
@@ -35,67 +37,53 @@ export type PlayerSummary = {
   lossStreak: number
 }
 
-function normalizeVT(v: unknown) {
+function normalizeRatingClass(v: unknown): RatingClass | null {
   const s = String(v ?? '').trim().toUpperCase()
   if (!s) return null
-  if (s.startsWith('VT')) return s
-  return s
+  if (s === 'UNRANKED') return null
+  // Sheet stores VT1..VT4
+  if (s === 'VT1') return 'A'
+  if (s === 'VT2') return 'B'
+  if (s === 'VT3') return 'C'
+  if (s === 'VT4') return 'D'
+  // In case the sheet ever starts storing Class letters directly
+  if (s === 'A' || s === 'B' || s === 'C' || s === 'D') return s as RatingClass
+  return null
 }
 
-export function useVtMap() {
-  return useQuery({
-    queryKey: ['vtMap'],
-    queryFn: async () => {
-      const rows = await fetchCsv(sheetCsvUrl(SHEETS.tournamentElo))
-      const map = new Map<string, string | null>()
-      for (let i = 1; i < rows.length; i++) {
-        const player = (rows[i]?.[0] ?? '').toString().trim()
-        if (!player) continue
-        const vt = normalizeVT(rows[i]?.[8])
-        map.set(normalizeKey(player), vt)
-      }
-      return map
-    },
-  })
-}
-
-function parseStandings(rows: string[][], vtMap: Map<string, string | null>): StandingsRow[] {
-  // Columns (0-based) from original app:
-  // A player, B rating, C games, D win, E loss, F draw, G peak, H winrate
+function parseStandings(rows: string[][]): StandingsRow[] {
+  // Expected columns (0-based):
+  // A player, B rating, C games, D win, E loss, F draw, G winrate, H peak, I rating class (VT1..VT4 or unranked)
   const parsed: Omit<StandingsRow, 'slug'>[] = []
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i]
     const player = (r?.[0] ?? '').toString().trim()
     if (!player) continue
     parsed.push({
-      rank: i,
+      rank: parsed.length + 1,
       player,
       rating: toNumber(r?.[1]),
       games: toNumber(r?.[2]),
       win: toNumber(r?.[3]),
       loss: toNumber(r?.[4]),
       draw: toNumber(r?.[5]),
-      peak: toNumber(r?.[6]),
-      winrate: (r?.[7] ?? '').toString().trim(),
-      vt: vtMap.get(normalizeKey(player)) ?? null,
+      winrate: (r?.[6] ?? '').toString().trim(),
+      peak: toNumber(r?.[7]),
+      ratingClass: normalizeRatingClass(r?.[8]),
     })
   }
 
-  // Slugs based on canonical order
   const slugs = buildDeterministicSlugs(parsed.map((p) => p.player))
   return parsed.map((p, idx) => ({ ...p, slug: slugs[idx] }))
 }
 
 export function useStandings(mode: 'elo' | 'dcpr') {
-  const vt = useVtMap()
-
   return useQuery({
-    queryKey: ['standings', mode, vt.data ? 'vt' : 'no-vt'],
-    enabled: vt.isSuccess,
+    queryKey: ['standings', mode],
     queryFn: async () => {
       const sheet = mode === 'dcpr' ? SHEETS.tournamentElo : SHEETS.eloStandings
       const rows = await fetchCsv(sheetCsvUrl(sheet))
-      return parseStandings(rows, vt.data ?? new Map())
+      return parseStandings(rows)
     },
   })
 }
