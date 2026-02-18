@@ -14,6 +14,7 @@ import {
   BarChart,
   LineChart,
 } from 'recharts'
+import type { TooltipProps } from 'recharts'
 import { ExternalLink, Filter, X } from 'lucide-react'
 import { useI18n } from '../../features/i18n/i18n'
 import { usePlayerCards, usePlayerSummary, type PlayerCard, type StandingsRow } from '../../features/elo/hooks'
@@ -27,10 +28,13 @@ function fmtDate(s: string) {
   return d.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
-function GlassTooltip({ active, payload, label }: any) {
+type ChartPayloadEntry = { dataKey?: string; value?: number | string }
+
+function GlassTooltip({ active, payload, label }: TooltipProps<number | string, string>) {
   if (!active || !payload?.length) return null
-  const p0 = payload.find((p: any) => p.dataKey === 'elo') || payload[0]
-  const p1 = payload.find((p: any) => p.dataKey === 'delta')
+  const entries = payload as unknown as ChartPayloadEntry[]
+  const p0 = entries.find((p) => p.dataKey === 'elo') || entries[0]
+  const p1 = entries.find((p) => p.dataKey === 'delta')
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
       <div className="text-slate-200 font-semibold">{label}</div>
@@ -313,7 +317,23 @@ export default function PlayerProfileModalContent({
 
     // Expected křivka (hladká): dense step
     const denseStep = 10
-    const byDiff = new Map<number, any>()
+    type WinrateDiffPoint = {
+      diff: number
+      expected: number
+      empirical?: number | null
+      empiricalStrong?: number | null
+      empiricalMid?: number | null
+      empiricalLow?: number | null
+      n?: number
+      wins?: number
+      losses?: number
+      draws?: number
+      ciLower?: number
+      ciUpper?: number
+      ciBand?: number
+    }
+
+    const byDiff = new Map<number, WinrateDiffPoint>()
     for (let d = minX; d <= maxX; d += denseStep) {
       byDiff.set(d, { diff: d, expected: expected(d) })
     }
@@ -329,7 +349,7 @@ export default function PlayerProfileModalContent({
       const p = b.sum / b.n
       const { lo, hi } = wilson(p, b.n)
       const key = b.center
-      const row = byDiff.get(key) || { diff: key, expected: expected(key) }
+      const row: WinrateDiffPoint = byDiff.get(key) || { diff: key, expected: expected(key) }
 
       // styl podle n
       const strong = b.n >= 30
@@ -489,7 +509,7 @@ export default function PlayerProfileModalContent({
         <div className="flex items-center gap-2">
           <Segmented
             value={localMode}
-            onChange={(v) => setLocalMode(v as any)}
+            onChange={(v) => setLocalMode(v === 'elo' || v === 'dcpr' ? v : 'elo')}
             options={[
               { value: 'elo', label: 'ELO' },
               { value: 'dcpr', label: 'DCPR' },
@@ -794,9 +814,20 @@ export default function PlayerProfileModalContent({
                     tickFormatter={(v) => `${Math.round(Number(v) * 100)}%`}
                   />
                   <Tooltip
-                    content={({ active, payload }: any) => {
+                    content={(props: TooltipProps<number | string, string>) => {
+                      const { active, payload } = props
                       if (!active || !payload?.length) return null
-                      const p = payload[0]?.payload
+                      const p = (payload[0] as unknown as { payload?: unknown })?.payload as
+                        | {
+                            diff?: number
+                            empirical?: number
+                            expected?: number
+                            n?: number
+                            wins?: number
+                            losses?: number
+                            draws?: number
+                          }
+                        | undefined
                       if (!p) return null
                       const emp = typeof p.empirical === 'number' ? `${Math.round(p.empirical * 100)}%` : '—'
                       const exp = typeof p.expected === 'number' ? `${Math.round(p.expected * 100)}%` : '—'

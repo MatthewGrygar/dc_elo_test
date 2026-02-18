@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, SlidersHorizontal, Trophy, TrendingUp, Users, Sparkles, ArrowRight, CalendarDays, Activity, Gauge, Zap } from 'lucide-react'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Area, AreaChart, CartesianGrid, LineChart, Line, Legend } from 'recharts'
+import type { TooltipProps } from 'recharts'
 import { useI18n } from '../features/i18n/i18n'
 import { useLastTournamentLabel, useStandings, usePlayerCards, type StandingsRow, type PlayerCard } from '../features/elo/hooks'
 import { useEloMode } from '../features/elo/mode'
@@ -126,6 +127,7 @@ function ClassPill({ cls }: { cls: 'A' | 'B' | 'C' | 'D' }) {
       Class {cls}
     </span>
   )
+}
 
 function MetricFlipCard({
   icon: Icon,
@@ -135,7 +137,7 @@ function MetricFlipCard({
   note,
   className = '',
 }: {
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   label: string
   value: ReactNode
   detail: string
@@ -173,14 +175,12 @@ function MetricFlipCard({
   )
 }
 
-}
-
-function GlassTooltip({ active, payload, label }: any) {
+function GlassTooltip({ active, payload, label }: TooltipProps<number | string, string>) {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm shadow-soft backdrop-blur">
       <div className="text-slate-200 font-semibold">{label}</div>
-      <div className="text-slate-300">{payload[0].value}</div>
+      <div className="text-slate-300">{payload[0]?.value as ReactNode}</div>
     </div>
   )
 }
@@ -443,18 +443,19 @@ export default function HomePage() {
     diff: number
   }
 
-  const byKey = new Map<string, any[]>()
+  type CardItem = PlayerCard & { __src: 'ELO' | 'DCPR'; __d: Date }
+  const byKey = new Map<string, CardItem[]>()
   for (const it of allItems) {
     const d = parseLooseDate(it.date)
     if (!d || d < cutoff) continue
     if (!Number.isFinite(it.matchId)) continue
     const key = `${it.__src}::${it.matchId}`
     const arr = byKey.get(key) ?? []
-    arr.push({ ...it, __d: d })
+    arr.push({ ...(it as PlayerCard & { __src: 'ELO' | 'DCPR' }), __d: d })
     byKey.set(key, arr)
   }
 
-  const extractScore = (s: any) => {
+  const extractScore = (s: unknown) => {
     const str = String(s ?? '')
     const m = str.match(/(\d+)\s*-\s*(\d+)/)
     return m ? `${m[1]}-${m[2]}` : str.trim()
@@ -1051,7 +1052,7 @@ export default function HomePage() {
                     axisLine={false}
                     tickLine={false}
                     interval={0}
-                    tickFormatter={(v: any, idx: number) => (idx % 2 === 0 ? String(v).slice(2) : '')}
+                    tickFormatter={(v: string | number, idx: number) => (idx % 2 === 0 ? String(v).slice(2) : '')}
                   />
                   <YAxis tick={{ fill: 'rgba(226,232,240,0.55)', fontSize: 12 }} axisLine={false} tickLine={false} width={32} />
                   <Tooltip content={<GlassTooltip />} />

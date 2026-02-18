@@ -63,7 +63,7 @@ function HeaderInner() {
         <div className="ml-auto flex items-center gap-2">
           <Segmented
             value={mode}
-            onChange={(v) => setMode(v as any)}
+            onChange={(v) => setMode(v === 'elo' || v === 'dcpr' ? v : 'elo')}
             options={[
               { value: 'elo', label: 'ELO' },
               { value: 'dcpr', label: 'DCPR' },

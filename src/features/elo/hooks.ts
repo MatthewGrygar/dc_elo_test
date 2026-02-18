@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchCsv, toNumber, normalizeKey, buildDeterministicSlugs } from '../../lib/csv'
+import { fetchCsv, toNumber, buildDeterministicSlugs } from '../../lib/csv'
 import { sheetCsvUrl, SHEETS } from './sheets'
 
 export type RatingClass = 'A' | 'B' | 'C' | 'D'

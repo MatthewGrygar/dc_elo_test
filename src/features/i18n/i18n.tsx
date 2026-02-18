@@ -26,9 +26,6 @@ export function detectPreferredLang(): Lang {
   return 'en'
 }
 
-function detectLangFromPath(_pathname: string): Lang | null {
-  return null
-}
 
 type I18nCtx = {
   lang: Lang
@@ -43,8 +40,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation()
 
   const stored = (localStorage.getItem(STORAGE_KEY) as Lang | null) || null
-  const fromPath = detectLangFromPath(location.pathname)
-  const initialLang: Lang = fromPath || (stored && LANGS.includes(stored) ? stored : detectPreferredLang())
+  // We no longer infer language from path segments (we use runtime basename for GH Pages).
+  const initialLang: Lang = (stored && LANGS.includes(stored) ? stored : detectPreferredLang())
 
   const [lang, setLangState] = useState<Lang>(initialLang)
 
@@ -60,8 +57,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     lang,
     seg,
     t: (key) => {
-      const dict = DICT[lang] as unknown as Record<string, string>
-      return dict[key] ?? (DICT.en as any)[key] ?? String(key)
+      const dict = DICT[lang] as unknown as Record<DictKey, string>
+      const fallback = DICT.en as unknown as Record<DictKey, string>
+      return dict[key] ?? fallback[key] ?? String(key)
     },
     setLang,
   }), [lang, seg])
