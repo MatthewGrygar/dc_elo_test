@@ -1,32 +1,43 @@
 # DC ELO 2.0 (v2.3)
 
-Moderní analytický dashboard pro Duel Commander ELO — **TypeScript + React + Vite**.
+TypeScript + React (Vite) skeleton pro **Duel Commander ELO** analytický dashboard.
+
+## Co je už hotové
+
+- ✅ Modulární layout: `Header → Banner → Dashboard → Leaderboard → PlayerModal`
+- ✅ Přepínač tématu (Světlý/Tmavý) s animací (GPU friendly: transform + opacity)
+- ✅ Přepínač zdroje dat `ELO / DCPR` (sheet: `Elo standings` / `Tournament_Elo`)
+- ✅ Načítání dat z veřejného Google Sheet jako CSV (bez backendu)
+- ✅ Leaderboard je virtualizovaný (`react-window`) → plynulejší scroll i pro stovky hráčů
+- ✅ Glass UI styl (decentní) + sjednocené tokeny pro dark/light
 
 ## Lokální spuštění
+
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
-```bash
-npm run build
-npm run preview
-```
+## GitHub Pages deploy (automaticky)
 
-## Nasazení na GitHub Pages
-Repo je připravené pro GitHub Pages přes **GitHub Actions** (`.github/workflows/deploy.yml`).
+Repo je připravený na build + deploy přes GitHub Actions.
 
-1. Pushni na větev `main`
-2. V GitHubu otevři **Settings → Pages**
-3. Source nastav na **GitHub Actions**
-4. Po dalším pushi se stránka automaticky deployne
+1. Pushni projekt do GitHubu (branch **main**)
+2. V GitHub → **Settings → Pages**:
+   - Source: **GitHub Actions**
+3. Po každém pushi na main se web automaticky buildí a publikuje.
 
-> Poznámka: Vite `base` se automaticky nastavuje na `/<repo-name>/` v CI přes proměnnou `BASE_PATH`.
+> Pozn.: Workflow nastavuje `BASE_PATH=/<repo>/` automaticky.
 
-## Data vrstva (Google Sheets)
-Aktuálně se načítá list **"Elo standings"** z Google Sheet a bere se rozsah:
-- A: Jméno
+## Data layer (Google Sheets)
+
+Aktuálně se čte veřejný sheet:
+- Spreadsheet ID: `1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA`
+- ELO: sheet `Elo standings`
+- DCPR: sheet `Tournament_Elo`
+
+Mapování sloupců (A–H):
+- A: Name
 - B: Rating
 - C: Games
 - D: Win
@@ -35,29 +46,27 @@ Aktuálně se načítá list **"Elo standings"** z Google Sheet a bere se rozsah
 - G: Winrate
 - H: Peak
 
-Konfigurace je v `src/data/googleSheet.ts`.
+> Pokud se sheet stane privátní, bude potřeba backend nebo service account.
 
-### Když by sheet nebyl veřejný
-UI se automaticky přepne na lokální fallback data (`src/data/fallbackPlayers.ts`), aby stránka byla vždy funkční.
+## Struktura
 
-## Architektura komponent
 ```
-<AppShell>
- ├── <Header />
- ├── <BannerSlider />
- ├── <DashboardSection>
- │    ├── <SummaryPanels />
- │    ├── <ChartsGrid />
- ├── <LeaderboardSection>
- │    └── <Leaderboard />
- └── <PlayerModal />
+src/
+  app/                # contexty, hooks
+  components/         # UI primitives (Header, toggles)
+  features/
+    dashboard/        # hero, KPI, charts
+    leaderboard/      # seznam hráčů
+    player/           # modal detail
+  lib/                # sheets client, stats
+  styles/             # design tokens
+  types/              # TS types
 ```
 
-## Kód jako dokumentace
-- většina komponent má krátké komentáře „proč“ (nejen „co“)
-- utility jsou oddělené (`src/lib`, `src/data`, `src/types`)
-- design tokeny jsou v CSS proměnných (`src/styles/tokens.css`)
+## Co budeme doplňovat dál
 
-## CI poznámka (lockfile)
-GitHub Actions build používá `npm install` (bez cache), protože repozitář zatím neobsahuje lockfile.
-Pokud přidáš `package-lock.json`, můžeš přepnout na `npm ci` a zapnout `cache: npm`.
+- skutečné KPI z match historie (active 7d/30d, delta elo, upset rate)
+- reálné grafy (volume bar chart, trends)
+- detail hráče (ELO vývoj, soupeři, metriky stability/momentum/clutch)
+- cache + revalidation (SWR/React Query) podle potřeby
+
