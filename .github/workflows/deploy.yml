@@ -34,6 +34,13 @@ jobs:
           npm config set fund false
           npm config set audit false
           npm config set progress false
+          # Some org/repo CI templates set `omit=dev` globally which would skip Vite
+          # (a devDependency) and make `npm run build` fail with "vite: not found".
+          # We explicitly clear omit/include to ensure devDependencies are installed.
+          npm config delete omit || true
+          npm config delete include || true
+          npm config set omit ""
+          npm config set include "dev"
 
       - name: Install
         # Use the lockfile for reproducible installs on CI
@@ -42,11 +49,13 @@ jobs:
         # Vite is a devDependency but is required to build.
         env:
           # Force devDependencies to be installed (Vite is required for the build).
-          # Some org/repo settings can implicitly set production-only installs.
-          NODE_ENV: development
+          # Some environments set omit=dev / NODE_ENV=production globally.
+          NODE_ENV: ""
           NPM_CONFIG_PRODUCTION: "false"
           NPM_CONFIG_ONLY: "false"
-        run: npm ci --include=dev --no-audit --no-fund --prefer-offline
+          NPM_CONFIG_OMIT: ""
+          NPM_CONFIG_INCLUDE: "dev"
+        run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Sanity check toolchain
         run: |
