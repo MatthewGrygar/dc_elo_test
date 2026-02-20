@@ -1,7 +1,6 @@
 import * as React from "react";
 import type { PlayerStanding } from '@/types/dc';
-import { List as List, type ListChildComponentProps } from "react-window";
-
+import { FixedSizeList, type ListChildComponentProps } from "react-window";
 function formatPct(v: number) {
   if (!Number.isFinite(v)) return '0%';
   return `${Math.round(v * 100)}%`;
@@ -69,7 +68,7 @@ export function LeaderboardTable({
       ) : players.length === 0 ? (
         <div className="tableLoading">Žádní hráči</div>
       ) : (
-        <List
+        <FixedSizeList
           height={height}
           width="100%"
           itemCount={players.length}
@@ -78,7 +77,7 @@ export function LeaderboardTable({
           overscanCount={8}
         >
           {Row}
-        </List>
+        </FixedSizeList>
       )}
     </div>
   );
