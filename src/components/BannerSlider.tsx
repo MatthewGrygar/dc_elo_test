@@ -54,35 +54,21 @@ export function BannerSlider({ slides }: Props) {
 
   return (
     <GlassPanel className="relative overflow-hidden" hover>
-      {/* Background image (subtle, still calm). */}
-      {active.imageSrc ? (
-        <img
-          src={active.imageSrc}
-          alt=""
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-55 dark:opacity-45"
-          loading="lazy"
-        />
-      ) : null}
+      {/* Decorative blobs (subtle) */}
+      <div className="pointer-events-none absolute -left-20 -top-24 h-72 w-72 animate-float rounded-full bg-[rgba(var(--accent),0.14)] blur-3xl" />
+      <div className="pointer-events-none absolute -right-28 -bottom-24 h-80 w-80 animate-float rounded-full bg-[rgba(var(--teal),0.10)] blur-3xl" />
 
-      {/* Contrast veil so text stays readable on every image. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[rgba(0,0,0,0.45)] via-[rgba(0,0,0,0.18)] to-transparent dark:from-[rgba(0,0,0,0.55)]" />
-
-      {/* Decorative blobs */}
-      <div className="pointer-events-none absolute -left-20 -top-24 h-72 w-72 animate-float rounded-full bg-[rgba(var(--accent),0.22)] blur-3xl" />
-      <div className="pointer-events-none absolute -right-28 -bottom-24 h-80 w-80 animate-float rounded-full bg-[rgba(var(--accent-2),0.18)] blur-3xl" />
-
-      <div className="relative flex flex-col gap-4 p-8 md:flex-row md:items-end md:justify-between">
+      <div className="relative grid gap-6 p-7 md:grid-cols-[1.2fr,0.8fr] md:items-center md:gap-8 md:p-8">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">{active.hint}</p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">{active.title}</h1>
           <p className="mt-3 text-base leading-relaxed text-[rgb(var(--muted))] md:text-lg">{active.subtitle}</p>
-        </div>
 
-        <div className="flex items-center gap-2">
+          <div className="mt-5 flex items-center gap-2">
           <button
             type="button"
             onClick={() => setIndex((i) => (i - 1 + deck.length) % deck.length)}
-            className="glass-chip p-2 shadow-soft transition hover:translate-y-[-1px]"
+            className="glass-chip ui-hover p-2"
             aria-label="Předchozí slide"
           >
             <ChevronLeft size={18} />
@@ -90,15 +76,31 @@ export function BannerSlider({ slides }: Props) {
           <button
             type="button"
             onClick={() => setIndex((i) => (i + 1) % deck.length)}
-            className="glass-chip p-2 shadow-soft transition hover:translate-y-[-1px]"
+            className="glass-chip ui-hover p-2"
             aria-label="Další slide"
           >
             <ChevronRight size={18} />
           </button>
+          </div>
         </div>
+
+        {/* Right-side image — avoids awkward empty space and feels more "dashboard" than a full-bleed hero. */}
+        {active.imageSrc ? (
+          <div className="relative">
+            <div className="pointer-events-none absolute -inset-6 rounded-[28px] bg-gradient-to-br from-[rgba(var(--accent),0.14)] via-transparent to-[rgba(var(--gold),0.10)] blur-2xl" />
+            <div className="glass-panel p-3">
+              <img
+                src={active.imageSrc}
+                alt=""
+                className="h-44 w-full rounded-[22px] object-cover sm:h-52"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      <div className="relative flex items-center gap-2 px-8 pb-6">
+      <div className="relative flex items-center gap-2 px-7 pb-6 md:px-8">
         {deck.map((_, i) => (
           <button
             key={i}

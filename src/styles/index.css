@@ -10,25 +10,57 @@
  * - Dark mode is controlled by adding/removing the `dark` class on <html>.
  */
 :root {
-  /* Light mode: warm neutral (not pure white) */
-  --bg: 248 247 245;
+  /*
+   * Light Mode – clean, professional, readable
+   * Spec: #F3F5F8 background, white glass panels, competitive blue accent.
+   */
+  --bg: 243 245 248; /* #F3F5F8 */
+  --bg-2: 239 242 248; /* slightly darker for subtle vertical gradient */
+
+  /* Glass surface */
   --panel: 255 255 255;
-  --text: 15 23 42; /* slate-900 */
-  --muted: 71 85 105; /* slate-600 */
-  --border: 226 232 240; /* slate-200 */
-  --accent: 59 130 246; /* blue-500 */
-  --accent-2: 168 85 247; /* purple-500 */
+  --panel-alpha: 0.70;
+  --panel-blur: 22px;
+
+  /* Text */
+  --text: 17 24 39; /* #111827 */
+  --muted: 107 114 128; /* #6B7280 */
+
+  /* Borders & shadows */
+  --border: 255 255 255; /* spec wants a bright border in light mode */
+  --border-alpha: 0.65;
+  --shadow: 0 8px 30px rgba(0,0,0,0.08);
+
+  /* Accents (esport/data) */
+  --accent: 79 107 255; /* #4F6BFF */
+  --teal: 0 191 166; /* #00BFA6 */
+  --gold: 255 176 32; /* #FFB020 */
+  --danger: 239 68 68; /* #EF4444 */
 }
 
 html.dark {
-  /* Dark mode: deep blue-gray (not pure black) */
-  --bg: 12 16 24;
-  --panel: 20 26 38;
-  --text: 226 232 240;
-  --muted: 148 163 184;
-  --border: 51 65 85;
-  --accent: 96 165 250;
-  --accent-2: 192 132 252;
+  /*
+   * Dark Mode – deep, esporty, high-contrast (not pure black)
+   * Spec: #0E1116 → #141923 gradient, glass panels with stronger shadows.
+   */
+  --bg: 14 17 22; /* #0E1116 */
+  --bg-2: 20 25 35; /* #141923 */
+
+  --panel: 22 26 36;
+  --panel-alpha: 0.60;
+  --panel-blur: 26px;
+
+  --text: 243 244 246; /* #F3F4F6 */
+  --muted: 156 163 175; /* #9CA3AF */
+
+  --border: 255 255 255;
+  --border-alpha: 0.08;
+  --shadow: 0 15px 50px rgba(0,0,0,0.50);
+
+  --accent: 122 140 255; /* #7A8CFF */
+  --teal: 0 224 198; /* #00E0C6 */
+  --gold: 255 200 87; /* #FFC857 */
+  --danger: 255 93 93; /* #FF5D5D */
 }
 
 html,
@@ -43,11 +75,8 @@ body {
 
 /* Subtle gradient background – looks good in both themes */
 .bg-aurora {
-  background:
-    radial-gradient(1200px 600px at 10% 0%, rgba(var(--accent), 0.12), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(var(--accent-2), 0.10), transparent 62%),
-    radial-gradient(900px 600px at 50% 105%, rgba(var(--accent), 0.06), transparent 65%),
-    rgb(var(--bg));
+  /* Calm, monotone background so panels dominate */
+  background: linear-gradient(180deg, rgb(var(--bg)) 0%, rgb(var(--bg-2)) 100%);
 }
 
 /* Simple nice scrollbar */
@@ -71,14 +100,11 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 1.75rem; /* ~rounded-3xl */
-  border: 1px solid rgba(var(--border), 0.62);
-  background: rgba(var(--panel), 0.66);
-  box-shadow:
-    0 22px 70px rgba(0, 0, 0, 0.16),
-    0 2px 0 rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(18px) saturate(170%);
-  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(var(--border), var(--border-alpha));
+  background: rgba(var(--panel), var(--panel-alpha));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--panel-blur)) saturate(165%);
+  -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(165%);
   transform: translateZ(0);
 }
 
@@ -89,12 +115,8 @@ body {
   inset: 0;
   padding: 1px;
   border-radius: inherit;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--accent), 0.55),
-    rgba(var(--accent-2), 0.35),
-    rgba(255, 255, 255, 0.15)
-  );
+  /* subtle edge highlight (premium, not neon) */
+  background: linear-gradient(135deg, rgba(255,255,255,0.45), rgba(var(--accent), 0.22), rgba(255,255,255,0.10));
 
   /* mask out center so it becomes a border-like highlight */
   -webkit-mask:
@@ -103,7 +125,7 @@ body {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.58;
+  opacity: 0.70;
 }
 
 /* Colorful reflections / glows */
@@ -111,12 +133,13 @@ body {
   content: '';
   position: absolute;
   inset: -20%;
+  /* colorful reflections – keep it restrained (fantasy hint, esport UI) */
   background:
-    radial-gradient(600px 260px at 15% 15%, rgba(var(--accent), 0.28), transparent 55%),
-    radial-gradient(520px 240px at 85% 20%, rgba(var(--accent-2), 0.24), transparent 60%),
-    radial-gradient(420px 220px at 50% 105%, rgba(var(--accent), 0.12), transparent 55%);
-  filter: blur(10px);
-  opacity: 0.75;
+    radial-gradient(520px 240px at 15% 15%, rgba(var(--accent), 0.18), transparent 60%),
+    radial-gradient(520px 240px at 85% 20%, rgba(var(--teal), 0.14), transparent 60%),
+    radial-gradient(520px 240px at 55% 105%, rgba(var(--gold), 0.10), transparent 62%);
+  filter: blur(12px);
+  opacity: 0.85;
   pointer-events: none;
 }
 
@@ -129,26 +152,50 @@ body {
   transition:
     transform 220ms ease,
     box-shadow 220ms ease,
-    border-color 220ms ease;
+    border-color 220ms ease,
+    filter 220ms ease;
 }
 
 .glass-panel-hover:hover {
-  transform: translateY(-2px);
+  /* No "jump" — prefer subtle premium emphasis */
+  transform: scale(1.006);
   border-color: rgba(var(--border), 0.75);
+  filter: brightness(1.02);
   box-shadow:
-    0 30px 90px rgba(0, 0, 0, 0.20),
-    0 2px 0 rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 18px 60px rgba(0,0,0,0.14),
+    0 0 0 1px rgba(var(--accent), 0.10);
 }
 
 /* A smaller variant for tight UI pieces */
 .glass-chip {
   border-radius: 1rem;
   border: 1px solid rgba(var(--border), 0.55);
-  background: rgba(var(--bg), 0.45);
+  background: rgba(var(--panel), 0.40);
   backdrop-filter: blur(12px) saturate(150%);
   -webkit-backdrop-filter: blur(12px) saturate(150%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+/* Premium button hover (no translate "bounce") */
+.ui-hover {
+  transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease, filter 200ms ease;
+}
+.ui-hover:hover {
+  border-color: rgba(var(--accent), 0.35);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  filter: brightness(1.03);
+}
+
+/* Modal overlay (stronger, per spec) */
+.modal-overlay {
+  background: rgba(15, 23, 42, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+html.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .bg-aurora {

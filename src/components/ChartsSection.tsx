@@ -21,7 +21,9 @@ type Props = {
 
 type ChartColors = {
   accent: string;
-  accent2: string;
+  teal: string;
+  gold: string;
+  danger: string;
   text: string;
   muted: string;
   grid: string;
@@ -32,21 +34,26 @@ function getChartColors(): ChartColors {
   // We read the CSS variables at runtime so charts match the active theme.
   if (typeof window === 'undefined') {
     return {
-      accent: '#3b82f6',
-      accent2: '#a855f7',
+      accent: '#4F6BFF',
+      teal: '#00BFA6',
+      gold: '#FFB020',
+      danger: '#EF4444',
       text: '#0f172a',
       muted: '#475569',
-      grid: 'rgba(148,163,184,0.35)',
+      grid: 'rgba(148,163,184,0.18)',
     };
   }
 
   const styles = getComputedStyle(document.documentElement);
   const accent = `rgb(${styles.getPropertyValue('--accent').trim()})`;
-  const accent2 = `rgb(${styles.getPropertyValue('--accent-2').trim()})`;
+  const teal = `rgb(${styles.getPropertyValue('--teal').trim()})`;
+  const gold = `rgb(${styles.getPropertyValue('--gold').trim()})`;
+  const danger = `rgb(${styles.getPropertyValue('--danger').trim()})`;
   const text = `rgb(${styles.getPropertyValue('--text').trim()})`;
   const muted = `rgb(${styles.getPropertyValue('--muted').trim()})`;
-  const grid = `rgba(${styles.getPropertyValue('--border').trim()}, 0.55)`;
-  return { accent, accent2, text, muted, grid };
+  // Very light grid so the charts stay "dashboard-clean".
+  const grid = `rgba(${styles.getPropertyValue('--muted').trim()}, 0.18)`;
+  return { accent, teal, gold, danger, text, muted, grid };
 }
 
 function GlassTooltip({ active, payload, label }: any) {
@@ -152,8 +159,8 @@ export function ChartsSection({ players }: Props) {
                 <stop offset="100%" stopColor={colors.accent} stopOpacity={0.02} />
               </linearGradient>
               <linearGradient id="gAccent2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={colors.accent2} stopOpacity={0.40} />
-                <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.02} />
+                <stop offset="0%" stopColor={colors.gold} stopOpacity={0.40} />
+                <stop offset="100%" stopColor={colors.gold} stopOpacity={0.02} />
               </linearGradient>
               <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur stdDeviation="5" result="blur" />
@@ -196,7 +203,7 @@ export function ChartsSection({ players }: Props) {
               type="monotone"
               dataKey="peak"
               name="Peak"
-              stroke={colors.accent2}
+              stroke={colors.gold}
               strokeWidth={2}
               fill="url(#gAccent2)"
               dot={false}
@@ -213,7 +220,7 @@ export function ChartsSection({ players }: Props) {
               <defs>
                 <linearGradient id="barGlow" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={colors.accent} stopOpacity={0.70} />
-                  <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.30} />
+                  <stop offset="100%" stopColor={colors.teal} stopOpacity={0.28} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
@@ -251,8 +258,8 @@ export function ChartsSection({ players }: Props) {
                 type="monotone"
                 dataKey="winrate"
                 name="Winrate %"
-                stroke={colors.accent2}
-                strokeWidth={2.5}
+              stroke={colors.teal}
+              strokeWidth={2.25}
                 dot={false}
                 filter="url(#lineGlow)"
                 activeDot={{ r: 5 }}
@@ -266,8 +273,8 @@ export function ChartsSection({ players }: Props) {
             <AreaChart data={ratingVsPeak} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="gPeak" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={colors.accent2} stopOpacity={0.45} />
-                  <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.04} />
+                <stop offset="0%" stopColor={colors.gold} stopOpacity={0.40} />
+                <stop offset="100%" stopColor={colors.gold} stopOpacity={0.04} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
@@ -278,7 +285,7 @@ export function ChartsSection({ players }: Props) {
                 type="monotone"
                 dataKey="peak"
                 name="Peak"
-                stroke={colors.accent2}
+                stroke={colors.gold}
                 strokeWidth={2.25}
                 fill="url(#gPeak)"
                 dot={false}
@@ -306,7 +313,7 @@ export function ChartsSection({ players }: Props) {
               <YAxis tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} width={42} />
               <Tooltip content={<GlassTooltip />} />
               <Bar dataKey="win" name="Win" fill={colors.accent} radius={[10, 10, 10, 10]} />
-              <Bar dataKey="loss" name="Loss" fill={colors.accent2} radius={[10, 10, 10, 10]} />
+              <Bar dataKey="loss" name="Loss" fill={colors.danger} radius={[10, 10, 10, 10]} />
               <Bar dataKey="draw" name="Draw" fill={colors.muted} radius={[10, 10, 10, 10]} />
             </BarChart>
           </ResponsiveContainer>

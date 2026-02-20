@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { PlayerRow } from '../types/player';
 import { GlassPanel } from './ui/GlassPanel';
@@ -7,6 +7,8 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'rec
 type Props = {
   open: boolean;
   player: PlayerRow | null;
+  /** 1-based rank in the global leaderboard (by rating). */
+  rank?: number | null;
   onClose: () => void;
 };
 
@@ -46,8 +48,41 @@ function GlassTooltip({ active, payload, label }: any) {
  * - Works in light/dark
  * - Minimal and readable (acts as living documentation)
  */
-export function PlayerModal({ open, player, onClose }: Props) {
+export function PlayerModal({ open, player, rank, onClose }: Props) {
   const colors = getChartColors();
+
+  // --- Mobile bottom-sheet drag ---
+  // We implement a small, non-invasive swipe-to-close interaction.
+  // Desktop keeps the centered modal.
+  const dragStartY = useRef<number | null>(null);
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  function onTouchStart(e: React.TouchEvent) {
+    // Only meaningful for mobile (bottom sheet).
+    dragStartY.current = e.touches[0]?.clientY ?? null;
+    setDragging(true);
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (!dragStartY.current) return;
+    const y = e.touches[0]?.clientY ?? 0;
+    const delta = Math.max(0, y - dragStartY.current);
+    setDragY(delta);
+  }
+
+  function onTouchEnd() {
+    setDragging(false);
+    if (dragY > 90) {
+      onClose();
+      setDragY(0);
+      dragStartY.current = null;
+      return;
+    }
+    // Snap back
+    setDragY(0);
+    dragStartY.current = null;
+  }
 
   // ESC to close
   useEffect(() => {
@@ -80,28 +115,57 @@ export function PlayerModal({ open, player, onClose }: Props) {
       {/* Backdrop */}
       <button
         type="button"
-        className="absolute inset-0 h-full w-full cursor-default bg-[rgba(0,0,0,0.35)] backdrop-blur-sm"
+        className="modal-overlay absolute inset-0 h-full w-full cursor-default"
         onClick={onClose}
         aria-label="Zavřít detail hráče"
       />
 
-      <div className="relative mx-auto flex h-full max-w-3xl items-center px-4">
-        <GlassPanel className="w-full p-6 md:p-7" hover>
+      <div className="relative mx-auto flex h-full items-end justify-center px-3 sm:items-center sm:px-4">
+        <div
+          className="w-full max-w-[720px]"
+          style={{ transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 220ms ease' }}
+        >
+          <GlassPanel
+            className="w-full overflow-hidden rounded-t-[24px] rounded-b-none p-5 sm:rounded-[24px] sm:p-7 border-[1.5px] border-[rgba(var(--border),0.70)] dark:border-[rgba(255,255,255,0.10)] bg-[rgba(var(--panel),0.78)] dark:bg-[rgba(var(--panel),0.70)] shadow-[0_25px_70px_rgba(0,0,0,0.22)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.60)]"
+            /* modal should be a higher UI layer than hoverable cards */
+            hover={false}
+          >
+            <div className="max-h-[92vh] overflow-y-auto pr-1 sm:max-h-[85vh]">
+          {/* Drag handle (mobile) */}
+          <div
+            className="mx-auto mb-4 mt-1 h-1.5 w-12 rounded-full bg-[rgba(var(--muted),0.35)] sm:hidden"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          />
+
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">Detail hráče</p>
-              <h3 className="mt-1 text-2xl font-extrabold tracking-tight">{player.name}</h3>
-              <p className="mt-2 text-sm text-[rgb(var(--muted))]">
-                Aktuální rating: <span className="font-semibold text-[rgb(var(--text))]">{Math.round(player.rating)}</span> • Peak:{' '}
-                <span className="font-semibold text-[rgb(var(--text))]">{Math.round(player.peak)}</span> • Winrate:{' '}
-                <span className="font-semibold text-[rgb(var(--text))]">{formatPct(player.winrate)}</span>
-              </p>
+              <h3 className="mt-1 text-[26px] font-extrabold tracking-tight sm:text-[28px]">{player.name}</h3>
+
+              <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+                <div className="leading-none">
+                  <div className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">Aktuální ELO</div>
+                  <div className="mt-1 text-[32px] font-extrabold tracking-tight text-[rgb(var(--accent))] sm:text-[36px]">
+                    {Math.round(player.rating)}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge label={`Peak ${Math.round(player.peak)}`} />
+                  <Badge label={`Winrate ${formatPct(player.winrate)}`} tone="teal" />
+                  {typeof rank === 'number' && rank > 0 ? (
+                    rank <= 10 ? <Badge label={`TOP ${rank}`} tone="gold" /> : <Badge label={`#${rank}`} />
+                  ) : null}
+                </div>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="glass-chip p-2 shadow-soft transition hover:translate-y-[-1px]"
+              className="glass-chip ui-hover p-2"
               aria-label="Zavřít"
             >
               <X size={18} />
@@ -109,10 +173,16 @@ export function PlayerModal({ open, player, onClose }: Props) {
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-4">
-            <Stat label="WIN" value={player.win} />
-            <Stat label="LOSS" value={player.loss} />
+            <Stat label="WIN" value={player.win} tone="teal" />
+            <Stat label="LOSS" value={player.loss} tone="danger" />
             <Stat label="DRAW" value={player.draw} />
             <Stat label="GAMES" value={player.games} />
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <StatText label="Win streak" value="—" hint="placeholder" />
+            <StatText label="Oblíbený commander" value="—" hint="placeholder" />
+            <StatText label="Rank" value={typeof rank === 'number' && rank > 0 ? `#${rank}` : '—'} hint={rank ? undefined : 'v1'} />
           </div>
 
           <div className="mt-5">
@@ -140,27 +210,62 @@ export function PlayerModal({ open, player, onClose }: Props) {
                       type="monotone"
                       dataKey="rating"
                       stroke={colors.accent}
-                      strokeWidth={2.5}
+                      strokeWidth={2.25}
                       dot={false}
                       filter="url(#pmGlow)"
                       activeDot={{ r: 5 }}
+                      isAnimationActive
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
-        </GlassPanel>
+            </div>
+          </GlassPanel>
+        </div>
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone?: 'teal' | 'danger' }) {
+  const toneClass =
+    tone === 'teal'
+      ? 'text-[rgb(var(--teal))]'
+      : tone === 'danger'
+        ? 'text-[rgb(var(--danger))]'
+        : 'text-[rgb(var(--text))]';
   return (
-    <div className="glass-chip px-4 py-3 shadow-soft">
+    <div className="glass-chip px-4 py-3">
       <div className="text-[11px] font-semibold tracking-wider text-[rgb(var(--muted))]">{label}</div>
-      <div className="mt-1 text-lg font-extrabold tracking-tight">{value}</div>
+      <div className={"mt-1 text-lg font-extrabold tracking-tight " + toneClass}>{value}</div>
     </div>
+  );
+}
+
+function StatText({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="glass-chip px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-[11px] font-semibold tracking-wider text-[rgb(var(--muted))]">{label}</div>
+        {hint ? <span className="text-[10px] font-semibold text-[rgb(var(--muted))] opacity-70">{hint}</span> : null}
+      </div>
+      <div className="mt-1 text-[15px] font-bold tracking-tight">{value}</div>
+    </div>
+  );
+}
+
+function Badge({ label, tone }: { label: string; tone?: 'teal' | 'gold' }) {
+  const toneClass =
+    tone === 'teal'
+      ? 'border-[rgba(var(--teal),0.30)] bg-[rgba(var(--teal),0.10)]'
+      : tone === 'gold'
+        ? 'border-[rgba(var(--gold),0.30)] bg-[rgba(var(--gold),0.12)]'
+        : 'border-[rgba(var(--accent),0.25)] bg-[rgba(var(--accent),0.10)]';
+  return (
+    <span className={"inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold " + toneClass}>
+      {label}
+    </span>
   );
 }

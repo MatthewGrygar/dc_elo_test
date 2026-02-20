@@ -21,6 +21,15 @@ export function PlayersTable({ players, loading, error }: Props) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('rating');
   const [selected, setSelected] = useState<PlayerRow | null>(null);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
+
+  const rankByName = useMemo(() => {
+    // Global ranking is always by rating (descending), independent of UI sort/filter.
+    const sorted = [...players].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    const map = new Map<string, number>();
+    sorted.forEach((p, i) => map.set(p.name, i + 1));
+    return map;
+  }, [players]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -131,7 +140,10 @@ export function PlayersTable({ players, loading, error }: Props) {
                 <tr
                   key={p.name}
                   className="cursor-pointer text-sm transition hover:bg-[rgba(var(--accent),0.08)]"
-                  onClick={() => setSelected(p)}
+                  onClick={() => {
+                    setSelected(p);
+                    setSelectedRank(rankByName.get(p.name) ?? null);
+                  }}
                   title="Klikni pro detail"
                 >
                   <td className="sticky left-0 z-10 border-t border-[rgb(var(--border))] bg-[rgba(var(--panel),0.35)] backdrop-blur px-3 py-3">
@@ -155,16 +167,24 @@ export function PlayersTable({ players, loading, error }: Props) {
       </div>
       </GlassPanel>
 
-      <PlayerModal open={!!selected} player={selected} onClose={() => setSelected(null)} />
+      <PlayerModal
+        open={!!selected}
+        player={selected}
+        rank={selectedRank}
+        onClose={() => {
+          setSelected(null);
+          setSelectedRank(null);
+        }}
+      />
     </>
   );
 }
 
 function buttonClass(active: boolean) {
   return [
-    'inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold shadow-soft transition',
+    'inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold ui-hover',
     active
       ? 'border-[rgba(var(--accent),0.55)] bg-[rgba(var(--accent),0.10)]'
-      : 'border-[rgb(var(--border))] bg-[rgb(var(--bg))]/60 hover:translate-y-[-1px]',
+      : 'border-[rgba(var(--border),0.45)] bg-[rgba(var(--panel),0.35)]',
   ].join(' ');
 }

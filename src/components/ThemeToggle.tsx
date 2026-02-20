@@ -13,7 +13,7 @@ export function ThemeToggle({ theme, onToggle }: Props) {
     <button
       type="button"
       onClick={onToggle}
-      className="inline-flex items-center gap-2 glass-chip px-4 py-2 text-sm font-semibold shadow-soft transition hover:translate-y-[-1px]"
+      className="inline-flex items-center gap-2 glass-chip ui-hover px-4 py-2 text-sm font-semibold"
       aria-label={isDark ? 'Přepnout na světlý režim' : 'Přepnout na tmavý režim'}
       title={isDark ? 'Světlý režim' : 'Tmavý režim'}
     >
