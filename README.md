@@ -54,3 +54,22 @@ Projekt je nastaven tak, aby fungoval na GitHub Pages bez ohledu na název repoz
   můžeš změnit `base` na `"/"`.
 
 Typický symptom špatného `base`: po deployi se ukáže „bílá stránka“ a v DevTools → Network uvidíš 404 na `/assets/...`.
+
+## GitHub Pages deployment (recommended)
+
+This repo includes a ready-to-use GitHub Actions workflow:
+
+- File: `.github/workflows/deploy.yml`
+- Trigger: on every push to `main`
+- Output: builds Vite into `dist/` and deploys that folder to GitHub Pages
+
+### One-time GitHub settings
+1. Repository → **Settings** → **Pages**
+2. Under **Build and deployment**:
+   - Source: **GitHub Actions**
+
+After the first successful run, your site will be available under:
+`https://<user>.github.io/<repo>/`
+
+Troubleshooting:
+- If you see a blank page, check that **Pages Source** is GitHub Actions (not "Deploy from a branch").
