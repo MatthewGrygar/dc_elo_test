@@ -1,67 +1,84 @@
-# DC ELO 2.0 (skeleton)
+# DC ELO 2.0 — v2.3.0
 
-React + TypeScript + Vite + Tailwind. Ready for **GitHub Pages** deployment.
+Modern, monochrome + data-accent analytics dashboard for Duel Commander ELO.
 
-## Co je v repozitáři
+- **Tech:** TypeScript + React (Vite)
+- **Hosting:** GitHub Pages (via GitHub Actions)
+- **Data layer:** Public Google Sheet (Visualization API / gviz)
 
-- **Titulní stránka**
-  - banner se sliderem (placeholder)
-  - top statistiky (počítané z tabulky)
-  - grafy: 1× přes celou šířku + 4× menší (2 vedle sebe)
-  - seznam hráčů (načítaný z Google Sheets)
-- **Tmavý / světlý režim** (tlačítko nahoře, uloženo v `localStorage`)
-- **Datová vrstva v0**: veřejný Google Sheet přes `/gviz/tq` (bez API key)
-
-## Lokální spuštění
+## Quick start
 
 ```bash
-npm install
+npm i
 npm run dev
 ```
 
-Build:
+Build locally:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Deploy na GitHub Pages
+## Deploy to GitHub Pages
 
-V repozitáři je workflow: `.github/workflows/deploy.yml`.
+This repo is configured for **GitHub Pages via Actions**.
 
-Postup na GitHubu:
+1. Push to `main`
+2. In GitHub → **Settings → Pages**
+   - Source: **GitHub Actions**
+3. The workflow will build and deploy automatically.
 
-1. **Repo → Settings → Pages**
-2. Source: **GitHub Actions**
-3. Push do `main` → workflow udělá build a deploy.
+> Note: Vite needs a non-root base path on GitHub Pages. The workflow sets `BASE_PATH="/<repo-name>/"` automatically.
 
-> Poznámka k `base` URL:
-> - GitHub Pages běží typicky na `https://<user>.github.io/<repo>/`.
-> - Workflow nastaví `VITE_BASE` automaticky na `/<repo>/`.
+## Data source (Google Sheets)
 
-## Google Sheets (placeholder)
+Currently reading:
+- Spreadsheet: `1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA`
+- Sheet tab: **Elo standings**
+- Columns:
+  - A: Name
+  - B: Rating
+  - C: Games
+  - D: Win
+  - E: Loss
+  - F: Draw
+  - G: Winrate
+  - H: Peak
 
-Zatím čteme list **"Elo standings"** a sloupce:
+Implementation lives here:
+- `src/lib/googleSheet.ts`
 
-- A: Name
-- B: Rating
-- C: Games
-- D: Win
-- E: Loss
-- F: Draw
-- G: Winrate
-- H: Peak
+### Troubleshooting
 
-Implementace je v `src/data/googleSheets.ts`.
+If data does not load on Pages:
+- Make sure the sheet is public or "anyone with the link can view"
+- Confirm the tab name is exactly `Elo standings`
 
-## Další kroky
+## Architecture
 
-- přidat stránku detailu hráče
-- přidat match history + skutečné time-series grafy
-- přidat caching (SWR / TanStack Query)
-- přidat skeleton loading a error states (lepší UX)
+High-level layout:
 
----
+```
+<AppShell>
+ ├── <Header />
+ ├── <BannerSlider />
+ ├── <DashboardSection>
+ │     ├── <SummaryPanels />
+ │     ├── <ChartsGrid />
+ ├── <LeaderboardSection>
+ │     └── <Leaderboard />
+ ├── <PlayerModal />
+</AppShell>
+```
 
-Projekt je psaný tak, aby sloužil jako "malá dokumentace": stručné komentáře vysvětlují záměr a hranice současné verze.
+- **Theme:** `src/lib/theme.tsx` (CSS variables + localStorage)
+- **Styles:** `src/styles/global.css` (design tokens + components)
+- **Domain types:** `src/types/*`
+
+## Next steps (planned)
+
+- Real chart datasets (rating history)
+- Player detail modal: match history, commander stats
+- Extra sections: Metagame, Commander stats, Match history
+

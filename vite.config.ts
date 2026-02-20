@@ -1,18 +1,24 @@
-/// <reference types="node" />
-
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 
 /**
- * GitHub Pages note:
- * - When deploying to https://<user>.github.io/<repo>/ the app must be built with base="/<repo>/".
- * - The provided GitHub Action sets VITE_BASE to that value automatically.
- * - Locally, base defaults to '/'.
+ * GitHub Pages needs a non-root base path: /<repo-name>/
+ *
+ * - In local dev we keep base = '/'
+ * - In CI (GitHub Actions) we set BASE_PATH = "/${{ github.event.repository.name }}/"
  */
-export default defineConfig(() => {
-  const base = process.env.VITE_BASE ?? '/';
+export default defineConfig(({ mode }) => {
+  const base = process.env.BASE_PATH ?? '/';
+
   return {
     base,
     plugins: [react()],
+    server: {
+      port: 5173,
+      strictPort: true
+    },
+    build: {
+      sourcemap: mode !== 'production'
+    }
   };
 });

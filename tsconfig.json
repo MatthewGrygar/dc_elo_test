@@ -2,32 +2,21 @@
   "compilerOptions": {
     "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
     "noFallthroughCasesInSwitch": true,
-    /*
-     * NOTE:
-     * - Vite injects its client types via `src/vite-env.d.ts`.
-     * - Node types are pulled in by config files via `/// <reference types="node" />`.
-     * Keeping `types` unset makes the project more resilient if a CI ever omits dev deps.
-     */
+
+    "types": ["vite/client"]
   },
-  "include": [
-    "src",
-    "vite.config.ts",
-    "tailwind.config.ts"
-  ]
+  "include": ["src"]
 }

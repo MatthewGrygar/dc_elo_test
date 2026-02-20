@@ -1,9 +1,6 @@
 node_modules
-.dist
-.dist-ssr
-dist
-.vscode
+/dist
+/.vite
 .DS_Store
-*.log
 .env
-.env.*
+.env.local
