@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "./theme.css";
+
+/* Small global improvements */
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Smooth theme transitions (subtle, non-janky) */
+html {
+  transition: background-color 180ms ease, color 180ms ease;
+}

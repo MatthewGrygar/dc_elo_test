@@ -1,6 +1,13 @@
-# dc_elo (modern)
+# NEW DC ELO 2.0
 
-Moderní web pro ELO/DCPR: **React + TypeScript + Vite + Tailwind + Framer Motion + React Query**.
+Frontend skeleton pro DC ELO (TypeScript + React).  
+Cíl: čistý, čitelný kód, který funguje i jako „malá dokumentace“ pro budoucí údržbu / AI.
+
+## Stack
+- Vite + React + TypeScript
+- TailwindCSS (dark mode přes `class` na `<html>`)
+- Recharts (placeholder grafy)
+- Data pro hráče: Google Sheets (sheet **Elo standings**, rozsah `A2:H`)
 
 ## Lokální spuštění
 ```bash
@@ -8,29 +15,33 @@ npm install
 npm run dev
 ```
 
-## Build
+## Build / Preview
 ```bash
 npm run build
 npm run preview
 ```
 
-## GitHub Pages
-Repo obsahuje workflow **.github/workflows/deploy.yml**, který po pushi do `main`:
-1) udělá `npm ci`
-2) `npm run build`
-3) nasadí složku `dist` na GitHub Pages
+## Deploy (rychlý test)
+- Vercel / Netlify / GitHub Pages (Vite build do `dist/`)
+- Pokud deployujete pod subpath, upravte `base` ve `vite.config.ts`.
 
-V nastavení repozitáře nastav:
-- **Settings → Pages → Build and deployment → Source: GitHub Actions**
+## Konfigurace Google Sheets
+Aktuálně se data čtou přes „GViz“ endpoint (bez API klíče).  
+Pokud by někdy Google změnil formát nebo by nastala CORS/permission komplikace:
+- nejjednodušší fix bývá **Publish to web** (CSV/JSON) nebo
+- vlastní malý backend proxy.
 
-### Routing na GitHub Pages
-Používáme **BrowserRouter** s automatickým `basename` pro `*.github.io/<repo>/` a fallback přes `public/404.html`.
-To znamená, že i přímé otevření `/player/:slug` na GitHub Pages neskončí 404.
+Konstanty najdete v `src/lib/googleSheets.ts`.
 
-## Struktura (po přepisu)
-- `src/app/*` – router, providers, theme
-- `src/features/*` – funkční moduly (elo, i18n, modal)
-- `src/entities/*` – doménové UI (profil hráče)
-- `src/widgets/*` – větší UI celky (shell, news)
-- `src/shared/*` – znovupoužitelné UI + utility
+## Struktura
+- `src/app/App.tsx` – hlavní layout stránky
+- `src/components/*` – UI bloky (slider, stats, charts, player table)
+- `src/lib/*` – utilitky (Google Sheets fetch + parsování)
+- `src/styles/*` – design tokeny (světlý/tmavý režim)
 
+---
+
+Plán další iterace:
+1) Přidat reálné grafy (např. vývoj ELO, histogram ratingů, winrate distribution).  
+2) Přidat filtrování/sortování hráčů.  
+3) Přidat caching a refresh interval pro Sheets.
