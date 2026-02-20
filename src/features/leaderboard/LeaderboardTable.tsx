@@ -1,5 +1,4 @@
-import React from 'react';
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
+import { List as List, type ListChildComponentProps } from "react-window";
 import type { PlayerStanding } from '@/types/dc';
 
 function formatPct(v: number) {
