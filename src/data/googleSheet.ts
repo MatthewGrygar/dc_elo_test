@@ -12,17 +12,20 @@ import { Player } from "../types/player";
  * so we have to strip the wrapper and JSON.parse it.
  */
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
-const SHEET_NAME = "Elo standings";
+const DEFAULT_SHEET_NAME = "Elo standings";
 
-// We select columns A–H (A,B,C,D,E,F,G,H) and skip header row.
-const GVIZ_URL =
-  "https://docs.google.com/spreadsheets/d/" +
-  SHEET_ID +
-  "/gviz/tq?sheet=" +
-  encodeURIComponent(SHEET_NAME) +
-  "&tq=" +
-  encodeURIComponent("select A,B,C,D,E,F,G,H") +
-  "&headers=1";
+function buildGvizUrl(sheetName: string) {
+  // We select columns A–H (A,B,C,D,E,F,G,H) and skip header row.
+  return (
+    "https://docs.google.com/spreadsheets/d/" +
+    SHEET_ID +
+    "/gviz/tq?sheet=" +
+    encodeURIComponent(sheetName) +
+    "&tq=" +
+    encodeURIComponent("select A,B,C,D,E,F,G,H") +
+    "&headers=1"
+  );
+}
 
 /** Best-effort number parsing (sheet cells may come as strings). */
 function toNumber(value: unknown): number {
@@ -40,8 +43,8 @@ function unwrapGviz(text: string): any {
   return JSON.parse(m[1]);
 }
 
-export async function fetchPlayersFromGoogleSheet(): Promise<Player[]> {
-  const res = await fetch(GVIZ_URL, { cache: "no-store" });
+export async function fetchPlayersFromGoogleSheet(sheetName: string = DEFAULT_SHEET_NAME): Promise<Player[]> {
+  const res = await fetch(buildGvizUrl(sheetName), { cache: "no-store" });
   if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status} ${res.statusText}`);
   const text = await res.text();
   const json = unwrapGviz(text);

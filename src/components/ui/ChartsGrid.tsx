@@ -3,6 +3,7 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -12,18 +13,6 @@ import {
 } from "recharts";
 import { Player } from "../../types/player";
 
-/**
- * Charts – redesigned (dark-first)
- *
- * Implemented:
- * - no grid, no sharp axes
- * - subtle tick labels
- * - smooth curves + 2px strokes
- * - subtle glow via SVG filters
- * - "Games Volume" = BarChart with rounded corners + gradient fill
- *
- * NOTE: Data is still synthetic placeholder.
- */
 type Point = { label: string; value: number; value2?: number };
 
 function makeMockSeries(players: Player[]): Point[] {
@@ -50,11 +39,12 @@ const axis = {
 } as const;
 
 const tooltipStyle = {
-  background: "rgba(15,23,42,0.72)",
-  border: "1px solid rgba(255,255,255,0.10)",
-  borderRadius: 12,
-  color: "white",
-  backdropFilter: "blur(10px)",
+  background: "var(--panel-bg)",
+  border: "1px solid var(--panel-border)",
+  borderRadius: 14,
+  color: "var(--text)",
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
 } as const;
 
 export function ChartsGrid({ players }: { players: Player[] }) {
@@ -91,9 +81,10 @@ export function ChartsGrid({ players }: { players: Player[] }) {
                 </filter>
               </defs>
 
+              <CartesianGrid stroke="var(--chart-grid)" strokeOpacity={0.6} vertical={false} />
               <XAxis dataKey="label" {...axis} />
               <YAxis {...axis} width={44} />
-              <Tooltip cursor={{ stroke: "rgba(255,255,255,0.10)" }} contentStyle={tooltipStyle} />
+              <Tooltip cursor={{ stroke: "var(--chart-grid)" }} contentStyle={tooltipStyle} />
 
               <Line
                 type="monotone"
@@ -133,14 +124,15 @@ export function ChartsGrid({ players }: { players: Player[] }) {
               <AreaChart data={series} margin={{ top: 6, right: 12, left: 2, bottom: 4 }}>
                 <defs>
                   <linearGradient id="gradWin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--data-positive)" stopOpacity={0.28} />
+                    <stop offset="0%" stopColor="var(--data-positive)" stopOpacity={0.24} />
                     <stop offset="100%" stopColor="var(--data-positive)" stopOpacity={0.04} />
                   </linearGradient>
                 </defs>
 
+                <CartesianGrid stroke="var(--chart-grid)" strokeOpacity={0.5} vertical={false} />
                 <XAxis dataKey="label" {...axis} />
                 <YAxis {...axis} width={44} />
-                <Tooltip cursor={{ stroke: "rgba(255,255,255,0.10)" }} contentStyle={tooltipStyle} />
+                <Tooltip cursor={{ stroke: "var(--chart-grid)" }} contentStyle={tooltipStyle} />
                 <Area
                   type="monotone"
                   dataKey="value"
@@ -158,7 +150,7 @@ export function ChartsGrid({ players }: { players: Player[] }) {
           <div className="chartHeader">
             <div>
               <div className="chartTitle">Games Volume</div>
-              <div className="chartHint">Sloupcový graf — bez mřížky, rounded, gradient.</div>
+              <div className="chartHint">Sloupce — rounded + gradient, glass tooltip.</div>
             </div>
           </div>
           <div className="chartBody">
@@ -166,14 +158,15 @@ export function ChartsGrid({ players }: { players: Player[] }) {
               <BarChart data={series} margin={{ top: 6, right: 12, left: 2, bottom: 4 }}>
                 <defs>
                   <linearGradient id="gradBars" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--data-primary)" stopOpacity={0.55} />
-                    <stop offset="100%" stopColor="var(--data-secondary)" stopOpacity={0.20} />
+                    <stop offset="0%" stopColor="var(--data-primary)" stopOpacity={0.52} />
+                    <stop offset="100%" stopColor="var(--data-secondary)" stopOpacity={0.18} />
                   </linearGradient>
                 </defs>
 
+                <CartesianGrid stroke="var(--chart-grid)" strokeOpacity={0.45} vertical={false} />
                 <XAxis dataKey="label" {...axis} />
                 <YAxis {...axis} width={44} />
-                <Tooltip cursor={{ fill: "rgba(255,255,255,0.03)" }} contentStyle={tooltipStyle} />
+                <Tooltip cursor={{ fill: "rgba(255,255,255,0.02)" }} contentStyle={tooltipStyle} />
                 <Bar dataKey="value2" name="Games" fill="url(#gradBars)" radius={[10, 10, 4, 4]} />
               </BarChart>
             </ResponsiveContainer>
@@ -184,7 +177,7 @@ export function ChartsGrid({ players }: { players: Player[] }) {
           <div className="chartHeader">
             <div>
               <div className="chartTitle">Top Delta</div>
-              <div className="chartHint">Placeholder — změna ratingu, tlumený highlight.</div>
+              <div className="chartHint">Placeholder — tlumený highlight.</div>
             </div>
           </div>
           <div className="chartBody">
@@ -200,9 +193,10 @@ export function ChartsGrid({ players }: { players: Player[] }) {
                   </filter>
                 </defs>
 
+                <CartesianGrid stroke="var(--chart-grid)" strokeOpacity={0.6} vertical={false} />
                 <XAxis dataKey="label" {...axis} />
                 <YAxis {...axis} width={44} />
-                <Tooltip cursor={{ stroke: "rgba(255,255,255,0.10)" }} contentStyle={tooltipStyle} />
+                <Tooltip cursor={{ stroke: "var(--chart-grid)" }} contentStyle={tooltipStyle} />
                 <Line
                   type="monotone"
                   dataKey="value"

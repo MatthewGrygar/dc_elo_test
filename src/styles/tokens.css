@@ -22,6 +22,12 @@
   --data-negative: #ef4444;
   --data-highlight: #f59e0b;
 
+  /* Chart tokens */
+  --chart-grid-light: rgba(0,0,0,0.06);
+  --chart-grid-dark: rgba(255,255,255,0.08);
+  --chart-glow: rgba(99,102,241,0.30);
+  --panel-2-bg: rgba(255,255,255,0.06);
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -41,6 +47,7 @@
 
   --tick: rgba(11, 16, 32, 0.55);
   --tableHead: rgba(11, 16, 32, 0.48);
+  --chart-grid: var(--chart-grid-light);
 }
 
 :root[data-theme="dark"] {
@@ -57,4 +64,5 @@
 
   --tick: rgba(255, 255, 255, 0.55);
   --tableHead: rgba(255, 255, 255, 0.50);
+  --chart-grid: var(--chart-grid-dark);
 }

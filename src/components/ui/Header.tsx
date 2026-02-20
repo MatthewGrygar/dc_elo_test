@@ -1,10 +1,13 @@
 import { ThemeToggle } from "../theme/ThemeToggle";
+import { DataSourceToggle, StandingsSource } from "./DataSourceToggle";
 
-/**
- * Top navigation.
- * Links are anchors for now; later we can upgrade to a router without changing layout.
- */
-export function Header() {
+export function Header({
+  standingsSource,
+  onStandingsSourceChange,
+}: {
+  standingsSource: StandingsSource;
+  onStandingsSourceChange: (v: StandingsSource) => void;
+}) {
   return (
     <header className="topbar">
       <div className="topbarLeft">
@@ -29,7 +32,8 @@ export function Header() {
         </a>
       </nav>
 
-      <div className="topbarRight">
+      <div className="topbarRight" style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <DataSourceToggle value={standingsSource} onChange={onStandingsSourceChange} />
         <ThemeToggle />
       </div>
     </header>

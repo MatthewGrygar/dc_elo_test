@@ -7,34 +7,38 @@ import { BannerSlider } from "../ui/BannerSlider";
 import { DashboardSection } from "../ui/DashboardSection";
 import { LeaderboardSection } from "../ui/LeaderboardSection";
 import { PlayerModal } from "../ui/PlayerModal";
+import type { StandingsSource } from "../ui/DataSourceToggle";
 
 /**
- * AppShell orchestrates data + high-level layout.
- *
- * Why keep data fetching here?
- * - in future we'll add more sections sharing same dataset (metagame, match history)
- * - avoids prop drilling by keeping "page state" at a single place
+ * AppShell orchestrates:
+ * - layout
+ * - data fetching (single source of truth)
+ * - modal selection state
  */
 export function AppShell() {
   const [players, setPlayers] = useState<Player[]>(fallbackPlayers);
-  const [dataSource, setDataSource] = useState<"google-sheet" | "fallback">("fallback");
-
+  const [dataStatus, setDataStatus] = useState<"google-sheet" | "fallback">("fallback");
+  const [standingsSource, setStandingsSource] = useState<StandingsSource>("ELO");
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch once on load; graceful fallback keeps UI usable.
-    fetchPlayersFromGoogleSheet()
+    const sheetName = standingsSource === "ELO" ? "Elo standings" : "Tournament_Elo";
+
+    fetchPlayersFromGoogleSheet(sheetName)
       .then((p) => {
         if (p.length > 0) {
           setPlayers(p);
-          setDataSource("google-sheet");
+          setDataStatus("google-sheet");
+        } else {
+          setPlayers(fallbackPlayers);
+          setDataStatus("fallback");
         }
       })
       .catch(() => {
         setPlayers(fallbackPlayers);
-        setDataSource("fallback");
+        setDataStatus("fallback");
       });
-  }, []);
+  }, [standingsSource]);
 
   const selectedPlayer = useMemo(
     () => players.find((p) => p.id === selectedPlayerId) ?? null,
@@ -43,13 +47,12 @@ export function AppShell() {
 
   return (
     <div className="page">
-      <Header />
+      <Header standingsSource={standingsSource} onStandingsSourceChange={setStandingsSource} />
       <main className="content">
-        <BannerSlider dataSource={dataSource} />
+        <BannerSlider dataSource={dataStatus} />
         <DashboardSection players={players} />
         <LeaderboardSection players={players} onSelectPlayer={(id) => setSelectedPlayerId(id)} />
       </main>
-
       <PlayerModal player={selectedPlayer} onClose={() => setSelectedPlayerId(null)} />
     </div>
   );
