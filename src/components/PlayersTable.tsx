@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { PlayerRow } from '../types/player';
 import { ArrowDownAZ, ArrowDownWideNarrow, Search } from 'lucide-react';
+import { GlassPanel } from './ui/GlassPanel';
 
 type SortKey = 'rating' | 'name' | 'games' | 'winrate' | 'peak';
 
@@ -43,7 +44,7 @@ export function PlayersTable({ players, loading, error }: Props) {
   }, [players, query, sortKey]);
 
   return (
-    <section className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--panel))]/60 p-5 shadow-soft backdrop-blur">
+    <GlassPanel className="p-5" hover>
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight">Hráči</h2>
@@ -60,7 +61,7 @@ export function PlayersTable({ players, loading, error }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Hledat…"
-              className="w-full rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg))]/60 py-2 pl-10 pr-3 text-sm shadow-soft outline-none transition focus:border-[rgba(var(--accent),0.7)]"
+              className="w-full glass-chip py-2 pl-10 pr-3 text-sm shadow-soft outline-none transition focus:border-[rgba(var(--accent),0.7)]"
             />
           </label>
 
@@ -91,8 +92,8 @@ export function PlayersTable({ players, loading, error }: Props) {
         <table className="min-w-[900px] w-full border-separate border-spacing-0">
           <thead>
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-[rgb(var(--muted))]">
-              <th className="sticky left-0 z-10 bg-[rgb(var(--panel))] px-3 py-3">#</th>
-              <th className="sticky left-10 z-10 bg-[rgb(var(--panel))] px-3 py-3">Hráč</th>
+              <th className="sticky left-0 z-10 bg-[rgba(var(--panel),0.35)] backdrop-blur px-3 py-3">#</th>
+              <th className="sticky left-10 z-10 bg-[rgba(var(--panel),0.35)] backdrop-blur px-3 py-3">Hráč</th>
               <th className="px-3 py-3">Rating</th>
               <th className="px-3 py-3">Games</th>
               <th className="px-3 py-3">Win</th>
@@ -126,12 +127,12 @@ export function PlayersTable({ players, loading, error }: Props) {
               filtered.map((p, idx) => (
                 <tr
                   key={p.name}
-                  className="text-sm transition hover:bg-[rgba(var(--accent),0.05)]"
+                  className="text-sm transition hover:bg-[rgba(var(--accent),0.08)]"
                 >
-                  <td className="sticky left-0 z-10 border-t border-[rgb(var(--border))] bg-[rgb(var(--panel))] px-3 py-3">
+                  <td className="sticky left-0 z-10 border-t border-[rgb(var(--border))] bg-[rgba(var(--panel),0.35)] backdrop-blur px-3 py-3">
                     {idx + 1}
                   </td>
-                  <td className="sticky left-10 z-10 border-t border-[rgb(var(--border))] bg-[rgb(var(--panel))] px-3 py-3 font-semibold">
+                  <td className="sticky left-10 z-10 border-t border-[rgb(var(--border))] bg-[rgba(var(--panel),0.35)] backdrop-blur px-3 py-3 font-semibold">
                     {p.name}
                   </td>
                   <td className="border-t border-[rgb(var(--border))] px-3 py-3">{Math.round(p.rating)}</td>
@@ -147,7 +148,7 @@ export function PlayersTable({ players, loading, error }: Props) {
           </tbody>
         </table>
       </div>
-    </section>
+    </GlassPanel>
   );
 }
 

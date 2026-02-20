@@ -1,5 +1,6 @@
 import type { PlayerRow } from '../types/player';
-import { Trophy, Users, Swords, TrendingUp } from 'lucide-react';
+import { Swords, TrendingUp, Trophy, Users } from 'lucide-react';
+import { GlassPanel } from './ui/GlassPanel';
 
 function formatPct(v: number) {
   if (!Number.isFinite(v)) return '—';
@@ -11,37 +12,41 @@ type Props = {
 };
 
 /**
- * Small "top stats" row.
+ * StatsBar
+ * -------
+ * "Hero" micro-cards showing quick project metrics.
  *
- * For now we compute few derived stats from the standings table.
- * Later we can extend this into a richer dashboard (weekly activity, streaks, etc.).
+ * Notes for future development:
+ * - These are derived from the standings sheet (no match history yet).
+ * - Once we add per-match data, we can extend this section with streaks,
+ *   activity over time, and performance vs. opponents.
  */
 export function StatsBar({ players }: Props) {
   const totalPlayers = players.length;
   const totalGames = players.reduce((sum, p) => sum + (p.games || 0), 0);
 
   const top = players[0];
-  const bestWinrate = [...players].sort((a, b) => b.winrate - a.winrate)[0];
+  const bestWinrate = [...players].sort((a, b) => (b.winrate || 0) - (a.winrate || 0))[0];
 
   const cards = [
     {
-      label: 'Hráčů v žebříčku',
-      value: String(totalPlayers),
+      label: 'Players',
+      value: totalPlayers.toString(),
       icon: Users,
     },
     {
-      label: 'Zápasů celkem',
-      value: String(totalGames),
+      label: 'Total games',
+      value: totalGames.toString(),
       icon: Swords,
     },
     {
-      label: 'Lídr ratingu',
-      value: top ? `${top.name} (${Math.round(top.rating)})` : '—',
+      label: 'Current #1',
+      value: top ? top.name : '—',
       icon: Trophy,
     },
     {
-      label: 'Nejlepší winrate',
-      value: bestWinrate ? `${bestWinrate.name} (${formatPct(bestWinrate.winrate)})` : '—',
+      label: 'Best winrate',
+      value: bestWinrate ? formatPct(bestWinrate.winrate) : '—',
       icon: TrendingUp,
     },
   ];
@@ -49,20 +54,18 @@ export function StatsBar({ players }: Props) {
   return (
     <section className="grid gap-4 md:grid-cols-4">
       {cards.map((c) => (
-        <div
-          key={c.label}
-          className="rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--panel))]/60 p-5 shadow-soft backdrop-blur"
-        >
+        <GlassPanel key={c.label} className="p-5" hover>
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold tracking-wide text-[rgb(var(--muted))]">{c.label}</p>
               <p className="mt-2 text-lg font-bold tracking-tight">{c.value}</p>
             </div>
-            <div className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg))]/60 p-2">
+
+            <div className="glass-chip p-2">
               <c.icon size={18} />
             </div>
           </div>
-        </div>
+        </GlassPanel>
       ))}
     </section>
   );

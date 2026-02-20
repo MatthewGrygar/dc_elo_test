@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import classNames from 'classnames';
+import { GlassPanel } from './ui/GlassPanel';
 
 export type Slide = {
   title: string;
@@ -42,7 +43,7 @@ export function BannerSlider({ slides }: Props) {
   const active = deck[index];
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--panel))]/60 shadow-soft backdrop-blur">
+    <GlassPanel className="relative overflow-hidden" hover>
       {/* Decorative blobs */}
       <div className="pointer-events-none absolute -left-20 -top-24 h-72 w-72 animate-float rounded-full bg-[rgba(var(--accent),0.22)] blur-3xl" />
       <div className="pointer-events-none absolute -right-28 -bottom-24 h-80 w-80 animate-float rounded-full bg-[rgba(var(--accent-2),0.18)] blur-3xl" />
@@ -58,7 +59,7 @@ export function BannerSlider({ slides }: Props) {
           <button
             type="button"
             onClick={() => setIndex((i) => (i - 1 + deck.length) % deck.length)}
-            className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg))]/60 p-2 shadow-soft backdrop-blur transition hover:translate-y-[-1px]"
+            className="glass-chip p-2 shadow-soft transition hover:translate-y-[-1px]"
             aria-label="Předchozí slide"
           >
             <ChevronLeft size={18} />
@@ -66,7 +67,7 @@ export function BannerSlider({ slides }: Props) {
           <button
             type="button"
             onClick={() => setIndex((i) => (i + 1) % deck.length)}
-            className="rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--bg))]/60 p-2 shadow-soft backdrop-blur transition hover:translate-y-[-1px]"
+            className="glass-chip p-2 shadow-soft transition hover:translate-y-[-1px]"
             aria-label="Další slide"
           >
             <ChevronRight size={18} />
@@ -88,6 +89,6 @@ export function BannerSlider({ slides }: Props) {
           />
         ))}
       </div>
-    </section>
+    </GlassPanel>
   );
 }

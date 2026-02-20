@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { PlayerRow } from '../types/player';
 import {
   Area,
@@ -5,7 +6,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -13,236 +13,305 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-function panelClassName() {
-  return 'rounded-3xl border border-[rgb(var(--border))] bg-[rgb(var(--panel))]/60 p-5 shadow-soft backdrop-blur';
-}
-
-function toChartColors() {
-  // Recharts prefers actual colors; we use the CSS vars here.
-  const styles = getComputedStyle(document.documentElement);
-  const accent = `rgb(${styles.getPropertyValue('--accent').trim()})`;
-  const accent2 = `rgb(${styles.getPropertyValue('--accent-2').trim()})`;
-  const text = `rgb(${styles.getPropertyValue('--text').trim()})`;
-  const muted = `rgb(${styles.getPropertyValue('--muted').trim()})`;
-  const grid = `rgba(${styles.getPropertyValue('--border').trim()}, 0.65)`;
-  return { accent, accent2, text, muted, grid };
-}
+import { GlassPanel } from './ui/GlassPanel';
 
 type Props = {
   players: PlayerRow[];
 };
 
-/**
- * Charts are intentionally simple in v0.
- *
- * The real value comes once we add:
- * - match history (time series)
- * - rating deltas
- * - activity tracking
- */
-export function ChartsSection({ players }: Props) {
-  const top10 = players.slice(0, 10).map((p) => ({ name: p.name, rating: p.rating }));
+type ChartColors = {
+  accent: string;
+  accent2: string;
+  text: string;
+  muted: string;
+  grid: string;
+};
 
-  const ratingBuckets = bucketRatings(players, 100).map((b) => ({
-    bucket: b.label,
-    players: b.count,
-  }));
+function getChartColors(): ChartColors {
+  // Recharts expects actual CSS colors (not CSS variables).
+  // We read the CSS variables at runtime so charts match the active theme.
+  if (typeof window === 'undefined') {
+    return {
+      accent: '#3b82f6',
+      accent2: '#a855f7',
+      text: '#0f172a',
+      muted: '#475569',
+      grid: 'rgba(148,163,184,0.35)',
+    };
+  }
 
-  const winLoss = players.slice(0, 12).map((p) => ({
-    name: p.name,
-    win: p.win,
-    loss: p.loss,
-    draw: p.draw,
-  }));
+  const styles = getComputedStyle(document.documentElement);
+  const accent = `rgb(${styles.getPropertyValue('--accent').trim()})`;
+  const accent2 = `rgb(${styles.getPropertyValue('--accent-2').trim()})`;
+  const text = `rgb(${styles.getPropertyValue('--text').trim()})`;
+  const muted = `rgb(${styles.getPropertyValue('--muted').trim()})`;
+  const grid = `rgba(${styles.getPropertyValue('--border').trim()}, 0.55)`;
+  return { accent, accent2, text, muted, grid };
+}
 
-  const gamesVsRating = players.slice(0, 40).map((p) => ({
-    name: p.name,
-    games: p.games,
-    rating: p.rating,
-  }));
-
-  // Get palette lazily (needs DOM) – safe in browser only.
-  const colors = typeof window !== 'undefined' ? toChartColors() : null;
-
+function GlassTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
   return (
-    <section className="space-y-4">
-      <div className={panelClassName()}>
-        <div className="mb-4 flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-bold tracking-tight">Distribuce ratingu</h2>
-          <p className="text-sm text-[rgb(var(--muted))]">Placeholder: bucketed histogram</p>
-        </div>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={ratingBuckets} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
-              <CartesianGrid stroke={colors?.grid} strokeDasharray="4 4" />
-              <XAxis dataKey="bucket" tick={{ fill: colors?.muted }} />
-              <YAxis tick={{ fill: colors?.muted }} allowDecimals={false} />
-              <Tooltip
-                contentStyle={{
-                  background: 'rgba(0,0,0,0.65)',
-                  borderRadius: 16,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: 'white',
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="players"
-                stroke={colors?.accent}
-                fill={colors?.accent}
-                fillOpacity={0.25}
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+    <div className="glass-panel p-3">
+      <p className="text-xs font-semibold text-[rgb(var(--muted))]">{label}</p>
+      <div className="mt-1 space-y-1">
+        {payload.map((p: any) => (
+          <div key={p.dataKey} className="flex items-center justify-between gap-6 text-sm">
+            <span className="text-[rgb(var(--muted))]">{p.name ?? p.dataKey}</span>
+            <span className="font-semibold">{p.value}</span>
+          </div>
+        ))}
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className={panelClassName()}>
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h3 className="text-base font-bold tracking-tight">Top 10 rating</h3>
-            <p className="text-sm text-[rgb(var(--muted))]">Placeholder</p>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={top10} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
-                <CartesianGrid stroke={colors?.grid} strokeDasharray="4 4" />
-                <XAxis dataKey="name" tick={{ fill: colors?.muted }} hide />
-                <YAxis tick={{ fill: colors?.muted }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(0,0,0,0.65)',
-                    borderRadius: 16,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'white',
-                  }}
-                />
-                <Bar dataKey="rating" fill={colors?.accent2} radius={[12, 12, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className={panelClassName()}>
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h3 className="text-base font-bold tracking-tight">Win/Loss/Draw (top 12)</h3>
-            <p className="text-sm text-[rgb(var(--muted))]">Placeholder</p>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={winLoss} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
-                <CartesianGrid stroke={colors?.grid} strokeDasharray="4 4" />
-                <XAxis dataKey="name" tick={{ fill: colors?.muted }} hide />
-                <YAxis tick={{ fill: colors?.muted }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(0,0,0,0.65)',
-                    borderRadius: 16,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'white',
-                  }}
-                />
-                <Legend wrapperStyle={{ color: colors?.muted }} />
-                <Bar dataKey="win" stackId="a" fill={colors?.accent} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="draw" stackId="a" fill={colors?.accent2} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="loss" stackId="a" fill={colors?.text} opacity={0.25} radius={[12, 12, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className={panelClassName()}>
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h3 className="text-base font-bold tracking-tight">Games vs Rating</h3>
-            <p className="text-sm text-[rgb(var(--muted))]">Placeholder</p>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={gamesVsRating} margin={{ left: 0, right: 10, top: 10, bottom: 0 }}>
-                <CartesianGrid stroke={colors?.grid} strokeDasharray="4 4" />
-                <XAxis dataKey="name" tick={{ fill: colors?.muted }} hide />
-                <YAxis yAxisId="left" tick={{ fill: colors?.muted }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fill: colors?.muted }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(0,0,0,0.65)',
-                    borderRadius: 16,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'white',
-                  }}
-                />
-                <Legend wrapperStyle={{ color: colors?.muted }} />
-                <Line yAxisId="left" type="monotone" dataKey="games" stroke={colors?.accent} strokeWidth={2} dot={false} />
-                <Line yAxisId="right" type="monotone" dataKey="rating" stroke={colors?.accent2} strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className={panelClassName()}>
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h3 className="text-base font-bold tracking-tight">TODO: Rating over time</h3>
-            <p className="text-sm text-[rgb(var(--muted))]">Placeholder for match history</p>
-          </div>
-
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={players.slice(0, 12).map((p, i) => ({ x: i + 1, rating: p.rating }))}
-                margin={{ left: 0, right: 10, top: 10, bottom: 0 }}
-              >
-                <CartesianGrid stroke={colors?.grid} strokeDasharray="4 4" />
-                <XAxis dataKey="x" tick={{ fill: colors?.muted }} />
-                <YAxis tick={{ fill: colors?.muted }} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(0,0,0,0.65)',
-                    borderRadius: 16,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    color: 'white',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="rating"
-                  stroke={colors?.accent}
-                  fill={colors?.accent}
-                  fillOpacity={0.18}
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }
 
-function bucketRatings(players: PlayerRow[], step: number) {
-  const ratings = players.map((p) => p.rating).filter((n) => Number.isFinite(n));
-  if (ratings.length === 0) return [] as { label: string; count: number }[];
+function ChartCard({
+  title,
+  subtitle,
+  children,
+  fullWidth = false,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+  fullWidth?: boolean;
+}) {
+  return (
+    <GlassPanel className="p-5" hover>
+      <header className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold tracking-tight">{title}</h3>
+          <p className="mt-1 text-sm text-[rgb(var(--muted))]">{subtitle}</p>
+        </div>
+      </header>
+      <div className={fullWidth ? 'h-72 md:h-80' : 'h-64'}>{children}</div>
+    </GlassPanel>
+  );
+}
 
-  const min = Math.floor(Math.min(...ratings) / step) * step;
-  const max = Math.ceil(Math.max(...ratings) / step) * step;
+/**
+ * ChartsSection
+ * -------------
+ * Modern, glassy charts (still placeholder data in v0).
+ *
+ * When we later add match history we can swap these placeholders for:
+ * - rating over time (per player)
+ * - seasonal performance
+ * - matchup matrices
+ * - activity heatmaps
+ */
+export function ChartsSection({ players }: Props) {
+  const colors = getChartColors();
 
-  const buckets: { label: string; count: number; from: number; to: number }[] = [];
-  for (let from = min; from < max; from += step) {
-    const to = from + step;
-    buckets.push({
-      from,
-      to,
-      label: `${from}–${to}`,
-      count: 0,
-    });
-  }
+  // Placeholder datasets derived from standings.
+  const topByRating = [...players]
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 16)
+    .map((p) => ({
+      name: p.name,
+      rating: p.rating,
+      peak: p.peak,
+      winrate: Math.round((p.winrate || 0) * 1000) / 10,
+      games: p.games,
+    }));
 
-  for (const r of ratings) {
-    const idx = Math.min(Math.floor((r - min) / step), buckets.length - 1);
-    if (idx >= 0) buckets[idx]!.count += 1;
-  }
+  const topByGames = [...players]
+    .sort((a, b) => (b.games || 0) - (a.games || 0))
+    .slice(0, 10)
+    .map((p) => ({ name: p.name, games: p.games, rating: p.rating }));
 
-  return buckets;
+  const topByWinrate = [...players]
+    .filter((p) => (p.games || 0) >= 5)
+    .sort((a, b) => (b.winrate || 0) - (a.winrate || 0))
+    .slice(0, 10)
+    .map((p) => ({ name: p.name, winrate: Math.round((p.winrate || 0) * 1000) / 10 }));
+
+  const ratingVsPeak = [...players]
+    .slice(0, 22)
+    .map((p) => ({ name: p.name, rating: p.rating, peak: p.peak }))
+    .sort((a, b) => (b.peak || 0) - (a.peak || 0));
+
+  const wlSplit = [...players]
+    .slice(0, 12)
+    .map((p) => ({ name: p.name, win: p.win, loss: p.loss, draw: p.draw }))
+    .sort((a, b) => (b.win || 0) - (a.win || 0));
+
+  return (
+    <section className="mt-6 space-y-4">
+      <ChartCard
+        title="Top rating overview"
+        subtitle="Modern area chart with soft glow + gradient fill (placeholder: top 16 by rating)."
+        fullWidth
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={topByRating} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gAccent" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={colors.accent} stopOpacity={0.55} />
+                <stop offset="100%" stopColor={colors.accent} stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="gAccent2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={colors.accent2} stopOpacity={0.40} />
+                <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.02} />
+              </linearGradient>
+              <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: colors.muted, fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+              interval={0}
+              angle={-12}
+              height={40}
+            />
+            <YAxis
+              tick={{ fill: colors.muted, fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+              width={42}
+            />
+            <Tooltip content={<GlassTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="rating"
+              name="Rating"
+              stroke={colors.accent}
+              strokeWidth={2.5}
+              fill="url(#gAccent)"
+              filter="url(#softGlow)"
+              dot={false}
+              activeDot={{ r: 5 }}
+            />
+            <Area
+              type="monotone"
+              dataKey="peak"
+              name="Peak"
+              stroke={colors.accent2}
+              strokeWidth={2}
+              fill="url(#gAccent2)"
+              dot={false}
+              activeDot={{ r: 5 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ChartCard title="Most active players" subtitle="Top 10 by games played (placeholder).">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={topByGames} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="barGlow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={colors.accent} stopOpacity={0.70} />
+                  <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.30} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} width={42} />
+              <Tooltip content={<GlassTooltip />} />
+              <Bar dataKey="games" name="Games" fill="url(#barGlow)" radius={[10, 10, 10, 10]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Best winrate (min 5 games)" subtitle="Top 10 winrate in % (placeholder).">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={topByWinrate} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <filter id="lineGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} />
+              <YAxis
+                tick={{ fill: colors.muted, fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+                width={42}
+                domain={[0, 100]}
+              />
+              <Tooltip content={<GlassTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="winrate"
+                name="Winrate %"
+                stroke={colors.accent2}
+                strokeWidth={2.5}
+                dot={false}
+                filter="url(#lineGlow)"
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Rating vs. peak" subtitle="How close are players to their peak (placeholder).">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={ratingVsPeak} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gPeak" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={colors.accent2} stopOpacity={0.45} />
+                  <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.04} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} width={42} />
+              <Tooltip content={<GlassTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="peak"
+                name="Peak"
+                stroke={colors.accent2}
+                strokeWidth={2.25}
+                fill="url(#gPeak)"
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="rating"
+                name="Rating"
+                stroke={colors.accent}
+                strokeWidth={2}
+                fillOpacity={0}
+                dot={false}
+                activeDot={{ r: 5 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="W/L/D split" subtitle="Wins, losses and draws (placeholder).">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={wlSplit} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke={colors.grid} strokeDasharray="4 10" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fill: colors.muted, fontSize: 12 }} tickLine={false} axisLine={false} width={42} />
+              <Tooltip content={<GlassTooltip />} />
+              <Bar dataKey="win" name="Win" fill={colors.accent} radius={[10, 10, 10, 10]} />
+              <Bar dataKey="loss" name="Loss" fill={colors.accent2} radius={[10, 10, 10, 10]} />
+              <Bar dataKey="draw" name="Draw" fill={colors.muted} radius={[10, 10, 10, 10]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+    </section>
+  );
 }
