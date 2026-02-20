@@ -24,8 +24,8 @@ export function PlayerModal({ player, onClose }: { player: Player | null; onClos
             <div className="modalTitle">{player.name}</div>
             <div className="modalSub">Detail hráče (placeholder)</div>
           </div>
-          <button className="btn btn--ghost" onClick={onClose} type="button">
-            Zavřít
+          <button className="modalClose" onClick={onClose} type="button" aria-label="Zavřít">
+            ×
           </button>
         </div>
 

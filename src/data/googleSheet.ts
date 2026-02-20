@@ -62,7 +62,9 @@ export async function fetchPlayersFromGoogleSheet(sheetName: string = DEFAULT_SH
     const win = toNumber(c[3]?.v);
     const loss = toNumber(c[4]?.v);
     const draw = toNumber(c[5]?.v);
-    const winrate = toNumber(c[6]?.v);
+    let winrate = toNumber(c[6]?.v);
+    // Sheet may provide winrate as 0.55 (fraction) OR 55 (percent). Normalize to 0..1.
+    if (winrate > 1) winrate = winrate / 100;
     const peak = toNumber(c[7]?.v);
 
     players.push({
@@ -77,8 +79,6 @@ export async function fetchPlayersFromGoogleSheet(sheetName: string = DEFAULT_SH
       peak,
     });
   }
-
-  // Sort by rating desc by default (leaderboard friendly).
-  players.sort((a, b) => b.rating - a.rating);
+  // IMPORTANT: Preserve the sheet row order (source-of-truth ranking).
   return players;
 }

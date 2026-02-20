@@ -41,8 +41,8 @@
   --text2: rgba(11, 16, 32, 0.62);
 
   /* light glass */
-  --panel-bg: rgba(255, 255, 255, 0.78);
-  --panel-border: rgba(17, 24, 39, 0.10);
+  --panel-bg: rgba(10, 12, 18, 0.62);
+  --panel-border: rgba(255, 255, 255, 0.08);
   --overlay: rgba(0, 0, 0, 0.28);
 
   --tick: rgba(11, 16, 32, 0.55);
@@ -58,7 +58,7 @@
   --text2: rgba(255, 255, 255, 0.65);
 
   /* matte glass */
-  --panel-bg: rgba(255, 255, 255, 0.04);
+  --panel-bg: rgba(10, 12, 18, 0.62);
   --panel-border: rgba(255, 255, 255, 0.08);
   --overlay: rgba(0, 0, 0, 0.62);
 
