@@ -1,29 +1,15 @@
 /**
- * Canonical data model for the Leaderboard.
- *
- * Keep this file stable and well-documented: other future AI/engineers
- * should be able to reason about the app's core domain types from here.
+ * PlayerRow is the normalized shape used throughout the app.
+ * Source columns are from Google Sheet:
+ * A Name, B Rating, C Games, D Win, E Loss, F Draw, G Winrate, H Peak
  */
 export type PlayerRow = {
-  /** Stable slug-like id derived from name (until we introduce real IDs). */
-  id: string;
-
-  /** Display name. */
   name: string;
-
-  /** Current rating. */
   rating: number;
-
-  /** Total played games. */
   games: number;
-
   win: number;
   loss: number;
   draw: number;
-
-  /** Historical best rating. */
+  winrate: number; // percentage (0-100)
   peak: number;
-
-  /** Winrate in percentage (0..100), or 0 if unknown. */
-  winrate: number;
 };

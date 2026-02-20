@@ -1,11 +1,5 @@
-import React from 'react';
-import { ThemeProvider } from './lib/theme';
-import { AppShell } from './components/AppShell';
+import { AppShell } from "./app/AppShell";
 
-export function App() {
-  return (
-    <ThemeProvider>
-      <AppShell />
-    </ThemeProvider>
-  );
+export default function App() {
+  return <AppShell />;
 }

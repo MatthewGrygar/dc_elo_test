@@ -1,86 +1,81 @@
-# DC ELO 2.0 — v2.3.0
+# DC ELO 2.0 — v2.3 (TypeScript + React)
 
-Modern, monochrome + data-accent analytics dashboard for Duel Commander ELO.
+Moderní, modulární analytický dashboard pro **Duel Commander ELO**.  
+Cíl této verze: **čistý skeleton + placeholdery**, připravené na rychlé rozšiřování.
 
-- **Tech:** TypeScript + React (Vite)
-- **Hosting:** GitHub Pages (via GitHub Actions)
-- **Data layer:** Public Google Sheet (Visualization API / gviz)
+## Tech stack
+- React 18 + TypeScript
+- Vite (rychlý dev server, jednoduchý deploy)
+- Recharts (grafy)
+- GitHub Pages deploy přes GitHub Actions (bez ručního klikání)
 
-## Quick start
-
+## Lokální spuštění
 ```bash
-npm i
+npm install
 npm run dev
 ```
 
-Build locally:
-
+## Build / Preview
 ```bash
 npm run build
 npm run preview
 ```
 
-## Deploy to GitHub Pages
+## Deploy na GitHub Pages (CI)
+Repo je připravené na Pages deploy přes workflow:
 
-This repo is configured for **GitHub Pages via Actions**.
+- push na `main` spustí build
+- artifact se nasadí na GitHub Pages (branchless Pages via Actions)
 
-1. Push to `main`
-2. In GitHub → **Settings → Pages**
-   - Source: **GitHub Actions**
-3. The workflow will build and deploy automatically.
+### 1) Zapni GitHub Pages
+Repo → **Settings → Pages** → Source: **GitHub Actions**.
 
-> Note: Vite needs a non-root base path on GitHub Pages. The workflow sets `BASE_PATH="/<repo-name>/"` automatically.
+### 2) Ujisti se, že workflow běží
+Workflow je v `.github/workflows/deploy.yml`.
 
-CI installs dependencies with `npm ci` (using `package-lock.json`) for reproducible builds.
+> Pozn.: Vite potřebuje base path `/<repo>/`. Workflow posílá do build procesu `REPO_NAME`.
 
-## Data source (Google Sheets)
+## Data: Google Sheet
+Data se berou ze sheetu (placeholder integrace už je hotová):
 
-Currently reading:
-- Spreadsheet: `1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA`
-- Sheet tab: **Elo standings**
-- Columns:
-  - A: Name
-  - B: Rating
-  - C: Games
-  - D: Win
-  - E: Loss
-  - F: Draw
-  - G: Winrate
-  - H: Peak
+- dokument: `1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA`
+- list: **Elo standings**
+- sloupce:
+  - A Name
+  - B Rating
+  - C Games
+  - D Win
+  - E Loss
+  - F Draw
+  - G Winrate
+  - H Peak
 
-Implementation lives here:
-- `src/lib/googleSheet.ts`
+Aplikace tahá CSV export přes Google "gviz" endpoint.
 
-### Troubleshooting
+### Když data nepůjdou načíst
+Nejčastější důvody:
+- Sheet není veřejný (`Anyone with the link can view`)
+- List se jmenuje jinak (musí být přesně `Elo standings`)
 
-If data does not load on Pages:
-- Make sure the sheet is public or "anyone with the link can view"
-- Confirm the tab name is exactly `Elo standings`
-
-## Architecture
-
-High-level layout:
-
+## Struktura aplikace
 ```
-<AppShell>
- ├── <Header />
- ├── <BannerSlider />
- ├── <DashboardSection>
- │     ├── <SummaryPanels />
- │     ├── <ChartsGrid />
- ├── <LeaderboardSection>
- │     └── <Leaderboard />
- ├── <PlayerModal />
-</AppShell>
+src/
+  app/               # layout + sekce
+  components/        # UI komponenty (banner, charts, leaderboard, modal)
+  data/              # google sheets fetch + csv parser
+  hooks/             # usePlayers()
+  styles/            # design tokens + globální styl
+  types/             # TS typy
 ```
 
-- **Theme:** `src/lib/theme.tsx` (CSS variables + localStorage)
-- **Styles:** `src/styles/global.css` (design tokens + components)
-- **Domain types:** `src/types/*`
+## Kodovací standard (pro budoucí AI)
+- Komponenty jsou malé, pojmenované a mají krátké docstringy.
+- UI je postavené z "panel" primitiva s tokeny (light/dark).
+- Data layer je izolovaná (`src/data/`), aby se později snadno vyměnila za API.
 
-## Next steps (planned)
+---
 
-- Real chart datasets (rating history)
-- Player detail modal: match history, commander stats
-- Extra sections: Metagame, Commander stats, Match history
-
+Plán další iterace:
+- PlayerModal: detailní statistiky, match history
+- reálné grafy z dat (zatím demo data)
+- routing (Dashboard / Leaderboard / Statistics)

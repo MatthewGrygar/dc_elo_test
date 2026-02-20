@@ -1,0 +1,80 @@
+.topbar {
+  position: sticky;
+  top: 14px;
+  z-index: 20;
+  margin: 14px auto 0;
+  width: min(1120px, calc(100% - 32px));
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.left { display: flex; align-items: center; gap: 18px; }
+.right { display: flex; align-items: center; gap: 10px; }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.logoMark {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--data-primary);
+  box-shadow: 0 0 0 6px rgba(79, 107, 255, 0.15);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.nav a {
+  padding: 8px 10px;
+  border-radius: 999px;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.nav a:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.10);
+}
+
+.themeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255,255,255,0.10);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow-L1);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.themeButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-L2);
+}
+
+.themeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--data-secondary);
+  box-shadow: 0 0 0 6px rgba(139, 92, 246, 0.14);
+}
+
+@media (max-width: 720px) {
+  .nav { display: none; }
+}

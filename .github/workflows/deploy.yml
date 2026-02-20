@@ -21,56 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          # Explicitly point to the lockfile so npm cache works reliably.
-          cache-dependency-path: package-lock.json
-
-      - name: Tune npm (CI)
-        run: |
-          npm config set fund false
-          npm config set audit false
-          npm config set progress false
-          # Some org/repo CI templates set `omit=dev` globally which would skip Vite
-          # (a devDependency) and make `npm run build` fail with "vite: not found".
-          # We explicitly clear omit/include to ensure devDependencies are installed.
-          npm config delete omit || true
-          npm config delete include || true
-          npm config set omit ""
-          npm config set include "dev"
+          node-version: "20"
+          cache: "npm"
 
       - name: Install
-        # Use the lockfile for reproducible installs on CI
-        # NOTE: Some CI environments/repo settings may set NODE_ENV=production or
-        # NPM_CONFIG_PRODUCTION=true, which would omit devDependencies.
-        # Vite is a devDependency but is required to build.
-        env:
-          # Force devDependencies to be installed (Vite is required for the build).
-          # Some environments set omit=dev / NODE_ENV=production globally.
-          NODE_ENV: ""
-          NPM_CONFIG_PRODUCTION: "false"
-          NPM_CONFIG_ONLY: "false"
-          NPM_CONFIG_OMIT: ""
-          NPM_CONFIG_INCLUDE: "dev"
-        run: npm ci --no-audit --no-fund --prefer-offline
-
-      - name: Sanity check toolchain
-        run: |
-          node -v
-          npm -v
-          test -d node_modules || (echo "node_modules missing" && exit 1)
-          test -f node_modules/.bin/vite || (echo "vite binary missing" && ls -la node_modules/.bin | head -n 50 && exit 1)
-          npx --no-install vite --version
+        run: npm ci
 
       - name: Build
         env:
-          # Vite base path for GitHub Pages: /<repo-name>/
-          BASE_PATH: "/${{ github.event.repository.name }}/"
-          NODE_ENV: development
-          NPM_CONFIG_PRODUCTION: "false"
+          REPO_NAME: ${{ github.event.repository.name }}
         run: npm run build
 
       - name: Upload artifact
@@ -79,12 +41,12 @@ jobs:
           path: dist
 
   deploy:
-    runs-on: ubuntu-latest
-    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
     steps:
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

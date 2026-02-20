@@ -1,24 +1,15 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 /**
- * GitHub Pages needs a non-root base path: /<repo-name>/
- *
- * - In local dev we keep base = '/'
- * - In CI (GitHub Actions) we set BASE_PATH = "/${{ github.event.repository.name }}/"
+ * GitHub Pages needs the correct base path (/<repo>/).
+ * The workflow injects REPO_NAME at build-time.
  */
-export default defineConfig(({ mode }) => {
-  const base = process.env.BASE_PATH ?? '/';
+const repoName = process.env.REPO_NAME;
+const base =
+  process.env.NODE_ENV === "production" && repoName ? `/${repoName}/` : "/";
 
-  return {
-    base,
-    plugins: [react()],
-    server: {
-      port: 5173,
-      strictPort: true
-    },
-    build: {
-      sourcemap: mode !== 'production'
-    }
-  };
+export default defineConfig({
+  plugins: [react()],
+  base,
 });
