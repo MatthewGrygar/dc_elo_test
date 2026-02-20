@@ -3,10 +3,17 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import classNames from 'classnames';
 import { GlassPanel } from './ui/GlassPanel';
 
+// Local placeholder assets (v0):
+// We keep them inside the repo so the banner works offline and on GitHub Pages.
+import slide1 from '../assets/slider/slide-1.png';
+import slide2 from '../assets/slider/slide-2.png';
+import slide3 from '../assets/slider/slide-3.png';
+
 export type Slide = {
   title: string;
   subtitle: string;
   hint?: string;
+  imageSrc?: string;
 };
 
 type Props = {
@@ -18,16 +25,19 @@ const DEFAULT_SLIDES: Slide[] = [
     title: 'DC ELO 2.0',
     subtitle: 'Nová generace žebříčku s rychlými statistikami, grafy a integrací na Google Sheets.',
     hint: 'Placeholder: banner #1',
+    imageSrc: slide1,
   },
   {
     title: 'Transparentní datová vrstva',
     subtitle: 'Veškerá data tečou z veřejného Google Sheet — jednoduchá správa, rychlé iterace.',
     hint: 'Placeholder: banner #2',
+    imageSrc: slide2,
   },
   {
     title: 'Grafy & trendy',
     subtitle: 'Připravujeme metriky výkonnosti, aktivitu hráčů a vývoj ratingu v čase.',
     hint: 'Placeholder: banner #3',
+    imageSrc: slide3,
   },
 ];
 
@@ -44,6 +54,19 @@ export function BannerSlider({ slides }: Props) {
 
   return (
     <GlassPanel className="relative overflow-hidden" hover>
+      {/* Background image (subtle, still calm). */}
+      {active.imageSrc ? (
+        <img
+          src={active.imageSrc}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-55 dark:opacity-45"
+          loading="lazy"
+        />
+      ) : null}
+
+      {/* Contrast veil so text stays readable on every image. */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[rgba(0,0,0,0.45)] via-[rgba(0,0,0,0.18)] to-transparent dark:from-[rgba(0,0,0,0.55)]" />
+
       {/* Decorative blobs */}
       <div className="pointer-events-none absolute -left-20 -top-24 h-72 w-72 animate-float rounded-full bg-[rgba(var(--accent),0.22)] blur-3xl" />
       <div className="pointer-events-none absolute -right-28 -bottom-24 h-80 w-80 animate-float rounded-full bg-[rgba(var(--accent-2),0.18)] blur-3xl" />

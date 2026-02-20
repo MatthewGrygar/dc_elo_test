@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { PlayerRow } from '../types/player';
 import { ArrowDownAZ, ArrowDownWideNarrow, Search } from 'lucide-react';
 import { GlassPanel } from './ui/GlassPanel';
+import { PlayerModal } from './PlayerModal';
 
 type SortKey = 'rating' | 'name' | 'games' | 'winrate' | 'peak';
 
@@ -19,6 +20,7 @@ function formatPct(v: number) {
 export function PlayersTable({ players, loading, error }: Props) {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('rating');
+  const [selected, setSelected] = useState<PlayerRow | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -44,7 +46,8 @@ export function PlayersTable({ players, loading, error }: Props) {
   }, [players, query, sortKey]);
 
   return (
-    <GlassPanel className="p-5" hover>
+    <>
+      <GlassPanel className="p-5" hover>
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-lg font-bold tracking-tight">Hráči</h2>
@@ -127,7 +130,9 @@ export function PlayersTable({ players, loading, error }: Props) {
               filtered.map((p, idx) => (
                 <tr
                   key={p.name}
-                  className="text-sm transition hover:bg-[rgba(var(--accent),0.08)]"
+                  className="cursor-pointer text-sm transition hover:bg-[rgba(var(--accent),0.08)]"
+                  onClick={() => setSelected(p)}
+                  title="Klikni pro detail"
                 >
                   <td className="sticky left-0 z-10 border-t border-[rgb(var(--border))] bg-[rgba(var(--panel),0.35)] backdrop-blur px-3 py-3">
                     {idx + 1}
@@ -148,7 +153,10 @@ export function PlayersTable({ players, loading, error }: Props) {
           </tbody>
         </table>
       </div>
-    </GlassPanel>
+      </GlassPanel>
+
+      <PlayerModal open={!!selected} player={selected} onClose={() => setSelected(null)} />
+    </>
   );
 }
 
