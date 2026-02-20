@@ -1,13 +1,6 @@
-# DC ELO 2.0 — v2.3 (TypeScript + React)
+# DC ELO 2.0 (v2.3)
 
-Moderní, modulární analytický dashboard pro **Duel Commander ELO**.  
-Cíl této verze: **čistý skeleton + placeholdery**, připravené na rychlé rozšiřování.
-
-## Tech stack
-- React 18 + TypeScript
-- Vite (rychlý dev server, jednoduchý deploy)
-- Recharts (grafy)
-- GitHub Pages deploy přes GitHub Actions (bez ručního klikání)
+Moderní analytický dashboard pro Duel Commander ELO — **TypeScript + React + Vite**.
 
 ## Lokální spuštění
 ```bash
@@ -15,67 +8,52 @@ npm install
 npm run dev
 ```
 
-## Build / Preview
+## Build
 ```bash
 npm run build
 npm run preview
 ```
 
-## Deploy na GitHub Pages (CI)
-Repo je připravené na Pages deploy přes workflow:
+## Nasazení na GitHub Pages
+Repo je připravené pro GitHub Pages přes **GitHub Actions** (`.github/workflows/deploy.yml`).
 
-- push na `main` spustí build
-- artifact se nasadí na GitHub Pages (branchless Pages via Actions)
+1. Pushni na větev `main`
+2. V GitHubu otevři **Settings → Pages**
+3. Source nastav na **GitHub Actions**
+4. Po dalším pushi se stránka automaticky deployne
 
-### 1) Zapni GitHub Pages
-Repo → **Settings → Pages** → Source: **GitHub Actions**.
+> Poznámka: Vite `base` se automaticky nastavuje na `/<repo-name>/` v CI přes proměnnou `BASE_PATH`.
 
-### 2) Ujisti se, že workflow běží
-Workflow je v `.github/workflows/deploy.yml`.
+## Data vrstva (Google Sheets)
+Aktuálně se načítá list **"Elo standings"** z Google Sheet a bere se rozsah:
+- A: Jméno
+- B: Rating
+- C: Games
+- D: Win
+- E: Loss
+- F: Draw
+- G: Winrate
+- H: Peak
 
-> Pozn.: Vite potřebuje base path `/<repo>/`. Workflow posílá do build procesu `REPO_NAME`.
+Konfigurace je v `src/data/googleSheet.ts`.
 
-## Data: Google Sheet
-Data se berou ze sheetu (placeholder integrace už je hotová):
+### Když by sheet nebyl veřejný
+UI se automaticky přepne na lokální fallback data (`src/data/fallbackPlayers.ts`), aby stránka byla vždy funkční.
 
-- dokument: `1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA`
-- list: **Elo standings**
-- sloupce:
-  - A Name
-  - B Rating
-  - C Games
-  - D Win
-  - E Loss
-  - F Draw
-  - G Winrate
-  - H Peak
-
-Aplikace tahá CSV export přes Google "gviz" endpoint.
-
-### Když data nepůjdou načíst
-Nejčastější důvody:
-- Sheet není veřejný (`Anyone with the link can view`)
-- List se jmenuje jinak (musí být přesně `Elo standings`)
-
-## Struktura aplikace
+## Architektura komponent
 ```
-src/
-  app/               # layout + sekce
-  components/        # UI komponenty (banner, charts, leaderboard, modal)
-  data/              # google sheets fetch + csv parser
-  hooks/             # usePlayers()
-  styles/            # design tokens + globální styl
-  types/             # TS typy
+<AppShell>
+ ├── <Header />
+ ├── <BannerSlider />
+ ├── <DashboardSection>
+ │    ├── <SummaryPanels />
+ │    ├── <ChartsGrid />
+ ├── <LeaderboardSection>
+ │    └── <Leaderboard />
+ └── <PlayerModal />
 ```
 
-## Kodovací standard (pro budoucí AI)
-- Komponenty jsou malé, pojmenované a mají krátké docstringy.
-- UI je postavené z "panel" primitiva s tokeny (light/dark).
-- Data layer je izolovaná (`src/data/`), aby se později snadno vyměnila za API.
-
----
-
-Plán další iterace:
-- PlayerModal: detailní statistiky, match history
-- reálné grafy z dat (zatím demo data)
-- routing (Dashboard / Leaderboard / Statistics)
+## Kód jako dokumentace
+- většina komponent má krátké komentáře „proč“ (nejen „co“)
+- utility jsou oddělené (`src/lib`, `src/data`, `src/types`)
+- design tokeny jsou v CSS proměnných (`src/styles/tokens.css`)

@@ -2,14 +2,17 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 /**
- * GitHub Pages needs the correct base path (/<repo>/).
- * The workflow injects REPO_NAME at build-time.
+ * GitHub Pages base path
+ *
+ * - Local dev: "/"
+ * - GitHub Actions: set BASE_PATH="/<repo-name>/"
+ *
+ * Why: GitHub Pages typically serves static assets under "/<repo-name>/".
+ * We keep this configurable to avoid hardcoding the repository name.
  */
-const repoName = process.env.REPO_NAME;
-const base =
-  process.env.NODE_ENV === "production" && repoName ? `/${repoName}/` : "/";
+const base = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
-  plugins: [react()],
   base,
+  plugins: [react()],
 });

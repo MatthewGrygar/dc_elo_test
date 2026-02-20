@@ -1,5 +1,15 @@
-import { AppShell } from "./app/AppShell";
+import { AppShell } from "./components/shell/AppShell";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
 
-export default function App() {
-  return <AppShell />;
+/**
+ * App root.
+ * ThemeProvider drží stav tmavého/světlého režimu v jednom místě,
+ * aby budoucí rozšíření (routing, settings, user prefs) bylo jednoduché.
+ */
+export function App() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
+  );
 }
