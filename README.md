@@ -45,3 +45,12 @@ Plán další iterace:
 1) Přidat reálné grafy (např. vývoj ELO, histogram ratingů, winrate distribution).  
 2) Přidat filtrování/sortování hráčů.  
 3) Přidat caching a refresh interval pro Sheets.
+
+## Nasazení na GitHub Pages (důležité)
+Projekt je nastaven tak, aby fungoval na GitHub Pages bez ohledu na název repozitáře.
+
+- V `vite.config.ts` je `base: "./"` ⇒ build používá relativní cesty na assety.
+- Pokud budeš někdy nasazovat na custom doménu do rootu a chceš absolutní cesty,
+  můžeš změnit `base` na `"/"`.
+
+Typický symptom špatného `base`: po deployi se ukáže „bílá stránka“ a v DevTools → Network uvidíš 404 na `/assets/...`.
