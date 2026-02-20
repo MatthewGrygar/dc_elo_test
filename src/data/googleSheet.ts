@@ -34,9 +34,8 @@ function toNumber(value: unknown): number {
 }
 
 function unwrapGviz(text: string): any {
-  // Typical: "/*O_o*/
-google.visualization.Query.setResponse({...});"
-  const m = text.match(/setResponse\((.*)\);\s*$/s);
+  // Typical payload: "/*O_o*/\\ngoogle.visualization.Query.setResponse({...});"
+  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);\s*$/);
   if (!m) throw new Error("Unexpected GVIZ payload");
   return JSON.parse(m[1]);
 }
