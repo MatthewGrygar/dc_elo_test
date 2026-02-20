@@ -1,5 +1,6 @@
-import { List as List, type ListChildComponentProps } from "react-window";
+import * as React from "react";
 import type { PlayerStanding } from '@/types/dc';
+import { List as List, type ListChildComponentProps } from "react-window";
 
 function formatPct(v: number) {
   if (!Number.isFinite(v)) return '0%';
