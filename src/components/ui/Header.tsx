@@ -6,7 +6,7 @@ import { ThemeToggle } from "../theme/ThemeToggle";
  */
 export function Header() {
   return (
-    <header className="topbar panel panel--soft">
+    <header className="topbar">
       <div className="topbarLeft">
         <div className="logoMark" aria-hidden>
           DC

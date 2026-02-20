@@ -4,11 +4,16 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <button className="btn btn--ghost" onClick={toggleTheme} type="button" aria-label="Toggle theme">
-      <span className="btnIcon" aria-hidden>
-        {theme === "dark" ? "🌙" : "☀️"}
+    <button
+      className="iconBtn"
+      onClick={toggleTheme}
+      type="button"
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      title={theme === "dark" ? "Light mode" : "Dark mode"}
+    >
+      <span className="iconBtnIcon" aria-hidden>
+        {theme === "dark" ? "☀️" : "🌙"}
       </span>
-      <span className="btnLabel">{theme === "dark" ? "Dark" : "Light"}</span>
     </button>
   );
 }
