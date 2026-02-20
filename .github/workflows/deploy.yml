@@ -37,7 +37,10 @@ jobs:
 
       - name: Install
         # Use the lockfile for reproducible installs on CI
-        run: npm ci --no-audit --no-fund --prefer-offline
+        # NOTE: Some CI environments/repo settings may set NODE_ENV=production or
+        # NPM_CONFIG_PRODUCTION=true, which would omit devDependencies.
+        # Vite is a devDependency but is required to build.
+        run: npm ci --include=dev --no-audit --no-fund --prefer-offline
 
       - name: Build
         env:
