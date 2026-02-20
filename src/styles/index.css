@@ -508,3 +508,118 @@ button, input { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+
+/* === Glass tuning v2 (thinner borders, stronger "glass") === */
+.panel {
+  border-width: 1px;
+  border-color: rgba(255,255,255,0.07);
+  background: linear-gradient(
+      180deg,
+      rgba(255,255,255,0.06) 0%,
+      rgba(255,255,255,0.035) 55%,
+      rgba(255,255,255,0.02) 100%
+    ),
+    var(--panel-bg);
+}
+
+:root[data-theme="light"] .panel {
+  border-color: rgba(17,24,39,0.10);
+  background: linear-gradient(
+      180deg,
+      rgba(255,255,255,0.95) 0%,
+      rgba(255,255,255,0.78) 60%,
+      rgba(255,255,255,0.70) 100%
+    ),
+    var(--panel-bg);
+}
+
+/* specular highlight: softer + more "glass" */
+.panel::before {
+  background:
+    radial-gradient(620px 280px at 18% 10%, rgba(255,255,255,0.20), transparent 60%),
+    linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 28%, rgba(255,255,255,0.00) 58%);
+  opacity: 0.55;
+}
+
+/* inner border: thinner + less visible */
+.panel::after {
+  inset: 1px;
+  border-width: 1px;
+  border-color: rgba(255,255,255,0.05);
+  opacity: 0.70;
+}
+:root[data-theme="light"] .panel::after { border-color: rgba(0,0,0,0.05); opacity: 0.65; }
+
+
+/* === Toggles sizing consistency === */
+.themeToggle,
+.sourceToggle {
+  height: 40px;
+  padding: 4px;
+  align-items: center;
+}
+
+/* Theme toggle: remove extra padding so it matches source toggle */
+.themeToggle {
+  gap: 8px;
+  padding: 4px 8px;
+}
+.themeToggleLabel { width: 64px; }
+
+/* Source toggle: animated thumb */
+.sourceToggle {
+  position: relative;
+  overflow: hidden;
+  gap: 0;
+  padding: 4px;
+}
+
+.sourceToggle::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.22);
+  transform: translateX(var(--source-x, 0px));
+  transition: transform 180ms var(--ease);
+  will-change: transform;
+  pointer-events: none;
+}
+:root[data-theme="light"] .sourceToggle::before { background: rgba(0,0,0,0.08); }
+
+.sourceBtn {
+  position: relative;
+  z-index: 1;
+  width: 72px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+
+.sourceBtn.active { background: transparent; } /* handled by thumb */
+
+
+/* === Leaderboard typography + contrast === */
+.row { font-size: 13.5px; }
+.nameMain { font-weight: 700; }
+.mono { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* Make rows slightly darker in dark mode to lift text */
+:root[data-theme="dark"] .row--item {
+  background: rgba(0,0,0,0.16);
+  border-color: rgba(255,255,255,0.06);
+}
+:root[data-theme="dark"] .row--item:hover {
+  background: rgba(0,0,0,0.22);
+  border-color: rgba(255,255,255,0.10);
+}
+
+/* Pill: allow inline color scale to control border/background */
+.pill { border-width: 1px; border-style: solid; }

@@ -2,6 +2,25 @@ import { useMemo, useState } from "react";
 import { Player } from "../../types/player";
 import { formatInt, formatPct } from "../../lib/format";
 
+/**
+ * Winrate color scale
+ * - 0% => red
+ * - 100% => green
+ *
+ * We return subtle, glass-friendly colors (bg + border) so it stays premium.
+ */
+function winrateStyle(winrate01: number): React.CSSProperties {
+  const w = Math.max(0, Math.min(1, winrate01));
+  // Hue 0 (red) -> 120 (green)
+  const hue = 120 * w;
+
+  // Keep it muted: use alpha backgrounds + slightly stronger border.
+  const border = `hsla(${hue}, 85%, 55%, 0.45)`;
+  const bg = `hsla(${hue}, 85%, 55%, 0.16)`;
+
+  return { borderColor: border, background: bg, color: "var(--text)" };
+}
+
 export function Leaderboard({
   players,
   onSelectPlayer,
@@ -82,7 +101,9 @@ export function Leaderboard({
               </span>
             </div>
             <div className="cell" role="cell">
-              <span className="pill pill--ok">{formatPct(p.winrate)}</span>
+              <span className="pill" style={winrateStyle(p.winrate)}>
+                {formatPct(p.winrate)}
+              </span>
             </div>
             <div className="cell" role="cell">
               <span className="mono">{formatInt(p.peak)}</span>

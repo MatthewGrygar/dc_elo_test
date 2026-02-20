@@ -1,8 +1,9 @@
 export type StandingsSource = "ELO" | "DCPR";
 
 /**
- * ELO/DCPR toggle (source of truth for dashboard data).
- * Presentational: parent owns the state.
+ * ELO/DCPR toggle (animated)
+ * - Sliding thumb via CSS var (--source-x)
+ * - Animates only transform (GPU-friendly)
  */
 export function DataSourceToggle({
   value,
@@ -11,12 +12,15 @@ export function DataSourceToggle({
   value: StandingsSource;
   onChange: (v: StandingsSource) => void;
 }) {
+  const x = value === "ELO" ? "0px" : "calc(100% + 4px)"; // +4 accounts for gap-less layout inside
+
   return (
-    <div className="sourceToggle" role="group" aria-label="Data source">
+    <div className="sourceToggle" style={{ ["--source-x" as any]: x }} role="group" aria-label="Data source">
       <button
         className={`sourceBtn ${value === "ELO" ? "active" : ""}`}
         onClick={() => onChange("ELO")}
         type="button"
+        aria-pressed={value === "ELO"}
       >
         ELO
       </button>
@@ -24,6 +28,7 @@ export function DataSourceToggle({
         className={`sourceBtn ${value === "DCPR" ? "active" : ""}`}
         onClick={() => onChange("DCPR")}
         type="button"
+        aria-pressed={value === "DCPR"}
       >
         DCPR
       </button>
