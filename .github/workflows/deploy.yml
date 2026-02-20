@@ -28,7 +28,8 @@ jobs:
           cache: npm
 
       - name: Install
-        run: npm install
+        # Use the lockfile for reproducible installs on CI
+        run: npm ci
 
       - name: Build
         env:

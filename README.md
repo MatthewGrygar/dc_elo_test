@@ -31,6 +31,8 @@ This repo is configured for **GitHub Pages via Actions**.
 
 > Note: Vite needs a non-root base path on GitHub Pages. The workflow sets `BASE_PATH="/<repo-name>/"` automatically.
 
+CI installs dependencies with `npm ci` (using `package-lock.json`) for reproducible builds.
+
 ## Data source (Google Sheets)
 
 Currently reading:
