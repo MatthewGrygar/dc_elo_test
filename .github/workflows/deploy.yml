@@ -21,14 +21,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # NOTE:
+      # We intentionally do NOT enable setup-node "cache: npm" here,
+      # because it requires a lockfile (package-lock.json / npm-shrinkwrap.json / yarn.lock).
+      # This repo keeps the initial skeleton lightweight; feel free to add a lockfile later
+      # and re-enable caching to speed up CI.
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         env:

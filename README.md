@@ -57,3 +57,7 @@ UI se automaticky přepne na lokální fallback data (`src/data/fallbackPlayers.
 - většina komponent má krátké komentáře „proč“ (nejen „co“)
 - utility jsou oddělené (`src/lib`, `src/data`, `src/types`)
 - design tokeny jsou v CSS proměnných (`src/styles/tokens.css`)
+
+## CI poznámka (lockfile)
+GitHub Actions build používá `npm install` (bez cache), protože repozitář zatím neobsahuje lockfile.
+Pokud přidáš `package-lock.json`, můžeš přepnout na `npm ci` a zapnout `cache: npm`.
