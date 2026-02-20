@@ -1,75 +1,67 @@
-# NEW DC ELO 2.0
+# DC ELO 2.0 (skeleton)
 
-Frontend skeleton pro DC ELO (TypeScript + React).  
-Cíl: čistý, čitelný kód, který funguje i jako „malá dokumentace“ pro budoucí údržbu / AI.
+React + TypeScript + Vite + Tailwind. Ready for **GitHub Pages** deployment.
 
-## Stack
-- Vite + React + TypeScript
-- TailwindCSS (dark mode přes `class` na `<html>`)
-- Recharts (placeholder grafy)
-- Data pro hráče: Google Sheets (sheet **Elo standings**, rozsah `A2:H`)
+## Co je v repozitáři
+
+- **Titulní stránka**
+  - banner se sliderem (placeholder)
+  - top statistiky (počítané z tabulky)
+  - grafy: 1× přes celou šířku + 4× menší (2 vedle sebe)
+  - seznam hráčů (načítaný z Google Sheets)
+- **Tmavý / světlý režim** (tlačítko nahoře, uloženo v `localStorage`)
+- **Datová vrstva v0**: veřejný Google Sheet přes `/gviz/tq` (bez API key)
 
 ## Lokální spuštění
+
 ```bash
 npm install
 npm run dev
 ```
 
-## Build / Preview
+Build:
+
 ```bash
 npm run build
 npm run preview
 ```
 
-## Deploy (rychlý test)
-- Vercel / Netlify / GitHub Pages (Vite build do `dist/`)
-- Pokud deployujete pod subpath, upravte `base` ve `vite.config.ts`.
+## Deploy na GitHub Pages
 
-## Konfigurace Google Sheets
-Aktuálně se data čtou přes „GViz“ endpoint (bez API klíče).  
-Pokud by někdy Google změnil formát nebo by nastala CORS/permission komplikace:
-- nejjednodušší fix bývá **Publish to web** (CSV/JSON) nebo
-- vlastní malý backend proxy.
+V repozitáři je workflow: `.github/workflows/deploy.yml`.
 
-Konstanty najdete v `src/lib/googleSheets.ts`.
+Postup na GitHubu:
 
-## Struktura
-- `src/app/App.tsx` – hlavní layout stránky
-- `src/components/*` – UI bloky (slider, stats, charts, player table)
-- `src/lib/*` – utilitky (Google Sheets fetch + parsování)
-- `src/styles/*` – design tokeny (světlý/tmavý režim)
+1. **Repo → Settings → Pages**
+2. Source: **GitHub Actions**
+3. Push do `main` → workflow udělá build a deploy.
+
+> Poznámka k `base` URL:
+> - GitHub Pages běží typicky na `https://<user>.github.io/<repo>/`.
+> - Workflow nastaví `VITE_BASE` automaticky na `/<repo>/`.
+
+## Google Sheets (placeholder)
+
+Zatím čteme list **"Elo standings"** a sloupce:
+
+- A: Name
+- B: Rating
+- C: Games
+- D: Win
+- E: Loss
+- F: Draw
+- G: Winrate
+- H: Peak
+
+Implementace je v `src/data/googleSheets.ts`.
+
+## Další kroky
+
+- přidat stránku detailu hráče
+- přidat match history + skutečné time-series grafy
+- přidat caching (SWR / TanStack Query)
+- přidat skeleton loading a error states (lepší UX)
 
 ---
 
-Plán další iterace:
-1) Přidat reálné grafy (např. vývoj ELO, histogram ratingů, winrate distribution).  
-2) Přidat filtrování/sortování hráčů.  
-3) Přidat caching a refresh interval pro Sheets.
-
-## Nasazení na GitHub Pages (důležité)
-Projekt je nastaven tak, aby fungoval na GitHub Pages bez ohledu na název repozitáře.
-
-- V `vite.config.ts` je `base: "./"` ⇒ build používá relativní cesty na assety.
-- Pokud budeš někdy nasazovat na custom doménu do rootu a chceš absolutní cesty,
-  můžeš změnit `base` na `"/"`.
-
-Typický symptom špatného `base`: po deployi se ukáže „bílá stránka“ a v DevTools → Network uvidíš 404 na `/assets/...`.
-
-## GitHub Pages deployment (recommended)
-
-This repo includes a ready-to-use GitHub Actions workflow:
-
-- File: `.github/workflows/deploy.yml`
-- Trigger: on every push to `main`
-- Output: builds Vite into `dist/` and deploys that folder to GitHub Pages
-
-### One-time GitHub settings
-1. Repository → **Settings** → **Pages**
-2. Under **Build and deployment**:
-   - Source: **GitHub Actions**
-
-After the first successful run, your site will be available under:
-`https://<user>.github.io/<repo>/`
-
-Troubleshooting:
-- If you see a blank page, check that **Pages Source** is GitHub Actions (not "Deploy from a branch").
+Projekt je psaný tak, aby sloužil jako "malá dokumentace": stručné komentáře vysvětlují záměr a hranice současné verze.

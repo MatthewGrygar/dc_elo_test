@@ -2,19 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "./theme.css";
+/**
+ * DC ELO 2.0 theme system
+ *
+ * - We use Tailwind for layout/spacing/typography.
+ * - We use CSS variables for colors so charts + small custom pieces can read consistent values.
+ * - Dark mode is controlled by adding/removing the `dark` class on <html>.
+ */
+:root {
+  --bg: 255 255 255;
+  --panel: 250 250 252;
+  --text: 15 23 42; /* slate-900 */
+  --muted: 71 85 105; /* slate-600 */
+  --border: 226 232 240; /* slate-200 */
+  --accent: 59 130 246; /* blue-500 */
+  --accent-2: 168 85 247; /* purple-500 */
+}
 
-/* Small global improvements */
-html, body {
+html.dark {
+  --bg: 10 12 18;
+  --panel: 16 20 30;
+  --text: 226 232 240;
+  --muted: 148 163 184;
+  --border: 51 65 85;
+  --accent: 96 165 250;
+  --accent-2: 192 132 252;
+}
+
+html,
+body {
   height: 100%;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
 }
 
-/* Smooth theme transitions (subtle, non-janky) */
-html {
-  transition: background-color 180ms ease, color 180ms ease;
+/* Subtle gradient background – looks good in both themes */
+.bg-aurora {
+  background:
+    radial-gradient(1200px 600px at 10% 0%, rgba(var(--accent), 0.14), transparent 55%),
+    radial-gradient(900px 500px at 90% 15%, rgba(var(--accent-2), 0.12), transparent 60%),
+    radial-gradient(900px 600px at 50% 100%, rgba(var(--accent), 0.08), transparent 60%),
+    rgb(var(--bg));
+}
+
+/* Simple nice scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--muted), 0.35) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(var(--muted), 0.35);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }

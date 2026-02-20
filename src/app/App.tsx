@@ -1,61 +1,57 @@
-import { useEffect, useMemo, useState } from "react";
-import { applyTheme, getInitialTheme, toggleTheme, type Theme } from "../lib/theme";
-import { Header } from "../components/Header";
-import { Hero } from "../components/Hero";
-import { StatsRow } from "../components/StatsRow";
-import { ChartsGrid } from "../components/ChartsGrid";
-import { PlayersSection } from "../components/PlayersSection";
+import { useEffect, useMemo, useState } from 'react';
+import { BannerSlider } from '../components/BannerSlider';
+import { ChartsSection } from '../components/ChartsSection';
+import { PlayersTable } from '../components/PlayersTable';
+import { SiteHeader } from '../components/SiteHeader';
+import { StatsBar } from '../components/StatsBar';
+import { fetchPlayersFromSheet, demoPlayers } from '../data/googleSheets';
+import { useTheme } from '../hooks/useTheme';
+import type { PlayerRow } from '../types/player';
 
 export function App() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const { theme, toggle } = useTheme();
+
+  const [players, setPlayers] = useState<PlayerRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const initial = getInitialTheme();
-    setTheme(initial);
-    applyTheme(initial);
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const rows = await fetchPlayersFromSheet(controller.signal);
+        setPlayers(rows);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setError(msg);
+        setPlayers(demoPlayers);
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
-  const onToggleTheme = () => {
-    setTheme((t) => {
-      const next = toggleTheme(t);
-      applyTheme(next);
-      return next;
-    });
-  };
-
-  const containerClass = useMemo(
-    () =>
-      "min-h-screen bg-[var(--bg)] text-[var(--text)] " +
-      "selection:bg-[var(--ring)] selection:text-[var(--text)]",
-    [],
-  );
+  const safePlayers = useMemo(() => (players.length > 0 ? players : demoPlayers), [players]);
 
   return (
-    <div className={containerClass}>
-      <Header theme={theme} onToggleTheme={onToggleTheme} />
+    <div className="min-h-screen bg-aurora">
+      <SiteHeader theme={theme} onToggleTheme={toggle} />
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-24">
-        <Hero />
+      <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        <BannerSlider />
+        <StatsBar players={safePlayers} />
+        <ChartsSection players={safePlayers} />
+        <PlayersTable players={safePlayers} loading={loading} error={error} />
 
-        <div className="mt-8">
-          <StatsRow />
-        </div>
-
-        <div className="mt-10">
-          <ChartsGrid />
-        </div>
-
-        <div className="mt-12">
-          <PlayersSection />
-        </div>
-
-        <footer className="mt-16 border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <span>© {new Date().getFullYear()} NEW DC ELO</span>
-            <span className="opacity-80">
-              Skeleton v0.1 • další iterace: reálné grafy, filtry, cache
-            </span>
-          </div>
+        <footer className="pb-10 pt-2 text-center text-xs text-[rgb(var(--muted))]">
+          <p>
+            DC ELO 2.0 — skeleton / placeholder UI. Data: Google Sheets (public). Build & deploy: GitHub Pages.
+          </p>
         </footer>
       </main>
     </div>

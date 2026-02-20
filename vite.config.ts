@@ -1,23 +1,16 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
 
 /**
- * Vite config
- *
- * Why `base: "./"`?
- * - GitHub Pages typically serves projects under a subpath:
- *   https://<user>.github.io/<repo>/
- * - If `base` stays as "/" then built assets will be referenced as `/assets/...`
- *   which becomes a 404 on GitHub Pages => white screen.
- * - Using a relative base makes the build portable across:
- *   - GitHub Pages subpaths
- *   - Static hosts that serve from a folder
- *   - Preview environments
- *
- * If you later deploy on a custom domain at the root and WANT absolute URLs,
- * you can change this to `base: "/"`.
+ * GitHub Pages note:
+ * - When deploying to https://<user>.github.io/<repo>/ the app must be built with base="/<repo>/".
+ * - The provided GitHub Action sets VITE_BASE to that value automatically.
+ * - Locally, base defaults to '/'.
  */
-export default defineConfig({
-  plugins: [react()],
-  base: "./",
+export default defineConfig(() => {
+  const base = process.env.VITE_BASE ?? '/';
+  return {
+    base,
+    plugins: [react()],
+  };
 });

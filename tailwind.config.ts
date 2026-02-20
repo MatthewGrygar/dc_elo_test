@@ -1,20 +1,21 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
-/**
- * Tailwind config
- * - We use class-based dark mode: the <html> element toggles "dark".
- * - Design tokens are expressed as CSS variables (see src/styles/theme.css).
- */
 export default {
-  darkMode: ["class"],
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  darkMode: ['class'],
   theme: {
     extend: {
       boxShadow: {
-        soft: "0 10px 30px -12px rgb(0 0 0 / 0.35)",
+        soft: '0 10px 30px rgba(0,0,0,0.12)',
       },
-      borderRadius: {
-        xl2: "1.25rem",
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+      },
+      animation: {
+        float: 'float 6s ease-in-out infinite',
       },
     },
   },
