@@ -25,10 +25,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          # NOTE:
+          # `cache: npm` requires a lockfile (package-lock.json / yarn.lock / pnpm-lock.yaml).
+          # This starter repo omits lockfiles on purpose, so we keep caching off for now.
+          # When you add a lockfile, you can re-enable caching + switch back to `npm ci`.
 
       - name: Install
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       # Important: set base to '/<repo>/' for GitHub Pages
       - name: Build
