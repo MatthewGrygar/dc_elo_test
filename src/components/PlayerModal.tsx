@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { PlayerRow } from '../types/player';
 import { GlassPanel } from './ui/GlassPanel';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import classNames from 'classnames';
 
 type Props = {
   open: boolean;
@@ -50,6 +51,17 @@ function GlassTooltip({ active, payload, label }: any) {
  */
 export function PlayerModal({ open, player, rank, onClose }: Props) {
   const colors = getChartColors();
+
+  // Simple mount animation (overlay fade + modal scale).
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const id = window.requestAnimationFrame(() => setVisible(true));
+    return () => {
+      window.cancelAnimationFrame(id);
+      setVisible(false);
+    };
+  }, [open]);
 
   // --- Mobile bottom-sheet drag ---
   // We implement a small, non-invasive swipe-to-close interaction.
@@ -111,7 +123,7 @@ export function PlayerModal({ open, player, rank, onClose }: Props) {
   if (!open || !player) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className={classNames('fixed inset-0 z-50 modal-enter', visible && 'is-visible')}>
       {/* Backdrop */}
       <button
         type="button"
@@ -121,71 +133,74 @@ export function PlayerModal({ open, player, rank, onClose }: Props) {
       />
 
       <div className="relative mx-auto flex h-full items-end justify-center px-3 sm:items-center sm:px-4">
-        <div
-          className="w-full max-w-[720px]"
-          style={{ transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 220ms ease' }}
-        >
+        <div className="w-full max-w-[720px]">
           <GlassPanel
-            className="w-full overflow-hidden rounded-t-[24px] rounded-b-none p-5 sm:rounded-[24px] sm:p-7 border-[1.5px] border-[rgba(var(--border),0.70)] dark:border-[rgba(255,255,255,0.10)] bg-[rgba(var(--panel),0.78)] dark:bg-[rgba(var(--panel),0.70)] shadow-[0_25px_70px_rgba(0,0,0,0.22)] dark:shadow-[0_25px_70px_rgba(0,0,0,0.60)]"
-            /* modal should be a higher UI layer than hoverable cards */
+            className={classNames(
+              'modal-panel w-full overflow-hidden rounded-t-[24px] rounded-b-none sm:rounded-[24px]',
+              'bg-[rgba(255,255,255,0.85)] dark:bg-[rgba(15,15,18,0.75)]',
+              'border border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.10)]',
+              'shadow-[0_25px_70px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.70)]',
+            )}
             hover={false}
+            style={{ transform: `translateY(${dragY}px)`, transition: dragging ? 'none' : 'transform 220ms ease' }}
           >
-            <div className="max-h-[92vh] overflow-y-auto pr-1 sm:max-h-[85vh]">
-          {/* Drag handle (mobile) */}
-          <div
-            className="mx-auto mb-4 mt-1 h-1.5 w-12 rounded-full bg-[rgba(var(--muted),0.35)] sm:hidden"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          />
+            {/* Header strip: same blur layer (inside modal), no opaque background */}
+            <div className="px-5 pt-5 sm:px-7 sm:pt-6">
+              <div className="-mx-5 -mt-5 px-5 pb-4 pt-5 sm:-mx-7 sm:-mt-6 sm:px-7 sm:pb-5 sm:pt-6 bg-gradient-to-b from-white/10 to-transparent dark:from-white/5">
+                {/* Drag handle (mobile) */}
+                <div
+                  className="mx-auto mb-4 mt-0.5 h-1.5 w-12 rounded-full bg-[rgba(var(--muted),0.35)] sm:hidden"
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                />
 
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">Detail hráče</p>
-              <h3 className="mt-1 text-[26px] font-extrabold tracking-tight sm:text-[28px]">{player.name}</h3>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">Detail hráče</p>
+                    <h3 className="mt-1 text-[26px] font-extrabold tracking-tight sm:text-[28px]">{player.name}</h3>
 
-              <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
-                <div className="leading-none">
-                  <div className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">Aktuální ELO</div>
-                  <div className="mt-1 text-[32px] font-extrabold tracking-tight text-[rgb(var(--accent))] sm:text-[36px]">
-                    {Math.round(player.rating)}
+                    <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+                      <div className="leading-none">
+                        <div className="text-xs font-semibold tracking-wider text-[rgb(var(--muted))]">Aktuální ELO</div>
+                        <div className="mt-1 text-[32px] font-extrabold tracking-tight text-[rgb(var(--accent))] sm:text-[36px]">
+                          {Math.round(player.rating)}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge label={`Peak ${Math.round(player.peak)}`} />
+                        <Badge label={`Winrate ${formatPct(player.winrate)}`} tone="sub" />
+                        {typeof rank === 'number' && rank > 0 ? (
+                          rank <= 10 ? <Badge label={`TOP ${rank}`} tone="rank" /> : <Badge label={`#${rank}`} />
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge label={`Peak ${Math.round(player.peak)}`} />
-                  <Badge label={`Winrate ${formatPct(player.winrate)}`} tone="teal" />
-                  {typeof rank === 'number' && rank > 0 ? (
-                    rank <= 10 ? <Badge label={`TOP ${rank}`} tone="gold" /> : <Badge label={`#${rank}`} />
-                  ) : null}
+                  <button type="button" onClick={onClose} className="glass-chip ui-hover p-2" aria-label="Zavřít">
+                    <X size={18} />
+                  </button>
                 </div>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="glass-chip ui-hover p-2"
-              aria-label="Zavřít"
-            >
-              <X size={18} />
-            </button>
-          </div>
+            <div className="max-h-[92vh] overflow-y-auto pr-1 sm:max-h-[85vh]">
+          <div className="px-5 pb-5 sm:px-7 sm:pb-7">
+            <div className="grid gap-3 sm:grid-cols-4">
+              <Stat label="WIN" value={player.win} />
+              <Stat label="LOSS" value={player.loss} />
+              <Stat label="DRAW" value={player.draw} />
+              <Stat label="GAMES" value={player.games} />
+            </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-4">
-            <Stat label="WIN" value={player.win} tone="teal" />
-            <Stat label="LOSS" value={player.loss} tone="danger" />
-            <Stat label="DRAW" value={player.draw} />
-            <Stat label="GAMES" value={player.games} />
-          </div>
+            <div className="mt-4 grid gap-3 border-t border-[rgba(var(--border),var(--border-alpha))] pt-4 sm:grid-cols-3">
+              <StatText label="Win streak" value="—" hint="placeholder" />
+              <StatText label="Oblíbený commander" value="—" hint="placeholder" />
+              <StatText label="Rank" value={typeof rank === 'number' && rank > 0 ? `#${rank}` : '—'} hint={rank ? undefined : 'v1'} />
+            </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <StatText label="Win streak" value="—" hint="placeholder" />
-            <StatText label="Oblíbený commander" value="—" hint="placeholder" />
-            <StatText label="Rank" value={typeof rank === 'number' && rank > 0 ? `#${rank}` : '—'} hint={rank ? undefined : 'v1'} />
-          </div>
-
-          <div className="mt-5">
+            <div className="mt-5">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-sm font-semibold">Graf vývoje (placeholder)</p>
               <span className="text-xs text-[rgb(var(--muted))]">v1: napojíme match historii</span>
@@ -215,11 +230,13 @@ export function PlayerModal({ open, player, rank, onClose }: Props) {
                       filter="url(#pmGlow)"
                       activeDot={{ r: 5 }}
                       isAnimationActive
+                      animationDuration={800}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
+          </div>
           </div>
             </div>
           </GlassPanel>
@@ -229,17 +246,11 @@ export function PlayerModal({ open, player, rank, onClose }: Props) {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number; tone?: 'teal' | 'danger' }) {
-  const toneClass =
-    tone === 'teal'
-      ? 'text-[rgb(var(--teal))]'
-      : tone === 'danger'
-        ? 'text-[rgb(var(--danger))]'
-        : 'text-[rgb(var(--text))]';
+function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="glass-chip px-4 py-3">
       <div className="text-[11px] font-semibold tracking-wider text-[rgb(var(--muted))]">{label}</div>
-      <div className={"mt-1 text-lg font-extrabold tracking-tight " + toneClass}>{value}</div>
+      <div className="mt-1 text-lg font-extrabold tracking-tight text-[rgb(var(--text))]">{value}</div>
     </div>
   );
 }
@@ -256,13 +267,13 @@ function StatText({ label, value, hint }: { label: string; value: string; hint?:
   );
 }
 
-function Badge({ label, tone }: { label: string; tone?: 'teal' | 'gold' }) {
+function Badge({ label, tone }: { label: string; tone?: 'sub' | 'rank' }) {
   const toneClass =
-    tone === 'teal'
-      ? 'border-[rgba(var(--teal),0.30)] bg-[rgba(var(--teal),0.10)]'
-      : tone === 'gold'
-        ? 'border-[rgba(var(--gold),0.30)] bg-[rgba(var(--gold),0.12)]'
-        : 'border-[rgba(var(--accent),0.25)] bg-[rgba(var(--accent),0.10)]';
+    tone === 'rank'
+      ? 'border-[rgba(255,255,255,0.18)] dark:border-[rgba(255,255,255,0.18)] bg-black/10 dark:bg-white/10'
+      : tone === 'sub'
+        ? 'border-[rgba(var(--border),0.14)] bg-[rgba(var(--panel),0.35)]'
+        : 'border-[rgba(var(--border),0.14)] bg-[rgba(var(--panel),0.30)]';
   return (
     <span className={"inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold " + toneClass}>
       {label}

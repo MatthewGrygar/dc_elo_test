@@ -11,6 +11,9 @@ import type { PlayerRow } from '../types/player';
 export function App() {
   const { theme, toggle } = useTheme();
 
+  // Subtle page-load motion: fade-in + panels slide up a touch.
+  const [ready, setReady] = useState(false);
+
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,16 +39,25 @@ export function App() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    // Ensure transitions start *after* the first paint.
+    const id = window.requestAnimationFrame(() => setReady(true));
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
   const safePlayers = useMemo(() => (players.length > 0 ? players : demoPlayers), [players]);
 
   return (
-    <div className="min-h-screen bg-aurora">
+    <div className={['min-h-screen bg-aurora page-load', ready ? 'is-ready' : ''].join(' ')}>
       <SiteHeader theme={theme} onToggleTheme={toggle} />
 
+      {/* Full-width hero (banner) */}
+      <BannerSlider />
+
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <BannerSlider />
         <StatsBar players={safePlayers} />
         <ChartsSection players={safePlayers} />
+        <div id="leaderboard" />
         <PlayersTable players={safePlayers} loading={loading} error={error} />
 
         <footer className="pb-10 pt-2 text-center text-xs text-[rgb(var(--muted))]">

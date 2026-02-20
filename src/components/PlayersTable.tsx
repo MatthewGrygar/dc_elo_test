@@ -139,7 +139,7 @@ export function PlayersTable({ players, loading, error }: Props) {
               filtered.map((p, idx) => (
                 <tr
                   key={p.name}
-                  className="cursor-pointer text-sm transition hover:bg-[rgba(var(--accent),0.08)]"
+                  className="player-row cursor-pointer text-sm"
                   onClick={() => {
                     setSelected(p);
                     setSelectedRank(rankByName.get(p.name) ?? null);
