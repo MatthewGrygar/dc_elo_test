@@ -1,24 +1,42 @@
-# DC ELO — Modern Dashboard (Next.js + TS + Tailwind + shadcn-style UI)
+# DC ELO – Dashboard (Next.js + TypeScript + shadcn/ui)
 
-Single-page dashboard (scroll sections) for DC ELO rating system with:
-- Dark/Light theme (persist via `next-themes`)
-- Segmented pill (ELO / DCPR) affecting labels and values across the page
-- Auto-rotating hero slider (Framer Motion)
-- KPI cards (glassmorphism)
-- 1 full-width distribution chart + 4 charts (2×2) with per-card range dropdown
-- Leaderboard table (sticky header, clickable rows)
-- Player detail side panel (Sheet)
+Moderní single‑page dashboard pro DC ELO (ELO/DCPR přepínač), s mock daty, grafy (Recharts), animacemi (Framer Motion), ikonami (lucide-react) a plnohodnotným dark/light theme (next-themes).
 
-## Run locally
+## Lokální spuštění
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000
+## GitHub Pages deploy (statický export)
 
-## Notes
-- All data are mock placeholders in `/data`.
-- Styling uses HSL tokens in `app/globals.css` for consistent theming across components and charts.
-- UI components in `/components/ui` are minimal shadcn-like wrappers (Radix + Tailwind).
+Tento projekt je připravený pro GitHub Pages pomocí **GitHub Actions**.
+
+### 1) Zapni GitHub Pages přes Actions
+
+V repozitáři:
+- **Settings → Pages → Build and deployment**
+- zvol **Source: GitHub Actions**
+
+### 2) Nastav basePath (důležité)
+
+GitHub Pages hostuje projekt pod cestou `/<repo>` (např. `https://user.github.io/dc_elo_test/`).
+
+Proto je potřeba nastavit `NEXT_PUBLIC_BASE_PATH` na název repozitáře s lomítkem:
+- repo `dc_elo_test` → `NEXT_PUBLIC_BASE_PATH=/dc_elo_test`
+
+V tomto repu je to nastavené ve workflow souboru:
+
+- `.github/workflows/deploy-pages.yml`
+
+> Pokud se jmenuje repo jinak, uprav v workflow hodnotu `NEXT_PUBLIC_BASE_PATH`.
+
+### 3) Push do `main`
+
+Po každém `git push` do `main` se spustí build a deploy na GitHub Pages.
+
+## Poznámky
+
+- `next.config.mjs` je nastavený na `output: "export"`, aby vznikl statický web do složky `out/`.
+- `images.unoptimized: true` je nutné pro export na GitHub Pages.
