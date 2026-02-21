@@ -1,39 +1,19 @@
-import type { ListChildComponentProps } from 'react-window'
-import type { Player } from '../../types/player'
-import { formatNumber, formatPercent } from '../../utils/format'
-import { useModal } from '../../hooks/useModal'
+import React from 'react';
+import type { Player } from '../../types/player';
+import { formatNumber } from '../../utils/format';
 
-export function PlayerRow({ index, style, data }: ListChildComponentProps<Player[]>) {
-  const player = data[index]
-  const { openPlayer } = useModal()
-
+export function PlayerRow({ player, onClick }: { player: Player; onClick: () => void }) {
   return (
-    <div
-      className="playerRow panel panel--row panel--interactive"
-      style={style}
-      role="button"
-      tabIndex={0}
-      onClick={() => openPlayer(player)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') openPlayer(player)
-      }}
-      aria-label={`Otevřít detail hráče ${player.name}`}
-    >
-      <div className="col col--rank">{player.rank}</div>
-      <div className="col col--name">
-        <div className="playerName">{player.name}</div>
-      </div>
-      <div className="col col--elo">
-        <span className="eloPill">{formatNumber(player.elo)}</span>
-      </div>
-      <div className="col col--num">{formatNumber(player.games)}</div>
-      <div className="col col--num">{formatNumber(player.wins)}</div>
-      <div className="col col--num">{formatNumber(player.losses)}</div>
-      <div className="col col--num">{formatNumber(player.draws)}</div>
-      <div className="col col--num">{formatNumber(player.peak)}</div>
-      <div className="col col--num">
-        <span className="muted">{formatPercent(player.winrate)}</span>
-      </div>
-    </div>
-  )
+    <button className="playerRow" onClick={onClick} role="listitem">
+      <div className="td td--rank">{player.rank}</div>
+      <div className="td td--name">{player.name}</div>
+      <div className="td td--num">{formatNumber(player.elo)}</div>
+      <div className="td td--num">{formatNumber(player.games)}</div>
+      <div className="td td--num">{formatNumber(player.wins)}</div>
+      <div className="td td--num">{formatNumber(player.losses)}</div>
+      <div className="td td--num">{formatNumber(player.draws)}</div>
+      <div className="td td--num">{formatNumber(player.peak)}</div>
+      <div className="td td--num">{formatNumber(Math.round(player.winrate * 100))}%</div>
+    </button>
+  );
 }

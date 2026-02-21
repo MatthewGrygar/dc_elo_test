@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,26 +26,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # Note: We intentionally do not enable npm caching here,
-          # because caching requires a lockfile (package-lock.json / yarn.lock).
-          # This repo supports install without a lockfile.
+          cache: npm
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: List src/components
-        run: |
-          echo "--- src/components tree ---"
-          find src/components -maxdepth 3 -type f -print
-          echo "--- AppShell imports ---"
-          sed -n "1,40p" src/app/AppShell.tsx
+      - name: Install
+        run: npm ci
 
       - name: Build
         env:
-          GITHUB_PAGES: "true"
-          # Optional: set to /<repo>/ explicitly if you prefer.
-          # VITE_BASE: "/${{ github.event.repository.name }}/"
+          # Automatically set base to "/<repo>/" for GitHub Pages
+          VITE_BASE: /${{ github.event.repository.name }}/
+          # Optional: if you store your CSV URLs in repo variables/secrets
+          VITE_ELO_CSV_URL: ${{ vars.VITE_ELO_CSV_URL }}
+          VITE_DCPR_CSV_URL: ${{ vars.VITE_DCPR_CSV_URL }}
         run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -57,7 +54,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

@@ -1,33 +1,25 @@
-import { formatNumber } from '../../utils/format'
-import type { DashboardKpis } from './DashboardSection'
+import React from 'react';
+import type { KPIStat } from '../../types/app';
+import { Panel } from '../common/Panel';
+import { formatNumber } from '../../utils/format';
 
-function Panel({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="panel panel--kpi">
-      <div className="kpiValue">{value}</div>
-      <div className="kpiLabel">{label}</div>
-      {sub ? <div className="kpiSub">{sub}</div> : null}
-    </div>
-  )
+function formatKpi(kpi: KPIStat): string {
+  const { value, format } = kpi;
+  if (format === 'percent') return `${formatNumber(value, { maximumFractionDigits: 1 })}%`;
+  if (format === 'float') return formatNumber(value, { maximumFractionDigits: 1 });
+  return formatNumber(Math.round(value));
 }
 
-export function SummaryPanels({ kpis, loading }: { kpis: DashboardKpis; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="kpiGrid" aria-busy="true">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="panel panel--kpi skeleton" />
-        ))}
-      </div>
-    )
-  }
-
+export function SummaryPanels({ kpis, isLoading }: { kpis: KPIStat[]; isLoading: boolean }) {
   return (
-    <div className="kpiGrid">
-      <Panel label="Počet hráčů" value={formatNumber(kpis.playerCount)} />
-      <Panel label="Odehrané hry" value={formatNumber(kpis.gamesTotal)} />
-      <Panel label="Průměrné ELO" value={formatNumber(Math.round(kpis.eloAvg))} sub="(za všechny hráče)" />
-      <Panel label="Top ELO" value={formatNumber(kpis.topElo)} />
+    <div className="kpiGrid" aria-label="Souhrnné statistiky">
+      {kpis.map((kpi) => (
+        <Panel key={kpi.label} className="kpi" variant="soft">
+          <div className="kpi__label">{kpi.label}</div>
+          <div className="kpi__value">{isLoading ? '—' : formatKpi(kpi)}</div>
+          {kpi.hint ? <div className="kpi__hint">{kpi.hint}</div> : null}
+        </Panel>
+      ))}
     </div>
-  )
+  );
 }

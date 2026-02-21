@@ -1,81 +1,68 @@
 # DC ELO Dashboard 2.0 (React + TypeScript + Vite)
 
-Moderní, responzivní analytický dashboard pro Duel Commander ELO/DCPR.
+Moderní, responzivní analytický dashboard pro Duel Commander ELO systém.
 
-## Rychlý start
+## Lokální spuštění
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Nastavení dat (Google Sheets CSV)
-
-1. V Google Sheetu: **File → Share → Publish to web** (nebo „Publikovat na web“) a zvol **CSV**.
-2. Zkopíruj URL (CSV endpoint) pro sheet s ELO standings.
-3. Vytvoř soubor `.env` podle `.env.example` a doplň:
+Build:
 
 ```bash
-VITE_SHEETS_ELO_CSV_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/pub?output=csv&gid=<GID>"
-VITE_SHEETS_DCPR_CSV_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/pub?output=csv&gid=<GID>"
+npm run build
+npm run preview
 ```
 
-> Pozn.: CSV varianta je vhodná pro veřejná data bez přihlašování.
+## Připojení Google Sheets (CSV)
 
-## Deploy na GitHub Pages (doporučené: GitHub Actions)
+Dashboard očekává veřejně publikované CSV z Google Sheets.
 
-Repozitář už obsahuje workflow: `.github/workflows/deploy.yml`.
+1. V Google Sheets:
+   - **File → Share → Publish to web**
+   - vyber list (např. `Elo standings`) a formát **CSV**
+   - zkopíruj URL
 
-### 1) Zapnutí GitHub Pages
+2. V projektu vytvoř `.env.local` podle `.env.example`:
 
-- Repo → **Settings → Pages**
-- **Build and deployment**: zvol **GitHub Actions**
-
-### 2) Push do `main`
-
-Jakmile pushneš do `main`, workflow:
-- nainstaluje dependencies
-- udělá `npm run build`
-- nasadí složku `dist/` na GitHub Pages
-
-### Poznámka k base path
-
-GitHub Pages servíruje appku typicky z `/REPO_NAME/`.
-
-V `vite.config.ts` je připravená logika:
-- v Actions se nastavuje `GITHUB_PAGES=true`
-- base se pak odvodí z názvu repozitáře (npm package name)
-
-Pokud chceš base explicitně, odkomentuj v workflow proměnnou:
-
-```yml
-VITE_BASE: "/${{ github.event.repository.name }}/"
+```env
+VITE_ELO_CSV_URL="https://docs.google.com/spreadsheets/d/e/<PUBLISHED_ID>/pub?gid=<GID>&single=true&output=csv"
+VITE_DCPR_CSV_URL="https://docs.google.com/spreadsheets/d/e/<PUBLISHED_ID>/pub?gid=<GID>&single=true&output=csv"
 ```
 
-## Alternativa: deploy přes `gh-pages` (lokálně)
+3. Ujisti se, že první řádek v CSV obsahuje hlavičky sloupců.
+   - Mapování hlaviček je v `src/services/standingsService.ts` (konstanta `COLUMN_KEYS`).
 
-Pokud preferuješ starý styl deploye, je připravený skript:
+## GitHub Pages deploy (automaticky přes GitHub Actions)
 
-```bash
-npm run deploy
-```
+V repozitáři je připraven workflow `.github/workflows/deploy.yml`.
 
-To vytvoří build a nahraje `dist/` na branch `gh-pages`.
+### Jak to funguje
+- Build proběhne na GitHubu po pushi na `main`.
+- Vite `base` je nastaveno automaticky podle názvu repozitáře (např. `/dc-elo-dashboard-2.0/`).
+- Artefakt `dist/` se nasadí do GitHub Pages.
+
+### Nastavení v GitHubu
+1. **Settings → Pages**
+2. Source: **GitHub Actions**
+
+> Pozn.: Workflow má správně nastavené `permissions` pro Pages.
+
+## Struktura projektu
+
+- `src/components/` – UI komponenty (layout, dashboard, leaderboard, modal)
+- `src/context/` – globální preference (téma + zdroj dat)
+- `src/hooks/` – datové hooky (načítání standings)
+- `src/services/` – komunikace se Sheets (CSV fetch + parsing)
+- `src/styles/` – design tokens + glass styling
+- `src/types/` – TypeScript typy
+
+## Poznámky k výkonu
+- Leaderboard je **virtualizovaný** přes `react-window`.
+- Řádky leaderboardu nepoužívají `backdrop-filter` (blur) – blur je jen na velkých panelech.
 
 ---
 
-## Struktura
-
-- `src/app` – AppShell a bootstrap
-- `src/components` – UI komponenty (Header, Banner, Dashboard, Leaderboard, Modal)
-- `src/context` – Theme + DataSource + Modal kontext
-- `src/services` – načítání dat z Google Sheets CSV
-- `src/styles` – design tokens + glassmorphism styly
-
-## Další rozšíření (připraveno)
-
-- více sekcí (metagame, historie zápasů)
-- detailní grafy v modalu
-- další sheet pro DCPR / Tournament_Elo
-- další routy / navigace
-
+Když narazíš na problém s načítáním dat, první věc: otevři CSV URL v prohlížeči a ověř, že vrací čistý CSV text.

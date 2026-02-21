@@ -1,40 +1,58 @@
-import type { Player } from '../../types/player'
-import { Leaderboard } from './Leaderboard'
+import React, { useMemo } from 'react';
+import type { Player } from '../../types/player';
+import { Panel } from '../common/Panel';
+import { InlineStatus } from '../common/InlineStatus';
+import { LeaderboardTable } from './LeaderboardTable';
 
 export function LeaderboardSection({
   players,
-  loading,
+  isLoading,
   error,
-  fetchedAt
+  onSelectPlayer
 }: {
-  players: Player[]
-  loading: boolean
-  error: string | null
-  fetchedAt: string | null
+  players: Player[];
+  isLoading: boolean;
+  error: string | null;
+  onSelectPlayer: (p: Player) => void;
 }) {
+  const top = useMemo(() => players.slice(0, 3), [players]);
+
   return (
     <section id="leaderboard" className="section">
-      <div className="sectionHeader">
-        <h2 className="sectionTitle">Leaderboard</h2>
-        <div className="sectionHint">
-          {loading ? (
-            <span className="muted">Načítám…</span>
-          ) : error ? (
-            <span className="muted">Chyba načítání</span>
-          ) : fetchedAt ? (
-            <span className="muted">Aktualizováno: {new Date(fetchedAt).toLocaleString('cs-CZ')}</span>
-          ) : null}
+      <div className="section__head">
+        <div>
+          <h2 className="section__title">Leaderboard</h2>
+          <p className="section__subtitle">Klikni na hráče pro detail. Seznam je virtualizovaný pro plynulost.</p>
         </div>
       </div>
 
       {error ? (
-        <div className="panel panel--soft notice">
-          <div className="noticeTitle">Leaderboard není dostupný</div>
-          <div className="noticeBody">{error}</div>
-        </div>
-      ) : (
-        <Leaderboard players={players} loading={loading} />
-      )}
+        <InlineStatus
+          tone="danger"
+          title="Leaderboard není dostupný"
+          message="Nepodařilo se načíst data ze sheetu. Ověř publikované CSV a hlavičky sloupců."
+        />
+      ) : null}
+
+      <div className="leaderboardLayout">
+        <Panel variant="soft" className="leaderboardCard">
+          <div className="leaderboardCard__title">Top 3</div>
+          <div className="podium">
+            {top.map((p) => (
+              <button key={p.id} className="podium__item" onClick={() => onSelectPlayer(p)}>
+                <div className="podium__rank">#{p.rank}</div>
+                <div className="podium__name">{p.name}</div>
+                <div className="podium__elo">{p.elo}</div>
+              </button>
+            ))}
+            {isLoading ? <div className="podium__skeleton">Načítám…</div> : null}
+          </div>
+        </Panel>
+
+        <Panel variant="soft" className="leaderboardCard leaderboardCard--table">
+          <LeaderboardTable players={players} isLoading={isLoading} onSelectPlayer={onSelectPlayer} />
+        </Panel>
+      </div>
     </section>
-  )
+  );
 }

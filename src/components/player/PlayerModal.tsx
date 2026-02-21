@@ -1,76 +1,79 @@
-import { X } from 'lucide-react'
-import { useEffect } from 'react'
-import { useModal } from '../../hooks/useModal'
-import { formatNumber, formatPercent } from '../../utils/format'
+import React, { useMemo } from 'react';
+import type { Player } from '../../types/player';
+import { Modal } from '../common/Modal';
+import { formatNumber } from '../../utils/format';
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts';
 
-export function PlayerModal() {
-  const { selectedPlayer, close } = useModal()
+export function PlayerModal({ player, onClose }: { player: Player | null; onClose: () => void }) {
+  const data = useMemo(() => {
+    if (!player) return [];
 
-  useEffect(() => {
-    if (!selectedPlayer) return
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [selectedPlayer, close])
-
-  if (!selectedPlayer) return null
-
-  const p = selectedPlayer
+    // Placeholder sparkline: simulate small variation around current elo.
+    const base = player.elo;
+    return Array.from({ length: 14 }, (_, i) => {
+      const wobble = Math.sin(i / 2) * 22 + (i % 3 === 0 ? 9 : -6);
+      return { game: i + 1, elo: Math.round(base + wobble) };
+    });
+  }, [player]);
 
   return (
-    <div className="modalOverlay" role="dialog" aria-modal="true" aria-label="Detail hráče">
-      <div className="modalBackdrop" onClick={close} />
+    <Modal isOpen={!!player} title={player ? player.name : 'Player'} onClose={onClose}>
+      {player ? (
+        <div className="playerModal">
+          <div className="playerModal__hero">
+            <div>
+              <div className="playerModal__kicker">Aktuální ELO</div>
+              <div className="playerModal__elo">{formatNumber(player.elo)}</div>
+              <div className="playerModal__meta">
+                Rank #{player.rank} · {formatNumber(player.games)} her · Winrate{' '}
+                {formatNumber(Math.round(player.winrate * 100))}%
+              </div>
+            </div>
 
-      <div className="modal panel panel--modal" role="document">
-        <div className="modalHeader">
-          <div>
-            <div className="modalTitle">{p.name}</div>
-            <div className="modalSub">Duel Commander standings detail</div>
+            <div className="playerModal__stats">
+              <div className="stat">
+                <div className="stat__label">W</div>
+                <div className="stat__value">{formatNumber(player.wins)}</div>
+              </div>
+              <div className="stat">
+                <div className="stat__label">L</div>
+                <div className="stat__value">{formatNumber(player.losses)}</div>
+              </div>
+              <div className="stat">
+                <div className="stat__label">D</div>
+                <div className="stat__value">{formatNumber(player.draws)}</div>
+              </div>
+              <div className="stat">
+                <div className="stat__label">Peak</div>
+                <div className="stat__value">{formatNumber(player.peak)}</div>
+              </div>
+            </div>
           </div>
 
-          <button className="iconBtn" onClick={close} aria-label="Zavřít">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="modalHero">
-          <div className="modalElo">
-            <div className="modalEloValue">{formatNumber(p.elo)}</div>
-            <div className="modalEloLabel">Aktuální ELO</div>
-          </div>
-
-          <div className="modalStats">
-            <Stat label="Games" value={formatNumber(p.games)} />
-            <Stat label="Wins" value={formatNumber(p.wins)} />
-            <Stat label="Losses" value={formatNumber(p.losses)} />
-            <Stat label="Draws" value={formatNumber(p.draws)} />
-            <Stat label="Peak" value={formatNumber(p.peak)} />
-            <Stat label="Winrate" value={formatPercent(p.winrate)} />
-          </div>
-        </div>
-
-        <div className="modalBody">
-          <div className="panel panel--soft notice">
-            <div className="noticeTitle">Graf a historie</div>
-            <div className="noticeBody">
-              Tady bude později detailní historie ELO / turnajů (např. line chart), metagame a poslední
-              zápasy.
+          <div className="playerModal__chart">
+            <div className="chart__title">Výkon (placeholder)</div>
+            <div className="chart__body">
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={data} margin={{ top: 10, left: 4, right: 16, bottom: 6 }}>
+                  <CartesianGrid vertical={false} strokeOpacity={0.15} />
+                  <XAxis dataKey="game" tickLine={false} axisLine={false} />
+                  <YAxis tickLine={false} axisLine={false} width={38} domain={['dataMin - 40', 'dataMax + 40']} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="elo" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="stat">
-      <div className="statLabel">{label}</div>
-      <div className="statValue">{value}</div>
-    </div>
-  )
+      ) : null}
+    </Modal>
+  );
 }
