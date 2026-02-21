@@ -1,26 +1,21 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 /**
- * GitHub Pages notes:
- * - When hosted at https://<user>.github.io/<repo>/, Vite needs base="/<repo>/".
- * - The included GitHub Actions workflow sets VITE_BASE to "/<repo>/" automatically.
+ * GitHub Pages: Vite needs an explicit "base" when served from /<repo>/.
+ *
+ * Default behavior:
+ * - If VITE_BASE is provided (e.g. in GH Actions), use that.
+ * - Otherwise derive from package.json "name" (npm_package_name) -> /<name>/
+ * - For local dev, Vite ignores base.
  */
-export default defineConfig(({ mode }) => {
-  const base = process.env.VITE_BASE || '/';
+const base =
+  process.env.VITE_BASE ??
+  (process.env.GITHUB_PAGES === 'true'
+    ? `/${process.env.npm_package_name ?? ''}/`
+    : '/')
 
-  return {
-    base,
-    plugins: [react()],
-    server: {
-      port: 5173,
-      strictPort: true
-    },
-    build: {
-      outDir: 'dist'
-    },
-    define: {
-      __APP_ENV__: JSON.stringify(mode)
-    }
-  };
-});
+export default defineConfig({
+  plugins: [react()],
+  base
+})

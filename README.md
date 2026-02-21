@@ -1,68 +1,81 @@
 # DC ELO Dashboard 2.0 (React + TypeScript + Vite)
 
-Moderní, responzivní analytický dashboard pro Duel Commander ELO systém.
+Moderní, responzivní analytický dashboard pro Duel Commander ELO/DCPR.
 
-## Lokální spuštění
+## Rychlý start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Build:
+## Nastavení dat (Google Sheets CSV)
+
+1. V Google Sheetu: **File → Share → Publish to web** (nebo „Publikovat na web“) a zvol **CSV**.
+2. Zkopíruj URL (CSV endpoint) pro sheet s ELO standings.
+3. Vytvoř soubor `.env` podle `.env.example` a doplň:
 
 ```bash
-npm run build
-npm run preview
+VITE_SHEETS_ELO_CSV_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/pub?output=csv&gid=<GID>"
+VITE_SHEETS_DCPR_CSV_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/pub?output=csv&gid=<GID>"
 ```
 
-## Připojení Google Sheets (CSV)
+> Pozn.: CSV varianta je vhodná pro veřejná data bez přihlašování.
 
-Dashboard očekává veřejně publikované CSV z Google Sheets.
+## Deploy na GitHub Pages (doporučené: GitHub Actions)
 
-1. V Google Sheets:
-   - **File → Share → Publish to web**
-   - vyber list (např. `Elo standings`) a formát **CSV**
-   - zkopíruj URL
+Repozitář už obsahuje workflow: `.github/workflows/deploy.yml`.
 
-2. V projektu vytvoř `.env.local` podle `.env.example`:
+### 1) Zapnutí GitHub Pages
 
-```env
-VITE_ELO_CSV_URL="https://docs.google.com/spreadsheets/d/e/<PUBLISHED_ID>/pub?gid=<GID>&single=true&output=csv"
-VITE_DCPR_CSV_URL="https://docs.google.com/spreadsheets/d/e/<PUBLISHED_ID>/pub?gid=<GID>&single=true&output=csv"
+- Repo → **Settings → Pages**
+- **Build and deployment**: zvol **GitHub Actions**
+
+### 2) Push do `main`
+
+Jakmile pushneš do `main`, workflow:
+- nainstaluje dependencies
+- udělá `npm run build`
+- nasadí složku `dist/` na GitHub Pages
+
+### Poznámka k base path
+
+GitHub Pages servíruje appku typicky z `/REPO_NAME/`.
+
+V `vite.config.ts` je připravená logika:
+- v Actions se nastavuje `GITHUB_PAGES=true`
+- base se pak odvodí z názvu repozitáře (npm package name)
+
+Pokud chceš base explicitně, odkomentuj v workflow proměnnou:
+
+```yml
+VITE_BASE: "/${{ github.event.repository.name }}/"
 ```
 
-3. Ujisti se, že první řádek v CSV obsahuje hlavičky sloupců.
-   - Mapování hlaviček je v `src/services/standingsService.ts` (konstanta `COLUMN_KEYS`).
+## Alternativa: deploy přes `gh-pages` (lokálně)
 
-## GitHub Pages deploy (automaticky přes GitHub Actions)
+Pokud preferuješ starý styl deploye, je připravený skript:
 
-V repozitáři je připraven workflow `.github/workflows/deploy.yml`.
+```bash
+npm run deploy
+```
 
-### Jak to funguje
-- Build proběhne na GitHubu po pushi na `main`.
-- Vite `base` je nastaveno automaticky podle názvu repozitáře (např. `/dc-elo-dashboard-2.0/`).
-- Artefakt `dist/` se nasadí do GitHub Pages.
-
-### Nastavení v GitHubu
-1. **Settings → Pages**
-2. Source: **GitHub Actions**
-
-> Pozn.: Workflow má správně nastavené `permissions` pro Pages.
-
-## Struktura projektu
-
-- `src/components/` – UI komponenty (layout, dashboard, leaderboard, modal)
-- `src/context/` – globální preference (téma + zdroj dat)
-- `src/hooks/` – datové hooky (načítání standings)
-- `src/services/` – komunikace se Sheets (CSV fetch + parsing)
-- `src/styles/` – design tokens + glass styling
-- `src/types/` – TypeScript typy
-
-## Poznámky k výkonu
-- Leaderboard je **virtualizovaný** přes `react-window`.
-- Řádky leaderboardu nepoužívají `backdrop-filter` (blur) – blur je jen na velkých panelech.
+To vytvoří build a nahraje `dist/` na branch `gh-pages`.
 
 ---
 
-Když narazíš na problém s načítáním dat, první věc: otevři CSV URL v prohlížeči a ověř, že vrací čistý CSV text.
+## Struktura
+
+- `src/app` – AppShell a bootstrap
+- `src/components` – UI komponenty (Header, Banner, Dashboard, Leaderboard, Modal)
+- `src/context` – Theme + DataSource + Modal kontext
+- `src/services` – načítání dat z Google Sheets CSV
+- `src/styles` – design tokens + glassmorphism styly
+
+## Další rozšíření (připraveno)
+
+- více sekcí (metagame, historie zápasů)
+- detailní grafy v modalu
+- další sheet pro DCPR / Tournament_Elo
+- další routy / navigace
+

@@ -1,7 +1,8 @@
-export function formatNumber(value: number, opts?: Intl.NumberFormatOptions) {
-  return new Intl.NumberFormat('cs-CZ', opts).format(value);
+export function formatNumber(n: number) {
+  return new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(n)
 }
 
-export function clamp01(n: number) {
-  return Math.min(1, Math.max(0, n));
+export function formatPercent(v01: number) {
+  const v = Math.max(0, Math.min(1, v01))
+  return new Intl.NumberFormat('cs-CZ', { style: 'percent', maximumFractionDigits: 1 }).format(v)
 }
