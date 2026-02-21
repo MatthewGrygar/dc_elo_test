@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Player } from '../types/player'
 import { loadStandings } from '../services/sheetsService'
 import { useDataSource } from '../hooks/useDataSource'
-import { Header } from '../components/Header/Header'
-import { BannerSlider } from '../components/Banner/BannerSlider'
-import { DashboardSection } from '../components/Dashboard/DashboardSection'
-import { LeaderboardSection } from '../components/Leaderboard/LeaderboardSection'
-import { PlayerModal } from '../components/Player/PlayerModal'
+import { Header } from '../components/header/Header'
+import { BannerSlider } from '../components/banner/BannerSlider'
+import { DashboardSection } from '../components/dashboard/DashboardSection'
+import { LeaderboardSection } from '../components/leaderboard/LeaderboardSection'
+import { PlayerModal } from '../components/player/PlayerModal'
 
 export function AppShell() {
   const { dataSource } = useDataSource()
