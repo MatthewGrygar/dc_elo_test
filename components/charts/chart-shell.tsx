@@ -34,12 +34,12 @@ export function ChartShell({
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className={cn("glass dark:glass rounded-3xl")}>
+      <Card className={cn("glass card-edge shine rounded-3xl")}>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle>{title}</CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="rounded-xl gap-2">
+              <Button variant="outline" size="sm" className="rounded-2xl gap-2 bg-background/30">
                 {rangeOptions.find((o) => o.key === range)?.label ?? "Range"}
                 <ChevronDown className="h-4 w-4 opacity-70" />
               </Button>

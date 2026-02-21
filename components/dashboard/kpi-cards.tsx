@@ -42,7 +42,7 @@ export function KpiCards({ players, loading }: { players: Player[]; loading?: bo
           transition={{ duration: 0.45, delay: idx * 0.06 }}
           whileHover={{ y: -4 }}
         >
-          <Card className={cn("glass dark:glass rounded-3xl")}>
+          <Card className={cn("glass card-edge shine rounded-3xl")}>
             <CardHeader className="flex flex-row items-start justify-between gap-3">
               <div className="space-y-1">
                 <CardTitle>{it.title}</CardTitle>

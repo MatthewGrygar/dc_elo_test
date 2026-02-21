@@ -1,13 +1,14 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { Navbar } from "@/components/navbar/navbar"
-import { HeroSlider } from "@/components/slider/hero-slider"
-import { KpiCards } from "@/components/dashboard/kpi-cards"
-import { OverviewPanels } from "@/components/dashboard/overview-panels"
-import { EloDistributionChart } from "@/components/charts/elo-distribution-chart"
-import { ChartsGrid } from "@/components/charts/charts-grid"
-import { LeaderboardSection } from "@/components/leaderboard/leaderboard-section"
+import * as React from "react"
+import { AnimatePresence, motion } from "framer-motion"
+
+import { Sidebar, type ViewKey } from "@/components/shell/sidebar"
+import { Topbar } from "@/components/shell/topbar"
+import { DashboardView } from "@/components/views/dashboard-view"
+import { LeaderboardView } from "@/components/views/leaderboard-view"
+import { StatsView } from "@/components/views/stats-view"
+
 import { useRating } from "@/components/providers/rating-provider"
 import { useStandings } from "@/lib/use-standings"
 
@@ -15,55 +16,53 @@ export default function Page() {
   const { mode } = useRating()
   const { players, loading, error } = useStandings(mode)
 
+  const [view, setView] = React.useState<ViewKey>("dashboard")
+  const [query, setQuery] = React.useState("")
+
   return (
-    <main className="min-h-screen">
-      <div className="fixed inset-0 -z-10 bg-dash-light dark:bg-transparent" />
+    <main className="h-screen overflow-hidden">
+      {/* background layers */}
       <div className="fixed inset-0 -z-20 bg-background" />
+      <div className="fixed inset-0 -z-10 bg-dash-light dark:bg-transparent" />
 
-      <Navbar />
+      <div className="h-full w-full flex">
+        <Sidebar view={view} setView={setView} />
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="container pt-6 md:pt-8 pb-16 space-y-8 md:space-y-10"
-      >
-        <HeroSlider />
+        <div className="flex-1 h-full pr-3 py-3">
+          <div className="glass card-edge rounded-3xl h-full flex flex-col overflow-hidden">
+            <Topbar query={query} setQuery={setQuery} />
 
-        <section id="dashboard" className="scroll-mt-24 space-y-4">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="section-title">Dashboard</h2>
-              <p className="subtle">Základní přehled a rychlé metriky pro aktuální sezónu.</p>
+            <div className="flex-1 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {view === "dashboard" && (
+                  <motion.div
+                    key="dashboard"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.35 }}
+                    className="h-full"
+                  >
+                    <DashboardView players={players} loading={loading} />
+                  </motion.div>
+                )}
+
+                {view === "stats" && (
+                  <motion.div key="stats" className="h-full">
+                    <StatsView players={players} />
+                  </motion.div>
+                )}
+
+                {view === "leaderboard" && (
+                  <motion.div key="leaderboard" className="h-full">
+                    <LeaderboardView players={players} loading={loading} error={error} query={query} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
-
-          <OverviewPanels players={players} />
-
-          <div className="pt-1">
-            <KpiCards players={players} loading={loading} />
-          </div>
-        </section>
-
-        <section id="statistics" className="scroll-mt-24 space-y-4">
-          <div>
-            <h2 className="section-title">Statistics</h2>
-            <p className="subtle">Rozložení ratingu a vývoj v čase (mock data, připraveno na API).</p>
-          </div>
-
-          <EloDistributionChart players={players} />
-          <ChartsGrid />
-        </section>
-
-        <section id="leaderboard" className="scroll-mt-24 space-y-4">
-          <div>
-            <h2 className="section-title">Leaderboard</h2>
-            <p className="subtle">Klikni na hráče pro detail v postranním panelu.</p>
-          </div>
-
-          <LeaderboardSection players={players} loading={loading} error={error} />
-        </section>
-      </motion.div>
+        </div>
+      </div>
     </main>
   )
 }

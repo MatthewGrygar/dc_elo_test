@@ -11,12 +11,12 @@ export function LeaderboardSection({ players, loading, error }: { players: Playe
   return (
     <>
       {error ? (
-        <div className="rounded-3xl border p-4 glass dark:glass text-sm">
+        <div className="rounded-3xl border p-4 glass card-edge text-sm">
           <div className="font-semibold">Nepodařilo se načíst leaderboard</div>
           <div className="text-muted-foreground mt-1">{error}</div>
         </div>
       ) : loading ? (
-        <div className="rounded-3xl border p-4 glass dark:glass text-sm text-muted-foreground">
+        <div className="rounded-3xl border p-4 glass card-edge text-sm text-muted-foreground">
           Načítám leaderboard z Google Sheets…
         </div>
       ) : (

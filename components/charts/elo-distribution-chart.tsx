@@ -55,7 +55,7 @@ export function EloDistributionChart({ players }: { players: Player[] }) {
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.55 }}
     >
-      <Card className={cn("glass dark:glass rounded-3xl")}>
+      <Card className={cn("glass card-edge shine rounded-3xl")}>
         <CardHeader>
           <CardTitle>Rozložení {mode.toUpperCase()}</CardTitle>
           <CardDescription>Histogram rozložení ratingu v aktuálním datasetu.</CardDescription>
@@ -64,8 +64,19 @@ export function EloDistributionChart({ players }: { players: Player[] }) {
           <div className="h-[360px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 12, right: 10, left: -10, bottom: 0 }}>
-                <XAxis dataKey="range" tickMargin={10} />
-                <YAxis tickMargin={8} />
+                <XAxis
+                  dataKey="range"
+                  tickMargin={10}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={{ stroke: "hsl(var(--border))" }}
+                />
+                <YAxis
+                  tickMargin={8}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  axisLine={{ stroke: "hsl(var(--border))" }}
+                  tickLine={{ stroke: "hsl(var(--border))" }}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="count" radius={[10, 10, 0, 0]} fill="hsl(var(--chart-1))" />
               </BarChart>

@@ -20,7 +20,7 @@ export function LeaderboardTable({
   const { mode } = useRating()
 
   return (
-    <div className={cn("rounded-3xl border overflow-hidden", "glass dark:glass")}>
+    <div className={cn("rounded-3xl border overflow-hidden", "glass card-edge")}> 
       <div className="overflow-x-auto">
         <Table className="min-w-[980px]">
           <TableHeader className="sticky top-0 bg-background/70 backdrop-blur-md">
