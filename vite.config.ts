@@ -1,24 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'node:path';
 
 /**
- * GitHub Pages note:
- * - When deployed under https://<user>.github.io/<repo>/ you must set Vite's `base` to `/<repo>/`.
- * - This config reads BASE_PATH from env (set in GitHub Actions). Locally it's '/'.
+ * GitHub Pages notes:
+ * - Set BASE to '/<repo>/' (trailing slash!) for correct asset paths.
+ * - You can do it via env: VITE_BASE=/<repo>/
  */
-export default defineConfig(({ mode }) => {
-  const base = process.env.BASE_PATH ?? '/';
-  return {
-    base,
-    plugins: [react()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, 'src'),
-      },
-    },
-    build: {
-      sourcemap: mode !== 'production',
-    },
-  };
+const base = process.env.VITE_BASE ?? '/';
+
+export default defineConfig({
+  base,
+  plugins: [react()],
 });
