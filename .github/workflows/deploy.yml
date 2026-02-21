@@ -32,6 +32,13 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: List src/components
+        run: |
+          echo "--- src/components tree ---"
+          find src/components -maxdepth 3 -type f -print
+          echo "--- AppShell imports ---"
+          sed -n "1,40p" src/app/AppShell.tsx
+
       - name: Build
         env:
           GITHUB_PAGES: "true"
