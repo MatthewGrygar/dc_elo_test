@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Player } from '../types/player'
 import { loadStandings } from '../services/sheetsService'
 import { useDataSource } from '../hooks/useDataSource'
-// Import via folder-level index files to avoid case-sensitivity issues on Linux (GitHub Actions).
-import { Header } from '../components/header'
-import { BannerSlider } from '../components/banner'
-import { DashboardSection } from '../components/dashboard'
-import { LeaderboardSection } from '../components/leaderboard'
-import { PlayerModal } from '../components/player'
+// Explicit file imports (Linux CI is case-sensitive; avoid directory imports with TS "Bundler" resolution).
+import { Header } from '../components/header/Header'
+import { BannerSlider } from '../components/banner/BannerSlider'
+import { DashboardSection } from '../components/dashboard/DashboardSection'
+import { LeaderboardSection } from '../components/leaderboard/LeaderboardSection'
+import { PlayerModal } from '../components/player/PlayerModal'
 
 export function AppShell() {
   const { dataSource } = useDataSource()

@@ -1,1 +1,1 @@
-export * from '../player'
+export { PlayerModal } from './PlayerModal'
