@@ -1,20 +1,48 @@
-import type { Player } from '../../types/player';
-import { PlayerRow } from './PlayerRow';
+import { FixedSizeList as List } from 'react-window'
+import AutoSizer from './AutoSizer'
+import type { Player } from '../../types/player'
+import { PlayerRow } from './PlayerRow'
 
-/**
- * Leaderboard is intentionally implemented dependency-free.
- *
- * If you later expect 200+ rows and want perfect scroll performance,
- * swap this component for react-window (virtualized list).
- */
-export function Leaderboard({ players }: { players: Player[] }) {
+const ROW_HEIGHT = 56
+
+export function Leaderboard({ players, loading }: { players: Player[]; loading: boolean }) {
   return (
-    <div className="leaderboard__body" role="table" aria-label="Seznam hráčů">
-      <div className="leaderboard__list">
-        {players.map((p) => (
-          <PlayerRow key={`${p.rank}-${p.name}`} player={p} />
-        ))}
+    <div className="panel panel--table">
+      <div className="tableHeader">
+        <div className="col col--rank">#</div>
+        <div className="col col--name">Hráč</div>
+        <div className="col col--elo">ELO</div>
+        <div className="col col--num">Games</div>
+        <div className="col col--num">W</div>
+        <div className="col col--num">L</div>
+        <div className="col col--num">D</div>
+        <div className="col col--num">Peak</div>
+        <div className="col col--num">Winrate</div>
+      </div>
+
+      <div className="tableBody" aria-busy={loading ? 'true' : 'false'}>
+        {loading ? (
+          <div className="tableLoading">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="playerRow skeleton" />
+            ))}
+          </div>
+        ) : (
+          <AutoSizer>
+            {({ height, width }) => (
+              <List
+                height={Math.max(320, height)}
+                width={width}
+                itemCount={players.length}
+                itemSize={ROW_HEIGHT}
+                itemData={players}
+              >
+                {PlayerRow}
+              </List>
+            )}
+          </AutoSizer>
+        )}
       </div>
     </div>
-  );
+  )
 }

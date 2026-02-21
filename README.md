@@ -1,11 +1,6 @@
-# DC ELO Dashboard 2.0
+# DC ELO Dashboard 2.0 (React + TypeScript + Vite)
 
-Moderní, responzivní analytický dashboard pro Duel Commander ELO systém.
-
-- **Stack:** React + TypeScript + Vite
-- **Design:** monochromatické UI + jemné akcenty pro data (glassmorphism)
-- **Data:** Google Sheets (publikované jako CSV)
-- **Deploy:** GitHub Pages (gh-pages)
+Moderní, responzivní analytický dashboard pro Duel Commander ELO/DCPR.
 
 ## Rychlý start
 
@@ -14,81 +9,73 @@ npm install
 npm run dev
 ```
 
-Aplikace poběží lokálně na výchozím Vite portu.
+## Nastavení dat (Google Sheets CSV)
 
-## Konfigurace dat (Google Sheets → CSV)
-
-1. Otevři Google Sheet.
-2. **File → Share → Publish to web**.
-3. Vyber list (např. *Elo standings*) a formát **CSV**.
-4. Zkopíruj URL a vlož ji do `.env`.
-
-Vzorový soubor proměnných je v `.env.example`.
+1. V Google Sheetu: **File → Share → Publish to web** (nebo „Publikovat na web“) a zvol **CSV**.
+2. Zkopíruj URL (CSV endpoint) pro sheet s ELO standings.
+3. Vytvoř soubor `.env` podle `.env.example` a doplň:
 
 ```bash
-cp .env.example .env
-# vyplň:
-# VITE_SHEETS_ELO_STANDINGS_CSV=...
-# VITE_SHEETS_TOURNAMENT_ELO_CSV=...
+VITE_SHEETS_ELO_CSV_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/pub?output=csv&gid=<GID>"
+VITE_SHEETS_DCPR_CSV_URL="https://docs.google.com/spreadsheets/d/<SHEET_ID>/pub?output=csv&gid=<GID>"
 ```
 
-Pokud URL není nastavena, aplikace automaticky použije **mock data** (aby UI šlo ladit i bez sheetu).
+> Pozn.: CSV varianta je vhodná pro veřejná data bez přihlašování.
 
-## Přepínače
+## Deploy na GitHub Pages (doporučené: GitHub Actions)
 
-- **Světlý/Tmavý režim**: ukládá se do `localStorage` (`dc-elo.theme`) a zároveň nastavuje `html[data-theme]`.
-- **Zdroj dat (ELO/DCPR)**: přepíná, z jakého CSV se načítají data.
+Repozitář už obsahuje workflow: `.github/workflows/deploy.yml`.
 
-## Struktura projektu
+### 1) Zapnutí GitHub Pages
 
+- Repo → **Settings → Pages**
+- **Build and deployment**: zvol **GitHub Actions**
+
+### 2) Push do `main`
+
+Jakmile pushneš do `main`, workflow:
+- nainstaluje dependencies
+- udělá `npm run build`
+- nasadí složku `dist/` na GitHub Pages
+
+### Poznámka k base path
+
+GitHub Pages servíruje appku typicky z `/REPO_NAME/`.
+
+V `vite.config.ts` je připravená logika:
+- v Actions se nastavuje `GITHUB_PAGES=true`
+- base se pak odvodí z názvu repozitáře (npm package name)
+
+Pokud chceš base explicitně, odkomentuj v workflow proměnnou:
+
+```yml
+VITE_BASE: "/${{ github.event.repository.name }}/"
 ```
-src/
-  assets/           # obrázky / svg
-  components/
-    AppShell/       # hlavní layout + modal mount
-    Header/         # logo, navigace, toggly
-    BannerSlider/   # hero banner (zatím 1 slide placeholder)
-    Dashboard/      # KPI + grafy (placeholder)
-    Leaderboard/    # tabulka hráčů (scroll)
-    PlayerModal/    # detail hráče
-    common/         # sdílené drobné komponenty
-  context/          # Theme + DataSource + DataProvider
-  hooks/            # useTheme, useDataSource, useStandings
-  services/         # fetch + CSV parser
-  styles/           # design tokens a globální styly
-  types/            # TS typy
-  utils/            # formátování
-```
 
-## GitHub Pages deploy
+## Alternativa: deploy přes `gh-pages` (lokálně)
 
-### 1) Nastav base path
-
-GitHub Pages hostuje aplikaci pod `https://<uzivatel>.github.io/<repo>/`, takže Vite potřebuje znát base path pro assety.
-
-- do `.env` nastav:
+Pokud preferuješ starý styl deploye, je připravený skript:
 
 ```bash
-VITE_BASE="/<repo>/"
-```
-
-### 2) Deploy přes gh-pages
-
-```bash
-npm run build
 npm run deploy
 ```
 
-Skript `deploy` nasazuje obsah složky `dist/` do branche `gh-pages`.
-
-> Pozn.: Pole `homepage` v `package.json` je ponecháno pro orientaci (CRA styl), ale u Vite rozhoduje `base`.
-
-## Další rozšíření (plán)
-
-- napojení grafů na historii zápasů / ELO time-series
-- další sekce: metagame, historie turnajů, detailní statistiky
-- volitelná virtualizace leaderboardu (react-window) při velmi dlouhých seznamech
+To vytvoří build a nahraje `dist/` na branch `gh-pages`.
 
 ---
 
-© DC ELO Dashboard 2.0
+## Struktura
+
+- `src/app` – AppShell a bootstrap
+- `src/components` – UI komponenty (Header, Banner, Dashboard, Leaderboard, Modal)
+- `src/context` – Theme + DataSource + Modal kontext
+- `src/services` – načítání dat z Google Sheets CSV
+- `src/styles` – design tokens + glassmorphism styly
+
+## Další rozšíření (připraveno)
+
+- více sekcí (metagame, historie zápasů)
+- detailní grafy v modalu
+- další sheet pro DCPR / Tournament_Elo
+- další routy / navigace
+

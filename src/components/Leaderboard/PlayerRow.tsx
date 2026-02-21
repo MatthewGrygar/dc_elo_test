@@ -1,24 +1,39 @@
-import { useContext } from 'react';
-import type { Player } from '../../types/player';
-import { AppShellContext } from '../AppShell/AppShell';
-import { formatElo, formatPercent01 } from '../../utils/format';
+import type { ListChildComponentProps } from 'react-window'
+import type { Player } from '../../types/player'
+import { formatNumber, formatPercent } from '../../utils/format'
+import { useModal } from '../../hooks/useModal'
 
-export function PlayerRow({ player }: { player: Player }) {
-  const shell = useContext(AppShellContext);
-
-  const onClick = () => shell?.openPlayer(player);
+export function PlayerRow({ index, style, data }: ListChildComponentProps<Player[]>) {
+  const player = data[index]
+  const { openPlayer } = useModal()
 
   return (
-    <button type="button" className="lbRow lbRow--body" onClick={onClick}>
-      <div className="lbCell lbCell--rank">{player.rank}</div>
-      <div className="lbCell lbCell--name">{player.name}</div>
-      <div className="lbCell lbCell--elo">{formatElo(player.elo)}</div>
-      <div className="lbCell lbCell--num">{player.games}</div>
-      <div className="lbCell lbCell--num">{player.wins}</div>
-      <div className="lbCell lbCell--num">{player.losses}</div>
-      <div className="lbCell lbCell--num">{player.draws}</div>
-      <div className="lbCell lbCell--num">{formatElo(player.peak)}</div>
-      <div className="lbCell lbCell--num">{formatPercent01(player.winrate)}</div>
-    </button>
-  );
+    <div
+      className="playerRow panel panel--row panel--interactive"
+      style={style}
+      role="button"
+      tabIndex={0}
+      onClick={() => openPlayer(player)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') openPlayer(player)
+      }}
+      aria-label={`Otevřít detail hráče ${player.name}`}
+    >
+      <div className="col col--rank">{player.rank}</div>
+      <div className="col col--name">
+        <div className="playerName">{player.name}</div>
+      </div>
+      <div className="col col--elo">
+        <span className="eloPill">{formatNumber(player.elo)}</span>
+      </div>
+      <div className="col col--num">{formatNumber(player.games)}</div>
+      <div className="col col--num">{formatNumber(player.wins)}</div>
+      <div className="col col--num">{formatNumber(player.losses)}</div>
+      <div className="col col--num">{formatNumber(player.draws)}</div>
+      <div className="col col--num">{formatNumber(player.peak)}</div>
+      <div className="col col--num">
+        <span className="muted">{formatPercent(player.winrate)}</span>
+      </div>
+    </div>
+  )
 }

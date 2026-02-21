@@ -1,11 +1,8 @@
-export function formatCompactNumber(n: number) {
-  return new Intl.NumberFormat('cs-CZ', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+export function formatNumber(n: number) {
+  return new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(n)
 }
 
-export function formatElo(n: number) {
-  return new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(Math.round(n));
-}
-
-export function formatPercent01(v: number) {
-  return `${Math.round(v * 100)}%`;
+export function formatPercent(v01: number) {
+  const v = Math.max(0, Math.min(1, v01))
+  return new Intl.NumberFormat('cs-CZ', { style: 'percent', maximumFractionDigits: 1 }).format(v)
 }

@@ -1,37 +1,35 @@
-import { DataSourceToggle } from './DataSourceToggle';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle } from './ThemeToggle'
+import { DataSourceToggle } from './DataSourceToggle'
 
 export function Header() {
   return (
-    <header className="header panel panel--soft">
-      <div className="header__left">
+    <header className="header">
+      <div className="container headerInner panel panel--soft">
         <div className="brand">
-          <div className="brand__mark" aria-hidden="true">
-            DC
-          </div>
-          <div className="brand__text">
-            <div className="brand__title">DC ELO</div>
-            <div className="brand__subtitle">Dashboard 2.0</div>
+          <div className="brandMark">DC</div>
+          <div className="brandText">
+            <div className="brandTitle">DC ELO</div>
+            <div className="brandSub">Dashboard 2.0</div>
           </div>
         </div>
 
-        <nav className="nav" aria-label="Navigace">
-          <a className="nav__link" href="#dashboard">
+        <nav className="nav">
+          <a className="navLink" href="#dashboard">
             Dashboard
           </a>
-          <a className="nav__link" href="#leaderboard">
+          <a className="navLink" href="#leaderboard">
             Leaderboard
           </a>
-          <a className="nav__link" href="#statistics">
+          <a className="navLink" href="#statistics" aria-disabled="true" title="Připravujeme">
             Statistics
           </a>
         </nav>
-      </div>
 
-      <div className="header__right">
-        <ThemeToggle />
-        <DataSourceToggle />
+        <div className="headerActions">
+          <DataSourceToggle />
+          <ThemeToggle />
+        </div>
       </div>
     </header>
-  );
+  )
 }

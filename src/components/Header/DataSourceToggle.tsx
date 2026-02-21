@@ -1,31 +1,24 @@
-import { useDataSource } from '../../hooks/useDataSource';
-import type { DataSource } from '../../types/player';
-
-function Button({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      className={"segmented__btn " + (active ? 'isActive' : '')}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
+import { useDataSource } from '../../hooks/useDataSource'
 
 export function DataSourceToggle() {
-  const { dataSource, setDataSource } = useDataSource();
-
-  const set = (v: DataSource) => () => setDataSource(v);
+  const { dataSource, setDataSource } = useDataSource()
 
   return (
-    <div className="segmented" role="group" aria-label="Zdroj dat">
-      <Button active={dataSource === 'ELO'} onClick={set('ELO')}>
+    <div className="segmented panel panel--soft" role="group" aria-label="Zdroj dat">
+      <button
+        type="button"
+        className={dataSource === 'ELO' ? 'segmentedBtn isActive' : 'segmentedBtn'}
+        onClick={() => setDataSource('ELO')}
+      >
         ELO
-      </Button>
-      <Button active={dataSource === 'DCPR'} onClick={set('DCPR')}>
+      </button>
+      <button
+        type="button"
+        className={dataSource === 'DCPR' ? 'segmentedBtn isActive' : 'segmentedBtn'}
+        onClick={() => setDataSource('DCPR')}
+      >
         DCPR
-      </Button>
+      </button>
     </div>
-  );
+  )
 }

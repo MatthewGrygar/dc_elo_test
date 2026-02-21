@@ -1,16 +1,44 @@
-import { SummaryPanels } from './SummaryPanels';
-import { ChartsGrid } from './ChartsGrid';
+import type { DataSource } from '../../types/core'
+import { SummaryPanels } from './SummaryPanels'
+import { ChartsGrid } from './ChartsGrid'
 
-export function DashboardSection() {
+export type DashboardKpis = {
+  playerCount: number
+  gamesTotal: number
+  eloAvg: number
+  topElo: number
+}
+
+export function DashboardSection({
+  kpis,
+  loading,
+  error,
+  dataSource
+}: {
+  kpis: DashboardKpis
+  loading: boolean
+  error: string | null
+  dataSource: DataSource
+}) {
   return (
-    <section className="section" id="dashboard" aria-label="Dashboard">
-      <div className="section__header">
-        <h2 className="section__title">Dashboard</h2>
-        <p className="section__subtitle">Shrnutí výkonu a rychlý přehled metrik.</p>
+    <section id="dashboard" className="section">
+      <div className="sectionHeader">
+        <h2 className="sectionTitle">Dashboard</h2>
+        <div className="sectionHint">
+          Zdroj: <span className="kbd">{dataSource}</span>
+        </div>
       </div>
 
-      <SummaryPanels />
-      <ChartsGrid />
+      <SummaryPanels kpis={kpis} loading={loading} />
+
+      {error ? (
+        <div className="panel panel--soft notice">
+          <div className="noticeTitle">Nepodařilo se načíst data</div>
+          <div className="noticeBody">{error}</div>
+        </div>
+      ) : null}
+
+      <ChartsGrid loading={loading} />
     </section>
-  );
+  )
 }
