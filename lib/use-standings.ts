@@ -7,9 +7,8 @@ import { parseCsv, sheetCsvUrl, toNumber, type RatingMode } from "@/lib/google-s
 // Sheet names in the provided spreadsheet.
 const SHEETS: Record<RatingMode, string> = {
   elo: "Elo standings",
-  // If you later add a dedicated DCPR tab, set it here.
-  // Until then, we fall back to Elo standings.
-  dcpr: "Elo standings"
+  // DCPR standings live in the "Tournament_Elo" sheet.
+  dcpr: "Tournament_Elo"
 }
 
 function rowsToPlayers(rows: string[][], mode: RatingMode): Player[] {
@@ -26,10 +25,10 @@ function rowsToPlayers(rows: string[][], mode: RatingMode): Player[] {
     const winrate = toNumber(r[6])
     const peak = toNumber(r[7])
 
-    // Store both, so the UI can switch modes.
-    // Once you provide a separate DCPR sheet, map its rating to dcpr instead.
-    const elo = rating
-    const dcpr = rating
+    // The UI switches by refetching data for the current mode.
+    // Keep the non-active rating as 0 (not used).
+    const elo = mode === "elo" ? rating : 0
+    const dcpr = mode === "dcpr" ? rating : 0
 
     return {
       id: `${idx}-${name}`,

@@ -40,7 +40,7 @@ export default function Page() {
             <p className="subtle">Rozložení ratingu a vývoj v čase (mock data, připraveno na API).</p>
           </div>
 
-          <EloDistributionChart />
+          <EloDistributionChart players={players} />
           <ChartsGrid />
         </section>
 

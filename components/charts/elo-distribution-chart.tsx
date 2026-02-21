@@ -4,9 +4,9 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { charts } from "@/data/mockCharts"
 import { cn } from "@/lib/utils"
 import { useRating } from "@/components/providers/rating-provider"
+import type { Player } from "@/types/player"
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
@@ -18,8 +18,35 @@ function CustomTooltip({ active, payload, label }: any) {
   )
 }
 
-export function EloDistributionChart() {
+export function EloDistributionChart({ players }: { players: Player[] }) {
   const { mode } = useRating()
+
+  const data = React.useMemo(() => {
+    // Bin width requirement: 50 rating points.
+    const STEP = 50
+    const ratings: number[] = []
+
+    for (const p of players) {
+      const v = mode === "elo" ? p.elo : p.dcpr
+      if (Number.isFinite(v) && v > 0) ratings.push(v)
+    }
+
+    if (!ratings.length) return []
+    const min = Math.floor(Math.min(...ratings) / STEP) * STEP
+    const max = Math.ceil(Math.max(...ratings) / STEP) * STEP
+    const bins = new Map<number, number>()
+    for (let start = min; start < max; start += STEP) bins.set(start, 0)
+
+    for (const r of ratings) {
+      const start = Math.floor((r - min) / STEP) * STEP + min
+      if (bins.has(start)) bins.set(start, (bins.get(start) ?? 0) + 1)
+    }
+
+    return Array.from(bins.entries()).map(([start, count]) => ({
+      range: `${start}-${start + STEP - 1}`,
+      count
+    }))
+  }, [mode, players])
 
   return (
     <motion.div
@@ -36,7 +63,7 @@ export function EloDistributionChart() {
         <CardContent className="pt-0">
           <div className="h-[360px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={charts.distribution} margin={{ top: 12, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={data} margin={{ top: 12, right: 10, left: -10, bottom: 0 }}>
                 <XAxis dataKey="range" tickMargin={10} />
                 <YAxis tickMargin={8} />
                 <Tooltip content={<CustomTooltip />} />
