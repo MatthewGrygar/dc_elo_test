@@ -1,34 +1,24 @@
-# DC ELO Dashboard 2.0 (React + TypeScript + Vite)
+# DC ELO — Modern Dashboard (Next.js + TS + Tailwind + shadcn-style UI)
 
-Moderní, responzivní analytický dashboard pro Duel Commander ELO, připravený pro GitHub Pages.
+Single-page dashboard (scroll sections) for DC ELO rating system with:
+- Dark/Light theme (persist via `next-themes`)
+- Segmented pill (ELO / DCPR) affecting labels and values across the page
+- Auto-rotating hero slider (Framer Motion)
+- KPI cards (glassmorphism)
+- 1 full-width distribution chart + 4 charts (2×2) with per-card range dropdown
+- Leaderboard table (sticky header, clickable rows)
+- Player detail side panel (Sheet)
 
-## Lokální spuštění
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Produkční build
+Open http://localhost:3000
 
-```bash
-npm run build
-npm run preview
-```
-
-## GitHub Pages deploy (doporučeno: GitHub Actions)
-
-Workflow `.github/workflows/deploy.yml` nasazuje na GitHub Pages při každém push do `main`.
-V repo nastavení nastav: **Settings → Pages → Source: GitHub Actions**.
-
-## Google Sheets (CSV)
-
-Aplikace načítá leaderboard z publikovaného CSV.
-Nastav URL ve `.env` (necommitovat):
-
-```bash
-VITE_SHEETS_ELO_CSV_URL="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
-VITE_SHEETS_DCPR_CSV_URL="https://docs.google.com/spreadsheets/d/.../pub?output=csv"
-```
-
-Pokud `.env` nenastavíš, použije se demo dataset.
+## Notes
+- All data are mock placeholders in `/data`.
+- Styling uses HSL tokens in `app/globals.css` for consistent theming across components and charts.
+- UI components in `/components/ui` are minimal shadcn-like wrappers (Radix + Tailwind).
