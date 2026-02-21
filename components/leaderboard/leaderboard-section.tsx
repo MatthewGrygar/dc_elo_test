@@ -1,13 +1,19 @@
 "use client"
 
-import * as React from "react"
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table"
-import { PlayerSheet } from "@/components/sheet/player-sheet"
 import type { Player } from "@/types/player"
 
-export function LeaderboardSection({ players, loading, error }: { players: Player[]; loading?: boolean; error?: string | null }) {
-  const [selected, setSelected] = React.useState<Player | null>(null)
-
+export function LeaderboardSection({
+  players,
+  loading,
+  error,
+  onSelect
+}: {
+  players: Player[]
+  loading?: boolean
+  error?: string | null
+  onSelect: (p: Player) => void
+}) {
   return (
     <>
       {error ? (
@@ -20,9 +26,8 @@ export function LeaderboardSection({ players, loading, error }: { players: Playe
           Načítám leaderboard z Google Sheets…
         </div>
       ) : (
-        <LeaderboardTable players={players} onSelect={(p) => setSelected(p)} />
+        <LeaderboardTable players={players} onSelect={onSelect} />
       )}
-      <PlayerSheet player={selected} onClose={() => setSelected(null)} />
     </>
   )
 }

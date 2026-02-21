@@ -19,23 +19,24 @@ export function DashboardView({ players, loading }: { players: Player[]; loading
       variants={container}
       initial="hidden"
       animate="show"
-      className="h-full overflow-auto px-4 pb-6"
+      className="h-full overflow-hidden px-4 pb-4 pt-2"
     >
-      <div className="pt-2 space-y-6">
-        <OverviewPanels players={players} />
-
-        <KpiCards players={players} loading={loading} />
-
-        <div className="grid grid-cols-12 gap-5">
-          <div className="col-span-12 xl:col-span-7">
+      <div className="h-full grid grid-rows-[220px_140px_1fr] gap-5 min-h-0">
+        <div className="min-h-0">
+          <OverviewPanels players={players} />
+        </div>
+        <div className="min-h-0">
+          <KpiCards players={players} loading={loading} />
+        </div>
+        <div className="grid grid-cols-12 gap-5 min-h-0">
+          <div className="col-span-12 xl:col-span-7 min-h-0">
             <EloDistributionChart players={players} />
           </div>
-          <div className="col-span-12 xl:col-span-5">
-            <PlaceholderBlocks />
+          <div className="col-span-12 xl:col-span-5 min-h-0 grid grid-rows-2 gap-5">
+            <PlaceholderBlocks compact />
+            <ChartsGrid compact />
           </div>
         </div>
-
-        <ChartsGrid />
       </div>
     </motion.div>
   )

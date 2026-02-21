@@ -24,12 +24,12 @@ function TTip({ active, payload, label }: any) {
   )
 }
 
-export function ChartsGrid() {
+export function ChartsGrid({ compact }: { compact?: boolean }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div className={compact ? "grid grid-cols-1 gap-5 h-full" : "grid grid-cols-1 md:grid-cols-2 gap-5"}>
       <ChartShell title="Average rating (trend)">
         {(range) => (
-          <div className="h-[260px]">
+          <div className={compact ? "h-[170px]" : "h-[260px]"}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sliceByRange(charts.avgRating, range)} margin={{ top: 8, right: 10, left: -12, bottom: 0 }}>
                 <XAxis dataKey="date" hide />
@@ -44,7 +44,7 @@ export function ChartsGrid() {
 
       <ChartShell title="Games activity">
         {(range) => (
-          <div className="h-[260px]">
+          <div className={compact ? "h-[170px]" : "h-[260px]"}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sliceByRange(charts.activity, range)} margin={{ top: 8, right: 10, left: -12, bottom: 0 }}>
                 <XAxis dataKey="date" hide />
@@ -57,9 +57,10 @@ export function ChartsGrid() {
         )}
       </ChartShell>
 
+      {!compact && (
       <ChartShell title="New players (mock)">
         {(range) => (
-          <div className="h-[260px]">
+          <div className={compact ? "h-[170px]" : "h-[260px]"}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sliceByRange(charts.newPlayers, range)} margin={{ top: 8, right: 10, left: -12, bottom: 0 }}>
                 <XAxis dataKey="date" hide />
@@ -71,10 +72,12 @@ export function ChartsGrid() {
           </div>
         )}
       </ChartShell>
+      )}
 
+      {!compact && (
       <ChartShell title="Winrate trend (mock)">
         {(range) => (
-          <div className="h-[260px]">
+          <div className={compact ? "h-[170px]" : "h-[260px]"}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sliceByRange(charts.winrateTrend, range)} margin={{ top: 8, right: 10, left: -12, bottom: 0 }}>
                 <XAxis dataKey="date" hide />
@@ -86,6 +89,7 @@ export function ChartsGrid() {
           </div>
         )}
       </ChartShell>
+      )}
     </div>
   )
 }

@@ -12,10 +12,11 @@ const items = [
   { title: "Highlights", icon: Sparkles, body: "Placeholder: top streaky, peak records, atd." }
 ]
 
-export function PlaceholderBlocks() {
+export function PlaceholderBlocks({ compact }: { compact?: boolean }) {
+  const list = compact ? items.slice(0, 2) : items
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-      {items.map((it, idx) => (
+    <div className={compact ? "grid grid-cols-1 gap-5 h-full" : "grid grid-cols-1 sm:grid-cols-2 gap-5"}>
+      {list.map((it, idx) => (
         <motion.div
           key={it.title}
           initial={{ opacity: 0, y: 14 }}
@@ -24,7 +25,7 @@ export function PlaceholderBlocks() {
           transition={{ duration: 0.45, delay: idx * 0.05 }}
           whileHover={{ y: -4 }}
         >
-          <Card className="glass card-edge shine rounded-3xl">
+          <Card className={compact ? "glass card-edge shine rounded-3xl h-full" : "glass card-edge shine rounded-3xl"}>
             <CardHeader className="flex flex-row items-start justify-between gap-3">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">

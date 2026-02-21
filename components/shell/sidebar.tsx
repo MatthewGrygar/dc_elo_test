@@ -4,7 +4,7 @@ import { LayoutDashboard, Trophy, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-export type ViewKey = "dashboard" | "leaderboard" | "stats"
+export type ViewKey = "dashboard" | "leaderboard" | "stats" | "player"
 
 const items: Array<{ key: ViewKey; label: string; icon: any }> = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },

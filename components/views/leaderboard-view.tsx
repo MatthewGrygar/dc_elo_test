@@ -8,12 +8,14 @@ export function LeaderboardView({
   players,
   loading,
   error,
-  query
+  query,
+  onSelect
 }: {
   players: Player[]
   loading?: boolean
   error?: string | null
   query: string
+  onSelect: (p: Player) => void
 }) {
   const q = query.trim().toLowerCase()
   const filtered = q ? players.filter((p) => p.name.toLowerCase().includes(q)) : players
@@ -27,7 +29,7 @@ export function LeaderboardView({
       className="h-full overflow-auto px-4 pb-6"
     >
       <div className="pt-2">
-        <LeaderboardSection players={filtered} loading={loading} error={error} />
+        <LeaderboardSection players={filtered} loading={loading} error={error} onSelect={onSelect} />
       </div>
     </motion.div>
   )

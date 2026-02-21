@@ -61,7 +61,7 @@ export function EloDistributionChart({ players }: { players: Player[] }) {
           <CardDescription>Histogram rozložení ratingu v aktuálním datasetu.</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="h-[360px] w-full">
+          <div className="h-[240px] xl:h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 12, right: 10, left: -10, bottom: 0 }}>
                 <XAxis
