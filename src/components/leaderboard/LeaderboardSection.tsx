@@ -1,40 +1,17 @@
-import type { Player } from '../../types/player'
-import { Leaderboard } from './Leaderboard'
+import type { Player } from '../../types/player';
+import { LeaderboardTable } from './LeaderboardTable';
 
-export function LeaderboardSection({
-  players,
-  loading,
-  error,
-  fetchedAt
-}: {
-  players: Player[]
-  loading: boolean
-  error: string | null
-  fetchedAt: string | null
-}) {
+export function LeaderboardSection({ players, loading, onSelectPlayer }: { players: Player[]; loading: boolean; onSelectPlayer: (p: Player) => void }) {
   return (
-    <section id="leaderboard" className="section">
-      <div className="sectionHeader">
-        <h2 className="sectionTitle">Leaderboard</h2>
-        <div className="sectionHint">
-          {loading ? (
-            <span className="muted">Načítám…</span>
-          ) : error ? (
-            <span className="muted">Chyba načítání</span>
-          ) : fetchedAt ? (
-            <span className="muted">Aktualizováno: {new Date(fetchedAt).toLocaleString('cs-CZ')}</span>
-          ) : null}
-        </div>
+    <section id="leaderboard" className="section" aria-label="Leaderboard">
+      <div className="section__header">
+        <h2 className="section__title">Leaderboard</h2>
+        <p className="section__hint">Klikni na hráče pro detail (modal).</p>
       </div>
 
-      {error ? (
-        <div className="panel panel--soft notice">
-          <div className="noticeTitle">Leaderboard není dostupný</div>
-          <div className="noticeBody">{error}</div>
-        </div>
-      ) : (
-        <Leaderboard players={players} loading={loading} />
-      )}
+      <div className="panel leaderboard">
+        <LeaderboardTable players={players} loading={loading} onSelectPlayer={onSelectPlayer} />
+      </div>
     </section>
-  )
+  );
 }

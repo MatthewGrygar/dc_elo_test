@@ -1,39 +1,21 @@
-import type { ListChildComponentProps } from 'react-window'
-import type { Player } from '../../types/player'
-import { formatNumber, formatPercent } from '../../utils/format'
-import { useModal } from '../../hooks/useModal'
+import type { Player } from '../../types/player';
 
-export function PlayerRow({ index, style, data }: ListChildComponentProps<Player[]>) {
-  const player = data[index]
-  const { openPlayer } = useModal()
+function fmt(n: number) {
+  return Math.round(n).toLocaleString('cs-CZ');
+}
 
+export function PlayerRow({ player, onClick }: { player: Player; onClick: () => void }) {
   return (
-    <div
-      className="playerRow panel panel--row panel--interactive"
-      style={style}
-      role="button"
-      tabIndex={0}
-      onClick={() => openPlayer(player)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') openPlayer(player)
-      }}
-      aria-label={`Otevřít detail hráče ${player.name}`}
-    >
-      <div className="col col--rank">{player.rank}</div>
-      <div className="col col--name">
-        <div className="playerName">{player.name}</div>
-      </div>
-      <div className="col col--elo">
-        <span className="eloPill">{formatNumber(player.elo)}</span>
-      </div>
-      <div className="col col--num">{formatNumber(player.games)}</div>
-      <div className="col col--num">{formatNumber(player.wins)}</div>
-      <div className="col col--num">{formatNumber(player.losses)}</div>
-      <div className="col col--num">{formatNumber(player.draws)}</div>
-      <div className="col col--num">{formatNumber(player.peak)}</div>
-      <div className="col col--num">
-        <span className="muted">{formatPercent(player.winrate)}</span>
-      </div>
-    </div>
-  )
+    <button type="button" className="panel panel--row playerRow" onClick={onClick} role="listitem">
+      <div className="playerRow__cell playerRow__rank">{player.rank}</div>
+      <div className="playerRow__cell playerRow__name">{player.name}</div>
+      <div className="playerRow__cell playerRow__elo">{fmt(player.elo)}</div>
+      <div className="playerRow__cell">{fmt(player.games)}</div>
+      <div className="playerRow__cell">{fmt(player.wins)}</div>
+      <div className="playerRow__cell">{fmt(player.losses)}</div>
+      <div className="playerRow__cell">{fmt(player.draws)}</div>
+      <div className="playerRow__cell">{player.peak ? fmt(player.peak) : '—'}</div>
+      <div className="playerRow__cell">{player.winrate ? `${player.winrate.toFixed(1)}%` : '—'}</div>
+    </button>
+  );
 }

@@ -1,41 +1,35 @@
 {
-  "name": "dc-elo-dashboard-2-0",
+  "name": "dc-elo-dashboard-2.0",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "homepage": "https://<uzivatel>.github.io/<repo>/",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "format": "prettier . --write",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "axios": "^1.7.7",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.474.0",
+    "axios": "^1.7.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-window": "^1.8.10",
     "recharts": "^2.12.7"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/react-window": "^1.8.8",
-    "@typescript-eslint/eslint-plugin": "^8.1.0",
-    "@typescript-eslint/parser": "^8.1.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "eslint": "^9.8.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.20.0",
     "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.9",
+    "eslint-plugin-react-refresh": "^0.4.18",
     "gh-pages": "^6.1.1",
-    "prettier": "^3.3.3",
-    "typescript": "^5.5.4",
-    "vite": "^5.4.2",
-    "@types/node": "^20.14.10"
+    "prettier": "^3.5.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
   }
 }

@@ -1,16 +1,18 @@
 export type Player = {
-  rank: number
-  name: string
-  elo: number
-  games: number
-  wins: number
-  losses: number
-  draws: number
-  peak: number
-  winrate: number // 0..1
-}
+  rank: number;
+  name: string;
+  elo: number;
 
-export type PlayerDetail = Player & {
-  // Future-ready: place for per-player timeline points etc.
-  history?: Array<{ date: string; elo: number }>
-}
+  games: number;
+  wins: number;
+  losses: number;
+  draws: number;
+
+  peak?: number;
+  winrate?: number; // 0-100
+};
+
+export type PlayerDetails = {
+  player: Player;
+  history?: Array<{ date: string; elo: number }>;
+};

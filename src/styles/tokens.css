@@ -1,0 +1,18 @@
+:root {
+  --radius-lg: 18px;
+  --radius-md: 14px;
+
+  --shadow-l1: 0 10px 28px rgba(2, 6, 23, 0.08);
+  --shadow-l2: 0 18px 44px rgba(2, 6, 23, 0.12);
+  --shadow-l3: 0 26px 70px rgba(2, 6, 23, 0.18);
+
+  --ease: cubic-bezier(0.2, 0.9, 0.2, 1);
+
+  /* Chart palette (consistent across themes) */
+  --chart-blue: #3b82f6;
+  --chart-green: #10b981;
+  --chart-amber: #f59e0b;
+  --chart-red: #ef4444;
+  --chart-purple: #8b5cf6;
+  --chart-teal: #14b8a6;
+}

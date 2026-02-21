@@ -1,33 +1,29 @@
-import { formatNumber } from '../../utils/format'
-import type { DashboardKpis } from './DashboardSection'
-
-function Panel({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="panel panel--kpi">
-      <div className="kpiValue">{value}</div>
-      <div className="kpiLabel">{label}</div>
-      {sub ? <div className="kpiSub">{sub}</div> : null}
-    </div>
-  )
+function formatInt(x: number) {
+  return Math.round(x).toLocaleString('cs-CZ');
 }
 
-export function SummaryPanels({ kpis, loading }: { kpis: DashboardKpis; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="kpiGrid" aria-busy="true">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="panel panel--kpi skeleton" />
-        ))}
-      </div>
-    )
-  }
-
+export function SummaryPanels({ kpis }: { kpis: { countPlayers: number; games: number; avgElo: number; topElo: number } }) {
   return (
-    <div className="kpiGrid">
-      <Panel label="Počet hráčů" value={formatNumber(kpis.playerCount)} />
-      <Panel label="Odehrané hry" value={formatNumber(kpis.gamesTotal)} />
-      <Panel label="Průměrné ELO" value={formatNumber(Math.round(kpis.eloAvg))} sub="(za všechny hráče)" />
-      <Panel label="Top ELO" value={formatNumber(kpis.topElo)} />
+    <div className="summary">
+      <div className="panel summary__card">
+        <div className="summary__value">{formatInt(kpis.countPlayers)}</div>
+        <div className="summary__label">Počet hráčů</div>
+      </div>
+
+      <div className="panel summary__card">
+        <div className="summary__value">{formatInt(kpis.games)}</div>
+        <div className="summary__label">Odehrané hry</div>
+      </div>
+
+      <div className="panel summary__card">
+        <div className="summary__value">{formatInt(kpis.avgElo)}</div>
+        <div className="summary__label">Průměrné ELO</div>
+      </div>
+
+      <div className="panel summary__card">
+        <div className="summary__value">{formatInt(kpis.topElo)}</div>
+        <div className="summary__label">Top ELO</div>
+      </div>
     </div>
-  )
+  );
 }
