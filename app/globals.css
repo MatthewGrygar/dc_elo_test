@@ -63,13 +63,67 @@ body {
   @apply bg-background text-foreground antialiased;
 }
 
+/* Premium dashboard background (dark mode) */
+.dark body {
+  background:
+    radial-gradient(1200px 600px at 20% 15%, rgba(59, 130, 246, 0.18), transparent 55%),
+    radial-gradient(900px 500px at 80% 0%, rgba(147, 51, 234, 0.10), transparent 45%),
+    radial-gradient(700px 500px at 50% 100%, rgba(16, 185, 129, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(2, 6, 23, 1) 0%, rgba(3, 7, 18, 1) 60%, rgba(2, 6, 23, 1) 100%);
+}
+
+.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 15%, transparent 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.65) 100%);
+  z-index: -1;
+}
+
 @layer components {
   .glass {
-    @apply bg-card/55 backdrop-blur-md border border-border/60 shadow-glass;
+    @apply bg-card/50 backdrop-blur-xl border border-border/60;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .glass:hover {
+    box-shadow: 0 30px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
   }
   .glass-light {
     @apply bg-card border border-border shadow-soft;
   }
+
+  .card-edge {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-edge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent 30%);
+    pointer-events: none;
+  }
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    transform: rotate(20deg);
+    transition: left 0.8s ease;
+    pointer-events: none;
+  }
+  .shine:hover::after {
+    left: 140%;
+  }
+
   .section-title {
     @apply text-xl md:text-2xl font-semibold tracking-tight;
   }

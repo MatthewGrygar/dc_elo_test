@@ -1,8 +1,10 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { Navbar } from "@/components/navbar/navbar"
 import { HeroSlider } from "@/components/slider/hero-slider"
 import { KpiCards } from "@/components/dashboard/kpi-cards"
+import { OverviewPanels } from "@/components/dashboard/overview-panels"
 import { EloDistributionChart } from "@/components/charts/elo-distribution-chart"
 import { ChartsGrid } from "@/components/charts/charts-grid"
 import { LeaderboardSection } from "@/components/leaderboard/leaderboard-section"
@@ -15,12 +17,17 @@ export default function Page() {
 
   return (
     <main className="min-h-screen">
-      <div className="fixed inset-0 -z-10 bg-dash-light dark:bg-dash-dark" />
+      <div className="fixed inset-0 -z-10 bg-dash-light dark:bg-transparent" />
       <div className="fixed inset-0 -z-20 bg-background" />
 
       <Navbar />
 
-      <div className="container pt-6 md:pt-8 pb-16 space-y-8 md:space-y-10">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="container pt-6 md:pt-8 pb-16 space-y-8 md:space-y-10"
+      >
         <HeroSlider />
 
         <section id="dashboard" className="scroll-mt-24 space-y-4">
@@ -31,7 +38,11 @@ export default function Page() {
             </div>
           </div>
 
-          <KpiCards players={players} loading={loading} />
+          <OverviewPanels players={players} />
+
+          <div className="pt-1">
+            <KpiCards players={players} loading={loading} />
+          </div>
         </section>
 
         <section id="statistics" className="scroll-mt-24 space-y-4">
@@ -52,7 +63,7 @@ export default function Page() {
 
           <LeaderboardSection players={players} loading={loading} error={error} />
         </section>
-      </div>
+      </motion.div>
     </main>
   )
 }
