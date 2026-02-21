@@ -14,6 +14,13 @@ import { useRating } from "@/components/providers/rating-provider"
 import { useStandings } from "@/lib/use-standings"
 import type { Player } from "@/types/player"
 
+const slide = {
+  initial: { opacity: 0, x: -20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 20 },
+  transition: { duration: 0.35 },
+}
+
 export default function Page() {
   const { mode } = useRating()
   const { players, loading, error } = useStandings(mode)
@@ -30,7 +37,13 @@ export default function Page() {
       <div className="fixed inset-0 -z-10 bg-dash-light dark:bg-transparent" />
 
       <div className="h-full w-full flex">
-        <Sidebar view={view} setView={(v) => { setView(v); if (v !== "player") setSelectedPlayer(null) }} />
+        <Sidebar
+          view={view}
+          setView={(v) => {
+            setView(v)
+            if (v !== "player") setSelectedPlayer(null)
+          }}
+        />
 
         <div className="flex-1 h-full pr-3 py-3">
           <div className="glass card-edge rounded-3xl h-full flex flex-col overflow-hidden">
@@ -39,26 +52,19 @@ export default function Page() {
             <div className="flex-1 overflow-hidden">
               <AnimatePresence mode="wait">
                 {view === "dashboard" && (
-                  <motion.div
-                    key="dashboard"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.35 }}
-                    className="h-full"
-                  >
+                  <motion.div key="dashboard" className="h-full" {...slide}>
                     <DashboardView players={players} loading={loading} />
                   </motion.div>
                 )}
 
                 {view === "stats" && (
-                  <motion.div key="stats" className="h-full">
+                  <motion.div key="stats" className="h-full" {...slide}>
                     <StatsView players={players} />
                   </motion.div>
                 )}
 
                 {view === "leaderboard" && (
-                  <motion.div key="leaderboard" className="h-full">
+                  <motion.div key="leaderboard" className="h-full" {...slide}>
                     <LeaderboardView
                       players={players}
                       loading={loading}
@@ -68,19 +74,18 @@ export default function Page() {
                         setSelectedPlayer(p)
                         setLastListView("leaderboard")
                         setView("player")
-                      }
+                      }}
+                    />
+                  </motion.div>
+                )}
 
-{view === "player" && selectedPlayer && (
-  <motion.div key="player" className="h-full">
-    <PlayerView
-      player={selectedPlayer}
-      onBack={() => {
-        setView(lastListView)
-      }}
-    />
-  </motion.div>
-)}
-}
+                {view === "player" && selectedPlayer && (
+                  <motion.div key="player" className="h-full" {...slide}>
+                    <PlayerView
+                      player={selectedPlayer}
+                      onBack={() => {
+                        setView(lastListView)
+                      }}
                     />
                   </motion.div>
                 )}
