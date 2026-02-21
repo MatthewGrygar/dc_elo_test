@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 16px;
+
+  /* Light — warm gray/beige */
+  --background: 38 38% 96%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 222 89% 55%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 220 14% 92%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 220 14% 92%;
+  --muted-foreground: 215 16% 36%;
+  --accent: 220 14% 92%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 220 13% 85%;
+  --input: 220 13% 85%;
+  --ring: 222 89% 55%;
+
+  /* Chart hint (used for subtle fills) */
+  --chart-1: 222 89% 55%;
+  --chart-2: 199 89% 48%;
+}
+
+.dark {
+  /* Dark — elegant navy/gray */
+  --background: 222 47% 8%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 12%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 10%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 199 89% 55%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 222 18% 16%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 222 18% 16%;
+  --muted-foreground: 215 20% 70%;
+  --accent: 222 18% 16%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 222 20% 22%;
+  --input: 222 20% 22%;
+  --ring: 199 89% 55%;
+
+  --chart-1: 199 89% 55%;
+  --chart-2: 222 89% 60%;
+}
+
+* { @apply border-border; }
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
+
+@layer components {
+  .glass {
+    @apply bg-card/55 backdrop-blur-md border border-border/60 shadow-glass;
+  }
+  .glass-light {
+    @apply bg-card border border-border shadow-soft;
+  }
+  .section-title {
+    @apply text-xl md:text-2xl font-semibold tracking-tight;
+  }
+  .subtle {
+    @apply text-sm text-muted-foreground;
+  }
+}
