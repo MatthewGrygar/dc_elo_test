@@ -4,7 +4,9 @@ import { motion } from "framer-motion"
 import type { Player } from "@/types/player"
 import { EloDistributionChart } from "@/components/charts/elo-distribution-chart"
 import { NewsSlider } from "@/components/dashboard/news-slider"
-import { PlaceholderPanel, placeholderItems } from "@/components/dashboard/placeholder-panels"
+import { DashboardStatPanels } from "@/components/dashboard/stats-panels"
+import { useRating } from "@/components/providers/rating-provider"
+import { useDashboardStats } from "@/lib/use-dashboard-stats"
 
 const container = {
   hidden: { opacity: 0 },
@@ -12,6 +14,12 @@ const container = {
 }
 
 export function DashboardView({ players }: { players: Player[]; loading?: boolean }) {
+  const { mode } = useRating()
+  const ratings = players
+    .map((p) => (mode === "elo" ? p.elo : p.dcpr))
+    .filter((n) => Number.isFinite(n) && n > 0)
+  const { stats, loading } = useDashboardStats(mode, ratings)
+
   return (
     <motion.div
       variants={container}
@@ -19,7 +27,7 @@ export function DashboardView({ players }: { players: Player[]; loading?: boolea
       animate="show"
       className="h-full overflow-hidden px-4 pb-4 pt-2"
     >
-      {/* Mosaic dashboard (no overlaps): small news slider top-left + distribution chart + 5 placeholder panels */}
+      {/* Mosaic dashboard (no overlaps): news slider + distribution chart + stats panels */}
       <div className="h-full min-h-0 grid grid-cols-12 grid-rows-6 gap-5">
         {/* Top-left: News slider */}
         <div className="col-span-12 lg:col-span-4 row-span-2 min-h-0">
@@ -31,17 +39,14 @@ export function DashboardView({ players }: { players: Player[]; loading?: boolea
           <EloDistributionChart players={players} />
         </div>
 
-        {/* Left middle: two stacked panels under the slider */}
-        <div className="col-span-12 lg:col-span-4 row-span-2 min-h-0 grid grid-rows-2 gap-5">
-          <PlaceholderPanel item={placeholderItems[0]} />
-          <PlaceholderPanel item={placeholderItems[1]} />
+        {/* Left middle: 4 stats panels (2x2) under the slider */}
+        <div className="col-span-12 lg:col-span-4 row-span-2 min-h-0 grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-5">
+          <DashboardStatPanels stats={stats} loading={loading} range={[0, 4]} />
         </div>
 
-        {/* Bottom row: 3 panels */}
-        <div className="col-span-12 row-span-2 min-h-0 grid grid-cols-1 md:grid-cols-3 gap-5">
-          <PlaceholderPanel item={placeholderItems[2]} />
-          <PlaceholderPanel item={placeholderItems[3]} />
-          <PlaceholderPanel item={placeholderItems[4]} />
+        {/* Bottom row: 4 more stats panels */}
+        <div className="col-span-12 row-span-2 min-h-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+          <DashboardStatPanels stats={stats} loading={loading} range={[4, 8]} />
         </div>
       </div>
     </motion.div>
