@@ -40,21 +40,7 @@ const items: StatItem[] = [
   },
 ]
 
-function StatPanel({
-  title,
-  icon: Icon,
-  value,
-  meta,
-  loading,
-  uniform,
-}: {
-  title: string
-  icon: LucideIcon
-  value: string
-  meta: string
-  loading: boolean
-  uniform?: boolean
-}) {
+function StatPanel({ title, icon: Icon, value, meta }: { title: string; icon: LucideIcon; value: string; meta: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
@@ -64,25 +50,21 @@ function StatPanel({
       whileHover={{ y: -4 }}
       className="h-full"
     >
-      <Card className={"glass card-edge shine rounded-3xl h-full " + (uniform ? "min-h-[150px]" : "")}
-      >
+      <Card className="glass card-edge shine rounded-3xl h-full">
         <CardHeader className="flex flex-row items-start justify-between gap-3 pb-2">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <Icon className="h-4 w-4" />
               {title}
             </CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
-              {meta}
-              {loading ? <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/70 animate-pulse" /> : null}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{meta}</p>
           </div>
           <div className="h-9 w-9 rounded-2xl bg-primary/15 border border-border/60 grid place-items-center">
             <Icon className="h-4 w-4" />
           </div>
         </CardHeader>
         <CardContent className="pt-2">
-          <div className="text-3xl font-semibold tracking-tight tabular-nums">{value}</div>
+          <div className="text-3xl font-semibold tracking-tight">{value}</div>
           <div className="mt-2 text-xs text-muted-foreground">Aktualizováno z Google Sheets</div>
         </CardContent>
       </Card>
@@ -94,12 +76,10 @@ export function DashboardStatPanels({
   stats,
   loading,
   range,
-  uniform,
 }: {
   stats: DashboardStats | null
   loading: boolean
   range?: [number, number]
-  uniform?: boolean
 }) {
   const [from, to] = range ?? [0, items.length]
   const slice = items.slice(from, to)
@@ -108,18 +88,8 @@ export function DashboardStatPanels({
     <>
       {slice.map((it) => {
         const raw = stats ? (stats as any)[it.key] : 0
-        const value = it.format ? it.format(raw) : Intl.NumberFormat("cs-CZ").format(raw)
-        return (
-          <StatPanel
-            key={it.key}
-            title={it.title}
-            icon={it.icon}
-            value={value}
-            meta={it.meta}
-            loading={loading && !stats}
-            uniform={uniform}
-          />
-        )
+        const value = loading ? "…" : it.format ? it.format(raw) : Intl.NumberFormat("cs-CZ").format(raw)
+        return <StatPanel key={it.key} title={it.title} icon={it.icon} value={value} meta={it.meta} />
       })}
     </>
   )
