@@ -21,6 +21,12 @@ export type DashboardStats = {
   medianRating: number
   uniqueTournaments: number
   avgAbsChange: number
+  interestingMatches: {
+    gameId: string
+    date: string
+    players: string[]
+    totalAbsChange: number
+  }[]
 }
 
 function parseDateLoose(v: string): Date | null {
@@ -62,7 +68,10 @@ function median(values: number[]): number {
   return xs[mid]
 }
 
-export function useDashboardStats(mode: RatingMode, ratings: number[]) {
+// Simple in-memory cache to prevent flicker and re-fetches during re-renders.
+const CACHE: Partial<Record<RatingMode, { stats: DashboardStats; ts: number }>> = {}
+
+export function useDashboardStats(mode: RatingMode, medianRating: number) {
   const [stats, setStats] = React.useState<DashboardStats | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -71,8 +80,16 @@ export function useDashboardStats(mode: RatingMode, ratings: number[]) {
     let cancelled = false
     const controller = new AbortController()
 
+    // Use cached stats immediately (prevents "blinking").
+    const cached = CACHE[mode]
+    if (cached?.stats) {
+      setStats((prev) => prev ?? cached.stats)
+      setLoading(false)
+    }
+
     async function run() {
-      setLoading(true)
+      // Don't clear existing data; just show a subtle loading state.
+      setLoading((prev) => prev || !CACHE[mode])
       setError(null)
 
       try {
@@ -103,6 +120,12 @@ export function useDashboardStats(mode: RatingMode, ratings: number[]) {
         const firstSeenByName = new Map<string, number>()
         const absChanges: number[] = []
 
+        // Interesting matches: group by game id (column B), collect names (A), date (J), sum abs change (H).
+        const matchById = new Map<
+          string,
+          { gameId: string; ts: number; dateStr: string; players: Set<string>; totalAbsChange: number }
+        >()
+
         const now = new Date()
         const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
@@ -129,6 +152,27 @@ export function useDashboardStats(mode: RatingMode, ratings: number[]) {
 
           const change = toNumber(r?.[7] ?? "")
           if (change !== 0) absChanges.push(Math.abs(change))
+
+          if (gameId) {
+            const d = dGame ?? dActive
+            const ts = d ? d.getTime() : 0
+            const dateStr = d ? d.toISOString().slice(0, 10) : ""
+            const cur = matchById.get(gameId) ?? {
+              gameId,
+              ts,
+              dateStr,
+              players: new Set<string>(),
+              totalAbsChange: 0,
+            }
+            if (name) cur.players.add(name)
+            if (Number.isFinite(change)) cur.totalAbsChange += Math.abs(change)
+            // Keep the newest date if multiple rows
+            if (ts && ts > cur.ts) {
+              cur.ts = ts
+              cur.dateStr = dateStr
+            }
+            matchById.set(gameId, cur)
+          }
         }
 
         const newPlayers30d = Array.from(firstSeenByName.values()).filter((ts) => ts >= cutoff.getTime()).length
@@ -137,17 +181,30 @@ export function useDashboardStats(mode: RatingMode, ratings: number[]) {
         const dataT = dataRows.slice(2) // skip first two rows => start at row 3
         const tournamentCount = dataT.filter((r) => (r?.[1] ?? "").trim().length > 0).length
 
+        const interestingMatches = Array.from(matchById.values())
+          .filter((m) => (m.ts ? m.ts >= cutoff.getTime() : true))
+          .sort((a, b) => b.totalAbsChange - a.totalAbsChange)
+          .slice(0, 6)
+          .map((m) => ({
+            gameId: m.gameId,
+            date: m.dateStr,
+            players: Array.from(m.players).slice(0, 6),
+            totalAbsChange: Number(m.totalAbsChange.toFixed(1)),
+          }))
+
         const computed: DashboardStats = {
           totalGames: gameSet.size,
           uniquePlayers: nameSet.size,
           activePlayers30d: activeNameSet.size,
           games30d: games30Set.size,
           newPlayers30d,
-          medianRating: Math.round(median(ratings)),
+          medianRating,
           uniqueTournaments: tournamentCount,
           avgAbsChange: absChanges.length ? Number((absChanges.reduce((a, b) => a + b, 0) / absChanges.length).toFixed(1)) : 0,
+          interestingMatches,
         }
 
+        CACHE[mode] = { stats: computed, ts: Date.now() }
         if (!cancelled) setStats(computed)
       } catch (e: any) {
         if (e?.name === "AbortError") return
@@ -166,7 +223,12 @@ export function useDashboardStats(mode: RatingMode, ratings: number[]) {
       cancelled = true
       controller.abort()
     }
-  }, [mode, ratings])
+  }, [mode])
+
+  // Update the median immediately if mode changes but remote data is cached.
+  React.useEffect(() => {
+    setStats((prev) => (prev ? { ...prev, medianRating } : prev))
+  }, [medianRating])
 
   return { stats, loading, error }
 }

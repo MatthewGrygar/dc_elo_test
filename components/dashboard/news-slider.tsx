@@ -52,8 +52,8 @@ export function NewsSlider({ intervalMs = 6500 }: { intervalMs?: number }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="relative h-[140px] md:h-[150px] lg:h-[150px] rounded-2xl overflow-hidden border border-border/60 bg-background/10">
+      <CardContent className="pt-0 h-full flex flex-col">
+        <div className="relative flex-1 min-h-[210px] rounded-2xl overflow-hidden border border-border/60 bg-background/10">
           <AnimatePresence mode="wait">
             <motion.div
               key={idx}
