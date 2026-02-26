@@ -1,33 +1,271 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DC ELO</title>
-</head>
-<body>
-<script>
-(function(){
-  var params = new URLSearchParams(window.location.search || "");
-  var r = params.get("r") || params.get("redirect") || "";
-  var nav = (navigator.languages && navigator.languages.length ? navigator.languages[0] : navigator.language) || "";
-  nav = (nav || "").toLowerCase();
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Petr Hanák — Personal Page</title>
 
-  var seg = "eng";
-  if (nav.indexOf("fr") === 0) seg = "fr";
-  else if (nav.indexOf("cs") === 0 || nav.indexOf("sk") === 0 || nav.indexOf("cz") === 0) seg = "cz";
+    <!-- Typography similar to the reference animation -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600,700,800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  // Project base: /<repo>/
-  var path = window.location.pathname || "/";
-  var parts = path.split("/").filter(Boolean);
-  var base = parts.length ? ("/" + parts[0] + "/") : "/";
+    <meta name="description" content="Personal page / portfolio for recruiters." />
+  </head>
+  <body>
+    <div id="app">
+      <div class="wrap">
+        <header class="topbar">
+          <div class="brand">
+            <div class="mark">Petr Hanák</div>
+            <div class="tag">Product / Design / Front‑end</div>
+          </div>
 
-  var target = base + seg + "/";
-  if (r){
-    target += "?r=" + encodeURIComponent(r.replace(/^\/+/, ""));
-  }
-  window.location.replace(target);
-})();
-</script>
-</body>
+          <nav class="nav">
+            <a href="#work"><strong>Work</strong></a>
+            <a href="#skills">Skills</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+          </nav>
+        </header>
+
+        <main>
+          <section class="hero" id="top">
+            <div class="hero-left">
+              <p class="kicker reveal">Available • Prague / Remote</p>
+
+              <h1 class="headline reveal">
+                I build calm, readable interfaces
+                <span class="underline">with taste and structure</span>.
+              </h1>
+
+              <p class="lede reveal">
+                Personal page for recruiters: selected work, approach, and a quick way to reach me.
+                Inspired by editorial CV motion graphics — paper, ink, whitespace and hairlines.
+              </p>
+
+              <div class="cta-row reveal">
+                <a class="btn primary" href="#contact">Contact me</a>
+                <a class="btn ghost" href="#work">See work</a>
+              </div>
+
+              <div class="meta-grid reveal">
+                <div class="meta">
+                  <div class="meta-label">Focus</div>
+                  <div class="meta-value">Product UI • Web • Motion</div>
+                </div>
+                <div class="meta">
+                  <div class="meta-label">Stack</div>
+                  <div class="meta-value">TypeScript • React • CSS</div>
+                </div>
+                <div class="meta">
+                  <div class="meta-label">Languages</div>
+                  <div class="meta-value">CZ / EN</div>
+                </div>
+              </div>
+            </div>
+
+            <aside class="hero-right reveal">
+              <div class="card portrait-card" data-parallax>
+                <div class="card-title">
+                  <span>Profile</span>
+                  <span class="hairline"></span>
+                </div>
+
+                <div class="portrait">
+                  <!-- Replace this with your own photo: /public/profile.jpg -->
+                  <img src="/profile.jpg" alt="Petr portrait" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+                  <div class="portrait-fallback" style="display:none;">
+                    <div>
+                      <div class="fallback-big">Add a photo</div>
+                      <div class="fallback-small">Put <code>profile.jpg</code> into <code>/public</code></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-foot">
+                  <div class="pill">Open to offers</div>
+                  <div class="pill">Portfolio-ready</div>
+                </div>
+              </div>
+
+              <div class="card stats-card reveal">
+                <div class="card-title">
+                  <span>Highlights</span>
+                  <span class="hairline"></span>
+                </div>
+                <ul class="bullets">
+                  <li><span class="dot"></span>Clean UI systems & design tokens</li>
+                  <li><span class="dot"></span>Motion that supports reading</li>
+                  <li><span class="dot"></span>Fast, accessible front‑ends</li>
+                </ul>
+              </div>
+            </aside>
+          </section>
+
+          <section class="section" id="work">
+            <div class="section-head reveal">
+              <h2>Selected work</h2>
+              <div class="section-sub">A few projects in the same structured, “editorial” layout.</div>
+            </div>
+
+            <div class="work-grid">
+              <article class="work-card reveal">
+                <div class="work-top">
+                  <div class="work-title">Project A</div>
+                  <div class="work-year">2025</div>
+                </div>
+                <div class="work-desc">
+                  Short, concrete description of impact: improved conversion, simplified onboarding, redesigned dashboard.
+                </div>
+                <div class="work-tags">
+                  <span class="chip">Product UI</span>
+                  <span class="chip">Design system</span>
+                  <span class="chip">React</span>
+                </div>
+                <div class="work-links">
+                  <a href="#" aria-disabled="true">Case study</a>
+                  <a href="#" aria-disabled="true">Live</a>
+                </div>
+              </article>
+
+              <article class="work-card reveal">
+                <div class="work-top">
+                  <div class="work-title">Project B</div>
+                  <div class="work-year">2024</div>
+                </div>
+                <div class="work-desc">
+                  Motion + content design: made complex information readable with typography and paced animation.
+                </div>
+                <div class="work-tags">
+                  <span class="chip">Motion</span>
+                  <span class="chip">Content</span>
+                  <span class="chip">Web</span>
+                </div>
+                <div class="work-links">
+                  <a href="#" aria-disabled="true">Video</a>
+                  <a href="#" aria-disabled="true">Notes</a>
+                </div>
+              </article>
+
+              <article class="work-card reveal">
+                <div class="work-top">
+                  <div class="work-title">Project C</div>
+                  <div class="work-year">2023</div>
+                </div>
+                <div class="work-desc">
+                  Accessibility-first rebuild: reduced bundle size, improved performance and keyboard navigation.
+                </div>
+                <div class="work-tags">
+                  <span class="chip">A11y</span>
+                  <span class="chip">Performance</span>
+                  <span class="chip">TypeScript</span>
+                </div>
+                <div class="work-links">
+                  <a href="#" aria-disabled="true">Before/after</a>
+                  <a href="#" aria-disabled="true">Repo</a>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="section" id="skills">
+            <div class="section-head reveal">
+              <h2>Skills</h2>
+              <div class="section-sub">Structured like a CV: clear categories and short proofs.</div>
+            </div>
+
+            <div class="skills">
+              <div class="skill-card reveal">
+                <div class="skill-title">Product & UI</div>
+                <div class="skill-body">
+                  Design systems, UX writing, information architecture, prototyping, handoff.
+                </div>
+              </div>
+              <div class="skill-card reveal">
+                <div class="skill-title">Front‑end</div>
+                <div class="skill-body">
+                  TypeScript, React, modern CSS, animation, performance tuning.
+                </div>
+              </div>
+              <div class="skill-card reveal">
+                <div class="skill-title">Workflow</div>
+                <div class="skill-body">
+                  Figma, Git, CI, code review culture, clear documentation.
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="about">
+            <div class="section-head reveal">
+              <h2>About</h2>
+              <div class="section-sub">A short paragraph that sounds human.</div>
+            </div>
+
+            <div class="about-card reveal">
+              <p>
+                I like interfaces that read like good print: strong hierarchy, generous spacing, and details that quietly guide the eye.
+                I collaborate closely with engineers and stakeholders, and I’m happiest when the final UI feels inevitable.
+              </p>
+              <div class="about-grid">
+                <div>
+                  <div class="about-k">Location</div>
+                  <div class="about-v">Prague • Remote</div>
+                </div>
+                <div>
+                  <div class="about-k">Availability</div>
+                  <div class="about-v">Now / by agreement</div>
+                </div>
+                <div>
+                  <div class="about-k">Interests</div>
+                  <div class="about-v">Typography • Motion • Systems</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="contact">
+            <div class="section-head reveal">
+              <h2>Contact</h2>
+              <div class="section-sub">Fast ways to reach you.</div>
+            </div>
+
+            <div class="contact-card reveal">
+              <div class="contact-row">
+                <div class="contact-label">Email</div>
+                <div class="contact-value"><a href="mailto:hello@yourdomain.com">hello@yourdomain.com</a></div>
+              </div>
+              <div class="contact-row">
+                <div class="contact-label">LinkedIn</div>
+                <div class="contact-value"><a href="#" aria-disabled="true">linkedin.com/in/your-handle</a></div>
+              </div>
+              <div class="contact-row">
+                <div class="contact-label">GitHub</div>
+                <div class="contact-value"><a href="#" aria-disabled="true">github.com/your-handle</a></div>
+              </div>
+
+              <div class="contact-foot">
+                <span class="mini">Tip: Put a real resume PDF into <code>/public/resume.pdf</code> and link it here.</span>
+                <a class="btn primary small" href="/resume.pdf" aria-disabled="true">Download CV</a>
+              </div>
+            </div>
+          </section>
+
+          <footer class="footer">
+            <div class="footer-left">
+              <span>© <span id="year"></span> Petr Hanák</span>
+              <span class="sep">•</span>
+              <a href="#top">Back to top</a>
+            </div>
+            <div class="footer-right">
+              <span class="mini">Built with Vite • Vanilla TS</span>
+            </div>
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
