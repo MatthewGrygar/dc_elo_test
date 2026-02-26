@@ -1,271 +1,249 @@
 <!doctype html>
 <html lang="cs">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Petr Hanák — Personal Page</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Osobní stránka — Matthew Grygar" />
+  <title>Matthew Grygar</title>
 
-    <!-- Typography similar to the reference animation -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600,700,800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <meta name="description" content="Personal page / portfolio for recruiters." />
-  </head>
-  <body>
-    <div id="app">
-      <div class="wrap">
-        <header class="topbar">
-          <div class="brand">
-            <div class="mark">Petr Hanák</div>
-            <div class="tag">Product / Design / Front‑end</div>
+  <link rel="icon" type="image/png" href="assets/matthew-avatar.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <a class="brand" href="#top" aria-label="Domů">
+        <span class="brand__mark">MG</span>
+        <span class="brand__text">Matthew Grygar</span>
+      </a>
+      <nav class="nav">
+        <a href="#about">O mně</a>
+        <a href="#experience">Pozice</a>
+        <a href="#projects">Projekty</a>
+        <a href="#contact" class="nav__cta">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">PERSONAL PAGE · 2026</p>
+          <h1 class="display">
+            Matthew<br />
+            <span class="display__accent">Grygar</span>
+          </h1>
+          <p class="lead">
+            Placeholder tagline: stavím elegantní produkty, které jsou jednoduché na používání,
+            rychlé a udržitelné.
+          </p>
+          <div class="hero__meta">
+            <div class="pill">📍 Praha / Remote</div>
+            <div class="pill">💼 Product · Engineering</div>
+            <div class="pill">✦ Available for collaboration</div>
           </div>
 
-          <nav class="nav">
-            <a href="#work"><strong>Work</strong></a>
-            <a href="#skills">Skills</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
-          </nav>
-        </header>
+          <div class="hero__actions">
+            <a class="btn" href="#projects">Prohlédnout práci</a>
+            <a class="btn btn--ghost" href="#contact">Napsat mi</a>
+          </div>
 
-        <main>
-          <section class="hero" id="top">
-            <div class="hero-left">
-              <p class="kicker reveal">Available • Prague / Remote</p>
+          <div class="divider" aria-hidden="true"></div>
 
-              <h1 class="headline reveal">
-                I build calm, readable interfaces
-                <span class="underline">with taste and structure</span>.
-              </h1>
-
-              <p class="lede reveal">
-                Personal page for recruiters: selected work, approach, and a quick way to reach me.
-                Inspired by editorial CV motion graphics — paper, ink, whitespace and hairlines.
-              </p>
-
-              <div class="cta-row reveal">
-                <a class="btn primary" href="#contact">Contact me</a>
-                <a class="btn ghost" href="#work">See work</a>
-              </div>
-
-              <div class="meta-grid reveal">
-                <div class="meta">
-                  <div class="meta-label">Focus</div>
-                  <div class="meta-value">Product UI • Web • Motion</div>
-                </div>
-                <div class="meta">
-                  <div class="meta-label">Stack</div>
-                  <div class="meta-value">TypeScript • React • CSS</div>
-                </div>
-                <div class="meta">
-                  <div class="meta-label">Languages</div>
-                  <div class="meta-value">CZ / EN</div>
-                </div>
-              </div>
+          <div class="quick">
+            <div class="quick__item">
+              <span class="quick__k">Zaměření</span>
+              <span class="quick__v">Web apps · UX · Automatizace</span>
             </div>
-
-            <aside class="hero-right reveal">
-              <div class="card portrait-card" data-parallax>
-                <div class="card-title">
-                  <span>Profile</span>
-                  <span class="hairline"></span>
-                </div>
-
-                <div class="portrait">
-                  <!-- Replace this with your own photo: /public/profile.jpg -->
-                  <img src="/profile.jpg" alt="Petr portrait" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
-                  <div class="portrait-fallback" style="display:none;">
-                    <div>
-                      <div class="fallback-big">Add a photo</div>
-                      <div class="fallback-small">Put <code>profile.jpg</code> into <code>/public</code></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="card-foot">
-                  <div class="pill">Open to offers</div>
-                  <div class="pill">Portfolio-ready</div>
-                </div>
-              </div>
-
-              <div class="card stats-card reveal">
-                <div class="card-title">
-                  <span>Highlights</span>
-                  <span class="hairline"></span>
-                </div>
-                <ul class="bullets">
-                  <li><span class="dot"></span>Clean UI systems & design tokens</li>
-                  <li><span class="dot"></span>Motion that supports reading</li>
-                  <li><span class="dot"></span>Fast, accessible front‑ends</li>
-                </ul>
-              </div>
-            </aside>
-          </section>
-
-          <section class="section" id="work">
-            <div class="section-head reveal">
-              <h2>Selected work</h2>
-              <div class="section-sub">A few projects in the same structured, “editorial” layout.</div>
+            <div class="quick__item">
+              <span class="quick__k">Stack</span>
+              <span class="quick__v">TS/JS · Node · React · Cloud</span>
             </div>
-
-            <div class="work-grid">
-              <article class="work-card reveal">
-                <div class="work-top">
-                  <div class="work-title">Project A</div>
-                  <div class="work-year">2025</div>
-                </div>
-                <div class="work-desc">
-                  Short, concrete description of impact: improved conversion, simplified onboarding, redesigned dashboard.
-                </div>
-                <div class="work-tags">
-                  <span class="chip">Product UI</span>
-                  <span class="chip">Design system</span>
-                  <span class="chip">React</span>
-                </div>
-                <div class="work-links">
-                  <a href="#" aria-disabled="true">Case study</a>
-                  <a href="#" aria-disabled="true">Live</a>
-                </div>
-              </article>
-
-              <article class="work-card reveal">
-                <div class="work-top">
-                  <div class="work-title">Project B</div>
-                  <div class="work-year">2024</div>
-                </div>
-                <div class="work-desc">
-                  Motion + content design: made complex information readable with typography and paced animation.
-                </div>
-                <div class="work-tags">
-                  <span class="chip">Motion</span>
-                  <span class="chip">Content</span>
-                  <span class="chip">Web</span>
-                </div>
-                <div class="work-links">
-                  <a href="#" aria-disabled="true">Video</a>
-                  <a href="#" aria-disabled="true">Notes</a>
-                </div>
-              </article>
-
-              <article class="work-card reveal">
-                <div class="work-top">
-                  <div class="work-title">Project C</div>
-                  <div class="work-year">2023</div>
-                </div>
-                <div class="work-desc">
-                  Accessibility-first rebuild: reduced bundle size, improved performance and keyboard navigation.
-                </div>
-                <div class="work-tags">
-                  <span class="chip">A11y</span>
-                  <span class="chip">Performance</span>
-                  <span class="chip">TypeScript</span>
-                </div>
-                <div class="work-links">
-                  <a href="#" aria-disabled="true">Before/after</a>
-                  <a href="#" aria-disabled="true">Repo</a>
-                </div>
-              </article>
+            <div class="quick__item">
+              <span class="quick__k">Kontakt</span>
+              <span class="quick__v">matthew@placeholder.cz</span>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <section class="section" id="skills">
-            <div class="section-head reveal">
-              <h2>Skills</h2>
-              <div class="section-sub">Structured like a CV: clear categories and short proofs.</div>
-            </div>
-
-            <div class="skills">
-              <div class="skill-card reveal">
-                <div class="skill-title">Product & UI</div>
-                <div class="skill-body">
-                  Design systems, UX writing, information architecture, prototyping, handoff.
-                </div>
-              </div>
-              <div class="skill-card reveal">
-                <div class="skill-title">Front‑end</div>
-                <div class="skill-body">
-                  TypeScript, React, modern CSS, animation, performance tuning.
-                </div>
-              </div>
-              <div class="skill-card reveal">
-                <div class="skill-title">Workflow</div>
-                <div class="skill-body">
-                  Figma, Git, CI, code review culture, clear documentation.
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="section" id="about">
-            <div class="section-head reveal">
-              <h2>About</h2>
-              <div class="section-sub">A short paragraph that sounds human.</div>
-            </div>
-
-            <div class="about-card reveal">
-              <p>
-                I like interfaces that read like good print: strong hierarchy, generous spacing, and details that quietly guide the eye.
-                I collaborate closely with engineers and stakeholders, and I’m happiest when the final UI feels inevitable.
-              </p>
-              <div class="about-grid">
-                <div>
-                  <div class="about-k">Location</div>
-                  <div class="about-v">Prague • Remote</div>
-                </div>
-                <div>
-                  <div class="about-k">Availability</div>
-                  <div class="about-v">Now / by agreement</div>
-                </div>
-                <div>
-                  <div class="about-k">Interests</div>
-                  <div class="about-v">Typography • Motion • Systems</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="section" id="contact">
-            <div class="section-head reveal">
-              <h2>Contact</h2>
-              <div class="section-sub">Fast ways to reach you.</div>
-            </div>
-
-            <div class="contact-card reveal">
-              <div class="contact-row">
-                <div class="contact-label">Email</div>
-                <div class="contact-value"><a href="mailto:hello@yourdomain.com">hello@yourdomain.com</a></div>
-              </div>
-              <div class="contact-row">
-                <div class="contact-label">LinkedIn</div>
-                <div class="contact-value"><a href="#" aria-disabled="true">linkedin.com/in/your-handle</a></div>
-              </div>
-              <div class="contact-row">
-                <div class="contact-label">GitHub</div>
-                <div class="contact-value"><a href="#" aria-disabled="true">github.com/your-handle</a></div>
-              </div>
-
-              <div class="contact-foot">
-                <span class="mini">Tip: Put a real resume PDF into <code>/public/resume.pdf</code> and link it here.</span>
-                <a class="btn primary small" href="/resume.pdf" aria-disabled="true">Download CV</a>
-              </div>
-            </div>
-          </section>
-
-          <footer class="footer">
-            <div class="footer-left">
-              <span>© <span id="year"></span> Petr Hanák</span>
-              <span class="sep">•</span>
-              <a href="#top">Back to top</a>
-            </div>
-            <div class="footer-right">
-              <span class="mini">Built with Vite • Vanilla TS</span>
-            </div>
-          </footer>
-        </main>
+        <div class="hero__visual" aria-label="Portrét">
+          <div class="portrait">
+            <div class="portrait__halo" aria-hidden="true"></div>
+            <div class="portrait__ring" aria-hidden="true"></div>
+            <img class="portrait__img" src="assets/matthew-hero.png" alt="Matthew Grygar" />
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <section id="about" class="section reveal">
+      <div class="container">
+        <div class="section__header">
+          <h2>O mně</h2>
+          <p>Krátký popis (placeholder) — uprav si později podle sebe.</p>
+        </div>
+
+        <div class="card-grid">
+          <article class="card">
+            <h3>Bio</h3>
+            <p>
+              Jsem Matthew Grygar a baví mě dělat věci, které působí čistě, profesionálně a mají smysl.
+              V posledních letech se soustředím na propojení produktu a vývoje.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Co umím dodat</h3>
+            <ul class="list">
+              <li>Návrh a realizace webových aplikací end‑to‑end</li>
+              <li>UX/UI, design systém, detailní polishing</li>
+              <li>Automatizace procesů, integrace služeb</li>
+              <li>Analytika, měření, iterace na základě dat</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>Aktuálně</h3>
+            <ul class="list">
+              <li>Placeholder: pracuji na osobní značce a portfoliu</li>
+              <li>Placeholder: otevřený spolupracím a novým projektům</li>
+              <li>Placeholder: učím se a zlepšuji každý den</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="experience" class="section reveal">
+      <div class="container">
+        <div class="section__header">
+          <h2>Pozice</h2>
+          <p>Ukázkový timeline (placeholder). Nahraď konkrétními rolemi.</p>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline__item">
+            <div class="timeline__meta">
+              <span class="timeline__time">2025 — současnost</span>
+              <span class="timeline__tag">FULL‑TIME</span>
+            </div>
+            <h3 class="timeline__title">Product / Engineering — Placeholder Company</h3>
+            <p class="timeline__desc">
+              Vedení vývoje a doručování funkcí, které mají dopad. Nastavení procesů, komunikace napříč týmy,
+              dohled nad kvalitou a výkonem.
+            </p>
+          </div>
+
+          <div class="timeline__item">
+            <div class="timeline__meta">
+              <span class="timeline__time">2023 — 2025</span>
+              <span class="timeline__tag">CONTRACT</span>
+            </div>
+            <h3 class="timeline__title">Frontend / Full‑stack — Multiple Clients</h3>
+            <p class="timeline__desc">
+              Stavba webových aplikací, integrace API, dashboardy, landing pages. Důraz na UX, rychlost a stabilitu.
+            </p>
+          </div>
+
+          <div class="timeline__item">
+            <div class="timeline__meta">
+              <span class="timeline__time">2021 — 2023</span>
+              <span class="timeline__tag">START</span>
+            </div>
+            <h3 class="timeline__title">Junior Developer — Placeholder</h3>
+            <p class="timeline__desc">
+              Základy profesionálního vývoje: code review, testy, deploymenty a týmová spolupráce.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="section reveal">
+      <div class="container">
+        <div class="section__header">
+          <h2>Projekty</h2>
+          <p>Ukázkové karty (placeholder) — později sem dej konkrétní odkazy a výsledky.</p>
+        </div>
+
+        <div class="projects">
+          <article class="project">
+            <div class="project__top">
+              <h3>Elegantní dashboard</h3>
+              <span class="chip">Web app</span>
+            </div>
+            <p>
+              Placeholder: přehled metrik a reportů. Rychlé načítání, přístupnost, čisté UI.
+            </p>
+            <div class="project__bottom">
+              <span class="muted">Stack: React · TS · API</span>
+              <a class="link" href="#">Detail ↗</a>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project__top">
+              <h3>Automatizace workflow</h3>
+              <span class="chip">Automation</span>
+            </div>
+            <p>
+              Placeholder: propojení služeb, notifikace, synchronizace dat, úspora času.
+            </p>
+            <div class="project__bottom">
+              <span class="muted">Stack: Node · Webhooks</span>
+              <a class="link" href="#">Detail ↗</a>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project__top">
+              <h3>Osobní design systém</h3>
+              <span class="chip">Design</span>
+            </div>
+            <p>
+              Placeholder: komponenty, typografie, spacing, ikonografie — jednotný styl napříč projekty.
+            </p>
+            <div class="project__bottom">
+              <span class="muted">Stack: Figma · CSS</span>
+              <a class="link" href="#">Detail ↗</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section section--tight reveal">
+      <div class="container">
+        <div class="cta">
+          <div class="cta__copy">
+            <h2>Pojďme se spojit</h2>
+            <p>
+              Napiš mi pár vět o tom, co řešíš — ozvu se co nejdřív. (E‑mail je placeholder.)
+            </p>
+          </div>
+          <div class="cta__actions">
+            <a class="btn" href="mailto:matthew@placeholder.cz">matthew@placeholder.cz</a>
+            <a class="btn btn--ghost" href="#">LinkedIn ↗</a>
+            <a class="btn btn--ghost" href="#">GitHub ↗</a>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <span>© <span id="year"></span> Matthew Grygar</span>
+          <span class="footer__sep">•</span>
+          <span>Built for GitHub Pages</span>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <script src="main.js"></script>
+</body>
 </html>

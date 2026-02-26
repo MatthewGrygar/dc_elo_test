@@ -1,26 +1,39 @@
-# Petr Personal Page (Recruiter-friendly)
+# Matthew Grygar — osobní stránka (GitHub Pages)
 
-Minimal repo inspired by editorial CV motion graphics: paper background, ink typography, hairlines, calm reveal animations.
+Minimalistická, elegantní osobní stránka inspirovaná dodaným stylem (béžové pozadí, výrazná serif typografie, čisté rozvržení) + jemné animace.
 
-## Run locally
+## Struktura
+- `index.html` – obsah stránky
+- `styles.css` – styling
+- `main.js` – malé animace/reveal + smooth scroll
+- `assets/` – fotka a drobná textura
+
+## Jak spustit lokálně
+Nejjednodušší je použít libovolný statický server:
+
 ```bash
-npm install
-npm run dev
+# varianta 1 (Python)
+python3 -m http.server 5173
+
+# varianta 2 (Node)
+npx serve .
 ```
 
-## Build
-```bash
-npm run build
-npm run preview
-```
+Pak otevři `http://localhost:5173`.
 
-## Customize
-- Replace **/public/profile.jpg** with your portrait (recommended: square-ish, >= 1200px).
-- Put your CV into **/public/resume.pdf** and enable the “Download CV” button (remove `aria-disabled="true"` in `index.html`).
-- Edit content directly in `index.html`.
-- Styling is in `src/styles.css`.
-- Animations/behavior in `src/main.ts`.
+## Nasazení na GitHub Pages
+1. Vytvoř nový repo (např. `matthew-grygar`).
+2. Nahraj obsah tohoto projektu do rootu repozitáře.
+3. Na GitHubu: **Settings → Pages**
+   - **Build and deployment**: *Deploy from a branch*
+   - Branch: `main` (nebo `master`) / folder: `/ (root)`
+4. Hotovo – GitHub Pages ti vygeneruje URL.
 
-## Deploy
-Any static hosting works:
-- Vercel / Netlify / GitHub Pages (build output is `dist/`).
+## Co upravit jako první
+- Jméno a texty: `index.html` (sekce **O mně**, **Pozice**, **Projekty**, **Kontakt**)
+- Kontakty: e‑mail, LinkedIn, GitHub odkazy
+- Případně barvy: `styles.css` (CSS proměnné v `:root`)
+
+---
+
+Pozn.: Fotka je už připravená jako PNG s průhledným pozadím (`assets/matthew-hero.png`).
