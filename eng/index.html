@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DC ELO žebříček</title>
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="headerLeft">
+      <div class="logo">
+        <img id="logoImg" src="../assets/images/logos/logo.png" alt="Logo" />
+      </div>
+      <div>
+        <h1 data-i18n="site_title">DC ELO žebříček</h1>
+        <div class="subtitle"><span data-i18n="by_word">by</span> <a href="https://grailseries.cz/" target="_blank" rel="noopener noreferrer" class="grail-link">GRAIL SERIES</a></div>
+        <div class="credit muted" data-i18n="project_desc">
+          Systém ELO pro spravedlivé a transparentní hodnocení hráčů Duel Commanderu.
+        </div>
+        <div class="credit muted">
+          <span data-i18n="anon_line">Nechcete mít na webu uvedené své jméno? </span><a class="inlineLink" id="anonLink" href="#" data-i18n="anon_link">Klikněte sem</a>.
+        </div>
+      </div>
+    </div>
+
+    <div class="headerRight">
+      
+      <div class="headerRightTop">
+        <button class="btnSupport" id="supportBtn" type="button" data-i18n-aria="support" data-i18n-title="support" aria-label="Podpořit" title="Podpořit">
+          <span class="btnSupportIcon" aria-hidden="true">★</span>
+          <span class="btnSupportText" data-i18n="support">Podpořit</span>
+        </button>
+
+        <div class="langWrap">
+          <button class="btnIcon btnLang" id="langBtn" type="button" aria-label="Language" title="Language">🇨🇿</button>
+          <div class="langPanel" id="langPanel" aria-hidden="true"></div>
+        </div>
+
+        <button class="btnIcon" id="menuBtn" type="button" data-i18n-aria="menu" data-i18n-title="menu" aria-label="Menu" title="Menu">
+          ☰
+        </button>
+
+        <div class="menuPanel" id="menuPanel" aria-hidden="true">
+          <!-- <button class="menuItem" id="menuUpload" type="button">NAHRÁNÍ DAT</button> -->
+          <button class="menuItem" id="menuNews" type="button" data-i18n="menu_news">AKTUALITY</button>
+          <button class="menuItem" id="menuManagement" type="button" data-i18n="menu_management">VEDENÍ</button>
+          <button class="menuItem" id="menuArticles" type="button" data-i18n="menu_articles">ČLÁNKY</button>
+          <!-- <button class="menuItem" id="menuTitles" type="button">TITULY</button>
+          <button class="menuItem" id="menuContact" type="button">KONTAKT</button>
+          <button class="menuItem" id="menuRecords" type="button">REKORDY</button> -->
+
+          <div class="menuDivider"></div>
+
+          <div class="menuToggleRow">
+            <div class="menuToggleLabel" data-i18n="theme_mode">Režim</div>
+            <div class="themeToggle" id="themeToggle" title="Přepnout režim">
+              <span class="dot"></span>
+              <span id="themeLabel" data-i18n="theme_light">☀️ Světlý</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="heroCarousel" aria-label="Carousel">
+    <div class="carouselTrack" id="carouselTrack">
+      <img class="carouselImg isActive" src="../assets/images/slider/carousel_eng_1.png" alt="Carousel 1" loading="lazy" />
+      <img class="carouselImg" src="../assets/images/slider/carousel_eng_2.png" alt="Carousel 2" loading="lazy" />
+      <img class="carouselImg" src="../assets/images/slider/carousel_eng_3.png" alt="Carousel 3" loading="lazy" />
+    </div>
+    <button class="carouselZone carouselZoneLeft" id="carouselPrev" type="button" data-i18n-aria="carousel_prev" aria-label="Předchozí slide"></button>
+    <button class="carouselZone carouselZoneRight" id="carouselNext" type="button" data-i18n-aria="carousel_next" aria-label="Další slide"></button>
+    <button class="carouselZone carouselZoneCenter" id="carouselGo" type="button" data-i18n-aria="carousel_open" aria-label="Otevřít odkaz ze slideru"></button>
+    <div class="carouselDots" id="carouselDots" aria-hidden="true"></div>
+  </div>
+
+  <div class="infoBar" aria-label="Souhrn">
+    <div class="infoItem"><b data-i18n="info_median_elo">Medián ELO</b><span id="avgElo">—</span></div>
+    <div class="infoItem"><b data-i18n="info_total_games">celkový počet her</b><span id="totalGames">—</span></div>
+    <div class="infoItem"><b data-i18n="info_unique_players">unikátní hráči</b><span id="uniquePlayers">—</span></div>
+    <div class="infoItem"><b data-i18n="info_last_data">poslední data</b><span id="lastTournament">—</span></div>
+  </div>
+</div>
+
+<main>
+  <div class="card">
+    <div class="toolbar">
+      <div class="toolbarLeft">
+        <input id="search" type="search" autocomplete="off" data-i18n-placeholder="search_placeholder" placeholder="Hledat hráče…" />
+        <div class="ratedToggle" title="Zobrazí data z listu Tournament Elo">
+          <span class="ratedToggleText">
+            <span class="labelFull" data-i18n="rated_only">Pouze DCPR</span>
+            <span class="labelShort" data-i18n="rated_only">Pouze DCPR</span>
+          </span>
+
+          <label class="switch" data-i18n-aria="rated_only_aria" aria-label="Pouze DCPR">
+            <input id="ratedOnly" type="checkbox" />
+            <span class="slider" aria-hidden="true"></span>
+          </label>
+      </div>
+    </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="rank colRank" data-i18n="th_rank">Pořadí</th>
+            <th class="playerCol" data-i18n="th_player">Player</th>
+            <th class="num ratingCol" data-i18n="th_rating">Rating</th><th class="num colGames" data-i18n="th_games">Games</th>
+            <th class="num colWin" data-i18n="th_win">Win</th>
+            <th class="num colLoss" data-i18n="th_loss">Loss</th>
+            <th class="num colDraw" data-i18n="th_draw">Draw</th>
+            <th class="num colPeak" data-i18n="th_peak">PEAK</th>
+            
+            <th class="num colWinrate" data-i18n="th_winrate">Winrate</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <footer>
+      <span data-i18n="tip_click_player">Tip: Klikni na jméno hráče pro detail.</span>
+      <span><span data-i18n="version">verze</span>: 1.2.0</span>
+    </footer>
+  </div>
+</main>
+
+<script type="module" src="../modal.js"></script>
+<script type="module">
+  // NOTE: i18n lives in the repository root, language pages are in /cz, /eng, /fr
+  import { t } from '../i18n.js';
+
+  const isMobileModal = () => window.matchMedia('(max-width: 760px)').matches;
+
+  // Carousel logic lives in ../slider/carousel.js
+
+  const link = document.getElementById('anonLink');
+  if (link) {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const mobile = isMobileModal();
+
+      const bodyHtml = `
+        <div class="anonModal">
+          <h1 class="anonH1">${t("anon_modal_h1")}</h1>
+          <p>${t("anon_modal_p1")}</p>
+          <p>${t("anon_modal_p2")}</p>
+          <p>${t("anon_modal_p3")}</p>
+          <div class="anonActions">
+            <a class="btnPrimary btnAnon" href="https://docs.google.com/forms/d/e/1FAIpQLSfwFbnvW9SnOvGZ3KGhk4mHx61GIrWdQBSIp8vGovC1xr9wDg/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">${t("anon_modal_btn")}</a>
+          </div>
+        </div>
+      `;
+// Modal header
+      if (window.openModal) {
+        window.openModal({ title: t("anon_modal_title"), subtitle: '', html: bodyHtml, fullscreen: mobile });
+      }
+
+      // Visual tuning for the anonymizace modal only (kept local to the homepage)
+      const overlay = document.getElementById('modalOverlay');
+      if (overlay && !mobile) {
+        overlay.classList.add('isAnon');
+
+        const cleanup = () => overlay.classList.remove('isAnon');
+
+        // Close button
+        const closeBtn = overlay.querySelector('#closeModalBtn');
+        if (closeBtn) closeBtn.addEventListener('click', cleanup, { once: true });
+
+        // Click outside
+        overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cleanup(); }, { once: true });
+
+        // ESC
+        const escHandler = (ev) => {
+          if (ev.key === 'Escape') {
+            cleanup();
+            window.removeEventListener('keydown', escHandler);
+          }
+        };
+        window.addEventListener('keydown', escHandler);
+      }
+    });
+  }
+</script>
+<script type="module" src="../slider/carousel.js"></script>
+<script type="module" src="../aktuality.js"></script>
+<script type="module" src="../common.js"></script>
+<script type="module" src="../app.js"></script>
+</body>
+</html>

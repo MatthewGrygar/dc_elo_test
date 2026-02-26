@@ -12,13 +12,13 @@
     <div class="headerLeft">
       <div class="logo">
         <a href="index.html" class="logoLink" aria-label="Domů">
-          <img id="logoImg" src="logo.png" alt="Logo" />
+          <img id="logoImg" src="assets/images/logos/logo.png" alt="Logo" />
         </a>
       </div>
       <div class="headerText">
-        <h1>REKORDY</h1>
-        <div class="sub">BY GRAIL SERIES</div>
-        <div class="desc muted">Rekordy a statistiky (zatím placeholder).</div>
+        <h1 data-i18n="records_title">REKORDY</h1>
+        <div class="sub" data-i18n="by_grail">BY GRAIL SERIES</div>
+        <div class="desc muted" data-i18n="records_desc">Rekordy a statistiky (zatím placeholder).</div>
       </div>
     </div>
 
@@ -26,24 +26,34 @@
       <div class="headerRightTop">
         <div class="badge">DC ELO</div>
 
-        <button class="btnIcon" id="menuBtn" type="button" aria-label="Menu" title="Menu">
+        <button class="btnSupport" id="supportBtn" type="button" data-i18n-aria="support" data-i18n-title="support" aria-label="Podpořit" title="Podpořit">
+          <span class="btnSupportIcon" aria-hidden="true">★</span>
+          <span class="btnSupportText" data-i18n="support">Podpořit</span>
+        </button>
+
+        <div class="langWrap">
+          <button class="btnIcon btnLang" id="langBtn" type="button" aria-label="Language" title="Language">🇨🇿</button>
+          <div class="langPanel" id="langPanel" aria-hidden="true"></div>
+        </div>
+
+        <button class="btnIcon" id="menuBtn" type="button" data-i18n-aria="menu" data-i18n-title="menu" aria-label="Menu" title="Menu">
           ☰
         </button>
 
         <div class="menuPanel" id="menuPanel" aria-hidden="true">
-          <button class="menuItem" id="requestUploadBtn" type="button">NAHRÁNÍ DAT</button>
-          <button class="menuItem" id="newsBtn" type="button">AKTUALITY</button>
-          <a class="menuItem" href="tituly.html">TITULY</a>
-          <a class="menuItem" href="kontakt.html">KONTAKT</a>
-          <a class="menuItem" href="rekordy.html">REKORDY</a>
+          <button class="menuItem" id="requestUploadBtn" type="button" data-i18n="menu_upload">NAHRÁNÍ DAT</button>
+          <button class="menuItem" id="newsBtn" type="button" data-i18n="menu_news">AKTUALITY</button>
+          <a class="menuItem" href="tituly.html" data-i18n="menu_titles">TITULY</a>
+          <a class="menuItem" href="kontakt.html" data-i18n="menu_contact">KONTAKT</a>
+          <a class="menuItem" href="rekordy.html" data-i18n="menu_records">REKORDY</a>
 
           <div class="menuDivider"></div>
 
           <div class="menuToggleRow">
-            <div class="menuToggleLabel">Režim</div>
+            <div class="menuToggleLabel" data-i18n="theme_mode">Režim</div>
             <div class="themeToggle" id="themeToggle" title="Přepnout režim">
               <span class="dot"></span>
-              <span id="themeLabel">☀️ Světlý</span>
+              <span id="themeLabel" data-i18n="theme_light">☀️ Světlý</span>
             </div>
           </div>
         </div>
@@ -56,18 +66,16 @@
   <div class="card">
     <div class="cardHead">
       <div class="chip">Stránka</div>
-      <button class="btnSecondary" type="button" onclick="location.href='index.html'">Zpět na titulní</button>
+      <button class="btnSecondary" type="button" onclick="location.href='index.html'" data-i18n="back_home">Zpět na titulní</button>
     </div>
 
     <div class="pageBody">
-      <h2>REKORDY</h2>
-      <p class="muted">Tady budou rekordy (nejvyšší ELO, nejdelší streaky, nejlepší winrate atd.). Zatím jen zástupný obsah.</p>
+      <h2 data-i18n="records_title">REKORDY</h2>
+      <p class="muted" data-i18n="records_desc">Rekordy a statistiky (zatím placeholder).</p>
     </div>
   </div>
 </div>
 
-<script src="modal.js"></script>
-<script src="common.js"></script>
-<script src="aktuality.js"></script>
+<script type="module" src="common.js"></script>
 </body>
 </html>

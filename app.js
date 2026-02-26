@@ -1,31 +1,47 @@
 import { openModal, setModalActions, setModalContent, setModalHeaderMeta, closeModal, setModalOnCloseRequest } from "./modal.js";
 import { openOpponentsModal } from "./opponents.js";
+import { t, onLangChange } from "./i18n.js";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 const ELO_SHEET_NAME = "Elo standings";
+const TOURNAMENT_ELO_SHEET_NAME = "Tournament_Elo";
 const DATA_SHEET_NAME = "Data";
 const PLAYER_CARDS_SHEET_NAME = "Player cards (CSV)";
+const PLAYER_CARDS_TOURNAMENT_SHEET_NAME = "Player cards (CSV) - Tournament";
 const PLAYER_SUMMARY_SHEET_NAME = "Player summary";
+const PLAYER_SUMMARY_TOURNAMENT_SHEET_NAME = "Player summary - Tournament";
 
 const ELO_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(ELO_SHEET_NAME)}`;
+const TOURNAMENT_ELO_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(TOURNAMENT_ELO_SHEET_NAME)}`;
 const DATA_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(DATA_SHEET_NAME)}`;
 const PLAYER_CARDS_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_CARDS_SHEET_NAME)}`;
+const PLAYER_CARDS_TOURNAMENT_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_CARDS_TOURNAMENT_SHEET_NAME)}`;
 const PLAYER_SUMMARY_CSV_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_SUMMARY_SHEET_NAME)}`;
+const PLAYER_SUMMARY_TOURNAMENT_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(PLAYER_SUMMARY_TOURNAMENT_SHEET_NAME)}`;
 
-const statusEl = document.getElementById("status");
+function buildCsvUrlForSheet(sheetName){
+  // Build a fresh URL for the requested sheet.
+  // This prevents any chance of accidentally reusing the wrong sheet URL.
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
 const tbody = document.getElementById("tbody");
 const searchEl = document.getElementById("search");
 const ratedOnlyEl = document.getElementById("ratedOnly");
 const refreshBtn = document.getElementById("refresh");
-const lastDataBadge = document.getElementById("lastDataBadge");
+const setRefreshDisabled = (v) => { if (refreshBtn) refreshBtn.disabled = !!v; };
 
 const avgEloEl = document.getElementById("avgElo");
 const avgWinrateEl = document.getElementById("avgWinrate");
 const totalGamesEl = document.getElementById("totalGames");
+const uniquePlayersEl = document.getElementById("uniquePlayers");
 const lastTournamentEl = document.getElementById("lastTournament");
 const requestUploadBtn = document.getElementById("requestUploadBtn");
 const newsBtn = document.getElementById("newsBtn");
@@ -37,18 +53,156 @@ const themeLabel = document.getElementById("themeLabel");
 
 let allRows = [];
 let lastTournamentText = "";
-let playerCardsCache = null;
-let playerSummaryCache = null;
+let playerCardsCache = { elo: null, dcpr: null };
+let playerSummaryCache = { elo: null, dcpr: null };
+
+// Prevent race conditions when switching sources (e.g., toggling "Pouze DCPR").
+// Only the latest loadStandings() call is allowed to update UI/state.
+let standingsLoadSeq = 0;
+
+// Standings caches (prefetched on page load to avoid table "jump" when switching modes)
+let standingsCache = {
+  vtMap: null,
+  eloRows: null,   // from "Elo standings"
+  dcprRows: null   // from "Tournament Elo"
+};
+
+function getCachedRows(dcprMode){
+  return dcprMode ? standingsCache.dcprRows : standingsCache.eloRows;
+}
+
+// Ensure every standings row has a stable slug and the global slugToPlayer map is up to date.
+function ensureSlugsAndRouting(){
+  const elo = Array.isArray(standingsCache.eloRows) ? standingsCache.eloRows : [];
+  const dcpr = Array.isArray(standingsCache.dcprRows) ? standingsCache.dcprRows : [];
+
+  // Prefer Elo standings order as the canonical ordering for slug disambiguation.
+  // This keeps deep links stable when switching between ELO and DCPR modes.
+  const canonicalNames = elo.length
+    ? elo.map(r => r.player)
+    : dcpr.map(r => r.player);
+
+  const slugs = buildDeterministicSlugs(canonicalNames);
+  const nameToSlug = new Map();
+  canonicalNames.forEach((name, i) => {
+    nameToSlug.set(normalizeKey(name), slugs[i]);
+  });
+
+  function apply(rows){
+    for (const r of rows){
+      const k = normalizeKey(r.player);
+      if (!r.slug){
+        const s = nameToSlug.get(k);
+        if (s) r.slug = s;
+      }
+      // In case a player appears only in one dataset, generate + memoize.
+      if (!r.slug){
+        const s = baseSlugFromName(r.player);
+        let final = s;
+        let n = 2;
+        while ([...nameToSlug.values()].includes(final)){
+          final = `${s}-${n++}`;
+        }
+        r.slug = final;
+        nameToSlug.set(k, final);
+      }
+    }
+  }
+
+  apply(elo);
+  apply(dcpr);
+
+  // Keep routing map in sync with whatever is currently rendered
+  slugToPlayer = new Map((allRows || []).map(p => [p.slug, p]));
+}
+
+function switchStandingsMode(dcprMode){
+  const cached = getCachedRows(!!dcprMode);
+  if (cached && Array.isArray(cached) && cached.length){
+    allRows = cached;
+    ensureSlugsAndRouting();
+    updateInfoBar();
+    renderStandings(allRows);
+    // If there is a deep link pending, apply it now that slug map is ready.
+    if (pendingSlugToOpen) applyRoute();
+    return;
+  }
+  // Fallback (should be rare): fetch if cache missing
+  loadStandings(!!dcprMode);
+}
+
+
+
+// Rating Class (VT1–VT4) is now ALWAYS sourced from: Tournament Elo → column I.
+let vtByPlayerCache = null;
+
+async function loadVtByPlayer(){
+  if (vtByPlayerCache) return vtByPlayerCache;
+  try{
+    const u = new URL(buildCsvUrlForSheet(TOURNAMENT_ELO_SHEET_NAME));
+    u.searchParams.set("_", Date.now().toString());
+    console.log("[ELO] Fetch Tournament Elo (VT map) CSV:", u.toString());
+    const { res, text } = await fetchUtf8Text(u.toString());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
+
+    const rows = parseCSV(text);
+    // Tournament Elo mapping:
+    // PLAYER -> column A (0)
+    // Rating Class -> column I (8)
+    const map = new Map();
+    for (let i = 1; i < rows.length; i++){
+      const player = (rows[i][0] ?? "").toString().trim();
+      if (!player) continue;
+      const vt = normalizeVT(rows[i][8]);
+      map.set(normalizeKey(player), vt);
+    }
+    vtByPlayerCache = map;
+    return map;
+  } catch (e){
+    console.warn("[ELO] Failed to load Tournament Elo VT map:", e);
+    vtByPlayerCache = new Map();
+    return vtByPlayerCache;
+  }
+}
 
 // -------------------- SLUG ROUTING + VT --------------------
 let slugToPlayer = new Map();
 let pendingSlugToOpen = null;
 
-function getBasePath(){
-  // GitHub Pages project site base: /<repo>/
+function isLangSeg(seg){
+  return (seg === "eng" || seg === "cz" || seg === "fr");
+}
+
+function getRepoBase(){
+  // Works both for:
+  //  - GitHub Pages project site: /<repo>/<lang>/...
+  //  - Root deploy (own domain): /<lang>/...
   const parts = window.location.pathname.split("/").filter(Boolean);
-  // If served from root (local dev), parts[0] may be undefined
-  return parts.length ? `/${parts[0]}/` : "/";
+  if (!parts.length) return "/";
+  return isLangSeg(parts[0]) ? "/" : `/${parts[0]}/`;
+}
+
+function getLangSegment(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  if (!parts.length) return null;
+  // Root deploy: /<lang>/...
+  if (isLangSeg(parts[0])) return parts[0];
+  // Project deploy: /<repo>/<lang>/...
+  const seg = parts[1] || "";
+  return isLangSeg(seg) ? seg : null;
+}
+
+function getBasePath(){
+  // Base for SPA routes inside a language namespace: /<repo>/<lang>/
+  const repoBase = getRepoBase();
+  const langSeg = getLangSegment();
+  return langSeg ? `${repoBase}${langSeg}/` : repoBase;
+}
+
+function getStaticBase(){
+  // Where shared static files live (assets, css, js): /<repo>/
+  return getRepoBase();
 }
 
 function stripDiacritics(s){
@@ -139,7 +293,7 @@ function getSlugFromLocation(){
 
 let __closeModalRaw = closeModal;
 function openPlayerModal(playerObj){
-  openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+  openModal({ title: playerObj.player, subtitle: t("player_detail"), html: `<div class="muted">${t("loading")}</div>` });
   loadPlayerDetail(playerObj);
 }
 
@@ -155,8 +309,17 @@ function normalizeSpaRedirectIfPresent(){
   const params = new URLSearchParams(window.location.search);
   const r = params.get("r") || params.get("redirect");
   if (!r) return;
+
   const base = getBasePath();
-  const clean = r.toString().replace(/^\/+/, "").replace(/\/+$/, "");
+  let clean = r.toString().replace(/^\/+/,"").replace(/\/+$/,"");
+
+  // If redirect contains a language prefix but we're already inside that language namespace,
+  // drop the prefix to avoid /eng/eng/... duplicates.
+  const langSeg = getLangSegment();
+  if (langSeg && (clean === langSeg || clean.startsWith(langSeg + "/"))){
+    clean = clean === langSeg ? "" : clean.slice(langSeg.length + 1);
+  }
+
   history.replaceState(history.state || {}, "", base + clean);
 }
 
@@ -176,10 +339,8 @@ function applyRoute(){
   }
 
   const playerObj = slugToPlayer.get(slug);
-  if (!playerObj){
-    try{ __closeModalRaw?.(); }catch(e){}
-    return;
-  }
+  // If the slug doesn't belong to a player, do nothing here (it can be an article route handled elsewhere).
+  if (!playerObj) return;
 
   openPlayerModal(playerObj);
 }
@@ -279,6 +440,103 @@ function parseCSV(csvText){
   return rows;
 }
 
+
+async function getPlayerStandingFromSheet(sheetName, dcprMode, playerName){
+  const u = new URL(buildCsvUrlForSheet(sheetName));
+  u.searchParams.set("_", Date.now().toString());
+  const { res, text } = await fetchUtf8Text(u.toString());
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
+
+  const rows = parseCSV(text);
+  const vtMap = await loadVtByPlayer();
+
+  const mapped = rows.slice(1).map((r, idx) => {
+    const player = (r[0] ?? "").toString().trim();
+    if (!player) return null;
+
+    if (dcprMode){
+      return {
+        _dataIndex: idx,
+        player,
+        rating: toNumber(r[1]),
+        games: toNumber(r[2]),
+        win: toNumber(r[3]),
+        loss: toNumber(r[4]),
+        draw: toNumber(r[5]),
+        winrate: (r[6] ?? "").toString().trim(),
+        peak: toNumber(r[7]),
+        vt: normalizeVT(r[8])
+      };
+    }
+
+    return {
+      _dataIndex: idx,
+      player,
+      rating: toNumber(r[1]),
+      games: toNumber(r[2]),
+      win: toNumber(r[3]),
+      loss: toNumber(r[4]),
+      draw: toNumber(r[5]),
+      winrate: (r[6] ?? "").toString().trim(),
+      peak: toNumber(r[7]),
+      vt: vtMap.get(normalizeKey(player)) ?? null
+    };
+  }).filter(Boolean);
+
+  const keyWanted = normalizeKey(playerName);
+
+  // Rank rules:
+  // - DCPR (Tournament_Elo): rank follows the row order (row 2 => rank 1)
+  // - ELO (Elo standings): rank by rating DESC, stable by player name
+  let ranked = [];
+  if (dcprMode){
+    ranked = mapped.map((o, i) => ({ ...o, rank: i + 1 }));
+  } else {
+    ranked = mapped.slice().sort((a,b) => {
+      const ra = Number.isFinite(a.rating) ? a.rating : -Infinity;
+      const rb = Number.isFinite(b.rating) ? b.rating : -Infinity;
+      if (rb !== ra) return rb - ra;
+      return a.player.localeCompare(b.player);
+    }).map((o, i) => ({ ...o, rank: i + 1 }));
+  }
+
+  return ranked.find(o => normalizeKey(o.player) === keyWanted) || null;
+}
+
+function heroMiniStatsHtml(obj){
+  if (!obj){
+    return `
+      <div class="heroMiniStat heroMiniStatWin"><b>win</b><span>—</span></div>
+      <div class="heroMiniStat heroMiniStatLoss"><b>loss</b><span>—</span></div>
+      <div class="heroMiniStat heroMiniStatDraw"><b>draw</b><span>—</span></div>
+      <div class="heroMiniStat"><b>games</b><span>—</span></div>
+      <div class="heroMiniStat"><b>winrate</b><span>—</span></div>
+      <div class="heroMiniStat"><b>peak</b><span>—</span></div>
+    `;
+  }
+  return `
+    <div class="heroMiniStat heroMiniStatWin"><b>win</b><span>${safeInt(obj.win)}</span></div>
+    <div class="heroMiniStat heroMiniStatLoss"><b>loss</b><span>${safeInt(obj.loss)}</span></div>
+    <div class="heroMiniStat heroMiniStatDraw"><b>draw</b><span>${safeInt(obj.draw)}</span></div>
+    <div class="heroMiniStat"><b>games</b><span>${safeInt(obj.games)}</span></div>
+    <div class="heroMiniStat"><b>winrate</b><span>${escapeHtml(obj.winrate || "—")}</span></div>
+    <div class="heroMiniStat"><b>peak</b><span>${Number.isFinite(obj.peak) ? obj.peak.toFixed(0) : "—"}</span></div>
+  `;
+}
+
+
+function rankBadgeHtml(rank){
+  if (!Number.isFinite(rank)) return "";
+  const r = Math.max(1, Math.floor(rank));
+  let cls = "";
+  if (r === 1) cls = " rank1";
+  else if (r === 2) cls = " rank2";
+  else if (r === 3) cls = " rank3";
+  return `<span class="rankBadge${cls}">#${r}</span>`;
+}
+
+
 function rankCellHtml(rank){
   if (rank === 1) return `<span class="r1">👑 ${rank}</span>`;
   if (rank === 2) return `<span class="r2">${rank}</span>`;
@@ -313,12 +571,11 @@ function updateInfoBar(){
 
   avgEloEl.textContent = Number.isFinite(medianElo) ? medianElo.toFixed(0) : "—";
   totalGamesEl.textContent = Number.isFinite(totalGames) ? totalGames.toFixed(0) : "—";
-  avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
+  if (avgWinrateEl) avgWinrateEl.textContent = Number.isFinite(avgWinrate) ? `${avgWinrate.toFixed(0)}%` : "—";
   lastTournamentEl.textContent = lastTournamentText || "—";
 }
 
 async function loadLastData(){
-  lastDataBadge.textContent = `načteno: ${formatNow()}`;
   try{
     const u = new URL(DATA_CSV_URL);
     u.searchParams.set("_", Date.now().toString());
@@ -344,11 +601,15 @@ async function loadLastData(){
 
 function renderStandings(rows){
   const q = normalizeKey(searchEl.value);
-  const ratedOnly = !!(ratedOnlyEl && ratedOnlyEl.checked);
+  const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
   const filtered = rows
-    .filter(r => (!ratedOnly || !!r.vt))
     .filter(r => !q || normalizeKey(r.player).includes(q))
     .sort((a,b)=>a.rank-b.rank);
+
+  // "Unikátní hráči" = počet řádků aktuálně zobrazených v tabulce
+  if (uniquePlayersEl){
+    uniquePlayersEl.textContent = filtered.length.toString();
+  }
 
   tbody.innerHTML = "";
   if (!filtered.length){
@@ -360,20 +621,19 @@ function renderStandings(rows){
 
   for (let i = 0; i < filtered.length; i++){
     const r = filtered[i];
-    // When "Pouze hodnocení hráči" is ON, re-number rank only for the displayed (rated) players.
-    // When OFF, keep the original global rank from the full standings.
-    const displayRank = ratedOnly ? (i + 1) : r.rank;
+    // Rank is always the stored rank. For DCPR mode, rank follows the row order in the Tournament Elo sheet.
+    const displayRank = r.rank;
     const peakText = Number.isFinite(r.peak) ? r.peak.toFixed(0) : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="rank colRank">${rankCellHtml(displayRank)}</td>
       <td class="playerCol"><span class="nameWrap"><button class="playerBtn" type="button">${escapeHtml(shortenPlayerNameForMobile(r.player))}</button>${vtBadgeHtml(r.vt)}</span></td>
       <td class="num ratingCol">${Number.isFinite(r.rating) ? r.rating.toFixed(0) : ""}</td>
-      <td class="num colPeak">${peakText}</td>
       <td class="num colGames">${safeInt(r.games)}</td>
       <td class="num colWin">${safeInt(r.win)}</td>
       <td class="num colLoss">${safeInt(r.loss)}</td>
       <td class="num colDraw">${safeInt(r.draw)}</td>
+      <td class="num colPeak">${peakText}</td>
       <td class="num colWinrate">${escapeHtml(r.winrate || "")}</td>
     `;
     tr.querySelector(".playerBtn")._playerObj = r;
@@ -381,45 +641,184 @@ function renderStandings(rows){
   }
 }
 
-async function loadStandings(){
-  statusEl.textContent = "Načítám…";
-  refreshBtn.disabled = true;
+
+async function fetchStandingsRows(dcprMode, vtMap){
+  const sheetName = dcprMode ? TOURNAMENT_ELO_SHEET_NAME : ELO_SHEET_NAME;
+  const u = new URL(buildCsvUrlForSheet(sheetName));
+  u.searchParams.set("_", Date.now().toString());
+  const { res, text } = await fetchUtf8Text(u.toString());
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
+  const rows = parseCSV(text);
+
+  const loadedInDataOrder = rows.slice(1).map((r, idx) => {
+    const player = (r[0] ?? "").toString().trim();
+    if (!player) return null;
+
+    if (dcprMode){
+      return {
+        _dataIndex: idx,
+        player,
+        rating: toNumber(r[1]),
+        games: toNumber(r[2]),
+        win: toNumber(r[3]),
+        loss: toNumber(r[4]),
+        draw: toNumber(r[5]),
+        winrate: (r[6] ?? "").toString().trim(),
+        peak: toNumber(r[7]),
+        vt: normalizeVT(r[8])
+      };
+    }
+
+    // Elo standings mapping (VT is always from Tournament Elo column I)
+    const vtFromMap = vtMap ? vtMap.get(normalizeKey(player)) : null;
+    return {
+      _dataIndex: idx,
+      player,
+      rating: toNumber(r[1]),
+      games: toNumber(r[2]),
+      win: toNumber(r[3]),
+      loss: toNumber(r[4]),
+      draw: toNumber(r[5]),
+      winrate: (r[6] ?? "").toString().trim(),
+      peak: toNumber(r[7]),
+      vt: vtFromMap || null
+    };
+  }).filter(Boolean);
+
+  let finalRows = [];
+
+  if (dcprMode){
+    // Rank follows sheet order (row 2 = rank 1)
+    finalRows = loadedInDataOrder.map((r, i) => ({ ...r, rank: i + 1 }));
+  } else {
+    // Rank by rating DESC, stable by data order
+    const sorted = [...loadedInDataOrder]
+      .sort((a,b) => {
+        const ra = Number.isFinite(a.rating) ? a.rating : -Infinity;
+        const rb = Number.isFinite(b.rating) ? b.rating : -Infinity;
+        if (rb !== ra) return rb - ra;
+        return a._dataIndex - b._dataIndex;
+      })
+      .map((r, i) => ({ ...r, rank: i + 1 }));
+
+    // Keep original data order in storage, but with rank attached
+    const byPlayer = new Map(sorted.map(r => [normalizeKey(r.player), r.rank]));
+    finalRows = loadedInDataOrder.map(r => ({ ...r, rank: byPlayer.get(normalizeKey(r.player)) || null }));
+  }
+
+  return finalRows;
+}
+
+async function preloadStandingsOnInit(){
+  setRefreshDisabled(true);
+  tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("loading")}</td></tr>`;
   try{
-    const u = new URL(ELO_CSV_URL);
+    const vtMap = await loadVtByPlayer();
+    standingsCache.vtMap = vtMap;
+
+    const [eloRows, dcprRows] = await Promise.all([
+      fetchStandingsRows(false, vtMap),
+      fetchStandingsRows(true, vtMap)
+    ]);
+    standingsCache.eloRows = eloRows;
+    standingsCache.dcprRows = dcprRows;
+
+    // render current mode instantly (no refetch on toggle)
+    const dcprMode = !!(ratedOnlyEl && ratedOnlyEl.checked);
+    allRows = getCachedRows(dcprMode) || [];
+    ensureSlugsAndRouting();
+    updateInfoBar();
+    renderStandings(allRows);
+  } catch(e){
+    console.error("[ELO] Failed to preload standings:", e);
+    if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("data_load_failed")}</td></tr>`;
+  } finally {
+    setRefreshDisabled(false);
+  }
+}
+
+
+async function loadStandings(forceDcprMode){
+  const seq = ++standingsLoadSeq;
+  setRefreshDisabled(true);
+
+  // Clear previous table immediately so old data doesn't linger while reloading.
+  allRows = [];
+  if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
+  tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("loading")}</td></tr>`;
+  try{
+    const dcprMode = (typeof forceDcprMode === "boolean")
+      ? forceDcprMode
+      : !!(ratedOnlyEl && ratedOnlyEl.checked);
+    const vtMap = await loadVtByPlayer();
+
+    // If another reload started while we were awaiting, abort this one.
+    if (seq !== standingsLoadSeq) return;
+
+    // IMPORTANT:
+    // - Normal mode must load from "Elo standings"
+    // - DCPR mode must load from "Tournament Elo"
+    // Build URL dynamically to ensure the correct sheet is always requested.
+    const sheetName = dcprMode ? TOURNAMENT_ELO_SHEET_NAME : ELO_SHEET_NAME;
+    const u = new URL(buildCsvUrlForSheet(sheetName));
     u.searchParams.set("_", Date.now().toString());
-    console.log("[ELO] Fetch standings CSV:", u.toString());
+    console.log(`[ELO] Fetch standings CSV (${dcprMode ? "Tournament Elo" : "Elo standings"}):`, u.toString());
     const { res, text } = await fetchUtf8Text(u.toString());
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     if (text.trim().startsWith("<")) throw new Error("Místo CSV přišlo HTML.");
 
+    if (seq !== standingsLoadSeq) return;
+
     const rows = parseCSV(text);
 
-    const iPlayer = 0, iRating = 1, iGames=2, iWin=3, iLoss=4, iDraw=5, iWinrate=6, iPeak=7, iVT=8;
+    // Data source mapping
+    // - Normal mode: Elo standings sheet (we still compute rank by sorting rating DESC)
+    // - DCPR mode: Tournament Elo sheet (rank follows row order, first player is row 2)
+    const loadedInDataOrder = rows.slice(1).map((r, idx) => {
+      const player = (r[0] ?? "").toString().trim();
+      if (!player) return null;
 
-    // Preserve original data order for deterministic slug collision resolution
-    const loadedInDataOrder = rows.slice(1).map((r, idx) => ({
-      _dataIndex: idx,
-      player:(r[iPlayer] ?? "").trim(),
-      rating:toNumber(r[iRating]),
-      peak:toNumber(r[iPeak]),
-      games:toNumber(r[iGames]),
-      win:toNumber(r[iWin]),
-      loss:toNumber(r[iLoss]),
-      draw:toNumber(r[iDraw]),
-      winrate:(r[iWinrate] ?? "").toString().trim(),
-      vt: normalizeVT(r[iVT])
-    })).filter(x=>x.player);
+      if (dcprMode){
+        // Tournament Elo mapping (A..I)
+        return {
+          _dataIndex: idx,
+          player,
+          rating: toNumber(r[1]),
+          games: toNumber(r[2]),
+          win: toNumber(r[3]),
+          loss: toNumber(r[4]),
+          draw: toNumber(r[5]),
+          winrate: (r[6] ?? "").toString().trim(),
+          peak: toNumber(r[7]),
+          vt: normalizeVT(r[8])
+        };
+      }
+
+      // Elo standings mapping (A..I), but VT is ALWAYS sourced from Tournament Elo → column I
+      return {
+        _dataIndex: idx,
+        player,
+        rating: toNumber(r[1]),
+        games: toNumber(r[2]),
+        win: toNumber(r[3]),
+        loss: toNumber(r[4]),
+        draw: toNumber(r[5]),
+        winrate: (r[6] ?? "").toString().trim(),
+        peak: toNumber(r[7]),
+        vt: vtMap.get(normalizeKey(player)) ?? null
+      };
+    }).filter(Boolean);
 
     const slugs = buildDeterministicSlugs(loadedInDataOrder.map(x => x.player));
     loadedInDataOrder.forEach((x, i) => { x.slug = slugs[i]; });
 
-    const loaded = loadedInDataOrder.slice();
-    loaded.sort((a,b)=>(b.rating||-Infinity)-(a.rating||-Infinity));
-    allRows = loaded.map((p,i)=>({ ...p, rank:i+1 }));
+    // Rank is always based on the row order in the selected sheet.
+    // Row 2 = rank 1, row 3 = rank 2, etc.
+    allRows = loadedInDataOrder.map((p, i) => ({ ...p, rank: i + 1 }));
 
     slugToPlayer = new Map(allRows.map(p => [p.slug, p]));
-
-    statusEl.textContent = `Načteno: ${allRows.length}`;
     renderStandings(allRows);
     updateInfoBar();
 
@@ -430,17 +829,19 @@ async function loadStandings(){
     }
   } catch (e){
     console.error("[ELO] Failed to load standings:", e);
-    statusEl.textContent = "Chyba načítání dat";
-    tbody.innerHTML = `<tr><td colspan="9" class="muted">❌ Data se nepodařilo načíst. Zkus „Znovu načíst“.</td></tr>`;
+    if (uniquePlayersEl) uniquePlayersEl.textContent = "0";
+    tbody.innerHTML = `<tr><td colspan="9" class="muted">${t("data_load_failed")}</td></tr>`;
   } finally {
-    refreshBtn.disabled = false;
+    setRefreshDisabled(false);
   }
 }
 
-async function loadPlayerCards(){
-  if (playerCardsCache) return playerCardsCache;
+async function loadPlayerCards(mode){
+  const normalized = (mode === "dcpr") ? "dcpr" : "elo";
+  if (playerCardsCache?.[normalized]) return playerCardsCache[normalized];
 
-  const u = new URL(PLAYER_CARDS_CSV_URL);
+  const baseUrl = (normalized === "dcpr") ? PLAYER_CARDS_TOURNAMENT_CSV_URL : PLAYER_CARDS_CSV_URL;
+  const u = new URL(baseUrl);
   u.searchParams.set("_", Date.now().toString());
   const { res, text } = await fetchUtf8Text(u.toString());
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -461,14 +862,16 @@ async function loadPlayerCards(){
     elo: toNumber((r[8] ?? "").toString().trim())
   })).filter(x => x.player);
 
-  playerCardsCache = items;
+  playerCardsCache[normalized] = items;
   return items;
 }
 
-async function loadPlayerSummary(){
-  if (playerSummaryCache) return playerSummaryCache;
+async function loadPlayerSummary(mode){
+  const normalized = (mode === "dcpr") ? "dcpr" : "elo";
+  if (playerSummaryCache?.[normalized]) return playerSummaryCache[normalized];
 
-  const u = new URL(PLAYER_SUMMARY_CSV_URL);
+  const baseUrl = (normalized === "dcpr") ? PLAYER_SUMMARY_TOURNAMENT_CSV_URL : PLAYER_SUMMARY_CSV_URL;
+  const u = new URL(baseUrl);
   u.searchParams.set("_", Date.now().toString());
   const { res, text } = await fetchUtf8Text(u.toString());
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -485,19 +888,19 @@ async function loadPlayerSummary(){
     lossStreak: toNumber((r[14] ?? "").toString().trim())
   })).filter(x => x.player);
 
-  playerSummaryCache = items;
+  playerSummaryCache[normalized] = items;
   return items;
 }
 
-async function getSummaryForPlayer(playerName){
-  const list = await loadPlayerSummary();
+async function getSummaryForPlayer(playerName, mode){
+  const list = await loadPlayerSummary(mode);
   const wanted = playerName.trim();
   return list.find(x => x.player.trim() === wanted) || null;
 }
 
 function buildSvgLineChartEqualX(points){
   const clean = points.filter(p => Number.isFinite(p.matchId) && Number.isFinite(p.elo)).slice();
-  if (clean.length < 2) return `<div class="muted">Graf nelze vykreslit (málo dat).</div>`;
+  if (clean.length < 2) return `<div class="muted">${t("chart_no_data")}</div>`;
 
   const w=980, h=280, padL=44, padR=18, padT=18, padB=42;
   const ys = clean.map(p=>p.elo);
@@ -555,42 +958,69 @@ function buildSvgLineChartEqualX(points){
   `;
 }
 
-function buildHero(playerObj, summary){
-  const avgOpp = summary && Number.isFinite(summary.avgOpp) ? summary.avgOpp.toFixed(0) : "—";
-  const winStreak = summary && Number.isFinite(summary.winStreak) ? summary.winStreak.toFixed(0) : "—";
-  const lossStreak = summary && Number.isFinite(summary.lossStreak) ? summary.lossStreak.toFixed(0) : "—";
-  const peakText = Number.isFinite(playerObj.peak) ? playerObj.peak.toFixed(0) : "—";
-  const rankText = (playerObj.rank ?? "").toString().trim();
-    const rankNum = parseInt(rankText, 10);
-    const rankClass = (Number.isFinite(rankNum) && !Number.isNaN(rankNum))
-      ? (rankNum === 1 ? "rank1" : rankNum === 2 ? "rank2" : rankNum === 3 ? "rank3" : "")
-      : "";
+function buildHero(playerName, tournamentObj, eloObj, summaryDcpr, summaryElo){
+  // Summary stats are mode-specific:
+  // - DCPR uses "Player summary - Tournament"
+  // - ELO uses "Player summary"
+  const sDcpr = summaryDcpr || null;
+  const sElo = summaryElo || null;
+
+  const dcprAvgOpp = sDcpr && Number.isFinite(sDcpr.avgOpp) ? sDcpr.avgOpp.toFixed(0) : "—";
+  const dcprWinStreak = sDcpr && Number.isFinite(sDcpr.winStreak) ? sDcpr.winStreak.toFixed(0) : "—";
+  const dcprLossStreak = sDcpr && Number.isFinite(sDcpr.lossStreak) ? sDcpr.lossStreak.toFixed(0) : "—";
+
+  const eloAvgOpp = sElo && Number.isFinite(sElo.avgOpp) ? sElo.avgOpp.toFixed(0) : "—";
+  const eloWinStreak = sElo && Number.isFinite(sElo.winStreak) ? sElo.winStreak.toFixed(0) : "—";
+  const eloLossStreak = sElo && Number.isFinite(sElo.lossStreak) ? sElo.lossStreak.toFixed(0) : "—";
+
+  const vt = tournamentObj?.vt || null;
+
+  const dcprRank = Number.isFinite(tournamentObj?.rank) ? tournamentObj.rank : null;
+  const eloRank = Number.isFinite(eloObj?.rank) ? eloObj.rank : null;
 
   return `
     <div class="heroGrid">
       <div class="box boxPad leftPanel">
         <div class="leftTop">
-          <div class="heroName">
-            ${escapeHtml(playerObj.player)}
-            ${Number.isFinite(rankNum) ? `<span class="heroRank ${rankClass}">#${rankNum}</span>` : ""}
+          <div class="heroNameRow">
+            <div class="heroName">${escapeHtml(playerName)}</div>
+            <div class="heroModeToggle" role="tablist" aria-label="Rating mode">
+              <button class="heroModeBtn isActive" type="button" data-hero-mode="dcpr" role="tab" aria-selected="true">DCPR</button>
+              <button class="heroModeBtn" type="button" data-hero-mode="elo" role="tab" aria-selected="false">ELO</button>
+            </div>
           </div>
-          ${playerObj.vt ? `<div class="heroVT ${vtToClass(playerObj.vt)}">${escapeHtml(vtDetailText(playerObj.vt))}</div>` : ""}
-          <div style="margin-top:10px;">
-            <div class="heroEloLabel">aktuální rating</div>
-            <div class="heroElo">${Number.isFinite(playerObj.rating) ? playerObj.rating.toFixed(0) : ""}</div>
-          </div>
-        </div>
+          ${vt ? `<div class="heroVT ${vtToClass(vt)}">${escapeHtml(vtDetailText(vt))}</div>` : ""}
 
-        <div class="leftBottom">
-          <div class="statsGrid">
-            <div class="stat"><b>games</b><span>${safeInt(playerObj.games)}</span></div>
-            <div class="stat"><b>winrate</b><span>${escapeHtml(playerObj.winrate || "")}</span></div>
-          </div>
+          <div class="heroModePanels">
+            <div class="heroModePanel" data-hero-panel="dcpr">
+              <div class="heroCol">
+                <div class="heroColHead">
+                  <div class="heroColTitle">DCPR</div>
+                  <div class="heroColRank">${rankBadgeHtml(dcprRank)}</div>
+                </div>
+                <div class="heroColValue">
+                  <div class="heroColNumber">${Number.isFinite(tournamentObj?.rating) ? tournamentObj.rating.toFixed(0) : "—"}</div>
+                </div>
+                <div class="heroColStats">
+                  ${heroMiniStatsHtml(tournamentObj)}
+                </div>
+              </div>
+            </div>
 
-          <div class="statsGridRow2">
-            <div class="stat statWin"><b>win</b><span>${safeInt(playerObj.win)}</span></div>
-            <div class="stat statLoss"><b>loss</b><span>${safeInt(playerObj.loss)}</span></div>
-            <div class="stat statDraw"><b>draw</b><span>${safeInt(playerObj.draw)}</span></div>
+            <div class="heroModePanel isHidden" data-hero-panel="elo">
+              <div class="heroCol">
+                <div class="heroColHead">
+                  <div class="heroColTitle">ELO</div>
+                  <div class="heroColRank">${rankBadgeHtml(eloRank)}</div>
+                </div>
+                <div class="heroColValue">
+                  <div class="heroColNumber">${Number.isFinite(eloObj?.rating) ? eloObj.rating.toFixed(0) : "—"}</div>
+                </div>
+                <div class="heroColStats">
+                  ${heroMiniStatsHtml(eloObj)}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -598,24 +1028,21 @@ function buildHero(playerObj, summary){
       <div class="rightCol">
         <div class="box boxPad chartBox">
           <div class="chartHead">
-            <b>Vývoj ELO</b>
-            <span id="chartMeta" class="muted">Načítám data hráče…</span>
+            <b id="chartTitle">${t("elo_evolution")}</b>
+            <span id="chartMeta" class="muted">${t("loading_player_data")}</span>
           </div>
-          <div id="eloChart" class="muted">Načítám data hráče…</div>
+          <div id="eloChart" class="muted">${t("loading_player_data")}</div>
         </div>
 
         <div class="metaBoxRow">
-          <div class="stat"><b>peak elo</b><span>${peakText}</span></div>
-          <div class="stat"><b>average opponent rating</b><span>${avgOpp}</span></div>
-          <div class="stat statWin"><b>longest win streak</b><span>${winStreak} 🔥</span></div>
-          <div class="stat statLoss"><b>longest loss streak</b><span>${lossStreak}</span></div>
+          <div class="stat"><b>average opponent rating</b><span id="avgOppVal" data-dcpr="${escapeHtml(dcprAvgOpp)}" data-elo="${escapeHtml(eloAvgOpp)}">${escapeHtml(dcprAvgOpp)}</span></div>
+          <div class="stat statWin"><b>longest win streak</b><span id="winStreakVal" data-dcpr="${escapeHtml(dcprWinStreak)}" data-elo="${escapeHtml(eloWinStreak)}">${escapeHtml(dcprWinStreak)} 🔥</span></div>
+          <div class="stat statLoss"><b>longest loss streak</b><span id="lossStreakVal" data-dcpr="${escapeHtml(dcprLossStreak)}" data-elo="${escapeHtml(eloLossStreak)}">${escapeHtml(dcprLossStreak)}</span></div>
         </div>
-        
       </div>
     </div>
   `;
 }
-
 
 function computeWLD(rows){
   const w = rows.reduce((acc, r) => acc + ((r.result||"").toLowerCase().includes("won") ? 1 : 0), 0);
@@ -696,7 +1123,7 @@ function buildTournamentTable(rows){
     <tr class="summaryRow">
       <td colspan="2">Souhrn</td>
       <td>Record: ${w}-${l}-${d}</td>
-      <td colspan="2" class="num">Průměr ELO soupeřů: ${Number.isFinite(avgOpp) ? avgOpp.toFixed(0) : "—"}</td>
+      <td colspan="2" class="num">${t("avg_opp_elo")} ${Number.isFinite(avgOpp) ? avgOpp.toFixed(0) : "—"}</td>
       <td colspan="2"></td>
     </tr>
   `;
@@ -705,29 +1132,40 @@ function buildTournamentTable(rows){
 }
 
 async function loadPlayerDetail(playerObj){
-  setModalHeaderMeta({ title: playerObj.player, subtitle: "Detail hráče" });
+  setModalHeaderMeta({ title: playerObj.player, subtitle: t("player_detail") });
   // Akce v horní liště nastavujeme až po načtení dat
   setModalActions("");
-  setModalContent(`<div class="muted">Načítám…</div>`);
+  setModalContent(`<div class="muted">${t("loading")}</div>`);
 
   try{
-    const [allCards, summary] = await Promise.all([loadPlayerCards(), getSummaryForPlayer(playerObj.player)]);
+    const [eloCardsAll, dcprCardsAll, eloSummary, dcprSummary, dcprStanding, eloStanding] = await Promise.all([
+      loadPlayerCards("elo"),
+      loadPlayerCards("dcpr"),
+      getSummaryForPlayer(playerObj.player, "elo"),
+      getSummaryForPlayer(playerObj.player, "dcpr"),
+      getPlayerStandingFromSheet(TOURNAMENT_ELO_SHEET_NAME, true, playerObj.player).catch(() => null),
+      getPlayerStandingFromSheet(ELO_SHEET_NAME, false, playerObj.player).catch(() => null)
+    ]);
     const wanted = playerObj.player.trim();
-    const cards = allCards.filter(r => r.player.trim() === wanted);
+    const cardsElo = (eloCardsAll || []).filter(r => r.player.trim() === wanted);
+    const cardsDcpr = (dcprCardsAll || []).filter(r => r.player.trim() === wanted);
+    // Keep a combined view for features like "Protihráči".
+    // (Mode-specific views below use cardsElo / cardsDcpr separately.)
+    const cardsAny = [...cardsElo, ...cardsDcpr];
 
-    if (!cards.length){
+    if (!cardsAny.length){
       currentPlayerDetail = null;
       setModalActions("");
-      setModalContent(buildHero(playerObj, summary) +
-        `<div class="bigError"><div class="icon">❌</div> Podrobná data hráče nenalezena</div>`);
+      setModalContent(buildHero(playerObj.player, dcprStanding, eloStanding, dcprSummary, eloSummary) +
+        `<div class="bigError"><div class="icon">❌</div> ${t("player_not_found")}</div>`);
       return;
     }
 
     // Uložíme pro Protihráče
-    currentPlayerDetail = { playerObj, cards };
+    currentPlayerDetail = { playerObj, cards: cardsAny };
 
     // Tlačítko "Protihráči" v horní liště (vedle Zavřít)
-    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">PROTIHRÁČI</button>`);
+    setModalActions(`<button id="oppBtn" class="btnOpponents" type="button">${t("opponents")}</button>`);
     queueMicrotask(() => {
       const btn = document.getElementById("oppBtn");
       if (!btn) return;
@@ -735,35 +1173,51 @@ async function loadPlayerDetail(playerObj){
         // Otevře "stránku" Protihráči v rámci stejného modalu
         openOpponentsModal({
           playerName: playerObj.player,
-          cards,
+          cards: cardsAny,
           onBack: () => {
-            openModal({ title: playerObj.player, subtitle: "Detail hráče", html: `<div class="muted">Načítám…</div>` });
+            openModal({ title: playerObj.player, subtitle: t("player_detail"), html: `<div class="muted">${t("loading")}</div>` });
             loadPlayerDetail(playerObj);
           }
         });
       });
     });
 
-    const sortedAll = cards.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
+    const sortedEloAll = cardsElo.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
+    const sortedDcprAll = cardsDcpr.slice().sort((a,b) => (a.matchId||0) - (b.matchId||0));
 
-    // Skupiny podle názvu turnaje (tournamentDetail)
-    const groups = new Map();
-    const order = [];
-    for (const r of sortedAll){
-      const key = (r.tournamentDetail || "Neznámé").trim();
-      if (!groups.has(key)){ groups.set(key, []); order.push(key); }
-      groups.get(key).push(r);
-    }
+    // Current mode affects chart + tournament list below.
+    let currentMode = "dcpr"; // default
+    let modeRows = [];
+    let groups = new Map();
+    let order = [];
 
-    
-    let currentTournament = "ALL";
+    const buildGroupsFromRows = (rows) => {
+      groups = new Map();
+      order = [];
+      for (const r of rows){
+        const key = (r.tournamentDetail || "Neznámé").trim();
+        if (!groups.has(key)){ groups.set(key, []); order.push(key); }
+        groups.get(key).push(r);
+      }
+    };
+
+    const rowsForMode = (mode) => (mode === "dcpr") ? sortedDcprAll.slice() : sortedEloAll.slice();
+
+    const applyMode = (mode) => {
+      currentMode = (mode === "elo") ? "elo" : "dcpr";
+      modeRows = rowsForMode(currentMode);
+      buildGroupsFromRows(modeRows);
+    };
+
+    applyMode("dcpr");
+let currentTournament = "ALL";
 
     // Filtr turnaje ovlivňuje POUZE spodní tabulky (graf + horní statistiky zůstávají vždy ze všech dat)
     const renderTournamentTables = (tournamentKey) => {
       currentTournament = tournamentKey;
 
       const filteredCards = (tournamentKey === "ALL")
-        ? sortedAll.slice()
+        ? modeRows.slice()
         : (groups.get(tournamentKey) ? groups.get(tournamentKey).slice().sort((a,b)=>(a.matchId||0)-(b.matchId||0)) : []);
 
       const filterOptions = [`<option value="ALL">Všechny turnaje</option>`]
@@ -807,35 +1261,101 @@ async function loadPlayerDetail(playerObj){
 
     // Postav obsah modalu: hero (ALL data) + filtr (níže) + tabulky
     setModalContent(
-      buildHero(playerObj, summary)
+      buildHero(playerObj.player, dcprStanding, eloStanding, dcprSummary, eloSummary)
       + `
         <div id="tournamentTables"></div>
       `
     );
 
-    // Graf (vždy ze všech dat)
-    const chartEl = document.getElementById("eloChart");
-    const chartMeta = document.getElementById("chartMeta");
-    const allPoints = sortedAll
-      .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
-      .map(r => ({ matchId:r.matchId, elo:r.elo }));
+    // Toggle DCPR/ELO (only one panel visible at a time)
+    queueMicrotask(() => {
+      const btns = Array.from(document.querySelectorAll(".heroModeBtn[data-hero-mode]"));
+      const panels = Array.from(document.querySelectorAll(".heroModePanel[data-hero-panel]"));
+      if (!btns.length || !panels.length) return;
 
-    if (chartEl){
-      chartEl.innerHTML = buildSvgLineChartEqualX(allPoints);
-    }
+      const setMode = (mode) => {
+        const normalized = (mode === "elo") ? "elo" : "dcpr";
 
-    if (chartMeta){
-      if (allPoints.length){
-        const last = allPoints[allPoints.length - 1];
-        chartMeta.textContent = `zápasů: ${allPoints.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
-      } else {
-        chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
-        if (chartEl) chartEl.innerHTML = `<div class="muted">Graf nelze vykreslit.</div>`;
+        for (const b of btns){
+          const isOn = (b.getAttribute("data-hero-mode") === normalized);
+          b.classList.toggle("isActive", isOn);
+          b.setAttribute("aria-selected", isOn ? "true" : "false");
+        }
+        for (const p of panels){
+          const isOn = (p.getAttribute("data-hero-panel") === normalized);
+          p.classList.toggle("isHidden", !isOn);
+        }
+
+        // Apply mode to the rest of the card (chart + tournaments)
+        applyMode(normalized);
+
+        // Update summary stats (avg opp, streaks)
+        try{
+          const avgEl = document.getElementById("avgOppVal");
+          const winEl = document.getElementById("winStreakVal");
+          const lossEl = document.getElementById("lossStreakVal");
+          if (avgEl){
+            avgEl.textContent = (avgEl.getAttribute(`data-${normalized}`) || "—").toString();
+          }
+          if (winEl){
+            const v = (winEl.getAttribute(`data-${normalized}`) || "—").toString();
+            winEl.textContent = `${v} 🔥`;
+          }
+          if (lossEl){
+            lossEl.textContent = (lossEl.getAttribute(`data-${normalized}`) || "—").toString();
+          }
+        }catch(e){}
+
+        // Re-render chart
+        try{ renderChartAndMeta(); }catch(e){}
+
+        // Re-render tournaments and keep selection if possible
+        const desired = (currentTournament && currentTournament !== "ALL" && groups.has(currentTournament))
+          ? currentTournament
+          : "ALL";
+        renderTournamentTables(desired);
+
+      };
+
+      // default
+      setMode("dcpr");
+
+      for (const b of btns){
+        b.addEventListener("click", () => setMode(b.getAttribute("data-hero-mode") || "dcpr"));
       }
-    }
+    });
 
+    // Graf + meta (depends on current mode)
+    const renderChartAndMeta = () => {
+      const chartEl = document.getElementById("eloChart");
+      const chartMeta = document.getElementById("chartMeta");
+      const chartTitle = document.getElementById("chartTitle");
 
-    // Výchozí stav: všechny turnaje
+      if (chartTitle){
+        chartTitle.textContent = (currentMode === "dcpr") ? t("dcpr_evolution") : t("elo_evolution");
+      }
+
+      const points = modeRows
+        .filter(r => Number.isFinite(r.matchId) && Number.isFinite(r.elo))
+        .map(r => ({ matchId:r.matchId, elo:r.elo }));
+
+      if (chartEl){
+        chartEl.innerHTML = buildSvgLineChartEqualX(points);
+      }
+
+      if (chartMeta){
+        if (points.length){
+          const last = points[points.length - 1];
+          chartMeta.textContent = `zápasů: ${points.length} • poslední Match ID: ${last.matchId.toFixed(0)} • poslední ELO: ${last.elo.toFixed(0)}`;
+        } else {
+          chartMeta.textContent = "Nelze vykreslit (chybí Match ID/ELO)";
+          if (chartEl) chartEl.innerHTML = `<div class="muted">${t("chart_no_data")}</div>`;
+        }
+      }
+    };
+
+    renderChartAndMeta();
+// Výchozí stav: všechny turnaje
     renderTournamentTables("ALL");
 
   } catch (e){
@@ -846,15 +1366,16 @@ async function loadPlayerDetail(playerObj){
 }
 
 async function loadAll(){
-  await Promise.all([loadStandings(), loadLastData()]);
-  playerCardsCache = null;
-  playerSummaryCache = null;
+  // Preload BOTH standings datasets to avoid UI "jump" when switching modes.
+  await Promise.all([preloadStandingsOnInit(), loadLastData()]);
+  playerCardsCache = { elo: null, dcpr: null };
+  playerSummaryCache = { elo: null, dcpr: null };
 }
 
 /* THEME + LOGO swap */
 function syncLogo(){
   const theme = htmlEl.getAttribute("data-theme") || "dark";
-  logoImg.src = (theme === "light") ? "logo2.png" : "logo.png";
+  logoImg.src = (theme === "light") ? getStaticBase() + "assets/images/logos/logo2.png" : getStaticBase() + "assets/images/logos/logo.png";
 }
 function setTheme(theme){
   htmlEl.setAttribute("data-theme", theme);
@@ -874,10 +1395,14 @@ if (themeToggle && !window.__themeHandled) themeToggle.addEventListener("click",
 });
 
 /* Events */
-refreshBtn.addEventListener("click", loadAll);
+if (refreshBtn) refreshBtn.addEventListener("click", loadAll);
 searchEl.addEventListener("input", () => renderStandings(allRows));
 if (ratedOnlyEl){
-  ratedOnlyEl.addEventListener("change", () => renderStandings(allRows));
+  // Toggle "Pouze DCPR" should not refetch — we pre-load both datasets on page load.
+  ratedOnlyEl.addEventListener("change", (e) => {
+    const checked = !!e?.target?.checked;
+    switchStandingsMode(checked);
+  });
 }
 
 

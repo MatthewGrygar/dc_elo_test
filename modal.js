@@ -39,7 +39,7 @@ export function ensureModal() {
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && overlay.style.display === "block") (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal());
+    if (e.key === "Escape" && overlay.style.display !== "none") (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal());
   });
 
   overlay.querySelector("#closeModalBtn").addEventListener("click", () => (__modalOnCloseRequest ? __modalOnCloseRequest() : closeModal()));
@@ -54,11 +54,21 @@ export function openModal({ title, subtitle, html, fullscreen }) {
     modalEl.classList.toggle('modalFullscreen', !!fullscreen);
   }
   overlay.querySelector("#modalName").textContent = title || "Hráč";
-  overlay.querySelector("#modalSub").textContent = subtitle || "Detail hráče";
+  const subEl = overlay.querySelector("#modalSub");
+  const subText = (subtitle == null) ? "" : String(subtitle);
+  if (subEl){
+    if (subText.trim()){
+      subEl.textContent = subText;
+      subEl.style.display = "block";
+    }else{
+      subEl.textContent = "";
+      subEl.style.display = "none";
+    }
+  }
   overlay.querySelector("#modalBody").innerHTML = html || "";
   const actions = overlay.querySelector("#modalActions");
   if (actions) actions.innerHTML = "";
-  overlay.style.display = "block";
+  overlay.style.display = "flex";
   document.body.style.overflow = "hidden";
 }
 
@@ -68,6 +78,9 @@ export function closeModal() {
   const modalEl = overlay.querySelector('.modal');
   if (modalEl) modalEl.classList.remove('modalFullscreen');
   overlay.style.display = "none";
+  overlay.classList.remove("isSupport");
+  overlay.classList.remove("isAnon");
+
   document.body.style.overflow = "";
   const body = overlay.querySelector("#modalBody");
   if (body) body.innerHTML = "";
@@ -93,7 +106,19 @@ export function setModalContent(html) {
 export function setModalHeaderMeta({ title, subtitle }){
   const overlay = ensureModal();
   if (title != null) overlay.querySelector("#modalName").textContent = title;
-  if (subtitle != null) overlay.querySelector("#modalSub").textContent = subtitle;
+  if (subtitle != null){
+    const subEl = overlay.querySelector("#modalSub");
+    const subText = String(subtitle);
+    if (subEl){
+      if (subText.trim()){
+        subEl.textContent = subText;
+        subEl.style.display = "block";
+      }else{
+        subEl.textContent = "";
+        subEl.style.display = "none";
+      }
+    }
+  }
 }
 
 // Nastaví/změní akční tlačítka vpravo v horní liště modalu (vedle Zavřít)

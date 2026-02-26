@@ -81,6 +81,11 @@ body{
   --toggle-on-bg: rgba(90, 180, 130, .45);
   --toggle-thumb: rgba(255,255,255,.92);
 }
+
+
+/* Keep links from changing color after being visited */
+a{ color: var(--accent); }
+a:visited{ color: var(--accent); }
 html[data-theme="light"] body{
   background:
     radial-gradient(900px 420px at 10% 0%, rgba(255,255,255,.80), transparent 55%),
@@ -92,7 +97,8 @@ html[data-theme="light"] body{
 }
 
 header{
-  padding:18px 18px 14px;
+  /* Compact, modern header */
+  padding:12px 18px 10px;
   border-bottom:1px solid var(--border2);
   background:var(--bg1);
   backdrop-filter: blur(10px);
@@ -103,16 +109,16 @@ header .wrap{
   display:flex; gap:16px; align-items:flex-start; justify-content:space-between;
 }
 
-h1{ margin:0 0 4px; font-size:26px; letter-spacing:.2px; }
+h1{ margin:0 0 2px; font-size:22px; letter-spacing:.2px; }
 .subtitle{ margin:0 0 8px; font-size:12px; letter-spacing:.10em; text-transform:uppercase; color:var(--muted); }
 .muted{ opacity:1; color:var(--muted); }
 .credit{ margin-top:6px; }
 
 .headerLeft{ display:flex; gap:16px; align-items:flex-start; }
 .logo{
-  width:118px; height:118px; flex:0 0 118px;
+  width:86px; height:86px; flex:0 0 86px;
   display:flex; align-items:center; justify-content:center;
-  overflow:hidden; margin-top:-4px;
+  overflow:hidden; margin-top:0;
 }
 .logo img{
   width:100%; height:100%; object-fit:contain; display:block;
@@ -140,6 +146,19 @@ button:hover{ filter: brightness(1.06); }
   padding:10px 14px;
 }
 
+/* inline link (titulní stránka) */
+.inlineLink{
+  color:inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(120, 160, 255, .55);
+  font-weight: 700;
+}
+.inlineLink:hover{
+  filter: brightness(1.12);
+  text-decoration-color: rgba(120, 160, 255, .85);
+}
+
 /* Menu button + dropdown */
 .btnIcon{
   display:inline-flex;
@@ -154,6 +173,53 @@ button:hover{ filter: brightness(1.06); }
   font-weight:950;
   font-size:20px;
   box-shadow:0 8px 24px rgba(0,0,0,.18);
+}
+
+/* Podpořit (tlačítko vpravo nahoře vedle menu) */
+.btnSupport{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:44px;
+  padding:0 14px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--chip);
+  color:var(--text);
+  box-shadow:0 8px 24px rgba(0,0,0,.14);
+}
+.btnSupportIcon{ font-size:16px; line-height:1; }
+.btnSupportText{ font-weight:900; letter-spacing:.02em; }
+.btnSupport:hover{ filter: brightness(1.06); }
+
+/* ===== Header actions on phones: keep Support + Language + Menu on one row ===== */
+@media (max-width: 520px){
+  header .wrap{ align-items:flex-start; }
+  .headerRight{ gap:8px; }
+  /* Phone header: keep Support left, language + menu right, always in one row */
+  .headerRightTop{
+    flex-wrap:nowrap;
+    gap:8px;
+    display:flex;
+    align-items:center;
+  }
+  .headerRightTop > *{ min-width:0; }
+  .btnSupport{
+    margin-right:auto; /* push language + hamburger to the right */
+    padding:0 10px;
+    border-radius:14px;
+    max-width:160px;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+  }
+  .btnSupportIcon{ margin-right:6px; }
+  /* On small screens keep the row compact */
+  .btnSupportText{ display:inline; font-size:12px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:72px; }
+  .btnIcon{ width:40px; height:40px; border-radius:14px; }
+  .btnLang{ min-width:64px; padding:0 10px; }
+  .langCode{ font-size:12px; }
 }
 
 .headerRightTop{
@@ -183,6 +249,62 @@ html[data-theme="light"] .menuPanel{
 }
 
 .menuPanel.isOpen{ display:block; }
+
+/* ---------- Language switcher ---------- */
+.langWrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+}
+
+.btnLang{
+  width:auto;
+  min-width:86px;
+  padding:0 12px;
+  font-size:14px;
+  line-height:1;
+  gap:8px;
+}
+
+.langPanel{
+  position:absolute;
+  right:0;
+  top:56px;
+  min-width:190px;
+  padding:10px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:rgba(15,17,21,.92);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  display:none;
+  z-index:45;
+}
+
+html[data-theme="light"] .langPanel{
+  background:rgba(255,255,255,.92);
+}
+
+.langPanel.isOpen{ display:block; }
+
+.langItem{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+  font-weight:800;
+}
+
+.langItem:hover{ background:var(--panel2); border-color:var(--border2); }
+
+.langFlag{ font-size:18px; line-height:1; }
+.langName{ font-size:14px; opacity:.92; }
 
 .menuItem{
   width:100%;
@@ -233,6 +355,124 @@ html[data-theme="light"] .menuPanel{
 
 .container{ max-width:1150px; margin:0 auto; padding:0 16px; }
 main{ max-width:1150px; margin:0 auto; padding:16px; }
+
+/* Carousel (titulní stránka) */
+.heroCarousel{
+  position:relative;
+  margin:12px 0 10px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:var(--panel2);
+  overflow:hidden;
+}
+.carouselTrack{
+  position:relative;
+  width:100%;
+  aspect-ratio: 4400 / 1585;
+  height:auto;
+}
+.carouselImg{
+  cursor:pointer;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:0;
+  transition: opacity 500ms ease;
+}
+.carouselImg.isActive{ opacity:1; }
+
+
+.carouselDots{
+  position:absolute;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  display:flex;
+  gap:8px;
+  padding:5px 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.18);
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(6px);
+}
+html[data-theme="light"] .carouselDots{
+  background:rgba(255,255,255,.55);
+  border:1px solid rgba(0,0,0,.10);
+}
+.carouselDot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  background:rgba(255,255,255,.45);
+  transition: transform 220ms ease, opacity 220ms ease, background-color 220ms ease;
+  opacity:.75;
+}
+html[data-theme="light"] .carouselDot{
+  background:rgba(0,0,0,.25);
+}
+.carouselDot.isActive{
+  opacity:1;
+  transform:scale(1.25);
+  background:rgba(255,255,255,.92);
+}
+html[data-theme="light"] .carouselDot.isActive{
+  background:rgba(0,0,0,.70);
+}
+
+/* Carousel controls: invisible click zones (desktop) + swipe-friendly */
+.heroCarousel{ touch-action: pan-y; }
+.carouselZone{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:10%;
+  border:0;
+  padding:0;
+  margin:0;
+  background:transparent;
+  appearance:none;
+  -webkit-appearance:none;
+  z-index:3;
+}
+.carouselZoneLeft{ left:0; }
+.carouselZoneRight{ right:0; }
+
+.carouselZoneCenter{
+  left:10%;
+  right:10%;
+  width:auto;
+  /* Leave space for dots row so they can be clicked without triggering navigation */
+  bottom:40px;
+  z-index:2;
+}
+
+/* Center click zone: opens the current slide link.
+   Keep dots clickable by leaving space at the bottom. */
+.carouselZoneCenter{
+  left:10%;
+  right:10%;
+  width:auto;
+  bottom:34px;
+  z-index:2;
+}
+
+@media (hover:hover){
+  .carouselZone{ cursor:pointer; }
+  .carouselZoneLeft:hover{
+    background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,0));
+  }
+  .carouselZoneRight:hover{
+    background: linear-gradient(270deg, rgba(255,255,255,.08), rgba(255,255,255,0));
+  }
+  html[data-theme="light"] .carouselZoneLeft:hover{
+    background: linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,0));
+  }
+  html[data-theme="light"] .carouselZoneRight:hover{
+    background: linear-gradient(270deg, rgba(0,0,0,.05), rgba(0,0,0,0));
+  }
+}
 
 .infoBar{
   margin:12px 0 4px;
@@ -296,7 +536,7 @@ html[data-theme="light"] .infoItem{ background:rgba(255,255,255,.50); }
 .right{ display:flex; gap:10px; align-items:center; }
 
 input[type="search"]{
-  width:min(520px, 70vw);
+  width:100%;
   padding:10px 12px;
   border-radius:14px;
   border:1px solid var(--border);
@@ -319,6 +559,8 @@ input[type="search"]:focus{
   align-items:center;
   gap:10px;
   user-select:none;
+  /* On homepage toolbar, keep the toggle pinned to the right */
+  margin-left: auto;
 }
 .ratedToggleText{
   font-size:13px;
@@ -381,7 +623,7 @@ input[type="search"]:focus{
 
 
 
-.tableWrap{ overflow:auto; }
+.tableWrap{ overflow-y:auto; overflow-x:hidden; }
 table{ width:100%; border-collapse:separate; border-spacing:0; }
 thead th{
   position:sticky; top:0; z-index:2;
@@ -456,12 +698,17 @@ footer{
 
 /* Modal */
 .modalOverlay{
-  display:none; position:fixed; inset:0;
+  display:none;
+  position:fixed;
+  inset:0;
+  align-items:center;
+  justify-content:center;
   background:rgba(0,0,0,.65);
   backdrop-filter: blur(6px);
-  z-index:50; padding:18px;
+  z-index:50; padding:18px; overflow:hidden;
 }
 .modal{
+  width:100%;
   max-width:1100px; margin:0 auto;
   height:calc(100vh - 36px);
   border-radius:20px;
@@ -471,6 +718,37 @@ footer{
   overflow:hidden;
   display:flex; flex-direction:column;
 }
+
+/* Kompaktní varianta modalu – používá se pouze pro titulní stránku (Anonimizace) */
+.modalOverlay.isAnon .modal{
+  max-width:680px;
+  height:auto;
+  max-height:calc(100vh - 36px);
+}
+.modalOverlay.isAnon .modalBody{
+  padding:18px;
+  padding-bottom:18px;
+}
+
+/* Kompaktní varianta modalu – používá se pouze pro titulní stránku (Podpořit) */
+.modalOverlay.isSupport .modal{
+  width:100%;
+  max-width:1200px;
+  max-height:90vh;
+  height:auto;
+  border-radius:20px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.modalOverlay.isSupport .modalBody{
+  padding:18px;
+  padding-bottom:18px;
+  flex:1 1 auto;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
 .modalHeader{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
   padding:12px;
@@ -481,7 +759,7 @@ footer{
 .modalTitle b{ font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70vw; }
 .modalTitle span{ font-size:12px; color:var(--muted); }
 .modalBody{ padding:12px;
-  padding-bottom:72px; overflow:auto; }
+  padding-bottom:72px; overflow-y:auto; overflow-x:hidden; }
 
 .btnDanger{
   border-color:var(--dangerBd);
@@ -492,6 +770,342 @@ footer{
 }
 
 .modalActions{ display:flex; gap:10px; align-items:center; }
+
+/* anonymizace modal (titulní stránka) */
+.anonModal{
+  max-width: 100%;
+}
+.anonH1{
+  margin: 2px 0 10px;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+.anonModal p{
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.anonModal p:first-of-type{
+  color: var(--text);
+  font-weight: 700;
+}
+.anonActions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top: 14px;
+}
+
+a.btnPrimary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+}
+
+.btnAnon{
+  border-radius: 14px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.16);
+}
+.btnAnon:hover{
+  filter: brightness(1.10);
+}
+
+/* Podpořit modal (titulní stránka) */
+.
+/* === Support payment layout (responsive) === */
+.supportPayContent{
+  padding: 0 6px;
+  width:100%;
+  display:flex;
+  flex-direction:row;
+  gap:20px;
+  align-items:flex-start;
+  justify-content:center;
+  margin-top: 8px;
+}
+
+
+.supportQrWrap{
+  flex:0 0 auto;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+.supportInfo{
+  flex:1 1 0;
+  min-width:0;
+  max-width:360px;
+  width:100%;
+}
+
+.supportQr{
+  width:100%;
+  max-width:320px;
+  height:auto;
+}
+
+@media (max-width: 768px){
+  .modalOverlay{ padding:12px; }
+  .supportPayContent{ flex-direction:column; align-items:center; }
+
+  .supportQr{ width:100%; max-width:260px; }
+  .supportSwitch{ flex-direction:column; gap:8px; }
+  .supportSwitchBtn{ width:100%; }
+}
+supportModal{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  /* make the support card slimmer */
+  max-width:920px;
+  margin:0 auto;
+}
+
+.supportHero{
+  width:100%;
+  text-align:center;
+  padding: 2px 0 2px;
+}
+.supportTitle{
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+}
+.supportBrand{
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: .92;
+}
+.supportTagline{
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.supportSwitch{
+  width:100%;
+  max-width: 600px;
+  display:flex;
+  gap:10px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+.supportSwitchBtn{
+  flex:1;
+  border-radius: 14px;
+  padding: 10px 12px;
+  border:1px solid rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  color: var(--text);
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor:pointer;
+  transition: transform .08s ease, filter .15s ease, background .15s ease;
+}
+html[data-theme="light"] .supportSwitchBtn{
+  border:1px solid rgba(0,0,0,.12);
+}
+.supportSwitchBtn:hover{ filter: brightness(1.08); }
+.supportSwitchBtn:active{ transform: translateY(1px); }
+.supportSwitchBtn.isActive{
+  border:1px solid rgba(60, 200, 120, .55);
+  background: rgba(60, 200, 120, .18);
+}
+.supportBody{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+@media (min-width: 720px){
+  .supportBody{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  .supportQr{
+    width:100%;
+    max-width:260px;
+  }
+}
+.supportQrWrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.supportQr{
+  /* kompaktnější, stále dobře skenovatelné */
+  width:100%;
+  max-width:100%;
+  height:auto;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background:color-mix(in srgb, var(--panel) 70%, transparent);
+  padding:8px;
+  box-shadow:0 14px 38px rgba(0,0,0,.22);
+}
+html[data-theme="light"] .supportQr{
+  border:1px solid rgba(0,0,0,.10);
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+.supportInfo{
+  width:100%;
+    border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:color-mix(in srgb, var(--panel) 62%, transparent);
+  backdrop-filter: blur(8px);
+  padding:10px 12px;
+  line-height:1.45;
+}
+html[data-theme="light"] .supportInfo{
+  border:1px solid rgba(0,0,0,.10);
+  background:color-mix(in srgb, var(--panel) 82%, transparent);
+}
+
+.supportInfoRow{
+  display:grid;
+  grid-template-columns: 120px 1fr auto;
+  align-items:center;
+  column-gap:10px;
+  row-gap:2px;
+  padding:6px 0;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+html[data-theme="light"] .supportInfoRow{
+  border-top:1px solid rgba(0,0,0,.06);
+}
+.supportInfoRow:first-of-type{ border-top:0; padding-top:2px; }
+
+.supportInfoLabel{
+  font-size:10px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.85;
+  font-weight:800;
+}
+.supportInfoValue{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.01em;
+  word-break: break-word;
+}
+.supportInfoMono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight:700;
+}
+.supportCopy{
+  justify-self:end;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:5px 8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+}
+html[data-theme="light"] .supportCopy{
+  border:1px solid rgba(0,0,0,.12);
+}
+.supportCopy:hover{ filter: brightness(1.08); }
+
+/* Mobile: make support "table" fit screen and place Copy under value */
+@media (max-width: 520px){
+  .supportInfo{ padding:10px 10px; }
+  .supportInfoRow{
+    grid-template-columns: 1fr;
+    row-gap:6px;
+    padding:10px 0;
+  }
+  .supportInfoLabel{ font-size:10px; }
+  .supportInfoValue{ font-size:13px; }
+  .supportCopy{
+    justify-self:start;
+    width:100%;
+    text-align:center;
+    padding:8px 10px;
+    border-radius:12px;
+  }
+  .supportCopyFeedback{ justify-self:start; width:100%; text-align:right; }
+  .supportNote{ max-width:100%; }
+}
+
+.supportCopyFeedback{
+  grid-column: 1 / -1;
+  justify-self:end;
+  font-size:12px;
+  color: var(--muted);
+  min-height: 14px;
+  padding-top:2px;
+}
+.supportInfoTitle{
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  font-size:12px;
+  margin-bottom:6px;
+  color:var(--muted);
+}
+.supportInfoLine{ margin:0; color:var(--text); }
+.supportInfoLine b{
+  display:inline-block;
+  font-size:11px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.85;
+  margin-right:6px;
+}
+
+.supportNote{
+  margin-top:16px;
+  width:100%;
+  max-width: 600px;
+  border-radius:14px;
+  padding:8px 10px;
+  border:1px solid rgba(60, 200, 120, .28);
+  background: rgba(60, 200, 120, .14);
+  color: var(--text);
+  text-align:center;
+  line-height:1.35;
+}
+html[data-theme="light"] .supportNote{
+  border:1px solid rgba(20, 140, 70, .28);
+  background: rgba(20, 140, 70, .10);
+}
+.supportThanks{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.01em;
+  padding-top:2px;
+  opacity:.92;
+}
+
+.btnIconClose{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 14px;
+  background: var(--chip);
+  border: 1px solid var(--border);
+  font-weight: 900;
+  line-height: 1;
+}
+.btnIconClose:hover{ filter: brightness(1.10); }
 
 /* zelené tlačítko v detailu hráče */
 .btnOpponents{
@@ -513,7 +1127,8 @@ html[data-theme="light"] .btnOpponents{
 /* Player hero */
 .heroGrid{
   display:grid;
-  grid-template-columns: 340px 1fr;
+  /* Slightly wider left column for the dual (DCPR+ELO) block */
+  grid-template-columns: 410px 1fr;
   gap:10px;
   margin-bottom:12px;
   align-items:stretch;
@@ -526,12 +1141,16 @@ html[data-theme="light"] .btnOpponents{
 }
 .boxPad{ padding:10px 12px; }
 
+/* Aktuality: add spacing between blocks */
+.newsWrap .box{ margin-bottom: 16px; }
+.newsWrap .box:last-child{ margin-bottom: 0; }
+
 .leftPanel{
   display:flex;
   flex-direction:column;
   min-height: 0;
 }
-.leftTop{ flex: 1 1 auto; }
+.leftTop{ flex: 1 1 auto; display:flex; flex-direction:column; min-height:0; }
 .leftBottom{ margin-top:auto; }
 
 .heroName{
@@ -561,6 +1180,9 @@ html[data-theme="light"] .btnOpponents{
   letter-spacing:.02em;
   border:1px solid currentColor;
   line-height:1.1;
+  align-self:flex-start;
+  width:fit-content;
+  max-width:100%;
 }
 .heroVT.classA{ background:var(--classA-bg); color:var(--classA-fg); }
 .heroVT.classB{ background:var(--classB-bg); color:var(--classB-fg); }
@@ -646,6 +1268,157 @@ html[data-theme="light"] .heroRank.rank2{
   min-width:28px;
   height:22px;
 }
+
+/* Player detail – dual rating columns (DCPR + ELO) */
+.heroNameRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.heroModeToggle{
+  display:inline-flex;
+  align-items:center;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:3px;
+  gap:3px;
+}
+
+.heroModeBtn{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-weight:900;
+  letter-spacing:.04em;
+  padding:5px 8px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:12px;
+  line-height:1;
+}
+.heroModeBtn.isActive{
+  background:var(--panel);
+  color:var(--text);
+  border:1px solid var(--border2);
+}
+.heroModeBtn:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+
+.heroModePanels{ margin-top:10px; display:flex; flex-direction:column; height:100%; flex:1 1 auto; }
+.heroModePanel{ flex:1 1 auto; }
+.heroModePanel.isHidden{ display:none; }
+
+.heroSplit{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+  margin-top:10px;
+}
+.heroCol{
+  border:1px solid var(--border);
+  background:var(--panel2);
+  border-radius:16px;
+  padding:12px 12px 10px;
+  min-width:0;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+.heroColHead{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.heroColTitle{
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-size:12px;
+  color:var(--muted);
+}
+.heroColRank{
+  font-size:12px;
+  color:var(--muted);
+}
+.heroColValue{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:4px 0 10px;
+}
+.heroColNumber{
+  font-size:44px;
+  font-weight:950;
+  line-height:1;
+}
+.heroColStats{
+  /* push stats grid to the bottom of the left column */
+  margin-top:auto;
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap:8px 10px;
+  /* keep a bit of breathing room above, while still staying anchored at the bottom */
+  padding-top:6px;
+}
+.heroMiniStat{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+  border:1px solid var(--border2);
+  background:var(--panel);
+  border-radius:14px;
+  padding:8px 10px;
+}
+
+.heroMiniStatWin{
+  border-color: rgba(60, 200, 120, .35);
+  background: rgba(60, 200, 120, .10);
+}
+html[data-theme="light"] .heroMiniStatWin{
+  border-color: rgba(20, 140, 70, .30);
+  background: rgba(20, 140, 70, .08);
+}
+
+.heroMiniStatLoss{
+  border-color: rgba(255, 110, 110, .35);
+  background: rgba(255, 110, 110, .10);
+}
+html[data-theme="light"] .heroMiniStatLoss{
+  border-color: rgba(190, 40, 40, .28);
+  background: rgba(190, 40, 40, .07);
+}
+
+.heroMiniStatDraw{
+  border-color: rgba(245, 200, 70, .35);
+  background: rgba(245, 200, 70, .10);
+}
+html[data-theme="light"] .heroMiniStatDraw{
+  border-color: rgba(190, 140, 20, .28);
+  background: rgba(190, 140, 20, .07);
+}
+.heroMiniStat b{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--muted);
+}
+.heroMiniStat span{
+  font-weight:900;
+  font-size:16px;
+}
+@media (max-width: 820px){
+  .heroSplit{ grid-template-columns: 1fr; }
+}
+
 
 .heroEloLabel{ color:var(--muted); font-size:12px; margin-bottom:2px; }
 .heroElo{
@@ -818,14 +1591,29 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   .ratedToggleText .labelShort{ display:inline; }
   /* mobile header: row1 = loaded + toggle, row2 = request button right */
   .headerRight{ width:100%; align-items:stretch; gap:8px; }
+  /* Mobile: keep Support + Language + Hamburger on ONE row */
   .headerRightTop{
     width:100%;
-    display:grid;
-    grid-template-columns: 1fr auto;
+    display:flex;
+    flex-wrap:nowrap;
     gap:8px;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-end;
   }
+  .btnSupport{
+    flex: 1 1 auto;
+    min-width: 0; /* allow ellipsis */
+    padding: 8px 10px;
+  }
+  .btnSupportText{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    letter-spacing: .02em;
+  }
+  .langWrap{ flex: 0 0 auto; }
+  #menuBtn{ flex: 0 0 auto; }
   .badge{ font-size:11px; padding:6px 8px; }
   .themeToggle{ font-size:11px; padding:6px 8px; }
 
@@ -834,11 +1622,11 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
     justify-self:end;
     width:auto;
     padding:8px 10px;
-    border-radius:12px;
+    border-radius:10px;
     font-size:12px;
   }
 
-  button{ padding:8px 10px; border-radius:12px; font-size:12px; }
+  button{ padding:8px 10px; border-radius:10px; font-size:12px; }
 
   /* info panels narrower */
   .container{ padding:0 12px; }
@@ -875,11 +1663,11 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   input[type="search"]{
     width:100%;
     padding:9px 10px;
-    border-radius:12px;
+    border-radius:10px;
     min-width:0;
   }
   .right{ flex:0 0 auto; }
-  #refresh{ padding:9px 10px; border-radius:12px; }
+  #refresh{ padding:9px 10px; border-radius:10px; }
 
   /* Mobile standings table: show Rank + Player + Rating */
   .tableWrap{ overflow-x:hidden; }
@@ -1024,11 +1812,14 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
 }
 .modal.modalFullscreen .modalBody{
   height: calc(100% - 64px);
-  overflow:auto;
+  overflow-y:auto; overflow-x:hidden;
 }
 .pageModal{
   padding: 4px 2px 14px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
+
 .pageModal h2{ margin: 6px 0 10px; }
 
 
@@ -1059,7 +1850,7 @@ html[data-theme="light"] .bigError{ color:#7a1f1f; }
   background:var(--panel);
   color:var(--text);
   padding:8px 10px;
-  border-radius:12px;
+  border-radius:10px;
   font-weight:800;
   min-width:220px;
 }
@@ -1103,7 +1894,7 @@ html[data-theme="light"] .tournamentFilter select{ color-scheme: light; }
 }
 .oppHeaderRow .sectionTitle{ margin:0; }
 .oppHeaderRow input{
-  width:min(360px, 100%);
+  width:100%;
   border:1px solid var(--border2);
   background:transparent;
   color:var(--text);
@@ -1184,7 +1975,7 @@ html[data-theme="light"] .tournamentFilter select option{
 .mobilePageSub{ font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mobilePageBody{
   height:calc(100vh - 56px);
-  overflow:auto;
+  overflow-y:auto; overflow-x:hidden;
   -webkit-overflow-scrolling: touch;
   padding:12px;
   padding-bottom:72px;
@@ -1197,3 +1988,1396 @@ html[data-theme="light"] .tournamentFilter select option{
 /* extra bottom space for mobile scroll reach */
 .endSpacer{ height: 96px; }
 @media (min-width: 561px){ .endSpacer{ height: 24px; } }
+
+
+
+/* === Requested UI tweaks (title page + support modal) === */
+
+/* 1) Desktop: Support + hamburger in one row (preserve mobile behavior) */
+@media (min-width: 900px) {
+  .headerRightTop {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 8–12px */
+  }
+}
+
+/* 2) Link styling for "GRAIL SERIES" in intro */
+.grail-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+.grail-link:hover {
+  opacity: 0.75;
+}
+
+/* 3) Support modal: account block + copy + green thank-you box */
+.supportInfo {
+  /* keep it slim + compact */
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.03);
+}
+/* better spacing between lines */
+.supportInfoLine {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 4px 0;
+}
+.supportInfoTitle {
+  margin-bottom: 10px;
+}
+
+/* click-to-copy values */
+.supportCopy {
+  cursor: pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  transition: transform 0.08s ease, filter 0.15s ease;
+}
+.supportCopy:hover {
+  filter: brightness(1.08);
+}
+.supportCopy:active{ transform: translateY(1px); }
+.supportCopyBtn{
+  justify-self: end;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.supportValue{ font-weight: 800; }
+.supportValueMono{
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  font-weight: 850;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.supportLink{
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+/* subtle feedback */
+.supportCopyFeedback {
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin: 0;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.supportCopyFeedback.isVisible {
+  opacity: 0.75;
+}
+
+/* green box becomes "Děkujeme" */
+.supportNote {
+  border-radius: 16px;
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 1.25rem;
+  border: 1px solid rgba(60, 200, 120, .36);
+  background: rgba(60, 200, 120, .18);
+}
+html[data-theme="light"] .supportNote{
+  border:1px solid rgba(20, 140, 70, .30);
+  background: rgba(20, 140, 70, .12);
+}
+
+
+@media (min-width: 900px){
+  header{ padding:8px 18px 8px; }
+  .headerRightTop{ flex-wrap:nowrap; }
+  .logo{ width:64px; height:64px; flex:0 0 64px; }
+  h1{ font-size:20px; }
+  .credit{ margin-top:4px; font-size:13px; line-height:1.35; }
+  .subtitle{ margin-bottom:6px; }
+}
+
+
+
+/* --- Player card refinements: mode header integrated, bigger numbers, rank badge --- */
+.heroCol{
+  border:0;
+  background:transparent;
+  padding:0;
+  border-radius:0;
+}
+.heroColHead{
+  margin-bottom:10px;
+}
+.heroColTitle{
+  font-size:13px;
+  color:var(--muted);
+}
+.heroColNumber{
+  font-size:58px;
+}
+.heroMiniStat span{
+  font-size:18px;
+}
+
+.heroColRank{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.rankBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border2);
+  background:var(--chip);
+  padding:2px 8px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:950;
+  line-height:1.2;
+  min-width:32px;
+  height:22px;
+}
+
+.rankBadge.rank1{
+  background: rgba(212,175,55,.18);
+  border-color: rgba(212,175,55,.60);
+  color: rgba(245,215,110,1);
+  box-shadow:0 0 10px rgba(255,215,0,.18);
+}
+.rankBadge.rank2{
+  background: rgba(192,192,192,.16);
+  border-color: rgba(192,192,192,.58);
+  color: rgba(230,230,230,1);
+}
+html[data-theme="light"] .rankBadge.rank2{ color:#6b6f77; }
+.rankBadge.rank3{
+  background: rgba(205,127,50,.16);
+  border-color: rgba(205,127,50,.58);
+  color: rgba(255,200,150,1);
+}
+
+
+/* Language switcher (code + circular flag) */
+.langCurrent{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+.langCode{
+  font-size:12px;
+  opacity:.92;
+}
+.langCircle{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  line-height:1;
+  border:1px solid var(--border);
+  background:var(--chip);
+  overflow:hidden;
+}
+.langCircle img{
+  width:100%;
+  height:100%;
+  object-fit: contain;
+  transform: scale(1.20);
+}
+.langItem .langCircle{
+  width:16px;
+  height:16px;
+  font-size:12px;
+}
+
+
+
+/* === Language flag fix === */
+.langFlag{
+  background-size: cover;
+  background-position: center;
+}
+
+.langFlagImg{ width:100%; height:100%; object-fit: contain; }
+
+
+/* === Toolbar layout tweak (homepage search + buttons on one row) === */
+.toolbar{
+  justify-content:flex-start;
+}
+.toolbarLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  width: 100%;
+}
+#search{
+  width: 220px;
+  max-width: 55vw;
+}
+@media (max-width: 768px){
+  #search{ width: 100%; max-width: none; }
+}
+
+
+/* ===== Support Container (narrower layout) ===== */
+.support-container{
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.supportQr{
+  width: 100%;
+  max-width: 320px;
+  display:block;
+  margin:0 auto;
+}
+
+.supportTable{
+  width:100%;
+  max-width:320px;
+  margin: 12px auto 0 auto;
+  background: var(--panel2);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.supportTable h3{
+  margin-bottom: 12px;
+}
+
+.supportTableRow{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.supportTableRow span.value{
+  font-weight:600;
+  word-break: break-word;
+}
+
+.supportThanks{
+  max-width:320px;
+  margin:20px auto 0 auto;
+  padding:14px;
+  border-radius:14px;
+  background:#e6f4ea;
+  color:#14532d;
+  text-align:center;
+  font-weight:600;
+}
+
+/* Mobile */
+@media (max-width: 768px){
+  .support-container{
+    padding:0 14px;
+  }
+}
+
+
+/* ===== Support modal (stacked, clean) ===== */
+.support-container{
+  max-width: 620px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.supportStack{
+  width:100%;
+  max-width: 320px; /* QR width = table width = thanks width */
+  margin: 10px auto 0 auto;
+}
+
+.supportSpacerSm{ height: 10px; }
+.supportSpacerLg{ height: 18px; }
+
+.supportQrWrap{ display:flex; justify-content:center; }
+.supportQr{
+  width:100%;
+  max-width:320px;
+  height:auto;
+  display:block;
+  margin:0 auto;
+}
+
+.supportInfo{
+  width:100%;
+  max-width:320px;
+  margin:0 auto;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:color-mix(in srgb, var(--panel) 62%, transparent);
+  backdrop-filter: blur(8px);
+  padding:12px;
+}
+
+.supportThanksBox{
+  width:100%;
+  max-width:320px;
+  margin:0 auto;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#e6f4ea;
+  color:#14532d;
+  text-align:center;
+  font-weight:800;
+  letter-spacing:.01em;
+}
+
+/* Remove any pill styling inside old thanks */
+.supportNote, .supportThanks{ background:transparent !important; padding:0 !important; border:0 !important; }
+
+/* Tabs: desktop side-by-side, mobile stacked */
+@media (max-width: 768px){
+  .support-container{ padding: 0 12px; }
+  .supportSwitch{ flex-direction:column; }
+  .supportSwitchBtn{ width:100%; }
+  .supportStack{ max-width: 260px; }
+  .supportQr{ max-width:260px; }
+  .supportInfo{ max-width:260px; }
+  .supportThanksBox{ max-width:260px; }
+}
+
+
+/* ===== Center everything in Support ===== */
+.support-container{
+  text-align:center;
+}
+
+.supportSwitch{
+  justify-content:center;
+  gap:8px;
+}
+
+.supportSwitchBtn{
+  padding:6px 14px;
+  font-size:13px;
+  border-radius:14px;
+}
+
+/* Narrow whole stack to 110% QR width */
+.supportStack{
+  max-width: 352px; /* 320px QR * 1.1 ≈ 352px */
+}
+
+.supportInfo{
+  max-width: 352px;
+}
+
+.supportThanksBox{
+  max-width: 352px;
+  background:#1f6f43;
+  color:#ffffff;
+  font-weight:700;
+  border:none;
+}
+
+/* Remove any previous light styling */
+.supportThanksBox::before,
+.supportThanksBox::after{
+  display:none;
+}
+
+
+/* ===== Support desktop: two columns (QR | table+thanks) ===== */
+.supportHero{ text-align:center; }
+.supportSwitch{ justify-content:center; }
+
+.supportColumns{
+  width:100%;
+  max-width: 860px;
+  margin: 14px auto 0 auto;
+  display:flex;
+  gap: 28px;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.supportCol{
+  flex: 1 1 0;
+  min-width: 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.supportColQr{
+  justify-content:flex-start;
+}
+
+.supportColInfo{
+  align-items:center;
+}
+
+.supportInfo,
+.supportThanksBox{
+  width: 100%;
+  max-width: 360px; /* pleasant width on desktop */
+}
+
+.supportQr{
+  max-width: 360px;
+}
+
+.supportSpacerSm{ height: 10px; }
+.supportSpacerLg{ height: 18px; }
+
+@media (max-width: 768px){
+  .supportColumns{
+    flex-direction:column;
+    gap: 14px;
+    max-width: 260px;
+  }
+  .supportInfo, .supportThanksBox, .supportQr{
+    max-width: 260px;
+  }
+}
+
+
+/* ===== Desktop proportion tweak: 1/3 QR | 2/3 Table ===== */
+@media (min-width: 992px){
+  .supportColumns{
+    max-width: 960px;
+    gap: 40px;
+  }
+
+  .supportColQr{
+    flex: 0 0 33%;
+    display:flex;
+    justify-content:center;
+  }
+
+  .supportColInfo{
+    flex: 0 0 67%;
+    display:flex;
+    align-items:center;
+  }
+
+  .supportQr{
+    max-width: 340px;
+  }
+
+  .supportInfo{
+    max-width: 100%;
+  }
+
+  /* Force rows to single line on desktop */
+  .supportInfoRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+  }
+
+  .supportInfoLabel{
+    white-space:nowrap;
+    min-width: 140px;
+  }
+
+  .supportInfoValue{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .supportThanksBox{
+    margin-top: 24px;
+  }
+}
+
+
+/* ===== Make Support full width on desktop ===== */
+@media (min-width: 992px){
+  .supportColumns{
+    max-width: 1200px;
+    width: 100%;
+    gap: 60px;
+    justify-content: space-between;
+  }
+
+  .supportColQr{
+    flex: 0 0 35%;
+  }
+
+  .supportColInfo{
+    flex: 0 0 65%;
+    align-items: stretch;
+  }
+
+  .supportQr{
+    max-width: 420px;
+  }
+
+  .supportInfo{
+    max-width: 100%;
+  }
+
+  .supportThanksBox{
+    width: 100%;
+    margin-top: 28px;
+  }
+}
+
+
+/* ===== Support: bigger QR + table, table sits lower (desktop) ===== */
+@media (min-width: 992px){
+  .supportColumns{
+    max-width: 1280px;
+    gap: 54px;
+  }
+  .supportColQr{ flex: 0 0 45%; }
+  .supportColInfo{ flex: 0 0 55%; }
+
+  .supportQr{ max-width: 460px; }
+
+  /* Sit table a bit lower to visually align with QR */
+  .supportInfo{ margin-top: 26px; }
+
+  /* Bigger text, thinner rows */
+  .supportInfoLabel{ font-size: 11px; }
+  .supportInfoValue{ font-size: 15px; }
+  .supportCopy{ padding: 5px 10px; font-size: 11px; }
+  .supportInfoRow{ padding: 6px 0; }
+}
+
+
+/* ===== Article card (Články) ===== */
+.articleCard{
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.articleHero{
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  display:block;
+}
+.articleRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:14px;
+}
+.articleTitle{
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+.articleBtn{
+  white-space: nowrap;
+}
+@media (max-width: 768px){
+  .articleRow{ flex-direction: column; align-items:flex-start; }
+  .articleBtn{ width: 100%; text-align:center; }
+}
+
+
+/* ===== Support: align left + wider table (desktop) ===== */
+@media (min-width: 992px){
+  .supportColumns{
+    max-width: 1400px;
+    width: calc(100% - 48px);
+    margin: 14px auto 0 auto;
+    justify-content: flex-start;
+    gap: 44px;
+  }
+
+  .supportColQr{
+    flex: 0 0 40%;
+    align-items: flex-start;
+  }
+
+  .supportColInfo{
+    flex: 1 1 60%;
+    align-items: stretch;
+  }
+
+  .supportQrWrap{
+    justify-content: flex-start;
+  }
+
+  .supportInfo{
+    width: 100%;
+    max-width: none;
+  }
+
+  .supportThanksBox{
+    width: 100%;
+    max-width: none;
+  }
+}
+
+
+/* =========================================================
+   SUPPORT MODAL (REWRITE) — clean, stable layout
+   ========================================================= */
+.modalOverlay.isSupport .modal{
+  width: 100%;
+  max-width: 1280px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modalOverlay.isSupport .modalBody{
+  padding: 22px 22px 24px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Root */
+.supportX{
+  width: 100%;
+}
+
+.supportXWrap{
+  width: 100%;
+  max-width: 860px; /* similar to player card width */
+  margin: 0 auto;
+}
+
+/* Header */
+.supportXHero{
+  text-align: center;
+  margin-top: 4px;
+}
+.supportXTitle{
+  font-size: 38px;
+  font-weight: 950;
+  letter-spacing: .02em;
+}
+.supportXBrand{
+  margin-top: 4px;
+  font-size: 13px;
+  letter-spacing: .18em;
+  opacity: .85;
+}
+.supportXTagline{
+  margin-top: 10px;
+  font-size: 15px;
+  opacity: .9;
+}
+
+/* Tabs */
+.supportXTabs{
+  margin: 18px auto 0;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  max-width: 760px;
+}
+.supportXTab{
+  flex: 1 1 0;
+  max-width: 360px;
+  border-radius: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  color: inherit;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+html[data-theme="light"] .supportXTab{
+  border: 1px solid rgba(0,0,0,.12);
+}
+.supportXTab.isActive{
+  background: rgba(30, 120, 70, .35);
+  border-color: rgba(60, 220, 140, .35);
+}
+
+/* Grid */
+.supportXGrid{
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 2fr; /* 1/3 QR, 2/3 table */
+  gap: 28px;
+  align-items: start;
+}
+.supportXCol{
+  min-width: 0;
+}
+.supportXColQr{
+  display: flex;
+  justify-content: flex-start; /* pushes QR left */
+}
+.supportXColInfo{
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* QR */
+.supportXQrCard{
+  width: 100%;
+  max-width: 520px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.20);
+  padding: 14px;
+}
+html[data-theme="light"] .supportXQrCard{
+  background: rgba(255,255,255,.65);
+}
+.supportXQr{
+  width: 100%;
+  display: block;
+  border-radius: 14px;
+  background: #fff;
+}
+
+/* Table card */
+.supportXCard{
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: color-mix(in srgb, var(--panel) 62%, transparent);
+  padding: 14px 14px 10px;
+}
+.supportXCardTitle{
+  text-align: center;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .9;
+  margin: 2px 0 10px;
+}
+
+/* Rows (single line on desktop) */
+.supportXRow{
+  display: grid;
+  grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+html[data-theme="light"] .supportXRow{
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+.supportXRow:first-of-type{ border-top: 0; padding-top: 4px; }
+
+.supportXKey{
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .85;
+  white-space: nowrap;
+}
+.supportXVal{
+  font-size: 16px;
+  font-weight: 800;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.supportXMono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.supportXLink{
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Copy button */
+.supportXCopy{
+  border-radius: 999px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: inherit;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+html[data-theme="light"] .supportXCopy{
+  border: 1px solid rgba(0,0,0,.14);
+  background: rgba(0,0,0,.04);
+}
+.supportXCopy:hover{ filter: brightness(1.08); }
+.supportXCopy.isCopied{ background: rgba(30, 120, 70, .35); border-color: rgba(60, 220, 140, .35); }
+
+/* Thanks */
+.supportXThanks{
+  margin-top: 18px;
+  width: 100%;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: #1f6f43;
+  color: #fff;
+  font-weight: 950;
+  text-align: center;
+  letter-spacing: .02em;
+}
+
+/* Responsive */
+@media (max-width: 900px){
+  .supportXTitle{ font-size: 30px; }
+  .supportXGrid{ grid-template-columns: 1fr; }
+  .supportXColQr{ justify-content: center; }
+  .supportXQrCard{ max-width: var(--supportXCardMax); }
+  .supportXQrCard{ max-width: 360px; }
+  /* Keep info card + Thanks aligned to the same width as the QR on mobile */
+  .supportXCard,
+  .supportXThanks{
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .supportXRow{
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 0;
+  }
+  .supportXKey, .supportXVal{ white-space: normal; }
+  .supportXCopy{ width: 100%; }
+  .supportXTabs{ flex-direction: column; max-width: 420px; }
+  .supportXTab{ max-width: none; width: 100%; }
+}
+
+
+/* ===== Final tweak: slightly smaller QR, table fits perfectly ===== */
+@media (min-width: 992px){
+  .supportXGrid{
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 24px;
+  }
+
+  .supportXQrCard{
+    max-width: 460px;   /* slightly smaller */
+  }
+
+  .supportXQr{
+    max-width: 430px;   /* reduce QR image size */
+  }
+
+  .supportXCard{
+    padding: 16px 18px 12px;
+  }
+
+  .supportXRow{
+    grid-template-columns: 150px 1fr auto;
+  }
+
+  .supportXVal{
+    font-size: 15px;
+  }
+}
+
+
+/* ===== SupportX FIX: tight, responsive, no weird gaps ===== */
+.modalOverlay.isSupport .modalBody{
+  padding: 18px 18px 20px;
+}
+
+.supportXGrid{
+  width: 100%;
+  max-width: none;
+  grid-template-columns: 1fr 1.55fr;
+  gap: 16px; /* remove big gap between QR and table */
+}
+
+.supportXColQr{ justify-content: flex-start; }
+.supportXColInfo{ align-items: stretch; }
+
+/* QR card fits QR perfectly */
+.supportXQrCard{
+  max-width: none;
+  padding: 10px;
+}
+.supportXQr{
+  border-radius: 12px;
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+}
+
+/* Table uses all available width and hugs right edge (within modal padding) */
+.supportXCard,
+.supportXThanks{
+  width: 100%;
+}
+
+@media (max-width: 900px){
+  .supportXGrid{ grid-template-columns: 1fr; gap: 14px; }
+  .supportXQrCard{ padding: 10px; }
+}
+
+
+/* ===== Support compact scaling (fit fully without scroll) ===== */
+@media (min-width: 992px){
+  .modalOverlay.isSupport .modal{
+    max-width: 1100px;
+  }
+
+  .supportXGrid{
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 14px;
+  }
+
+  .supportXQrCard{
+    max-width: 420px;
+    padding: 8px;
+  }
+
+  .supportXQr{
+    max-width: 390px;
+  }
+
+  .supportXCard{
+    padding: 12px 14px 10px;
+  }
+
+  .supportXRow{
+    grid-template-columns: 140px 1fr auto;
+    padding: 7px 0;
+  }
+
+  .supportXVal{
+    font-size: 14px;
+  }
+
+  .supportXCopy{
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .supportXThanks{
+    padding: 12px 14px;
+    margin-top: 14px;
+  }
+}
+
+
+/* ===== Articles (full-width cards) ===== */
+.articlesWrap{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.articleCardFull{
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  overflow: hidden;
+}
+.articleBanner{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.articleInner{
+  padding: 14px 14px 16px;
+  /* Keep full-width card, but make long text comfortably readable */
+  max-width: 980px;
+  margin: 0 auto;
+}
+.articleH{
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 950;
+}
+.articleP{
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+
+/* Teaser row: text + right-aligned CTA */
+.articleTeaserRow{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.articleTeaserRow .articleP{ margin:0; flex:1 1 auto; }
+.articleTeaserRow .articleReadBtn{ flex:0 0 auto; align-self:center; }
+
+@media (max-width: 560px){
+  .articleTeaserRow{ flex-direction:column; align-items:stretch; }
+  .articleTeaserRow .articleReadBtn{ width:100%; }
+}
+.articleDetail .articleInner h3{
+  margin-top: 18px;
+}
+
+.articleLead{
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.articleList{
+  margin: 10px 0 14px;
+  padding-left: 18px;
+}
+.articleList li{
+  margin: 6px 0;
+}
+
+.articleCallout{
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  border-radius: 16px;
+  padding: 10px 10px 8px;
+  margin: 12px 0;
+}
+.articleCalloutH{
+  font-weight: 950;
+  margin-bottom: 6px;
+}
+.articleMath{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px dashed var(--border2);
+  background: color-mix(in srgb, var(--panel) 55%, transparent);
+  overflow-x: auto;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+@media (max-width: 768px){
+  .articleH{ font-size: 18px; }
+  .articleInner{ padding: 12px; }
+  .articleMath{ font-size: 13px; }
+}
+
+/* ===== Management ===== */
+.managementWrap{ width: 100%; }
+.managementGrid{
+  display: grid;
+  /* Compact, centered cards (future-proof for more members) */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+  justify-content: center;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.managementCard{
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  padding: 14px;
+}
+.managementName{
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 950;
+  text-align: center;
+}
+.managementIntro{
+  margin-bottom: 14px;
+}
+.managementPhoto{
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid var(--border2);
+  display: block;
+  background: rgba(255,255,255,.06);
+}
+.managementRole{
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+  font-weight: 750;
+  opacity: .95;
+  font-size: 13px;
+}
+
+.managementContact{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border2);
+  font-size: 13px;
+  text-align: center;
+}
+
+.managementActs{
+  margin-top: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  padding: 14px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.managementActsTitle{
+  margin: 0 0 10px;
+  font-weight: 950;
+}
+.managementAct{
+  padding: 10px 0;
+  border-top: 1px solid var(--border2);
+}
+.managementAct:first-of-type{
+  border-top: none;
+  padding-top: 0;
+}
+.managementActH{
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.managementActP{
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.managementCoop{
+  margin-top: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--panel) 65%, transparent);
+  padding: 14px;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.managementCoopTitle{
+  margin: 0 0 10px;
+  font-weight: 950;
+}
+
+/* Mobile readability tweaks for Management */
+@media (max-width: 768px){
+  .managementIntro .muted{ font-size: 16px; line-height: 1.65; }
+  .managementRole{ font-size: 12.5px; line-height: 1.55; }
+  .managementActP{ font-size: 14px; line-height: 1.65; }
+  .managementActs, .managementCoop{ padding: 12px; }
+}
+
+.managementBottomSpacer{ height: 26px; }
+@media (max-width: 900px){
+  .managementBottomSpacer{ height: calc(90px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 900px){
+  .managementGrid{ grid-template-columns: 1fr; }
+}
+
+
+/* ===== PATCH 4b: Support modal on phones - full width/height and no overflow ===== */
+@media (max-width: 600px){
+  .modalOverlay.isSupport{
+    padding: 0;
+  }
+  .modalOverlay.isSupport .modal{
+    height: 100vh;
+    max-width: none;
+    border-radius: 0;
+  }
+  .modalOverlay.isSupport .modalBody{
+    padding: 14px 12px calc(18px + env(safe-area-inset-bottom));
+  }
+  .supportXWrap{
+    max-width: none;
+  }
+  .supportXGrid{
+    grid-template-columns: 1fr;
+  }
+  .supportXRow{
+    width: 100%;
+    max-width: 100%;
+  }
+  .supportXVal{
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .supportXCopy{
+    width: 100%;
+  }
+  .supportXThanks{
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+/* ===== Support modal – mobile full-screen + responsive table ===== */
+@media (max-width: 520px){
+  .modalOverlay.isSupport{ padding:0; }
+  .modalOverlay.isSupport .modal{
+    max-width:none;
+    width:100vw;
+    height:100vh;
+    max-height:none;
+    border-radius:0;
+  }
+  .modalOverlay.isSupport .modalBody{
+    padding:12px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .supportXWrap{
+    max-width: 100%;
+    margin: 0;
+  }
+  .supportXTitle{ font-size: 30px; }
+  .supportXTabs{ margin-top:14px; gap:10px; }
+  .supportXGrid{
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .supportXColQr{ justify-content:center; }
+  .supportXQrCard{ max-width: 320px; margin:0 auto; }
+  .supportXCard{ border-radius:16px; }
+  .supportXRow{
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .supportXKey{ font-size: 12px; opacity:.9; }
+  .supportXVal{
+    font-size: 14px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .supportXCopy{
+    width:100%;
+    justify-content:center;
+    padding: 10px 12px;
+  }
+  .supportXThanks{
+    width:100%;
+    border-radius:16px;
+    margin-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ===== PATCH 4c: Header buttons on phones (Support left, Language+Menu right) ===== */
+@media (max-width: 520px){
+  .headerRight{ width:100%; align-items:stretch; }
+  .headerRightTop{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
+    width:100%;
+    justify-content:space-between;
+    gap:8px;
+  }
+  /* Push the language+menu group to the right */
+  .headerRightTop .langWrap{ margin-left:auto; }
+  /* Make Support sit visually on the left edge */
+  /* Keep the button itself on the left, but center its label inside */
+  .btnSupport{ justify-content:center; }
+}
+
+/* ===== Support modal – ensure table + Thanks fit full width on touch phones (incl. landscape) ===== */
+@media (hover: none) and (pointer: coarse) and (max-width: 1024px){
+  .supportXWrap{ max-width: 100%; --supportXCardMax: 360px; }
+  .supportXGrid{ grid-template-columns: 1fr; gap: 14px; }
+  .supportXColQr{ justify-content: center; }
+  .supportXRow{
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+  .supportXCopy{ width: 100%; }
+  .supportXCard,
+  .supportXThanks{
+    width: 100%;
+    max-width: var(--supportXCardMax);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+}
+
+/* ===== PATCH 4c: Support modal on phones – true full-screen + safe scrolling ===== */
+@media (max-width: 600px){
+  .modalOverlay.isSupport{
+    align-items:stretch;
+    justify-content:stretch;
+  }
+  .modalOverlay.isSupport .modal{
+    width:100vw;
+    height:100dvh;
+    max-height:100dvh;
+    margin:0;
+  }
+  .modalOverlay.isSupport .modalBody{
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+}
+
+
+/* ===== SupportX mobile width fixes v3 ===== */
+
+/* Make Support (QR + table + thanks) never exceed viewport on phones,
+   and keep COPY buttons compact (not full-width). */
+@media (max-width: 900px){
+  .supportXQrCard,
+  .supportXCard,
+  .supportXThanks{
+    width: 100%;
+    max-width: min(360px, calc(100vw - 48px));
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .supportXCopy{
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Phones/tablets in landscape can exceed 900px width – keep the same mobile behavior. */
+@media (hover: none) and (pointer: coarse) and (max-width: 1024px){
+  .supportXQrCard,
+  .supportXCard,
+  .supportXThanks{
+    width: 100%;
+    max-width: min(360px, calc(100vw - 48px));
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .supportXCopy{
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
