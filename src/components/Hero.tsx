@@ -13,9 +13,12 @@ export function Hero({ lang }: { lang: Lang }) {
   // Hero transforms
   const titleScale = useTransform(scrollY, [0, 220], [1, 0.86]);
   const titleY = useTransform(scrollY, [0, 220], [0, -12]);
-  const photoY = useTransform(scrollY, [0, 220], [0, -28]);
-  const photoScale = useTransform(scrollY, [0, 220], [1, 0.92]);
-  const sigOpacity = useTransform(scrollY, [0, 220], [0.55, 0.14]);
+  const photoY = useTransform(scrollY, [0, 240], [0, -36]);
+  const photoX = useTransform(scrollY, [0, 240], [0, -110]);
+  const photoScale = useTransform(scrollY, [0, 240], [1, 0.9]);
+  const frameOpacity = useTransform(scrollY, [80, 220], [0, 1]);
+  const frameY = useTransform(scrollY, [80, 220], [22, 0]);
+  const sigOpacity = useTransform(scrollY, [0, 220], [0.65, 0.22]);
 
   return (
     <section id="home" className="relative overflow-hidden pt-28 md:pt-32">
@@ -48,22 +51,35 @@ export function Hero({ lang }: { lang: Lang }) {
 
           <motion.h1
             style={{ scale: titleScale, y: titleY }}
-            className="mt-7 text-[clamp(44px,6vw,76px)] font-semibold leading-[0.96] tracking-tightish"
+            className="mt-7 text-[clamp(54px,7.2vw,94px)] font-semibold leading-[0.92] tracking-tightish"
           >
             {profile.name}
           </motion.h1>
 
           <div className="relative mt-3">
+            {/* Signature (image) */}
             <motion.div
               style={{ opacity: sigOpacity }}
-              className="pointer-events-none absolute -top-10 left-0 font-signature text-[64px] leading-none text-[rgba(18,18,18,0.35)] md:-top-12 md:text-[84px]"
+              className="pointer-events-none absolute -top-7 left-2 h-[74px] w-[360px] -rotate-[12deg] md:-top-10 md:left-4 md:h-[90px] md:w-[440px]"
               aria-hidden
             >
-              Matthew Grygar
+              <Image
+                src="/signature.png"
+                alt="Signature"
+                fill
+                sizes="(max-width: 768px) 360px, 440px"
+                className="object-contain"
+                priority
+              />
             </motion.div>
 
             <p className="relative z-10 mt-4 max-w-[52ch] text-base leading-relaxed text-ink2 md:text-lg">
               {t(i18n.hero.title, lang)}
+            </p>
+
+            {/* Highlight line used for the hero-photo morph */}
+            <p className="mt-6 max-w-[46ch] text-[clamp(18px,2.1vw,26px)] font-medium leading-snug text-ink">
+              {t(i18n.about.headline, lang)}
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -96,24 +112,38 @@ export function Hero({ lang }: { lang: Lang }) {
 
         {/* Right photo */}
         <div className="relative md:col-span-5">
-          <motion.div style={{ y: photoY, scale: photoScale }} className="relative">
+          <motion.div
+            style={{ x: photoX, y: photoY, scale: photoScale }}
+            className="relative mx-auto max-w-[520px]"
+          >
+            {/* Spotlight behind */}
             <div
               aria-hidden
-              className="pointer-events-none absolute -inset-6 rounded-[32px] bg-[radial-gradient(ellipse_at_top,rgba(184,155,115,0.26),rgba(184,155,115,0)_60%)] blur-xl"
+              className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(circle_at_30%_20%,rgba(184,155,115,0.30),rgba(184,155,115,0)_60%)] blur-2xl"
             />
-            <div className="relative overflow-hidden rounded-[32px] border border-border bg-[rgba(255,255,255,0.28)] shadow-lift">
+
+            {/* Bottom semi-circle frame appears on scroll */}
+            <motion.div
+              aria-hidden
+              style={{ opacity: frameOpacity, y: frameY }}
+              className="pointer-events-none absolute -bottom-10 left-1/2 h-[58%] w-[118%] -translate-x-1/2 rounded-t-[999px] border border-border bg-[rgba(245,241,232,0.55)] shadow-[0_18px_60px_rgba(18,18,18,0.10)] backdrop-blur"
+            />
+
+            {/* Free-floating image (no frame) */}
+            <div className="relative">
               <Image
                 src="/profile.png"
                 alt="Matthew portrait"
-                width={900}
-                height={1100}
+                width={980}
+                height={1200}
                 priority
-                className="h-[520px] w-full object-cover object-[50%_18%] md:h-[620px]"
+                className="h-[520px] w-full select-none object-cover object-[50%_18%] [filter:drop-shadow(0_26px_60px_rgba(18,18,18,0.18))] md:h-[620px]"
               />
-              {/* Soft vignette */}
+
+              {/* Ultra subtle edge/vignette (keeps it premium on beige) */}
               <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_45%,rgba(0,0,0,0.22))]"
+                className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0)_40%,rgba(0,0,0,0.14))] opacity-70"
               />
             </div>
 
