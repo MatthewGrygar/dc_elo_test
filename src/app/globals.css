@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body{
+  background: theme(colors.bg);
+  color: theme(colors.ink);
+}
+
+::selection{
+  background: rgba(184,155,115,0.22);
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior: auto; }
+}
+
+/* Subtle noise overlay */
+.noise::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events:none;
+  opacity: 0.065;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+a, button, input, textarea{
+  outline: none;
+}
+
+:focus-visible{
+  outline: 2px solid rgba(184,155,115,0.55);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+/* Fancy underline */
+.link-underline{
+  position: relative;
+}
+.link-underline::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-0.18em;
+  height:1px;
+  width:100%;
+  transform: scaleX(0);
+  transform-origin:left;
+  transition: transform 380ms cubic-bezier(.2,.8,.2,1);
+  background: rgba(18,18,18,0.35);
+}
+.link-underline:hover::after, .link-underline:focus-visible::after{
+  transform: scaleX(1);
+}
+
+/* Custom cursor (subtle) */
+@media (pointer:fine){
+  .cursor-dot{
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(18,18,18,0.22);
+    box-shadow: 0 0 0 8px rgba(184,155,115,0.14);
+    pointer-events:none;
+    z-index: 60;
+    transform: translate3d(-50%, -50%, 0);
+    transition: transform 80ms linear, opacity 200ms ease;
+  }
+}

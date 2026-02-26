@@ -1,39 +1,26 @@
-# Matthew Grygar — osobní stránka (GitHub Pages)
+# Matthew Grygar — Portfolio (Next.js)
 
-Minimalistická, elegantní osobní stránka inspirovaná dodaným stylem (béžové pozadí, výrazná serif typografie, čisté rozvržení) + jemné animace.
+Premium one-page portfolio built with Next.js (App Router), TypeScript, TailwindCSS and Framer Motion.
 
-## Struktura
-- `index.html` – obsah stránky
-- `styles.css` – styling
-- `main.js` – malé animace/reveal + smooth scroll
-- `assets/` – fotka a drobná textura
-
-## Jak spustit lokálně
-Nejjednodušší je použít libovolný statický server:
+## Quick start
 
 ```bash
-# varianta 1 (Python)
-python3 -m http.server 5173
-
-# varianta 2 (Node)
-npx serve .
+npm install
+npm run dev
 ```
 
-Pak otevři `http://localhost:5173`.
+Open http://localhost:3000
 
-## Nasazení na GitHub Pages
-1. Vytvoř nový repo (např. `matthew-grygar`).
-2. Nahraj obsah tohoto projektu do rootu repozitáře.
-3. Na GitHubu: **Settings → Pages**
-   - **Build and deployment**: *Deploy from a branch*
-   - Branch: `main` (nebo `master`) / folder: `/ (root)`
-4. Hotovo – GitHub Pages ti vygeneruje URL.
+## Content & customization
 
-## Co upravit jako první
-- Jméno a texty: `index.html` (sekce **O mně**, **Pozice**, **Projekty**, **Kontakt**)
-- Kontakty: e‑mail, LinkedIn, GitHub odkazy
-- Případně barvy: `styles.css` (CSS proměnné v `:root`)
+- **All content lives in** `src/data/site.ts` (experience, projects, skills, copy, links).
+- Replace placeholders:
+  - `profile.email` and `profile.linkedin`
+  - `metadataBase` and OpenGraph URLs in `src/app/layout.tsx`
+- **Profile photo:** `public/profile.png` (already included from your uploaded photo).
+- **CV:** replace `public/cv.pdf` with your real file.
 
----
+## Deploy
 
-Pozn.: Fotka je už připravená jako PNG s průhledným pozadím (`assets/matthew-hero.png`).
+Push to GitHub and deploy to Vercel (recommended) or any Node host.
+
