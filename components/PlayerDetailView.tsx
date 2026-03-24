@@ -143,63 +143,103 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%", overflowY: "auto" }} className="scrollbar-thin">
 
-      {/* ── HERO ROW ── */}
-      <GC style={{ flexShrink: 0 }}>
-        <div style={{ padding: "18px 20px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 20, alignItems: "center" }}>
-            {/* Avatar + name */}
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 60, height: 60, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))", border: "2px solid hsl(var(--primary) / 0.3)", boxShadow: "0 0 28px -4px hsl(var(--primary) / 0.3)", fontFamily: "var(--font-display)", flexShrink: 0 }}>
+      {/* ── HERO ROW: 3 panels ── */}
+      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, flexShrink: 0 }}>
+
+        {/* Panel 1 — Name + ELO */}
+        <GC>
+          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 52, height: 52, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 900, background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))", border: "2px solid hsl(var(--primary) / 0.3)", boxShadow: "0 0 22px -4px hsl(var(--primary) / 0.28)", fontFamily: "var(--font-display)", flexShrink: 0 }}>
                 {avatarInitials(s.name)}
               </div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: 18, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{s.name}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                  <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.28)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em" }}>{mode}</span>
-                  <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.28)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em" }}>{mode}</span>
+                  <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
                 </div>
               </div>
             </div>
-
-            {/* W/L/D center */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-              <div style={{ display: "flex", gap: 6 }}>
-                {[
-                  { label: "W", value: s.wins, color: green, pct: wPct },
-                  { label: "L", value: s.losses, color: red, pct: lPct },
-                  { label: "D", value: s.draws, color: amber, pct: dPct },
-                ].map(r => (
-                  <div key={r.label} style={{ padding: "10px 16px", borderRadius: 12, background: `${r.color}15`, border: `1px solid ${r.color}35`, textAlign: "center", minWidth: 64 }}>
-                    <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1 }}>{r.value}</div>
-                    <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{r.label} · {r.pct}%</div>
-                  </div>
-                ))}
-              </div>
-              {/* W/L/D bar */}
-              <div style={{ display: "flex", width: "100%", maxWidth: 260, height: 5, borderRadius: 99, overflow: "hidden", gap: 1 }}>
-                <div style={{ flex: wPct, background: green, borderRadius: "99px 0 0 99px" }} />
-                <div style={{ flex: lPct, background: red }} />
-                <div style={{ flex: dPct || 1, background: amber, borderRadius: "0 99px 99px 0" }} />
-              </div>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>
-                {s.totalGames} her celkem · WR <span style={{ color: s.winrate >= 0.5 ? green : red, fontWeight: 700 }}>{(s.winrate * 100).toFixed(1)}%</span>
-              </div>
-            </div>
-
-            {/* ELO number */}
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>ELO {mode}</div>
-              <div style={{ fontSize: 48, fontWeight: 900, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", lineHeight: 1, letterSpacing: "-0.03em" }}>{fmt(s.currentElo)}</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, marginTop: 4 }}>
-                <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 600, color: eloChange >= 0 ? green : red }}>{eloChange >= 0 ? "+" : ""}{fmt(eloChange)} <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>30d</span></div>
-                {c.currentStreak.length > 0 && (
-                  <div style={{ padding: "2px 8px", borderRadius: 99, background: `${streakColor}20`, border: `1px solid ${streakColor}40`, fontSize: 10, fontFamily: "var(--font-mono)", color: streakColor, fontWeight: 700 }}>{streakLabel} ×{c.currentStreak.length}</div>
-                )}
+            <div style={{ borderTop: "1px solid hsl(var(--border)/0.4)", paddingTop: 10 }}>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>{mode} Rating</div>
+              <div style={{ fontSize: 40, fontWeight: 900, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", lineHeight: 1, letterSpacing: "-0.03em" }}>{fmt(s.currentElo)}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: eloChange >= 0 ? green : red }}>{eloChange >= 0 ? "+" : ""}{fmt(eloChange)} <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>30d</span></span>
+                <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>Peak: <span style={{ color: amber, fontWeight: 700 }}>{fmt(s.peakElo)}</span></span>
               </div>
             </div>
           </div>
-        </div>
-      </GC>
+        </GC>
+
+        {/* Panel 2 — W/L/D */}
+        <GC>
+          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Win / Loss / Draw</div>
+            <div style={{ display: "flex", gap: 6, flex: 1 }}>
+              {[
+                { label: "W", value: s.wins, color: green, pct: wPct },
+                { label: "L", value: s.losses, color: red, pct: lPct },
+                { label: "D", value: s.draws, color: amber, pct: dPct },
+              ].map(r => (
+                <div key={r.label} style={{ flex: 1, padding: "10px 8px", borderRadius: 12, background: `${r.color}15`, border: `1px solid ${r.color}35`, textAlign: "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1 }}>{r.value}</div>
+                  <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{r.label} · {r.pct}%</div>
+                </div>
+              ))}
+            </div>
+            {/* W/L/D bar */}
+            <div style={{ display: "flex", height: 5, borderRadius: 99, overflow: "hidden", gap: 1 }}>
+              <div style={{ flex: wPct, background: green, borderRadius: "99px 0 0 99px" }} />
+              <div style={{ flex: lPct, background: red }} />
+              <div style={{ flex: dPct || 1, background: amber, borderRadius: "0 99px 99px 0" }} />
+            </div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>
+              {s.totalGames} her · WR <span style={{ color: s.winrate >= 0.5 ? green : red, fontWeight: 700 }}>{(s.winrate * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+        </GC>
+
+        {/* Panel 3 — Records / badges */}
+        <GC>
+          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Profil & rekordy</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {c.currentStreak.length > 0 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${streakColor}18`, border: `1px solid ${streakColor}35`, color: streakColor, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{streakLabel} ×{c.currentStreak.length}</span>
+              )}
+              {s.longestWinStreak > 0 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${green}14`, border: `1px solid ${green}30`, color: green, fontFamily: "var(--font-mono)", fontWeight: 700 }}>🔥 Best streak ×{s.longestWinStreak}</span>
+              )}
+              {c.eloChange30d > 20 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${green}14`, border: `1px solid ${green}30`, color: green, fontFamily: "var(--font-mono)", fontWeight: 700 }}>📈 +{fmt(c.eloChange30d)} 30d</span>
+              )}
+              {c.momentumIndex >= 70 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: "hsl(var(--primary)/0.14)", border: "1px solid hsl(var(--primary)/0.3)", color: "hsl(var(--primary))", fontFamily: "var(--font-mono)", fontWeight: 700 }}>⚡ Hot momentum</span>
+              )}
+              {c.consistencyScore >= 75 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${amber}14`, border: `1px solid ${amber}30`, color: amber, fontFamily: "var(--font-mono)", fontWeight: 700 }}>🎯 Consistent</span>
+              )}
+              {selectedPlayer?.id === 1 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${amber}18`, border: `1px solid ${amber}35`, color: amber, fontFamily: "var(--font-mono)", fontWeight: 700 }}>👑 #1 hráč</span>
+              )}
+              {c.upsetRate > 30 && (
+                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: "hsl(265,65%,60%/0.14)", border: "1px solid hsl(265,65%,60%/0.3)", color: "hsl(265,65%,60%)", fontFamily: "var(--font-mono)", fontWeight: 700 }}>⚡ Upset King {c.upsetRate}%</span>
+              )}
+            </div>
+            <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Perf. Rating</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{fmt(c.performanceRating)}</div>
+              </div>
+              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bayesian WR</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{s.bayesianWR ?? "—"}</div>
+              </div>
+            </div>
+          </div>
+        </GC>
+      </div>
 
       {/* ── ELO CHART ── */}
       <GC style={{ flexShrink: 0 }}>
@@ -234,7 +274,7 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-              <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval="preserveStartEnd" />
+              <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.ceil(activeTrend.length / 6) - 1)} />
               <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={42} domain={[trendMin, trendMax]} />
               <ReferenceLine y={s.peakElo} stroke={amber} strokeDasharray="4 2" label={{ value: "Peak", fontSize: 9, fill: amber, position: "insideTopRight" }} />
               <Tooltip content={({ active, payload }) => {
@@ -563,7 +603,7 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
       </div>
 
       {/* ── MAIN ROW ── */}
-      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 10, flex: 1, minHeight: 0 }}>
+      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 10, flex: 1, minHeight: 280 }}>
 
         {/* Left: enriched opponent list */}
         <GC style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -698,7 +738,7 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
       )}
 
       {/* ── MAIN GRID ── */}
-      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: 1, minHeight: 280 }}>
+      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: 1, minHeight: 320 }}>
 
         {/* Left: enriched tournament cards */}
         <GC style={{ display: "flex", flexDirection: "column" }}>
@@ -889,9 +929,9 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
       {/* ── Table ── */}
       <div style={{ flex: 1, overflow: "hidden", borderRadius: 12, border: "1px solid hsl(var(--border)/0.4)", background: "hsl(var(--card)/0.6)", backdropFilter: "blur(12px)", display: "flex", flexDirection: "column" }}>
         {/* Header */}
-        <div style={{ display: "grid", gridTemplateColumns: "90px 1fr 130px 90px 90px 80px 70px", gap: 0, padding: "8px 14px", borderBottom: "1px solid hsl(var(--border)/0.4)", flexShrink: 0 }}>
+        <div className="history-row" style={{ display: "grid", gridTemplateColumns: "90px 1fr 130px 90px 90px 80px 70px", gap: 0, padding: "8px 14px", borderBottom: "1px solid hsl(var(--border)/0.4)", flexShrink: 0 }}>
           {["Datum", "Soupeř", "Turnaj", "ELO před", "ELO po", "Změna", "Výsledek"].map(h => (
-            <div key={h} style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: muted, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</div>
+            <div key={h} className="history-cell" style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: muted, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</div>
           ))}
         </div>
         {/* Rows */}
@@ -900,6 +940,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
             <div style={{ textAlign: "center", padding: 40, color: muted, fontFamily: "var(--font-mono)", fontSize: 12 }}>Žádné zápasy neodpovídají filtru</div>
           ) : pageData.map((m, i) => (
             <div key={`${m.matchId}-${i}`}
+              className="history-row"
               style={{ display: "grid", gridTemplateColumns: "90px 1fr 130px 90px 90px 80px 70px", gap: 0, padding: "9px 14px", borderBottom: "1px solid hsl(var(--border)/0.2)", transition: "background 0.12s" }}
               onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted)/0.35)")}
               onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>

@@ -162,7 +162,7 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
         <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 28 }}>
           {/* Hero row */}
           {(allTimePeak || biggestGain || longestWin || biggestUpset) && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+            <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
               {allTimePeak?.player  && <HeroCard icon={Crown}     label="All-time Peak ELO"        value={allTimePeak.value}  player={allTimePeak.player}  detail={allTimePeak.detail}              color={amber} />}
               {biggestGain?.player  && <HeroCard icon={TrendingUp} label="Největší jednorázový zisk" value={biggestGain.value}  player={biggestGain.player}  detail={biggestGain.detail ?? ""}        color={green} />}
               {longestWin?.player   && <HeroCard icon={Flame}      label="Nejdelší win streak"       value={longestWin.value}   player={longestWin.player}   detail={longestWin.detail}              color={orange}/>}
@@ -171,7 +171,7 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
           )}
 
           {/* Masonry 2-column */}
-          <div style={{ columns: "2", columnGap: 12 }}>
+          <div className="records-masonry" style={{ columns: "2", columnGap: 12 }}>
             {data.categories.map(cat => {
               const validRecords = cat.records.filter(r => r.entry && r.entry.value !== "—");
               if (validRecords.length === 0) return null;

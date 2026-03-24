@@ -210,9 +210,6 @@ export default function OrganizationView() {
           <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{t(lang, "sub_organization")}</p>
         </div>
 
-        {/* News Carousel */}
-        <NewsCarousel lang={lang} />
-
         {/* Hero */}
         <Card accentColor="hsl(152,72%,50%)">
           <div style={{ padding: "24px 26px 0" }}>

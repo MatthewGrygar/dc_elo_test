@@ -137,7 +137,7 @@ function PlayerMiniCard({ player, onClose, onOpen }: {
         </div>
 
         {/* Stats row */}
-        <div style={{
+        <div className="lb-mini-stats" style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
           gap: 8,
@@ -270,22 +270,22 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                 <th onClick={() => handleSort("rating")} style={{ ...thS(true), color: sortKey === "rating" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>{t(lang, "rating")}<SI col="rating" /></span>
                 </th>
-                <th onClick={() => handleSort("games")} style={{ ...thS(true), color: sortKey === "games" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+                <th onClick={() => handleSort("games")} className="hidden md:table-cell" style={{ ...thS(true), color: sortKey === "games" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>{t(lang, "games")}<SI col="games" /></span>
                 </th>
-                <th onClick={() => handleSort("win")} style={{ ...thS(true), color: sortKey === "win" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+                <th onClick={() => handleSort("win")} className="hidden md:table-cell" style={{ ...thS(true), color: sortKey === "win" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>W<SI col="win" /></span>
                 </th>
-                <th onClick={() => handleSort("loss")} style={{ ...thS(true), color: sortKey === "loss" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+                <th onClick={() => handleSort("loss")} className="hidden md:table-cell" style={{ ...thS(true), color: sortKey === "loss" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>L<SI col="loss" /></span>
                 </th>
-                <th onClick={() => handleSort("draw")} style={{ ...thS(true), color: sortKey === "draw" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+                <th onClick={() => handleSort("draw")} className="hidden md:table-cell" style={{ ...thS(true), color: sortKey === "draw" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>D<SI col="draw" /></span>
                 </th>
-                <th onClick={() => handleSort("winrate")} style={{ ...thS(true), color: sortKey === "winrate" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+                <th onClick={() => handleSort("winrate")} className="hidden md:table-cell" style={{ ...thS(true), color: sortKey === "winrate" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>{t(lang, "winrate")}<SI col="winrate" /></span>
                 </th>
-                <th onClick={() => handleSort("peak")} style={{ ...thS(true), color: sortKey === "peak" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
+                <th onClick={() => handleSort("peak")} className="hidden md:table-cell" style={{ ...thS(true), color: sortKey === "peak" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "flex-end" }}>{t(lang, "peak")}<SI col="peak" /></span>
                 </th>
               </tr>
@@ -320,8 +320,8 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                   >
                     <td style={td}>
                       {origRank <= 3 ? (
-                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 13, background: rankColors[origRank - 1].bg, border: `1px solid ${rankColors[origRank - 1].border}` }}>
-                          {medals[origRank - 1]}
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 12, fontWeight: 800, fontFamily: "var(--font-mono)", color: rankColors[origRank - 1].color, background: rankColors[origRank - 1].bg, border: `1px solid ${rankColors[origRank - 1].border}` }}>
+                          {origRank}
                         </span>
                       ) : (
                         <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 10, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted) / 0.5)" }}>
@@ -345,14 +345,14 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                     <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--primary))", fontSize: 13 }}>
                       {p.rating.toLocaleString("cs-CZ")}
                     </td>
-                    <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{p.games}</td>
-                    <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--primary))", fontWeight: 600 }}>{p.win}</td>
-                    <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(0,68%,58%)", fontWeight: 600 }}>{p.loss}</td>
-                    <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(42,90%,52%)", fontWeight: 600 }}>{p.draw}</td>
-                    <td style={{ ...td, textAlign: "right" }}>
+                    <td className="hidden md:table-cell" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{p.games}</td>
+                    <td className="hidden md:table-cell" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--primary))", fontWeight: 600 }}>{p.win}</td>
+                    <td className="hidden md:table-cell" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(0,68%,58%)", fontWeight: 600 }}>{p.loss}</td>
+                    <td className="hidden md:table-cell" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(42,90%,52%)", fontWeight: 600 }}>{p.draw}</td>
+                    <td className="hidden md:table-cell" style={{ ...td, textAlign: "right" }}>
                       <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-mono)", color: wrColor }}>{wr.toFixed(1)}%</span>
                     </td>
-                    <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                    <td className="hidden md:table-cell" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
                       {p.peak.toLocaleString("cs-CZ")}
                     </td>
                   </tr>

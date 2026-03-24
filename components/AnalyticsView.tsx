@@ -563,13 +563,13 @@ export default function AnalyticsView({ prefetchCache }: { prefetchCache?: Prefe
         ) : data ? (
           <>
             {/* Row 1: ELO Distribuce | Winrate distribuce */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <EloHistogram data={data.eloHistogram} />
               <WinrateDistribution data={data.winrateDistribution} />
             </div>
 
             {/* Row 2: Zápasy v čase | Medián ELO v čase */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <GamesOverTime data={data.gamesOverTime} />
               <MedianEloTrend data={data.medianEloTrend ?? []} />
             </div>
@@ -581,7 +581,7 @@ export default function AnalyticsView({ prefetchCache }: { prefetchCache?: Prefe
             <TopNHistory data5={data.top5History} data10={data.top10History ?? []} data15={data.top15History ?? []} top10={data.top10} />
 
             {/* Row 5: Aktivita heatmapa | Zápasy per turnaj */}
-            <div style={{ display: "grid", gridTemplateColumns: "5fr 7fr", gap: 12, alignItems: "start" }}>
+            <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "5fr 7fr", gap: 12, alignItems: "start" }}>
               <ActivityHeatmap data={data.activityHeatmap} />
               <TournamentPie data={data.tournamentPie} />
             </div>

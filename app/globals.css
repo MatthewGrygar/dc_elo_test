@@ -289,6 +289,8 @@
   /* Force multi-column grids to single column on mobile */
   .mobile-stack {
     grid-template-columns: 1fr !important;
+    height: auto !important;
+    flex: none !important;
   }
 
   /* Compare selector: stack players vertically on mobile */
@@ -297,5 +299,39 @@
   }
   .mobile-compare-grid .vs-divider {
     display: none !important;
+  }
+
+  /* Dashboard: panels stack and scroll */
+  .dashboard-wrap {
+    overflow-y: auto !important;
+  }
+
+  /* Leaderboard mini-card: 4 cols on mobile */
+  .lb-mini-stats {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  /* Records masonry: single column */
+  .records-masonry {
+    columns: 1 !important;
+  }
+
+  /* History table: compact 3-column layout on mobile */
+  .history-row {
+    grid-template-columns: 70px 1fr 60px !important;
+    padding: 7px 10px !important;
+  }
+  /* Hide columns 4-7 (ELO před, ELO po, Změna) — keep only date, opponent, výsledek */
+  .history-row > div:nth-child(3),
+  .history-row > div:nth-child(4),
+  .history-row > div:nth-child(5),
+  .history-row > div:nth-child(6) {
+    display: none !important;
+  }
+
+  /* Statistics: ensure VT class chart section stacks and has height */
+  .mobile-stack[style] {
+    height: auto !important;
+    min-height: 0 !important;
   }
 }

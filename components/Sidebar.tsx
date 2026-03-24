@@ -118,14 +118,9 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        {collapsed && (
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: "hsl(var(--primary))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px hsl(var(--primary) / 0.38)" }}>
-            <Trophy size={17} color="hsl(var(--primary-foreground))" strokeWidth={2.5} />
-          </div>
-        )}
         <button onClick={() => setCollapsed(c => !c)} className="hidden md:flex"
-          style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted) / 0.5)", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))", cursor: "pointer", flexShrink: 0 }}>
-          {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          style={{ width: collapsed ? 34 : 24, height: collapsed ? 34 : 24, borderRadius: collapsed ? 10 : 6, border: "1px solid hsl(var(--border))", background: collapsed ? "hsl(var(--primary) / 0.12)" : "hsl(var(--muted) / 0.5)", alignItems: "center", justifyContent: "center", color: collapsed ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", cursor: "pointer", flexShrink: 0, transition: "all 0.2s" }}>
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={12} />}
         </button>
         <button onClick={() => setSidebarOpen(false)} className="flex md:hidden"
           style={{ width: 24, height: 24, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted) / 0.5)", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))", cursor: "pointer" }}>

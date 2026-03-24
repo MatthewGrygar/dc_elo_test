@@ -19,7 +19,7 @@ export const translations = {
     search_placeholder: "Hledat hráče…", light_mode: "Světlý režim", dark_mode: "Tmavý režim",
     // Table
     rank: "Pořadí", player_name: "Hráč", rating: "Rating", games: "Zápasy",
-    wins: "Výhry", losses: "Prohry", draws: "Remízy", peak: "Maximum", winrate: "Úspěšnost",
+    wins: "Výhry", losses: "Prohry", draws: "Remízy", peak: "Maximum", winrate: "Winrate",
     // General
     no_data: "Žádná data k zobrazení", loading: "Načítání…", error: "Chyba při načítání dat",
     view_all: "Zobrazit vše",
