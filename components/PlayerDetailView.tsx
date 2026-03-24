@@ -595,7 +595,7 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
                   <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{o.draws}</td>
                   <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 700, color: o.winrate >= 50 ? green : red }}>{o.winrate}%</td>
                   <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", color: o.avgDelta >= 0 ? green : red }}>{o.avgDelta >= 0 ? "+" : ""}{o.avgDelta}</td>
-                  <td style={{ padding: "8px 4px", fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{o.lastPlayed}</td>
+                  <td style={{ padding: "8px 4px", fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{o.lastDate}</td>
                 </tr>
               ))}
             </tbody>
