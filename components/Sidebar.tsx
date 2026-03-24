@@ -62,13 +62,14 @@ export default function Sidebar() {
           gap: collapsed ? 0 : 10,
           padding: collapsed ? "9px 0" : "8px 12px",
           justifyContent: collapsed ? "center" : "flex-start",
-          width: "100%", borderRadius: 10, border: "1px solid transparent",
+          width: "100%", borderRadius: 10,
           ...(active ? {
             background: "hsl(var(--primary) / 0.12)",
             border: "1px solid hsl(var(--primary) / 0.28)",
             color: "hsl(var(--primary))",
           } : {
             background: "transparent",
+            border: "1px solid transparent",
             color: "hsl(var(--muted-foreground))",
           }),
           fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 13,

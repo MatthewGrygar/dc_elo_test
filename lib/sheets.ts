@@ -392,8 +392,8 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR"): Promise<Dashboar
   };
 }
 
-// Keep old fetchDashboardStats for the /api/stats route (used by StatisticsView)
-export interface DashboardStats {
+// Extended stats for the /api/stats route (used by StatisticsView)
+export interface ExtendedDashboardStats {
   totalGames: number;
   uniquePlayers: number;
   medianElo: number;
@@ -406,7 +406,7 @@ export interface DashboardStats {
   avgEloChange: number;
 }
 
-export async function fetchDashboardStats(mode: "ELO" | "DCPR"): Promise<DashboardStats> {
+export async function fetchDashboardStats(mode: "ELO" | "DCPR"): Promise<ExtendedDashboardStats> {
   const data = await fetchDashboardData(mode);
   const standingsSheet = mode === "ELO" ? "Elo standings" : "Tournament_Elo";
   const cardsSheet     = mode === "ELO" ? "Player cards (CSV)" : "Player cards (CSV) - Tournament";

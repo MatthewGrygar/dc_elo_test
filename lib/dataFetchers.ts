@@ -127,6 +127,7 @@ export interface AnalyticsData {
   eloChangeDistribution:{x:number;bucket:string;count:number}[];
   rivalryNetwork:{nodes:{id:string;elo:number;games:number}[];links:{source:string;target:string;games:number;winner:string}[]};
   newPlayerTrajectory:{gameNum:number;avgElo:number}[];
+  bumpsChart:{period:string;label:string;[k:string]:number|string}[];
   communityWinrateVsOpp:{
     byOppElo:{bucket:number;label:string;games:number;wins:number;draws:number;losses:number;winrate:number;avgEloDiff:number;theorWR:number}[];
     byEloDiff:{bucket:number;label:string;games:number;winrate:number;theorWR:number}[];
@@ -1060,7 +1061,7 @@ export async function fetchRecords(mode:"ELO"|"DCPR"): Promise<RecordsData> {
   let commMaxDay=0,commMaxDayDate="";for(const[dt,ms]of commDayMids)if(ms.size>commMaxDay){commMaxDay=ms.size;commMaxDayDate=dt;}
   let commMaxMonth=0,commMaxMonthLabel="";for(const[k,ms]of commMonthMids)if(ms.size>commMaxMonth){commMaxMonth=ms.size;commMaxMonthLabel=periodLabel(k);}
 
-  const matchPl=new Map<string,{name:string;elo:number;date:string;t:string}[]>();
+  const matchPl=new Map<string,{name:string;elo:number;date:string;t:string;result:string}[]>();
   for(const r of cRows){const mid=r[1]?.trim();if(!mid)continue;if(!matchPl.has(mid))matchPl.set(mid,[]);matchPl.get(mid)!.push({name:r[0]?.trim(),elo:pf(r[8])-pf(r[7]),date:r[4]?.trim(),t:`${r[3]?.trim()} ${r[4]?.trim()}`,result:r[6]?.trim()??""});}
   let bigMatchD=0,bigMatchA="",bigMatchAE=0,bigMatchB2="",bigMatchBE=0,bigMatchDate="",bigMatchT="";
   for(const[,pl]of matchPl){if(pl.length<2)continue;const diff=Math.abs(pl[0].elo-pl[1].elo);if(diff>bigMatchD){bigMatchD=diff;const[hi,lo]=pl[0].elo>pl[1].elo?[pl[0],pl[1]]:[pl[1],pl[0]];bigMatchA=hi.name;bigMatchAE=Math.round(hi.elo);bigMatchB2=lo.name;bigMatchBE=Math.round(lo.elo);bigMatchDate=pl[0].date;bigMatchT=pl[0].t;}}
