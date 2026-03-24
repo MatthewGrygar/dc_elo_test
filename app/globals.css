@@ -267,3 +267,22 @@
 .dark #sidebar-inner {
   background: hsl(var(--background-2) / 0.98);
 }
+
+/* ── Mobile responsive ── */
+@media (max-width: 767px) {
+  /* Content area should be horizontally scrollable when grid overflows */
+  .mobile-scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce content padding on mobile */
+  .mobile-compact {
+    padding: 8px !important;
+  }
+
+  /* Ensure text is readable on mobile */
+  .mobile-text-sm {
+    font-size: 11px !important;
+  }
+}

@@ -349,7 +349,7 @@ export default function OrganizationView() {
       </div>
 
       {/* ── Activities ── */}
-      <Panel style={{ padding: "22px 24px" }} className="anim-slide-up s4">
+      <Panel style={{ padding: "22px 24px" }}>
         <h3 style={{
           fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800,
           letterSpacing: "-0.025em", marginBottom: 20,
@@ -410,7 +410,7 @@ export default function OrganizationView() {
       </Panel>
 
       {/* ── Cooperation ── */}
-      <Panel accentColor="hsl(195,78%,50%)" style={{ padding: "22px 24px" }} className="anim-slide-up s5">
+      <Panel accentColor="hsl(195,78%,50%)" style={{ padding: "22px 24px" }}>
         <h3 style={{
           fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800,
           letterSpacing: "-0.025em", marginBottom: 14,
@@ -477,7 +477,7 @@ export default function OrganizationView() {
       </Panel>
 
       {/* ── Social ── */}
-      <div className="anim-slide-up s6" style={{ paddingBottom: 8 }}>
+      <div style={{ paddingBottom: 8 }}>
         <h3 style={{
           fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800,
           letterSpacing: "-0.025em", marginBottom: 12, color: "hsl(var(--foreground))",

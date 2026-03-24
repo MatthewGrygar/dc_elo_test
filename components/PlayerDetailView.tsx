@@ -91,20 +91,17 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
   const red = "hsl(0,65%,55%)";
   const amber = "hsl(42,80%,55%)";
 
-  // Prepare ELO trend with period filter
   const [period, setPeriod] = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
   const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
   const cutoffDays: Record<string, number> = { "30D": 30, "90D": 90, "180D": 180, "1Y": 365, "ALL": 99999 };
   const cutoff = new Date(Date.now() - cutoffDays[period] * 86400_000);
 
-  // helper: parse Czech date dd.mm.yyyy → Date
   const parseCzDate = (s: string): Date | null => {
     const parts = s.split(".");
     if (parts.length === 3) return new Date(+parts[2], +parts[1]-1, +parts[0]);
     return null;
   };
 
-  // Match ID mode — every game row, sorted oldest→newest
   const filteredTrend = eloTrend
     .filter(p => {
       if (period === "ALL") return true;
@@ -114,10 +111,9 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
     .sort((a, b) => {
       const da = parseCzDate(a.date), db = parseCzDate(b.date);
       if (!da || !db) return 0;
-      return da.getTime() - db.getTime(); // oldest first
+      return da.getTime() - db.getTime();
     });
 
-  // Date mode — last game ELO per day, sorted oldest→newest
   const filteredTrendByDate = (data.eloTrendByDate ?? [])
     .filter(p => {
       if (period === "ALL") return true;
@@ -127,126 +123,89 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
     .sort((a, b) => {
       const da = parseCzDate(a.date), db = parseCzDate(b.date);
       if (!da || !db) return 0;
-      return da.getTime() - db.getTime(); // oldest first
+      return da.getTime() - db.getTime();
     });
 
   const activeTrend = trendMode === "matchid" ? filteredTrend : filteredTrendByDate;
-
-  // Compute domain with +100 buffer so peaks/valleys breathe
   const trendElos = activeTrend.map((p: any) => p.elo).filter((v: any) => typeof v === "number");
   const trendMin = trendElos.length ? Math.min(...trendElos) - 100 : "auto";
   const trendMax = trendElos.length ? Math.max(...trendElos) + 100 : "auto";
 
   const streakColor = c.currentStreak.type === "win" ? green : c.currentStreak.type === "lose" ? red : "hsl(var(--muted-foreground))";
-  const streakLabel = c.currentStreak.type === "win" ? "🔥 Win streak" : c.currentStreak.type === "lose" ? "💀 Lose streak" : "Streak";
+  const streakLabel = c.currentStreak.type === "win" ? "🔥 Win streak" : c.currentStreak.type === "lose" ? "💀 Lose streak" : "—";
+  const eloChange = c.eloChange30d;
+
+  const total = s.wins + s.losses + s.draws || 1;
+  const wPct = Math.round(s.wins / total * 100);
+  const lPct = Math.round(s.losses / total * 100);
+  const dPct = Math.round(s.draws / total * 100);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%", overflowY: "auto" }} className="scrollbar-thin">
 
-      {/* ── Row 1: Hero + základní bloky ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr 1fr 1fr", gap: 10, flexShrink: 0 }}>
-        {/* Hero */}
-        <GC>
-          <div style={{ padding: "14px 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.25)", boxShadow: "0 0 20px -4px hsl(var(--primary) / 0.3)", flexShrink: 0, fontFamily: "var(--font-display)" }}>
+      {/* ── HERO ROW ── */}
+      <GC style={{ flexShrink: 0 }}>
+        <div style={{ padding: "18px 20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 20, alignItems: "center" }}>
+            {/* Avatar + name */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 60, height: 60, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 900, background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))", border: "2px solid hsl(var(--primary) / 0.3)", boxShadow: "0 0 28px -4px hsl(var(--primary) / 0.3)", fontFamily: "var(--font-display)", flexShrink: 0 }}>
                 {avatarInitials(s.name)}
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, fontFamily: "var(--font-display)", lineHeight: 1.2 }}>{s.name}</div>
-                <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Rank #{selectedPlayer?.id} · {mode}</div>
+                <div style={{ fontWeight: 800, fontSize: 18, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{s.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+                  <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 99, background: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.28)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em" }}>{mode}</span>
+                  <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
+                </div>
               </div>
             </div>
-            <div style={{ fontSize: 32, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", lineHeight: 1 }}>{fmt(s.currentElo)}</div>
-            <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>ELO</div>
-            <div style={{ display: "flex", gap: 14, marginTop: 10, paddingTop: 10, borderTop: "1px solid hsl(var(--border)/0.4)" }}>
-              <div><div style={{ fontSize: 15, fontWeight: 600, color: green, fontFamily: "var(--font-mono)" }}>{s.wins}</div><div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>WIN</div></div>
-              <div><div style={{ fontSize: 15, fontWeight: 600, color: red, fontFamily: "var(--font-mono)" }}>{s.losses}</div><div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>LOSS</div></div>
-              <div><div style={{ fontSize: 15, fontWeight: 600, fontFamily: "var(--font-mono)" }}>{s.draws}</div><div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>DRAW</div></div>
-              <div><div style={{ fontSize: 15, fontWeight: 600, color: amber, fontFamily: "var(--font-mono)" }}>{(s.winrate * 100).toFixed(0)}%</div><div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>WR</div></div>
-            </div>
-          </div>
-        </GC>
 
-        {/* ELO blok */}
-        <GC>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>ELO přehled</SH>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <KV label="Peak ELO" value={fmt(s.peakElo)} color={amber} />
-              <KV label="Min ELO" value={fmt(s.minElo)} color={red} />
-              <KV label="ELO Range" value={fmt(c.eloRange)} />
-              <KV label="Peak Retention" value={`${c.peakRetention}%`} color={c.peakRetention >= 90 ? green : amber} />
-              <KV label="Dní od peak" value={s.daysSincePeak > 0 ? `${s.daysSincePeak}d` : "Aktuální peak"} color={s.daysSincePeak <= 7 ? green : "hsl(var(--foreground))"} />
-              <KV label="Bayesian WR" value={s.bayesianWR ?? "—"} color="hsl(var(--primary))" />
-            </div>
-            <div style={{ marginTop: 2 }}>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>Peak retention</div>
-              <div style={{ height: 5, borderRadius: 99, background: "hsl(var(--muted))" }}>
-                <div style={{ height: "100%", width: `${c.peakRetention}%`, background: c.peakRetention >= 90 ? green : amber, borderRadius: 99 }} />
+            {/* W/L/D center */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", gap: 6 }}>
+                {[
+                  { label: "W", value: s.wins, color: green, pct: wPct },
+                  { label: "L", value: s.losses, color: red, pct: lPct },
+                  { label: "D", value: s.draws, color: amber, pct: dPct },
+                ].map(r => (
+                  <div key={r.label} style={{ padding: "10px 16px", borderRadius: 12, background: `${r.color}15`, border: `1px solid ${r.color}35`, textAlign: "center", minWidth: 64 }}>
+                    <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1 }}>{r.value}</div>
+                    <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{r.label} · {r.pct}%</div>
+                  </div>
+                ))}
+              </div>
+              {/* W/L/D bar */}
+              <div style={{ display: "flex", width: "100%", maxWidth: 260, height: 5, borderRadius: 99, overflow: "hidden", gap: 1 }}>
+                <div style={{ flex: wPct, background: green, borderRadius: "99px 0 0 99px" }} />
+                <div style={{ flex: lPct, background: red }} />
+                <div style={{ flex: dPct || 1, background: amber, borderRadius: "0 99px 99px 0" }} />
+              </div>
+              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>
+                {s.totalGames} her celkem · WR <span style={{ color: s.winrate >= 0.5 ? green : red, fontWeight: 700 }}>{(s.winrate * 100).toFixed(1)}%</span>
               </div>
             </div>
-            <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>Poslední zápas: {s.lastMatch}</div>
-          </div>
-        </GC>
 
-        {/* Aktivita */}
-        <GC>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>Aktivita</SH>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <KV label="Hry celkem" value={fmt(s.totalGames)} />
-              <KV label="Avg ELO soupeřů" value={fmt(s.avgOppElo)} />
-              <KV label="Hry (7 dní)" value={fmt(c.games7d)} />
-              <KV label="Hry (30 dní)" value={fmt(c.games30d)} />
-              <KV label="Δ 7 dní" value={(c.eloChange7d >= 0 ? "+" : "") + fmt(c.eloChange7d)} color={c.eloChange7d >= 0 ? green : red} />
-              <KV label="Δ 30 dní" value={(c.eloChange30d >= 0 ? "+" : "") + fmt(c.eloChange30d)} color={c.eloChange30d >= 0 ? green : red} />
-            </div>
-            <div style={{ paddingTop: 8, borderTop: "1px solid hsl(var(--border)/0.3)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              <KV label="Δ tento týden" value={(c.eloChangeThisWeek >= 0 ? "+" : "") + fmt(c.eloChangeThisWeek)} color={c.eloChangeThisWeek >= 0 ? green : red} size="sm" />
-              <KV label="Δ minulý týden" value={(c.eloChangeLastWeek >= 0 ? "+" : "") + fmt(c.eloChangeLastWeek)} color={c.eloChangeLastWeek >= 0 ? green : red} size="sm" />
-              <KV label="Her/aktivní den" value={String(c.avgGamesPerActiveDay)} size="sm" />
-              <KV label="Nejaktivnější den" value={c.bestDayOfWeek ?? "—"} size="sm" />
-              <KV label="Avg pauza (dny)" value={c.avgGapBetweenGames > 0 ? `${c.avgGapBetweenGames}d` : "—"} size="sm" />
-              <KV label="Nejdelší pauza" value={c.longestPause > 0 ? `${c.longestPause}d` : "—"} size="sm" />
+            {/* ELO number */}
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>ELO {mode}</div>
+              <div style={{ fontSize: 48, fontWeight: 900, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", lineHeight: 1, letterSpacing: "-0.03em" }}>{fmt(s.currentElo)}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, marginTop: 4 }}>
+                <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 600, color: eloChange >= 0 ? green : red }}>{eloChange >= 0 ? "+" : ""}{fmt(eloChange)} <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>30d</span></div>
+                {c.currentStreak.length > 0 && (
+                  <div style={{ padding: "2px 8px", borderRadius: 99, background: `${streakColor}20`, border: `1px solid ${streakColor}40`, fontSize: 10, fontFamily: "var(--font-mono)", color: streakColor, fontWeight: 700 }}>{streakLabel} ×{c.currentStreak.length}</div>
+                )}
+              </div>
             </div>
           </div>
-        </GC>
+        </div>
+      </GC>
 
-        {/* ELO změny + streak */}
-        <GC>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>ELO změny & streak</SH>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <KV label="Avg změna" value={fmtS(c.avgDelta)} color={c.avgDelta >= 0 ? green : red} />
-              <KV label="Avg výhra" value={fmtS(c.avgWinDelta)} color={green} />
-              <KV label="Avg prohra" value={fmtS(c.avgLossDelta)} color={red} />
-              <KV label="EV / zápas" value={fmtS(c.ev)} color={c.ev >= 0 ? green : red} />
-              <KV label="Max zisk" value={`+${fmt(c.biggestSingleGain)}`} color={green} />
-              <KV label="Max ztráta" value={fmt(c.biggestSingleLoss)} color={red} />
-            </div>
-            <div style={{ paddingTop: 8, borderTop: "1px solid hsl(var(--border)/0.3)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              <KV label="Perf. Rating" value={fmt(c.performanceRating)} color="hsl(var(--primary))" size="sm" />
-              <KV label="Exp. Win Diff" value={fmtS(c.expectedWinDiff, 1)} color={c.expectedWinDiff >= 0 ? green : red} size="sm" />
-              <KV label="ELO Efektivita" value={fmtS(c.eloEfficiencyRatio, 2)} color="hsl(var(--foreground))" size="sm" />
-              <KV label="Ladder Rate/měs." value={fmtS(c.ladderClimbingRate, 1)} color={c.ladderClimbingRate >= 0 ? green : red} size="sm" />
-              <KV label="ELO Ceiling est." value={`~${fmt(c.eloCeilingEstimate)}`} color={amber} size="sm" />
-              <KV label="True Skill ±" value={`±${c.trueSkillSigma}`} color="hsl(var(--muted-foreground))" size="sm" />
-            </div>
-            <div style={{ marginTop: 4, padding: "8px 10px", borderRadius: 10, background: `${streakColor}18`, border: `1px solid ${streakColor}40` }}>
-              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{streakLabel}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: streakColor, fontFamily: "var(--font-mono)" }}>{c.currentStreak.length}×</div>
-            </div>
-          </div>
-        </GC>
-      </div>
-
-      {/* ── Row 2: ELO trend (main) ─── */}
+      {/* ── ELO CHART ── */}
       <GC style={{ flexShrink: 0 }}>
         <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Vývoj ELO v čase</div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {/* Match ID / Datum toggle */}
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>Vývoj {mode} v čase</div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
               {([["matchid", "Match ID"], ["date", "Datum"]] as const).map(([v, label]) => (
                 <button key={v} onClick={() => setTrendMode(v)}
@@ -258,7 +217,6 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
                   }}>{label}</button>
               ))}
             </div>
-            {/* Period filter */}
             <div style={{ display: "flex", gap: 4 }}>
               {(["30D","90D","180D","1Y","ALL"] as const).map(p => (
                 <button key={p} onClick={() => setPeriod(p)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: 6, border: "1px solid", borderColor: period === p ? "hsl(var(--primary))" : "hsl(var(--border)/0.5)", background: period === p ? "hsl(var(--primary)/0.15)" : "transparent", color: period === p ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", cursor: "pointer" }}>{p}</button>
@@ -292,7 +250,6 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
                     {trendMode === "matchid" && d.result && (
                       <div style={{ color: "hsl(var(--foreground))", marginTop: 2 }}>{d.result} vs {d.opponent}</div>
                     )}
-                    {trendMode === "date" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>ELO na konci dne</div>}
                   </div>
                 );
               }} />
@@ -302,8 +259,87 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
         </div>
       </GC>
 
-      {/* ── Row 3: Pokročilé indexy + Delta hist + Weekday ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, flexShrink: 0 }}>
+      {/* ── STATS ROW 1: ELO overview + Activity + Streak ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10, flexShrink: 0 }}>
+        {/* ELO overview */}
+        <GC>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <SH>ELO přehled</SH>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <KV label="Peak ELO" value={fmt(s.peakElo)} color={amber} size="lg" />
+              <KV label="Min ELO" value={fmt(s.minElo)} color={red} size="md" />
+              <KV label="ELO Range" value={fmt(c.eloRange)} />
+              <KV label="Dní od peak" value={s.daysSincePeak > 0 ? `${s.daysSincePeak}d` : "Aktuální peak"} color={s.daysSincePeak <= 7 ? green : "hsl(var(--foreground))"} />
+              <KV label="Peak Retention" value={`${c.peakRetention}%`} color={c.peakRetention >= 90 ? green : amber} />
+              <KV label="Bayesian WR" value={s.bayesianWR ?? "—"} color="hsl(var(--primary))" />
+            </div>
+            <div style={{ marginTop: 2 }}>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>Peak retention</div>
+              <div style={{ height: 5, borderRadius: 99, background: "hsl(var(--muted))" }}>
+                <div style={{ height: "100%", width: `${c.peakRetention}%`, background: c.peakRetention >= 90 ? green : amber, borderRadius: 99 }} />
+              </div>
+            </div>
+          </div>
+        </GC>
+
+        {/* Activity */}
+        <GC>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <SH>Aktivita & ELO změny</SH>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <KV label="Hry celkem" value={fmt(s.totalGames)} />
+              <KV label="Avg ELO soupeřů" value={fmt(s.avgOppElo)} />
+              <KV label="Δ 7 dní" value={(c.eloChange7d >= 0 ? "+" : "") + fmt(c.eloChange7d)} color={c.eloChange7d >= 0 ? green : red} />
+              <KV label="Δ 30 dní" value={(c.eloChange30d >= 0 ? "+" : "") + fmt(c.eloChange30d)} color={c.eloChange30d >= 0 ? green : red} />
+              <KV label="Avg změna" value={fmtS(c.avgDelta)} color={c.avgDelta >= 0 ? green : red} />
+              <KV label="EV / zápas" value={fmtS(c.ev)} color={c.ev >= 0 ? green : red} />
+              <KV label="Max zisk" value={`+${fmt(c.biggestSingleGain)}`} color={green} size="sm" />
+              <KV label="Max ztráta" value={fmt(c.biggestSingleLoss)} color={red} size="sm" />
+              <KV label="Perf. Rating" value={fmt(c.performanceRating)} color="hsl(var(--primary))" size="sm" />
+              <KV label="ELO Ceiling" value={`~${fmt(c.eloCeilingEstimate)}`} color={amber} size="sm" />
+            </div>
+          </div>
+        </GC>
+
+        {/* Soupeřský blok */}
+        <GC>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <SH>Soupeřský blok</SH>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {[
+                { label: "WR vs. slabší (−100)", value: `${c.winVsWeaker}%`, color: c.winVsWeaker >= 60 ? green : amber },
+                { label: "WR vs. podobní (±100)", value: `${c.winVsSimilar}%`, color: c.winVsSimilar >= 50 ? green : red },
+                { label: "WR vs. silnější (+100)", value: `${c.winVsStronger}%`, color: c.winVsStronger >= 40 ? green : red },
+              ].map(r => (
+                <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", borderRadius: 8, background: "hsl(var(--muted)/0.3)" }}>
+                  <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{r.label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: r.color }}>{r.value}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ paddingTop: 8, borderTop: "1px solid hsl(var(--border)/0.3)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              <div>
+                <div style={{ fontSize: 9, color: red, fontFamily: "var(--font-mono)", marginBottom: 1 }}>💀 Nemesis</div>
+                <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{c.nemesis ?? "—"}</div>
+                {c.nemesis && c.nemesis !== "—" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>WR: {c.nemesisWR}%</div>}
+              </div>
+              <div>
+                <div style={{ fontSize: 9, color: green, fontFamily: "var(--font-mono)", marginBottom: 1 }}>🏆 Prey</div>
+                <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{c.prey ?? "—"}</div>
+                {c.prey && c.prey !== "—" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>WR: {c.preyWR}%</div>}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejčastější soupeř</div>
+              <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{c.mostPlayedOpponent.name}</div>
+              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{c.mostPlayedOpponent.games} her · {c.mostPlayedOpponent.winrate}% WR</div>
+            </div>
+          </div>
+        </GC>
+      </div>
+
+      {/* ── STATS ROW 2: Advanced indices + Streak block ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10, flexShrink: 0 }}>
         {/* Pokročilé indexy */}
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -316,11 +352,38 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
             <IndexBar label="Clutch pod tlakem" value={c.clutchUnderPressure} tip="Výhry jako outsider po 2 předchozích prohrách %" />
             <div style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid hsl(var(--border)/0.3)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
               <KV label="Gain/Loss ratio" value={c.gainLossRatio.toFixed(2)} color={c.gainLossRatio >= 1 ? green : red} size="sm" />
-              <KV label="Upset Rate" value={`${c.upsetRate}%`} color="hsl(var(--foreground))" size="sm" />
+              <KV label="Upset Rate" value={`${c.upsetRate}%`} size="sm" />
               <KV label="Choking Index" value={`${c.chokingIndex}%`} color={c.chokingIndex >= 30 ? red : amber} size="sm" />
               <KV label="Hot Hand" value={fmtS(c.hotHandEffect, 2)} color={c.hotHandEffect > 0.15 ? green : "hsl(var(--foreground))"} size="sm" />
-              <KV label="Fatigue Index" value={`${c.fatigueIndex > 0 ? "+" : ""}${c.fatigueIndex}%`} color={c.fatigueIndex > 10 ? red : "hsl(var(--foreground))"} size="sm" />
               <KV label="OQA Winrate" value={`${c.oqaWR}%`} color="hsl(var(--primary))" size="sm" />
+              <KV label="True Skill ±" value={`±${c.trueSkillSigma}`} color="hsl(var(--muted-foreground))" size="sm" />
+            </div>
+          </div>
+        </GC>
+
+        {/* Streak blok */}
+        <GC>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <SH>Streak blok</SH>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div style={{ padding: "8px 10px", borderRadius: 10, background: `${green}15`, border: `1px solid ${green}35`, textAlign: "center" }}>
+                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejdelší win</div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: green }}>{s.longestWinStreak}×</div>
+              </div>
+              <div style={{ padding: "8px 10px", borderRadius: 10, background: `${red}15`, border: `1px solid ${red}35`, textAlign: "center" }}>
+                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejdelší lose</div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: red }}>{s.longestLoseStreak}×</div>
+              </div>
+              <div style={{ padding: "8px 10px", borderRadius: 10, background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border)/0.4)", textAlign: "center" }}>
+                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bez prohry</div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: amber }}>{c.longestUnbeaten ?? 0}×</div>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
+              <KV label="Tilt Recovery" value={`${c.tiltRecovery ?? 0}%`} color={(c.tiltRecovery ?? 0) >= 50 ? green : red} />
+              <KV label="Comeback Rate" value={`${c.comebackRate ?? 0}%`} color={(c.comebackRate ?? 0) >= 50 ? green : amber} />
+              <KV label="Největší comeback" value={`+${fmt(c.biggestComeback ?? 0)}`} color={green} />
+              <KV label="Grind Efficiency" value={fmtS(c.grindEfficiency, 2)} color="hsl(var(--primary))" />
               <KV label="Nejlepší měsíc" value={c.bestMonth ?? "—"} size="sm" />
               <KV label="Zisk best měs." value={c.bestMonthGain > 0 ? `+${fmt(c.bestMonthGain)}` : "—"} color={green} size="sm" />
               <KV label="Nejhorší měsíc" value={c.worstMonth ?? "—"} size="sm" />
@@ -329,11 +392,35 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
           </div>
         </GC>
 
+        {/* ELO Brackets */}
+        <GC>
+          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>WR dle ELO pásma soupeře</div>
+          <div style={{ padding: "10px 16px 16px" }}>
+            {(c.eloBrackets ?? []).map((b, i) => (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", fontWeight: 500 }}>{b.bracket}</div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{b.games} her</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", color: b.games === 0 ? "hsl(var(--muted-foreground))" : b.winrate >= 55 ? green : b.winrate >= 45 ? amber : red }}>{b.games > 0 ? `${b.winrate}%` : "—"}</span>
+                  </div>
+                </div>
+                <div style={{ height: 5, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${b.games > 0 ? b.winrate : 0}%`, background: b.games === 0 ? "hsl(var(--muted))" : b.winrate >= 55 ? green : b.winrate >= 45 ? amber : red, borderRadius: 99 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </GC>
+      </div>
+
+      {/* ── CHARTS ROW ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10, flexShrink: 0, paddingBottom: 16 }}>
         {/* Delta distribuce */}
         <GC>
           <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Distribuce ELO změn</div>
           <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>Zelená = zisk, červená = ztráta</div>
-          <div style={{ height: 180, padding: "8px 4px 8px 8px" }}>
+          <div style={{ height: 160, padding: "8px 4px 8px 8px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={deltaDistribution} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
@@ -349,11 +436,11 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
           </div>
         </GC>
 
-        {/* Výkon dle dne v týdnu */}
+        {/* Weekday */}
         <GC>
           <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Výkon dle dne</div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 4px" }}>Winrate a počet her per den v týdnu</div>
-          <div style={{ height: 180, padding: "4px 4px 8px 8px" }}>
+          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 4px" }}>Winrate per den v týdnu</div>
+          <div style={{ height: 160, padding: "4px 4px 8px 8px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weekdayPerf} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
@@ -378,10 +465,7 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
             </ResponsiveContainer>
           </div>
         </GC>
-      </div>
 
-      {/* ── Row 4: Rolling Momentum + winrate vs opp ELO + soupeřský blok ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 280px", gap: 10, flexShrink: 0, paddingBottom: 16 }}>
         {/* Rolling momentum */}
         <GC>
           <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Rolling Momentum</div>
@@ -417,7 +501,6 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
                 <XAxis dataKey="bucket" tick={{ fontSize: 8, fontFamily: "var(--font-mono)" }} interval={2} />
                 <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={28} domain={[0, 100]} />
                 <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 2" />
-                <ReferenceLine x={String(Math.floor(s.currentElo / 50) * 50)} stroke={amber} strokeDasharray="3 2" label={{ value: "Ty", fontSize: 9, fill: amber }} />
                 <Tooltip content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const d = payload[0]?.payload;
@@ -434,110 +517,6 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </GC>
-
-        {/* Soupeřský blok — summary */}
-        <GC>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>Soupeřský blok</SH>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {[
-                { label: "WR vs. slabší (−100)", value: `${c.winVsWeaker}%`, color: c.winVsWeaker >= 60 ? green : amber },
-                { label: "WR vs. podobní (±100)", value: `${c.winVsSimilar}%`, color: c.winVsSimilar >= 50 ? green : red },
-                { label: "WR vs. silnější (+100)", value: `${c.winVsStronger}%`, color: c.winVsStronger >= 40 ? green : red },
-              ].map(r => (
-                <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{r.label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-mono)", color: r.color }}>{r.value}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ paddingTop: 8, borderTop: "1px solid hsl(var(--border)/0.3)", display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                <div>
-                  <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Největší poražené ELO</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, fontFamily: "var(--font-mono)", color: green }}>{c.biggestUpset > 0 ? c.biggestUpset.toLocaleString("cs-CZ") : "—"}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejsil. ELO co tě porazilo</div>
-                  <div style={{ fontSize: 16, fontWeight: 600, fontFamily: "var(--font-mono)", color: red }}>{c.hardestLoss > 0 ? c.hardestLoss.toLocaleString("cs-CZ") : "—"}</div>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                <div>
-                  <div style={{ fontSize: 9, color: red, fontFamily: "var(--font-mono)", marginBottom: 1 }}>💀 Nemesis</div>
-                  <div style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-display)" }}>{c.nemesis ?? "—"}</div>
-                  {c.nemesis && c.nemesis !== "—" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>WR: {c.nemesisWR}%</div>}
-                </div>
-                <div>
-                  <div style={{ fontSize: 9, color: green, fontFamily: "var(--font-mono)", marginBottom: 1 }}>🏆 Prey</div>
-                  <div style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-display)" }}>{c.prey ?? "—"}</div>
-                  {c.prey && c.prey !== "—" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>WR: {c.preyWR}%</div>}
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Upset Factor (avg ELO rozdíl)</div>
-                <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-mono)", color: amber }}>+{c.upsetFactor}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejčastější soupeř</div>
-                <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{c.mostPlayedOpponent.name}</div>
-                <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{c.mostPlayedOpponent.games} her · {c.mostPlayedOpponent.winrate}% WR</div>
-              </div>
-            </div>
-          </div>
-        </GC>
-      </div>
-      {/* ── Row 5: Streak blok + ELO Brackets ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flexShrink: 0, paddingBottom: 16 }}>
-        {/* Streak blok */}
-        <GC>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>Streak blok</SH>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              <div style={{ padding: "8px 10px", borderRadius: 10, background: `${green}15`, border: `1px solid ${green}35`, textAlign: "center" }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejdelší win</div>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: green }}>{s.longestWinStreak}×</div>
-              </div>
-              <div style={{ padding: "8px 10px", borderRadius: 10, background: `${red}15`, border: `1px solid ${red}35`, textAlign: "center" }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejdelší lose</div>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: red }}>{s.longestLoseStreak}×</div>
-              </div>
-              <div style={{ padding: "8px 10px", borderRadius: 10, background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border)/0.4)", textAlign: "center" }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bez prohry</div>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: amber }}>{c.longestUnbeaten ?? 0}×</div>
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
-              <KV label="Tilt Recovery" value={`${c.tiltRecovery ?? 0}%`} color={(c.tiltRecovery ?? 0) >= 50 ? green : red} />
-              <KV label="Comeback Rate" value={`${c.comebackRate ?? 0}%`} color={(c.comebackRate ?? 0) >= 50 ? green : amber} />
-              <KV label="Největší comeback" value={`+${fmt(c.biggestComeback ?? 0)}`} color={green} />
-              <KV label="Grind Efficiency" value={fmtS(c.grindEfficiency, 2)} color="hsl(var(--primary))" />
-            </div>
-          </div>
-        </GC>
-
-        {/* ELO Brackets winrate */}
-        <GC>
-          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>WR dle ELO pásma soupeře</div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "2px 16px 0" }}>Winrate v závislosti na síle soupeře</div>
-          <div style={{ flex: 1, padding: "10px 16px 16px" }}>
-            {(c.eloBrackets ?? []).map((b, i) => (
-              <div key={i} style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", fontWeight: 500 }}>{b.bracket}</div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{b.games} her</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", color: b.games === 0 ? "hsl(var(--muted-foreground))" : b.winrate >= 55 ? green : b.winrate >= 45 ? amber : red }}>{b.games > 0 ? `${b.winrate}%` : "—"}</span>
-                    {b.games > 0 && <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: b.avgDelta >= 0 ? green : red }}>{b.avgDelta >= 0 ? "+" : ""}{b.avgDelta}</span>}
-                  </div>
-                </div>
-                <div style={{ height: 5, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${b.games > 0 ? b.winrate : 0}%`, background: b.games === 0 ? "hsl(var(--muted))" : b.winrate >= 55 ? green : b.winrate >= 45 ? amber : red, borderRadius: 99, transition: "width 0.5s ease" }} />
-                </div>
-              </div>
-            ))}
           </div>
         </GC>
       </div>

@@ -222,7 +222,7 @@ export default function Sidebar() {
     <>
       {sidebarOpen && <div className="sidebar-overlay md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside
-        style={{ width: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", minWidth: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", transition: "width .28s cubic-bezier(.4,0,.2,1), min-width .28s cubic-bezier(.4,0,.2,1), transform .3s ease", borderRight: "1px solid hsl(var(--border) / 0.65)", display: "flex", flexDirection: "column", position: "relative", zIndex: 40, flexShrink: 0, overflow: "hidden" }}
+        style={{ width: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", minWidth: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", transition: "width .28s cubic-bezier(.4,0,.2,1), min-width .28s cubic-bezier(.4,0,.2,1), transform .3s ease", borderRight: "1px solid hsl(var(--border) / 0.65)", display: "flex", flexDirection: "column", zIndex: 40, flexShrink: 0, overflow: "hidden" }}
         className={["fixed md:relative", "h-full", sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"].join(" ")}
       >
         <div style={{ position: "absolute", inset: 0, background: "hsl(var(--background-2) / 0.96)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }} />
