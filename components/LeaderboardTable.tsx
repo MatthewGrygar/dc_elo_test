@@ -259,7 +259,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
 
       {/* Table */}
       <GlassPanel style={{ flex: 1, minHeight: 0 }} className="anim-slide-up s2">
-        <div style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
+        <div style={{ overflowY: "auto", overflowX: "hidden", flex: 1, minHeight: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>

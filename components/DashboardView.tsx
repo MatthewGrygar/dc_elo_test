@@ -141,6 +141,8 @@ const SLIDES = [
 ];
 
 function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
+  const { wBp } = useWinSize();
+  const isCompact = wBp === "xs" || wBp === "sm";
   const [current, setCurrent] = useState(0);
   const [anim, setAnim] = useState(false);
   const [progKey, setProgKey] = useState(0);
@@ -163,7 +165,7 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
   };
 
   return (
-    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", flex: 1, minHeight: 0 }}>
+    <div className="hero-slider" style={{ position: "relative", borderRadius: 16, overflow: "hidden", flex: 1, minHeight: isCompact ? 220 : 0 }}>
       <style>{`@keyframes slider-progress { from { width: 0% } to { width: 100% } }`}</style>
       {/* glass bg */}
       <div style={{ position: "absolute", inset: 0, background: "hsl(var(--card) / 0.80)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid hsl(var(--card-border) / 0.85)" }} />
@@ -455,12 +457,12 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                           fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)",
                           color: "hsl(var(--primary))",
                         }}>
-                          <span style={{ color: m.result1?.startsWith?.("Won") ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
-                            {m.result1?.startsWith?.("Won") ? "W" : "L"}
+                          <span style={{ color: m.result1?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result1?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result1?.startsWith?.("Won") ? "W" : m.result1?.startsWith?.("Draw") ? "D" : "L"}
                           </span>
                           {" — "}
-                          <span style={{ color: m.result2?.startsWith?.("Won") ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
-                            {m.result2?.startsWith?.("Won") ? "W" : "L"}
+                          <span style={{ color: m.result2?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result2?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result2?.startsWith?.("Won") ? "W" : m.result2?.startsWith?.("Draw") ? "D" : "L"}
                           </span>
                         </div>
                         <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo2}</span>
@@ -483,12 +485,12 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                         <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player1}</span>
                         <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo1}</span>
                         <div style={{ padding: "2px 7px", borderRadius: 6, background: "hsl(var(--muted)/0.5)", fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", flexShrink: 0 }}>
-                          <span style={{ color: m.result1?.startsWith?.("Won") ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
-                            {m.result1?.startsWith?.("Won") ? "W" : "L"}
+                          <span style={{ color: m.result1?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result1?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result1?.startsWith?.("Won") ? "W" : m.result1?.startsWith?.("Draw") ? "D" : "L"}
                           </span>
                           {" — "}
-                          <span style={{ color: m.result2?.startsWith?.("Won") ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
-                            {m.result2?.startsWith?.("Won") ? "W" : "L"}
+                          <span style={{ color: m.result2?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result2?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result2?.startsWith?.("Won") ? "W" : m.result2?.startsWith?.("Draw") ? "D" : "L"}
                           </span>
                         </div>
                         <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo2}</span>
@@ -549,7 +551,7 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
               {(prefetchCache?.[distMode]?.players?.length ?? stats?.uniquePlayers ?? 0)} hráčů · ×50
             </span>
           </div>
-          <div style={{ flex: 1, padding: "8px 10px 4px", minHeight: 0 }}>
+          <div className="dist-chart" style={{ flex: 1, padding: "8px 10px 4px", minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={distData} barCategoryGap="4%" margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="range" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false}

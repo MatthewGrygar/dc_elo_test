@@ -329,9 +329,16 @@
     display: none !important;
   }
 
-  /* Statistics: ensure VT class chart section stacks and has height */
-  .mobile-stack[style] {
-    height: auto !important;
-    min-height: 0 !important;
-  }
+  /* Statistics ELO dist chart grid — override inline height: 360 */
+  .stats-elo-grid { height: auto !important; }
+
+  /* Opponents / Tournaments chart panel fixed height on mobile */
+  .opp-chart-panel { height: 280px !important; }
+  .tour-chart-panel { height: 280px !important; }
+
+  /* Dashboard ELO distribution chart */
+  .dist-chart { height: 140px !important; }
+
+  /* Hero slider minimum height on mobile */
+  .hero-slider { min-height: 220px; }
 }

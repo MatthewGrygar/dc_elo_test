@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAppNav } from "./AppContext";
 import { useRatingMode } from "./RatingModeProvider";
 import { avatarInitials } from "@/lib/utils";
-import { PlayerDetailData } from "@/lib/dataFetchers";
+import { PlayerDetailData, RecordsData } from "@/lib/dataFetchers";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 
 // ─── Glass card ───────────────────────────────────────────────────────────────
-function GC({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function GC({ children, style, className }: { children: React.ReactNode; style?: React.CSSProperties; className?: string }) {
   return (
-    <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", ...style }}>
+    <div className={className} style={{ position: "relative", borderRadius: 14, overflow: "hidden", ...style }}>
       <div style={{
         position: "absolute", inset: 0, zIndex: 0,
         background: "hsl(var(--card) / 0.88)",
@@ -80,7 +80,7 @@ function Skeleton({ h = 60 }: { h?: number }) {
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ data }: { data: PlayerDetailData }) {
+function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; communityRecords?: RecordsData | null }) {
   const { selectedPlayer } = useAppNav();
   const { mode } = useRatingMode();
   const { summary: s, computed: c, eloTrend, rollingMomentum, deltaDistribution, weekdayPerf } = data;
@@ -204,6 +204,22 @@ function OverviewTab({ data }: { data: PlayerDetailData }) {
         <GC>
           <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
             <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Profil & rekordy</div>
+            {(() => {
+              const playerRecs = communityRecords?.categories.flatMap(cat =>
+                cat.records
+                  .filter(r => r.entry?.player === s.name)
+                  .map(r => ({ icon: cat.icon, label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime }))
+              ) ?? [];
+              return playerRecs.length > 0 ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, paddingBottom: 4, borderBottom: "1px solid hsl(var(--border)/0.3)" }}>
+                  {playerRecs.slice(0, 8).map((r, i) => (
+                    <span key={`cr-${i}`} title={r.label} style={{ fontSize: 8, padding: "2px 7px", borderRadius: 99, background: `${amber}16`, border: `1px solid ${amber}32`, color: amber, fontFamily: "var(--font-mono)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                      {r.icon} {r.isAllTime ? "👑 " : ""}{r.value}
+                    </span>
+                  ))}
+                </div>
+              ) : null;
+            })()}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {c.currentStreak.length > 0 && (
                 <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${streakColor}18`, border: `1px solid ${streakColor}35`, color: streakColor, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{streakLabel} ×{c.currentStreak.length}</span>
@@ -665,7 +681,7 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
         </GC>
 
         {/* Right: winrate chart */}
-        <GC style={{ display: "flex", flexDirection: "column" }}>
+        <GC style={{ display: "flex", flexDirection: "column" }} className="opp-chart-panel">
           <div style={{ padding: "14px 16px 0", flexShrink: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Winrate — top soupeři</div>
             <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Nejhranější soupeři · zelená &gt;50%, červená &lt;50%</div>
@@ -785,7 +801,7 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
         </GC>
 
         {/* Right: avg delta chart */}
-        <GC style={{ display: "flex", flexDirection: "column" }}>
+        <GC style={{ display: "flex", flexDirection: "column" }} className="tour-chart-panel">
           <div style={{ padding: "14px 16px 4px", flexShrink: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Průměrná Δ ELO per turnaj</div>
             <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Průměrný zisk/ztráta na zápas</div>
@@ -1003,6 +1019,7 @@ export default function PlayerDetailView() {
   const [data, setData] = useState<PlayerDetailData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [communityRecords, setCommunityRecords] = useState<RecordsData | null>(null);
 
   useEffect(() => {
     if (!selectedPlayer) return;
@@ -1011,6 +1028,14 @@ export default function PlayerDetailView() {
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
+  }, [selectedPlayer?.name, mode]);
+
+  useEffect(() => {
+    if (!selectedPlayer) return;
+    fetch(`/api/records?mode=${mode}`)
+      .then(r => r.json())
+      .then(d => setCommunityRecords(d))
+      .catch(() => {});
   }, [selectedPlayer?.name, mode]);
 
   if (!selectedPlayer) return null;
@@ -1031,7 +1056,7 @@ export default function PlayerDetailView() {
 
   return (
     <div style={{ height: "100%", overflow: "hidden" }}>
-      {playerSubView === "overview"    && <OverviewTab    data={data} />}
+      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} />}
       {playerSubView === "opponents"   && <OpponentsTab   data={data} />}
       {playerSubView === "tournaments" && <TournamentsTab data={data} />}
       {playerSubView === "history"     && <HistoryTab     data={data} />}

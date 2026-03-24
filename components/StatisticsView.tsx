@@ -319,7 +319,7 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
         <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
           <SH>ELO distribuce</SH>
           {/* Fixed height grid — both columns stretch to same bottom */}
-          <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8, marginTop: 8, height: 360, alignItems: "stretch" }}>
+          <div className="mobile-stack stats-elo-grid" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8, marginTop: 8, height: 360, alignItems: "stretch" }}>
 
             {/* Left column — stacked */}
             {loading
