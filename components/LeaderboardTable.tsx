@@ -21,11 +21,11 @@ const VT_META = {
   VT4: { label: "Class D", color: "hsl(0,70%,58%)",   bg: "hsl(0 70% 58% / .12)",   border: "hsl(0 70% 58% / .3)"   },
 } as const;
 
-function GlassPanel({ children, style, accent }: {
-  children: React.ReactNode; style?: React.CSSProperties; accent?: boolean;
+function GlassPanel({ children, style, accent, className }: {
+  children: React.ReactNode; style?: React.CSSProperties; accent?: boolean; className?: string;
 }) {
   return (
-    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", ...style }}>
+    <div className={className} style={{ position: "relative", borderRadius: 16, overflow: "hidden", ...style }}>
       <div style={{
         position: "absolute", inset: 0,
         background: "hsl(var(--card) / 0.82)",
