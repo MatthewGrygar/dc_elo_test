@@ -143,11 +143,13 @@ const SLIDES = [
 function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
   const [current, setCurrent] = useState(0);
   const [anim, setAnim] = useState(false);
+  const [progKey, setProgKey] = useState(0);
   const slide = SLIDES[current];
 
   useEffect(() => {
     const t = setInterval(() => {
       setAnim(true);
+      setProgKey(k => k + 1);
       setTimeout(() => { setCurrent(c => (c + 1) % SLIDES.length); setAnim(false); }, 320);
     }, 6000);
     return () => clearInterval(t);
@@ -156,13 +158,41 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
   const goTo = (i: number) => {
     if (i === current) return;
     setAnim(true);
+    setProgKey(k => k + 1);
     setTimeout(() => { setCurrent(i); setAnim(false); }, 320);
   };
 
   return (
     <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", flex: 1, minHeight: 0 }}>
+      <style>{`@keyframes slider-progress { from { width: 0% } to { width: 100% } }`}</style>
       {/* glass bg */}
       <div style={{ position: "absolute", inset: 0, background: "hsl(var(--card) / 0.80)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid hsl(var(--card-border) / 0.85)" }} />
+
+      {/* Nav arrows */}
+      <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
+        style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", zIndex: 10,
+          width: 28, height: 28, borderRadius: 8, border: "1px solid hsl(var(--border))",
+          background: "hsl(var(--card)/0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: "hsl(var(--muted-foreground))", transition: "all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--card))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "hsl(var(--card)/0.7)"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}>
+        <ChevronLeft size={14} />
+      </button>
+      <button onClick={() => goTo((current + 1) % SLIDES.length)}
+        style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", zIndex: 10,
+          width: 28, height: 28, borderRadius: 8, border: "1px solid hsl(var(--border))",
+          background: "hsl(var(--card)/0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", color: "hsl(var(--muted-foreground))", transition: "all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--card))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "hsl(var(--card)/0.7)"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}>
+        <ChevronRight size={14} />
+      </button>
+
+      {/* Progress bar */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "hsl(var(--border)/0.3)", zIndex: 10 }}>
+        <div key={progKey} style={{ height: "100%", background: slide.accent, borderRadius: 99,
+          animation: "slider-progress 6s linear forwards" }} />
+      </div>
 
       {/* photo layer */}
       {slide.slide && (
@@ -332,6 +362,7 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
 
   const [data, setData]       = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [distMode, setDistMode] = useState<"ELO"|"DCPR">(mode);
 
   useEffect(() => {
     const c = prefetchCache?.[mode]?.dashboard;
@@ -347,7 +378,8 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
   const players   = data?.players ?? [];
   const stats     = data?.stats;
   const milestones = data?.milestones ?? [];
-  const distData  = buildDist(players);
+  const distPlayers = prefetchCache?.[distMode]?.players ?? players;
+  const distData  = buildDist(distPlayers);
   const primaryCol = isDark ? "hsl(152,72%,50%)" : "hsl(152,65%,38%)";
 
   const matchCards = [...(data?.topMatchElo ?? []).slice(0, 2), ...(data?.topMatchDiff ?? []).slice(0, 2)];
@@ -432,7 +464,15 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                           background: "hsl(var(--muted) / 0.5)",
                           fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)",
                           color: "hsl(var(--primary))",
-                        }}>{m.result1?.replace("Won","").replace("Lost","").trim() || "–"} – {m.result2?.replace("Won","").replace("Lost","").trim() || "–"}</div>
+                        }}>
+                          <span style={{ color: m.result1 === "Won" ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result1 === "Won" ? "W" : "L"}
+                          </span>
+                          {" — "}
+                          <span style={{ color: m.result2 === "Won" ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result2 === "Won" ? "W" : "L"}
+                          </span>
+                        </div>
                         <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo2}</span>
                         <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>{m.player2}</span>
                       </div>
@@ -453,7 +493,13 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                         <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player1}</span>
                         <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo1}</span>
                         <div style={{ padding: "2px 7px", borderRadius: 6, background: "hsl(var(--muted)/0.5)", fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", flexShrink: 0 }}>
-                          {m.result1?.replace("Won","").replace("Lost","").trim() || "–"} – {m.result2?.replace("Won","").replace("Lost","").trim() || "–"}
+                          <span style={{ color: m.result1 === "Won" ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result1 === "Won" ? "W" : "L"}
+                          </span>
+                          {" — "}
+                          <span style={{ color: m.result2 === "Won" ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
+                            {m.result2 === "Won" ? "W" : "L"}
+                          </span>
                         </div>
                         <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo2}</span>
                         <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>{m.player2}</span>
@@ -499,8 +545,18 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
               ELO Distribution
             </div>
+            <div style={{ display: "flex", gap: 2 }}>
+              {(["ELO", "DCPR"] as const).map(m => (
+                <button key={m} onClick={() => setDistMode(m)}
+                  style={{ padding: "2px 7px", borderRadius: 5, fontSize: 8, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", border: "none", cursor: "pointer",
+                    background: distMode === m ? "hsl(var(--primary))" : "hsl(var(--muted)/0.6)",
+                    color: distMode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))" }}>
+                  {m}
+                </button>
+              ))}
+            </div>
             <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-              {(stats?.uniquePlayers ?? 0)} hráčů · ×50
+              {(prefetchCache?.[distMode]?.players?.length ?? stats?.uniquePlayers ?? 0)} hráčů · ×50
             </span>
           </div>
           <div style={{ flex: 1, padding: "8px 10px 4px", minHeight: 0 }}>

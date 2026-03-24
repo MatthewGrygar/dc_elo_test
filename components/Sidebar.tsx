@@ -50,7 +50,7 @@ export default function Sidebar() {
 
   useEffect(() => setMounted(true), []);
 
-  const isPlayer = view === "player";
+  const isPlayer = selectedPlayer !== null;
 
   function NavBtn({ icon: Icon, label, active, onClick, badge }: {
     icon: React.ElementType; label: string; active: boolean; onClick: () => void; badge?: string;
@@ -157,7 +157,7 @@ export default function Sidebar() {
                 <div style={{ width: 28, height: 28, borderRadius: 8, background: "hsl(var(--primary) / 0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)", flexShrink: 0 }}>
                   {avatarInitials(selectedPlayer.name)}
                 </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
+                <div onClick={() => setPlayerSubView("overview")} style={{ minWidth: 0, flex: 1, cursor: "pointer" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "hsl(var(--primary))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedPlayer.name}</div>
                   <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{selectedPlayer.rating} pts</div>
                 </div>
@@ -168,7 +168,7 @@ export default function Sidebar() {
               {PLAYER_SUB.map(s => <NavBtn key={s.id} icon={s.icon} label={t(lang, s.tKey as any)} active={playerSubView === s.id} onClick={() => setPlayerSubView(s.id)} />)}
             </>
           ) : (
-            <div style={{ width: 28, height: 28, margin: "auto", borderRadius: 8, background: "hsl(var(--primary) / 0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)" }}>
+            <div onClick={() => setPlayerSubView("overview")} style={{ width: 28, height: 28, margin: "auto", borderRadius: 8, background: "hsl(var(--primary) / 0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)", cursor: "pointer" }}>
               {avatarInitials(selectedPlayer.name)}
             </div>
           )}

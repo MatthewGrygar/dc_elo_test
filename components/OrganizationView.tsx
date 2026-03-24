@@ -343,8 +343,8 @@ export default function OrganizationView() {
         <h3 style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800, letterSpacing: "-0.025em", marginBottom: 14, color: "hsl(var(--foreground))" }}>
           {t(lang, "org_team")}
         </h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
-          {TEAM.map(m => <MemberCard key={m.name} member={m} />)}
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16 }}>
+          {TEAM.map(m => <div key={m.name} style={{ flex: "1 1 270px", maxWidth: 380 }}><MemberCard member={m} /></div>)}
         </div>
       </div>
 
@@ -361,7 +361,7 @@ export default function OrganizationView() {
         </h3>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
           gap: 1,
         }}>
           {ACTIVITIES.map((act, i) => {
@@ -421,8 +421,8 @@ export default function OrganizationView() {
           {t(lang, "org_cooperation")}
         </h3>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 24, alignItems: "start" }}>
-          <div>
+        <div style={{ display: "flex", gap: 24, alignItems: "start", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 260 }}>
             <p style={{ fontSize: 13, lineHeight: 1.75, color: "hsl(var(--foreground))", marginBottom: 10 }}>
               {lang === "en"
                 ? "Are you interested in working with us, joining your tournament into the DC ELO system, or becoming a member of our organisation?"

@@ -27,7 +27,7 @@ function GC({ children, style }: { children: React.ReactNode; style?: React.CSSP
         border: "1px solid hsl(var(--card-border) / 0.85)",
         borderRadius: 14,
       }} />
-      <div style={{ position: "relative", zIndex: 1, height: "100%" }}>{children}</div>
+      <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column" }}>{children}</div>
     </div>
   );
 }
@@ -548,7 +548,11 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
   const { opponents, computed: c } = data;
   const green = "hsl(142,65%,50%)";
   const red = "hsl(0,65%,55%)";
-  const top10 = opponents.slice(0, 20);
+  const [search, setSearch] = useState("");
+  const filtered = search.trim()
+    ? opponents.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))
+    : opponents;
+  const top10 = filtered.slice(0, 50);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: "100%" }}>
@@ -568,6 +572,14 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
               </div>
             ))}
           </div>
+        </div>
+        <div style={{ padding: "0 16px 8px", flexShrink: 0 }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Hledat soupeře…"
+            style={{ width: "100%", padding: "5px 10px", borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.4)", color: "hsl(var(--foreground))", fontSize: 11, fontFamily: "var(--font-mono)", outline: "none" }}
+          />
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }} className="scrollbar-thin">
           <table style={{ width: "100%", borderCollapse: "collapse" }}>

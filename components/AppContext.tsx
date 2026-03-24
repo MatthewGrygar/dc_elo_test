@@ -41,10 +41,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     selectedPlayer: null, lang: "cs", sidebarOpen: false,
   });
 
-  const navigateTo  = (view: BaseView)        => setState(s => ({ ...s, view, playerSubView: "overview", selectedPlayer: null, sidebarOpen: false }));
+  const navigateTo  = (view: BaseView)        => setState(s => ({ ...s, view, playerSubView: "overview", sidebarOpen: false }));
   const openPlayer  = (player: Player)        => setState(s => ({ ...s, view: "player", playerSubView: "overview", selectedPlayer: player, sidebarOpen: false }));
   const closePlayer = ()                       => setState(s => ({ ...s, view: "leaderboard", selectedPlayer: null }));
-  const setPlayerSubView = (sub: PlayerSubView) => setState(s => ({ ...s, playerSubView: sub }));
+  const setPlayerSubView = (sub: PlayerSubView) => setState(s => ({ ...s, playerSubView: sub, view: "player" }));
   const setLang     = (lang: Lang)            => setState(s => ({ ...s, lang }));
   const setSidebarOpen = (open: boolean)      => setState(s => ({ ...s, sidebarOpen: open }));
 
