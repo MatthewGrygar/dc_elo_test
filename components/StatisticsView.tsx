@@ -230,7 +230,7 @@ function VtRankedScatter({ data }: { data: GeneralStats["vtScatter"] }) {
       {/* Tooltip */}
       {tooltip && (
         <div style={{
-          position: "fixed", left: tooltip.x + 14, top: tooltip.y - 20, zIndex: 9999,
+          position: "fixed", left: tooltip.x > (typeof window !== "undefined" ? window.innerWidth * 0.65 : 900) ? tooltip.x - 170 : tooltip.x + 14, top: tooltip.y - 20, zIndex: 9999,
           background: "hsl(var(--card))", border: "1px solid hsl(var(--border))",
           borderRadius: 8, padding: "6px 11px", fontFamily: "var(--font-mono)", fontSize: 11,
           pointerEvents: "none", whiteSpace: "nowrap",
@@ -291,7 +291,7 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
         {/* ── 1. ZÁPASOVÉ STATISTIKY ────────────────────────────────────────── */}
         <div>
           <SH>Zápasové statistiky</SH>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
+          <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
             {loading ? [1,2,3,4].map(i => <Sk key={i} />) : <>
               <WDLBar wins={data?.totalWins ?? 0} losses={data?.totalLosses ?? 0} draws={data?.totalDraws ?? 0} />
               <SB icon={Target} label="Globální winrate"  value={`${data?.globalWinrate?.toFixed(1) ?? "—"}%`} sub="Výhry / Celkem"       color={green} />
@@ -304,7 +304,7 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
         {/* ── 2. PŘEHLED ────────────────────────────────────────────────────── */}
         <div>
           <SH>Přehled</SH>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginTop: 8 }}>
+          <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginTop: 8 }}>
             {loading ? [1,2,3,4,5].map(i => <Sk key={i} />) : <>
               <SB icon={Swords}    label="Zápasy celkem"    value={fmt(data?.totalGames)}       sub="Unique Match ID"     color={green} />
               <SB icon={Trophy}    label="Hráči celkem"     value={fmt(data?.playerCount)}      sub="Registrovaných"      color={blue}  />
@@ -319,7 +319,7 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
         <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
           <SH>ELO distribuce</SH>
           {/* Fixed height grid — both columns stretch to same bottom */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8, marginTop: 8, height: 360, alignItems: "stretch" }}>
+          <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8, marginTop: 8, height: 360, alignItems: "stretch" }}>
 
             {/* Left column — stacked */}
             {loading

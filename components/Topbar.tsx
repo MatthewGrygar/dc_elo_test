@@ -55,7 +55,7 @@ export default function Topbar() {
 
       {/* mobile hamburger */}
       <button onClick={() => setSidebarOpen(true)} className="flex md:hidden"
-        style={{ position: "relative", zIndex: 1, width: 32, height: 32, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted) / 0.5)", display: "flex", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))", cursor: "pointer", flexShrink: 0 }}>
+        style={{ position: "relative", zIndex: 1, width: 32, height: 32, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted) / 0.5)", alignItems: "center", justifyContent: "center", color: "hsl(var(--muted-foreground))", cursor: "pointer", flexShrink: 0 }}>
         <Menu size={15} />
       </button>
 

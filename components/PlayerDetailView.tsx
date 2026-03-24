@@ -527,196 +527,265 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
   const { opponents, computed: c } = data;
   const green = "hsl(142,65%,50%)";
   const red = "hsl(0,65%,55%)";
+  const amber = "hsl(42,80%,55%)";
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"games"|"winrate"|"avgDelta">("games");
   const filtered = search.trim()
     ? opponents.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))
     : opponents;
-  const top10 = filtered.slice(0, 50);
+  const sorted = [...filtered].sort((a, b) =>
+    sortBy === "games" ? b.games - a.games :
+    sortBy === "winrate" ? b.winrate - a.winrate :
+    b.avgDelta - a.avgDelta
+  );
+  const display = sorted.slice(0, 50);
+  const top12Chart = [...opponents].sort((a, b) => b.games - a.games).slice(0, 12);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: "100%" }}>
-      {/* Table */}
-      <GC style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px 10px", flexShrink: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, fontFamily: "var(--font-display)" }}>H2H přehled — Top soupeři</div>
-          <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-            {[
-              { l: "Nejlepší bilance", n: c.bestOpponent.name, v: `${c.bestOpponent.winrate}%`, c: green },
-              { l: "Nejhorší bilance", n: c.worstOpponent.name, v: `${c.worstOpponent.winrate}%`, c: red },
-            ].map(r => (
-              <div key={r.l} style={{ flex: 1, padding: "8px 10px", borderRadius: 10, background: `${r.c}15`, border: `1px solid ${r.c}30` }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{r.l}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-display)", marginTop: 1 }}>{r.n}</div>
-                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: r.c }}>{r.v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ padding: "0 16px 8px", flexShrink: 0 }}>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Hledat soupeře…"
-            style={{ width: "100%", padding: "5px 10px", borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.4)", color: "hsl(var(--foreground))", fontSize: 11, fontFamily: "var(--font-mono)", outline: "none" }}
-          />
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }} className="scrollbar-thin">
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid hsl(var(--border)/0.5)" }}>
-                {["Soupeř", "Hry", "W", "L", "D", "WR%", "Avg Δ", "Naposledy"].map(h => (
-                  <th key={h} style={{ padding: "6px 4px", textAlign: "left", fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {top10.map((o, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid hsl(var(--border)/0.25)", transition: "background 0.15s" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted)/0.4)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                  <td style={{ padding: "8px 4px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, background: "hsl(var(--primary)/0.12)", color: "hsl(var(--primary))", fontFamily: "var(--font-mono)", flexShrink: 0 }}>{avatarInitials(o.name)}</div>
-                      <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-display)", whiteSpace: "nowrap" }}>{o.name}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)" }}>{o.games}</td>
-                  <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", color: green, fontWeight: 600 }}>{o.wins}</td>
-                  <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", color: red, fontWeight: 600 }}>{o.losses}</td>
-                  <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{o.draws}</td>
-                  <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 700, color: o.winrate >= 50 ? green : red }}>{o.winrate}%</td>
-                  <td style={{ padding: "8px 4px", fontSize: 12, fontFamily: "var(--font-mono)", color: o.avgDelta >= 0 ? green : red }}>{o.avgDelta >= 0 ? "+" : ""}{o.avgDelta}</td>
-                  <td style={{ padding: "8px 4px", fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", whiteSpace: "nowrap" }}>{o.lastDate}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </GC>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%", overflowY: "auto" }} className="scrollbar-thin">
 
-      {/* Chart */}
-      <GC style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "14px 16px 0", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-display)" }}>Winrate vs. soupeři</div>
-        <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "2px 16px 0" }}>Top soupeři — zelená &gt;50%, červená &lt;50%</div>
-        <div style={{ flex: 1, padding: "8px 8px 16px 4px", minHeight: 0 }}>
-          <ResponsiveContainer width="100%" height={Math.max(200, Math.min(top10.length, 15) * 28)}>
-            <BarChart layout="vertical" data={[...top10.slice(0, 15)].reverse()} margin={{ top: 0, right: 48, bottom: 0, left: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border)/0.3)" />
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontFamily: "var(--font-display)", fontWeight: 600 }} width={90} />
-              <ReferenceLine x={50} stroke="hsl(var(--border))" strokeDasharray="4 2" />
-              <Tooltip content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const d = payload[0]?.payload;
-                return (
-                  <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 2 }}>{d.name}</div>
-                    <div style={{ color: d.winrate >= 50 ? green : red }}>WR: {d.winrate}%</div>
-                    <div style={{ color: "hsl(var(--muted-foreground))" }}>Hry: {d.games}</div>
+      {/* ── HERO STATS ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, flexShrink: 0 }}>
+        {[
+          { label: "Soupeři celkem", value: String(opponents.length), color: "hsl(var(--primary))" },
+          { label: "Nejlepší bilance", value: c.bestOpponent.name, sub: `${c.bestOpponent.winrate}% WR`, color: green },
+          { label: "Nejhorší bilance", value: c.worstOpponent.name, sub: `${c.worstOpponent.winrate}% WR`, color: red },
+          { label: "Nejhranější", value: opponents[0]?.name ?? "—", sub: opponents[0] ? `${opponents[0].games} her` : "", color: amber },
+        ].map(s => (
+          <GC key={s.label}>
+            <div style={{ padding: "12px 14px" }}>
+              <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>{s.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", color: s.color, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.value}</div>
+              {s.sub && <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: s.color, marginTop: 2, opacity: 0.8 }}>{s.sub}</div>}
+            </div>
+          </GC>
+        ))}
+      </div>
+
+      {/* ── MAIN ROW ── */}
+      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 10, flex: 1, minHeight: 0 }}>
+
+        {/* Left: enriched opponent list */}
+        <GC style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+          <div style={{ padding: "14px 16px 8px", flexShrink: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 8 }}>H2H přehled</div>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Hledat soupeře…"
+                style={{ flex: 1, padding: "5px 10px", borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.4)", color: "hsl(var(--foreground))", fontSize: 11, fontFamily: "var(--font-mono)", outline: "none" }}
+              />
+              <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 1 }}>
+                {([["games","Hry"],["winrate","WR"],["avgDelta","Δ"]] as const).map(([k, lbl]) => (
+                  <button key={k} onClick={() => setSortBy(k)}
+                    style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: 6, border: "none", cursor: "pointer", background: sortBy === k ? "hsl(var(--card))" : "transparent", color: sortBy === k ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))", fontWeight: sortBy === k ? 700 : 400 }}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 10px 10px" }} className="scrollbar-thin">
+            {display.map((o, i) => {
+              const total = o.wins + o.losses + o.draws || 1;
+              const wPct = o.wins / total * 100;
+              const lPct = o.losses / total * 100;
+              const wrColor = o.winrate >= 55 ? green : o.winrate <= 45 ? red : amber;
+              return (
+                <div key={i} style={{ padding: "9px 10px", borderRadius: 10, marginBottom: 4, background: "hsl(var(--muted)/0.18)", border: "1px solid hsl(var(--border)/0.3)", transition: "background 0.15s", cursor: "default" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "hsl(var(--muted)/0.4)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "hsl(var(--muted)/0.18)")}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, background: "hsl(var(--primary)/0.12)", color: "hsl(var(--primary))", fontFamily: "var(--font-mono)", flexShrink: 0 }}>{avatarInitials(o.name)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
+                      <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{o.games} her · {o.lastDate}</div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "var(--font-mono)", color: wrColor, lineHeight: 1 }}>{o.winrate}%</div>
+                      <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: o.avgDelta >= 0 ? green : red }}>Δ {o.avgDelta >= 0 ? "+" : ""}{o.avgDelta}</div>
+                    </div>
                   </div>
-                );
-              }} />
-              <Bar dataKey="winrate" name="Winrate %" radius={[0, 4, 4, 0]}>
-                {[...top10.slice(0, 15)].reverse().map((d, i) => <Cell key={i} fill={d.winrate >= 50 ? green : red} fillOpacity={0.82} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </GC>
+                  {/* W/D/L inline bar */}
+                  <div style={{ display: "flex", height: 3, borderRadius: 99, overflow: "hidden", gap: 1 }}>
+                    <div style={{ flex: wPct, background: green, minWidth: wPct > 0 ? 2 : 0 }} />
+                    <div style={{ flex: o.draws / total * 100, background: "hsl(var(--muted-foreground)/0.35)", minWidth: o.draws > 0 ? 2 : 0 }} />
+                    <div style={{ flex: lPct, background: red, minWidth: lPct > 0 ? 2 : 0 }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                    {[{ v: o.wins, c: green, l: "W" }, { v: o.draws, c: "hsl(var(--muted-foreground))", l: "D" }, { v: o.losses, c: red, l: "L" }].map(s => (
+                      <span key={s.l} style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: s.c }}>{s.l}: {s.v}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </GC>
+
+        {/* Right: winrate chart */}
+        <GC style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "14px 16px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Winrate — top soupeři</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Nejhranější soupeři · zelená &gt;50%, červená &lt;50%</div>
+          </div>
+          <div style={{ flex: 1, padding: "8px 8px 16px 0", minHeight: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart layout="vertical" data={[...top12Chart].reverse()} margin={{ top: 4, right: 52, bottom: 4, left: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border)/0.25)" />
+                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fontFamily: "var(--font-display)", fontWeight: 600 }} width={88} tickLine={false} />
+                <ReferenceLine x={50} stroke="hsl(var(--border))" strokeDasharray="4 3" strokeWidth={1.5} />
+                <Tooltip content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0]?.payload;
+                  return (
+                    <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, boxShadow: "0 4px 16px hsl(var(--foreground)/0.12)" }}>
+                      <div style={{ fontWeight: 700, marginBottom: 3 }}>{d.name}</div>
+                      <div style={{ color: d.winrate >= 50 ? green : red }}>WR: {d.winrate}%</div>
+                      <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 1 }}>Hry: {d.games} · W{d.wins}/L{d.losses}</div>
+                      <div style={{ color: d.avgDelta >= 0 ? green : red }}>Avg Δ: {d.avgDelta >= 0 ? "+" : ""}{d.avgDelta}</div>
+                    </div>
+                  );
+                }} />
+                <Bar dataKey="winrate" name="Winrate %" radius={[0, 5, 5, 0]} maxBarSize={18}>
+                  {[...top12Chart].reverse().map((d, i) => (
+                    <Cell key={i} fill={d.winrate >= 55 ? green : d.winrate <= 45 ? red : amber} fillOpacity={0.85} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </GC>
+      </div>
     </div>
   );
 }
 
 // ─── Tournaments Tab ──────────────────────────────────────────────────────────
 function TournamentsTab({ data }: { data: PlayerDetailData }) {
-  const { tournamentPerf, streaks } = data;
+  const { tournamentPerf } = data;
   const green = "hsl(142,65%,50%)";
   const red = "hsl(0,65%,55%)";
   const amber = "hsl(42,80%,55%)";
 
+  const bestT = tournamentPerf.reduce((b, t) => t.totalDelta > (b?.totalDelta ?? -Infinity) ? t : b, tournamentPerf[0]);
+  const worstT = tournamentPerf.reduce((b, t) => t.totalDelta < (b?.totalDelta ?? Infinity) ? t : b, tournamentPerf[0]);
+  const mostGamesT = tournamentPerf.reduce((b, t) => t.games > (b?.games ?? 0) ? t : b, tournamentPerf[0]);
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, height: "100%" }}>
-      {/* Left: tournament perf table */}
-      <GC style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px 10px", flexShrink: 0, fontSize: 14, fontWeight: 600, fontFamily: "var(--font-display)" }}>ELO výkon per turnaj</div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 16px" }} className="scrollbar-thin">
-          {tournamentPerf.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>Žádná turnajová data</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {tournamentPerf.map((t, i) => (
-                <div key={i} style={{ padding: "10px 12px", borderRadius: 10, background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{t.name}</div>
-                      <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>
-                        {t.games} her · {t.wins}W / {t.losses}L
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--font-mono)", color: t.totalDelta >= 0 ? green : red }}>
-                        {t.totalDelta >= 0 ? "+" : ""}{t.totalDelta}
-                      </div>
-                      <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-                        avg {t.avgDelta >= 0 ? "+" : ""}{t.avgDelta}/zápas
-                      </div>
-                    </div>
-                  </div>
-                  {/* Mini progress bar */}
-                  <div style={{ marginTop: 8, height: 4, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden", display: "flex" }}>
-                    <div style={{ width: `${t.games > 0 ? (t.wins / t.games * 100) : 0}%`, background: green }} />
-                    <div style={{ width: `${t.games > 0 ? (t.losses / t.games * 100) : 0}%`, background: red }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%", overflowY: "auto" }} className="scrollbar-thin">
+
+      {/* ── HERO STATS ── */}
+      {tournamentPerf.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, flexShrink: 0 }}>
+          {[
+            { label: "Turnaje celkem", value: String(tournamentPerf.length), color: "hsl(var(--primary))" },
+            { label: "Nejlepší turnaj", value: bestT?.name ?? "—", sub: bestT ? `+${bestT.totalDelta} ELO` : "", color: green },
+            { label: "Nejhorší turnaj", value: worstT?.name ?? "—", sub: worstT ? `${worstT.totalDelta} ELO` : "", color: red },
+            { label: "Nejvíce her", value: mostGamesT?.name ?? "—", sub: mostGamesT ? `${mostGamesT.games} zápasů` : "", color: amber },
+          ].map(s => (
+            <GC key={s.label}>
+              <div style={{ padding: "12px 14px" }}>
+                <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", color: s.color, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.value}</div>
+                {s.sub && <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: s.color, marginTop: 2, opacity: 0.85 }}>{s.sub}</div>}
+              </div>
+            </GC>
+          ))}
         </div>
-      </GC>
+      )}
 
-      {/* Right: tournament avg delta chart + streaks */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <GC style={{ flex: 1 }}>
-          <div style={{ padding: "14px 16px 0", fontSize: 14, fontWeight: 600, fontFamily: "var(--font-display)" }}>Průměrná Δ ELO per turnaj</div>
-          <div style={{ height: "calc(100% - 44px)", padding: "8px 4px 8px 8px" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={tournamentPerf.slice(0, 12)} margin={{ top: 4, right: 8, bottom: 40, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} angle={-35} textAnchor="end" height={44} />
-                <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={32} />
-                <ReferenceLine y={0} stroke="hsl(var(--border))" />
-                <Tooltip content={<CT />} />
-                <Bar dataKey="avgDelta" name="Avg Δ ELO" radius={[3, 3, 0, 0]}>
-                  {tournamentPerf.slice(0, 12).map((d, i) => <Cell key={i} fill={d.avgDelta >= 0 ? green : red} fillOpacity={0.85} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </GC>
+      {/* ── MAIN GRID ── */}
+      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: 1, minHeight: 280 }}>
 
-        {/* Streaks panel */}
-        <GC>
-          <div style={{ padding: "14px 16px" }}>
-            <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)", marginBottom: 10 }}>Streak timeline</div>
-            {streaks.length === 0 ? (
-              <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Žádné streaks (min. 2 za sebou)</div>
+        {/* Left: enriched tournament cards */}
+        <GC style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "14px 16px 8px", flexShrink: 0, fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>ELO výkon per turnaj</div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }} className="scrollbar-thin">
+            {tournamentPerf.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 40, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>Žádná turnajová data</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto" }} className="scrollbar-thin">
-                {[...streaks].reverse().slice(0, 12).map((s, i) => {
-                  const color = s.type === "win" ? green : s.type === "lose" ? red : "hsl(var(--muted-foreground))";
-                  const label = s.type === "win" ? "🔥 Win" : s.type === "lose" ? "💀 Lose" : "➖ Draw";
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {tournamentPerf.map((t, i) => {
+                  const winPct = t.games > 0 ? t.wins / t.games * 100 : 0;
+                  const lossPct = t.games > 0 ? t.losses / t.games * 100 : 0;
+                  const drawPct = t.games > 0 ? (t.games - t.wins - t.losses) / t.games * 100 : 0;
+                  const accentColor = t.totalDelta >= 10 ? green : t.totalDelta <= -10 ? red : amber;
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 60, fontSize: 10, fontFamily: "var(--font-mono)", color, fontWeight: 600, flexShrink: 0 }}>{label} ×{s.length}</div>
-                      <div style={{ flex: 1, height: 6, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${Math.min(s.length * 8, 100)}%`, background: color, opacity: 0.7, borderRadius: 99 }} />
+                    <div key={i} style={{ padding: "10px 12px", borderRadius: 11, background: "hsl(var(--muted)/0.18)", border: `1px solid ${accentColor}28`, borderLeft: `3px solid ${accentColor}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
+                          <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>
+                            {t.games} her · {t.wins}W / {t.losses}L{t.games - t.wins - t.losses > 0 ? ` / ${t.games - t.wins - t.losses}D` : ""}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "var(--font-mono)", color: accentColor, lineHeight: 1 }}>
+                            {t.totalDelta >= 0 ? "+" : ""}{t.totalDelta}
+                          </div>
+                          <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
+                            avg {t.avgDelta >= 0 ? "+" : ""}{t.avgDelta}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0, width: 64, textAlign: "right" }}>{s.startDate}</div>
+                      <div style={{ marginTop: 7, height: 3, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden", display: "flex", gap: 1 }}>
+                        <div style={{ flex: winPct, background: green, minWidth: winPct > 0 ? 2 : 0 }} />
+                        <div style={{ flex: drawPct, background: "hsl(var(--muted-foreground)/0.35)", minWidth: drawPct > 0 ? 2 : 0 }} />
+                        <div style={{ flex: lossPct, background: red, minWidth: lossPct > 0 ? 2 : 0 }} />
+                      </div>
                     </div>
                   );
                 })}
               </div>
             )}
+          </div>
+        </GC>
+
+        {/* Right: avg delta chart */}
+        <GC style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "14px 16px 4px", flexShrink: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Průměrná Δ ELO per turnaj</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Průměrný zisk/ztráta na zápas</div>
+          </div>
+          <div style={{ flex: 1, padding: "4px 8px 12px 4px", minHeight: 0 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={tournamentPerf.slice(0, 14)} margin={{ top: 8, right: 12, bottom: 48, left: 4 }}>
+                <defs>
+                  <linearGradient id="tGreen" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={green} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={green} stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="tRed" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stopColor={red} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={red} stopOpacity={0.5} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.25)" />
+                <XAxis dataKey="name" tick={{ fontSize: 8, fontFamily: "var(--font-mono)", fill: "hsl(var(--muted-foreground))" }} angle={-40} textAnchor="end" height={52} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={30} tickLine={false} axisLine={false} />
+                <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1.5} />
+                <Tooltip content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0]?.payload;
+                  return (
+                    <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, boxShadow: "0 4px 16px hsl(var(--foreground)/0.12)" }}>
+                      <div style={{ fontWeight: 700, marginBottom: 3, color: "hsl(var(--foreground))" }}>{d.name}</div>
+                      <div style={{ color: d.avgDelta >= 0 ? green : red }}>Avg Δ: {d.avgDelta >= 0 ? "+" : ""}{d.avgDelta}</div>
+                      <div style={{ color: d.totalDelta >= 0 ? green : red }}>Celkem: {d.totalDelta >= 0 ? "+" : ""}{d.totalDelta}</div>
+                      <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 1 }}>{d.games} her · {d.wins}W/{d.losses}L</div>
+                    </div>
+                  );
+                }} />
+                <Bar dataKey="avgDelta" name="Avg Δ ELO" radius={[4, 4, 0, 0]} maxBarSize={32}>
+                  {tournamentPerf.slice(0, 14).map((d, i) => (
+                    <Cell key={i} fill={d.avgDelta >= 0 ? `url(#tGreen)` : `url(#tRed)`} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </GC>
       </div>

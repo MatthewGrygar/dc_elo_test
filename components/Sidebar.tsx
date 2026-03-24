@@ -9,7 +9,7 @@ import { t, Lang } from "@/lib/i18n";
 import {
   LayoutDashboard, Trophy, TrendingUp, Activity, Medal,
   GitCompare, Newspaper, Building2, Moon, Sun,
-  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Menu,
+  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap,
 } from "lucide-react";
 
 const MAIN_NAV: { id: BaseView; icon: React.ElementType; tKey: string }[] = [
@@ -106,7 +106,7 @@ export default function Sidebar() {
         {!collapsed && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "hsl(var(--primary))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 14px hsl(var(--primary) / 0.38)" }}>
-              <Zap size={17} color="hsl(var(--primary-foreground))" strokeWidth={2.5} />
+              <Trophy size={17} color="hsl(var(--primary-foreground))" strokeWidth={2.5} />
             </div>
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 17, letterSpacing: "-0.03em", lineHeight: 1 }}>
@@ -120,7 +120,7 @@ export default function Sidebar() {
         )}
         {collapsed && (
           <div style={{ width: 34, height: 34, borderRadius: 10, background: "hsl(var(--primary))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 14px hsl(var(--primary) / 0.38)" }}>
-            <Zap size={17} color="hsl(var(--primary-foreground))" strokeWidth={2.5} />
+            <Trophy size={17} color="hsl(var(--primary-foreground))" strokeWidth={2.5} />
           </div>
         )}
         <button onClick={() => setCollapsed(c => !c)} className="hidden md:flex"
@@ -168,8 +168,20 @@ export default function Sidebar() {
               {PLAYER_SUB.map(s => <NavBtn key={s.id} icon={s.icon} label={t(lang, s.tKey as any)} active={playerSubView === s.id} onClick={() => setPlayerSubView(s.id)} />)}
             </>
           ) : (
-            <div onClick={() => setPlayerSubView("overview")} style={{ width: 28, height: 28, margin: "auto", borderRadius: 8, background: "hsl(var(--primary) / 0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)", cursor: "pointer" }}>
-              {avatarInitials(selectedPlayer.name)}
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "center" }}>
+              <div onClick={() => setPlayerSubView("overview")} style={{ width: 28, height: 28, margin: "0 auto 2px", borderRadius: 8, background: "hsl(var(--primary) / 0.22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)", cursor: "pointer" }}>
+                {avatarInitials(selectedPlayer.name)}
+              </div>
+              {PLAYER_SUB.map(sub => {
+                const Icon = sub.icon;
+                const active = playerSubView === sub.id;
+                return (
+                  <button key={sub.id} onClick={() => setPlayerSubView(sub.id)} title={t(lang, sub.tKey as any)}
+                    style={{ width: 28, height: 28, borderRadius: 7, border: `1px solid ${active ? "hsl(var(--primary) / 0.28)" : "transparent"}`, background: active ? "hsl(var(--primary) / 0.12)" : "transparent", color: active ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <Icon size={13} />
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

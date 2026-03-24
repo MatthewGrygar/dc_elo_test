@@ -178,10 +178,10 @@ function EloVsGamesScatter({ data }: { data: AnalyticsData["eloVsGames"] }) {
 const TOPN_COLORS = ["hsl(152,65%,50%)","hsl(210,70%,55%)","hsl(42,80%,55%)","hsl(265,65%,60%)","hsl(0,65%,55%)","hsl(185,60%,50%)","hsl(320,60%,55%)","hsl(45,85%,55%)","hsl(280,60%,58%)","hsl(180,60%,50%)","hsl(60,70%,50%)","hsl(30,80%,55%)","hsl(200,65%,55%)","hsl(340,60%,55%)","hsl(90,60%,50%)"];
 
 function TopNHistory({ data5, data10, data15, top10 }: { data5: AnalyticsData["top5History"]; data10: AnalyticsData["top10History"]; data15: AnalyticsData["top15History"]; top10: AnalyticsData["top10"] }) {
-  const [n, setN] = useState<5 | 10 | 15>(5);
-  const names = n === 5 ? top10.slice(0, 5).map(p => p.name) : n === 10 ? top10.slice(0, 10).map(p => p.name) : top10.slice(0, 15).map(p => p.name);
+  const [n, setN] = useState<5 | 10>(5);
+  const names = n === 5 ? top10.slice(0, 5).map(p => p.name) : top10.slice(0, 10).map(p => p.name);
   // fall back to data5 if higher datasets are empty (data not yet loaded)
-  const rawData = n === 5 ? data5 : n === 10 ? (data10?.length ? data10 : data5) : (data15?.length ? data15 : data10?.length ? data10 : data5);
+  const rawData = n === 5 ? data5 : (data10?.length ? data10 : data5);
   const chartData = rawData;
   const mt = "hsl(var(--muted-foreground))";
 
@@ -193,7 +193,7 @@ function TopNHistory({ data5, data10, data15, top10 }: { data5: AnalyticsData["t
           <div style={{ fontSize: 11, color: mt, marginTop: 2, fontFamily: "var(--font-mono)" }}>Historie ratingu nejlepších hráčů v čase</div>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
-          {([5, 10, 15] as const).map(v => (
+          {([5, 10] as const).map(v => (
             <button key={v} onClick={() => setN(v)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 6, border: "1px solid", cursor: "pointer", borderColor: n === v ? "hsl(var(--primary))" : "hsl(var(--border)/0.5)", background: n === v ? "hsl(var(--primary)/0.15)" : "transparent", color: n === v ? "hsl(var(--primary))" : mt, fontWeight: n === v ? 700 : 400 }}>
               TOP{v}
             </button>
@@ -214,17 +214,6 @@ function TopNHistory({ data5, data10, data15, top10 }: { data5: AnalyticsData["t
           </LineChart>
         </ResponsiveContainer>
       </div>
-      {/* Custom legend for TOP15 */}
-      {n === 15 && (
-        <div style={{ padding: "0 16px 14px", display: "flex", flexWrap: "wrap", gap: "4px 14px" }}>
-          {names.map((name, i) => (
-            <div key={name} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 12, height: 2, background: TOPN_COLORS[i % TOPN_COLORS.length], flexShrink: 0, borderRadius: 1 }} />
-              <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: mt }}>{name}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </GlassCard>
   );
 }

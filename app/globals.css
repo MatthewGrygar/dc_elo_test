@@ -285,4 +285,17 @@
   .mobile-text-sm {
     font-size: 11px !important;
   }
+
+  /* Force multi-column grids to single column on mobile */
+  .mobile-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Compare selector: stack players vertically on mobile */
+  .mobile-compare-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .mobile-compare-grid .vs-divider {
+    display: none !important;
+  }
 }
