@@ -186,19 +186,21 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, hsl(0 0% 0% / 0.82) 0%, hsl(0 0% 0% / 0.45) 45%, hsl(0 0% 0% / 0.12) 100%)" }} />
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, hsl(0 0% 0% / 0.35) 0%, transparent 60%)" }} />
 
-      {/* Left/right nav arrows — vertically centered */}
-      <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
-        style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", zIndex: 10, width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; e.currentTarget.style.color = "#fff"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}>
-        <ChevronLeft size={15} />
-      </button>
-      <button onClick={() => goTo((current + 1) % SLIDES.length)}
-        style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", zIndex: 10, width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; e.currentTarget.style.color = "#fff"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}>
-        <ChevronRight size={15} />
-      </button>
+      {/* Nav arrows — top-right corner */}
+      <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10, display: "flex", gap: 4 }}>
+        <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
+          style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}>
+          <ChevronLeft size={14} />
+        </button>
+        <button onClick={() => goTo((current + 1) % SLIDES.length)}
+          style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}>
+          <ChevronRight size={14} />
+        </button>
+      </div>
 
       {/* Content — bottom-left overlay */}
       <div style={{
