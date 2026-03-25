@@ -534,8 +534,8 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
               {(prefetchCache?.[distMode]?.players?.length ?? stats?.uniquePlayers ?? 0)} hráčů · ×50
             </span>
           </div>
-          <div className="dist-chart" style={{ flex: 1, padding: "8px 10px 4px", minHeight: 0, height: isCompact ? 140 : undefined }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="dist-chart" style={{ flex: 1, padding: "8px 10px 4px", minHeight: isCompact ? 140 : 0 }}>
+            <ResponsiveContainer width="100%" height={isCompact ? 130 : "100%"}>
               <BarChart data={distData} barCategoryGap="4%" margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <XAxis dataKey="range" tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }} tickLine={false} axisLine={false}
                   tickFormatter={(v) => v} interval={Math.ceil(distData.length / 6) - 1} />

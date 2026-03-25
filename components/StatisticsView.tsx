@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useWinSize } from "@/hooks/useWinSize";
 import { GeneralStats } from "@/lib/dataFetchers";
 import type { PrefetchCache } from "@/app/page";
 import {
@@ -94,6 +95,8 @@ const VT_ORDER = ["Class A", "Class B", "Class C", "Class D"];
 
 // ─── VT class bar chart ────────────────────────────────────────────────────────
 function VtBarChart({ data }: { data: GeneralStats["vtDistribution"] }) {
+  const { wBp } = useWinSize();
+  const isCompact = wBp === "xs" || wBp === "sm";
   const CT = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const d = payload[0]?.payload;
@@ -105,7 +108,7 @@ function VtBarChart({ data }: { data: GeneralStats["vtDistribution"] }) {
     );
   };
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height={isCompact ? 160 : "100%"}>
       <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -20 }} barCategoryGap="28%">
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.3)" />
         <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: "var(--font-mono)", fill: "hsl(var(--foreground))", fontWeight: 600 }} tickLine={false} axisLine={false} />
