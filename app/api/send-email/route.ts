@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    await resend.emails.send({
+    const { error: resendError } = await resend.emails.send({
       from: "onboarding@resend.dev",
       to: "prague-dc-series@seznam.cz",
       subject: subject ?? `Zpráva od ${name} — DC ELO`,
@@ -28,6 +28,11 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     });
+
+    if (resendError) {
+      console.error("Resend error:", resendError);
+      return NextResponse.json({ ok: false, error: resendError.message }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
