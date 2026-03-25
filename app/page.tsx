@@ -15,6 +15,7 @@ import CompareView from "@/components/CompareView";
 import ArticlesView from "@/components/ArticlesView";
 import OrganizationView from "@/components/OrganizationView";
 import SupportModal from "@/components/SupportModal";
+import FeedbackModal from "@/components/FeedbackModal";
 import { Zap } from "lucide-react";
 
 const ParticlesBackground = dynamic(
@@ -176,7 +177,7 @@ const VIEW_ORDER = [
 ];
 
 function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
-  const { view, supportOpen, setSupportOpen } = useAppNav();
+  const { view, supportOpen, setSupportOpen, feedbackOpen, setFeedbackOpen } = useAppNav();
   const [animKey, setAnimKey]   = useState(0);
   const [slideDir, setSlideDir] = useState<"R"|"L">("R");
   const prevView = useRef(view);
@@ -193,6 +194,7 @@ function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
   return (
     <div className="fixed inset-0 flex overflow-hidden" style={{ background: "hsl(var(--background))" }}>
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       {/* particles */}
       <ParticlesBackground />
 

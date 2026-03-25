@@ -20,6 +20,7 @@ interface AppState {
   lang: Lang;
   sidebarOpen: boolean;
   supportOpen: boolean;
+  feedbackOpen: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -31,20 +32,21 @@ interface AppContextType extends AppState {
   setLang: (lang: Lang) => void;
   setSidebarOpen: (open: boolean) => void;
   setSupportOpen: (open: boolean) => void;
+  setFeedbackOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType>({
   view: "dashboard", playerSubView: "overview", orgTab: "about",
-  selectedPlayer: null, lang: "cs", sidebarOpen: false, supportOpen: false,
+  selectedPlayer: null, lang: "cs", sidebarOpen: false, supportOpen: false, feedbackOpen: false,
   navigateTo: () => {}, openPlayer: () => {}, closePlayer: () => {},
   setPlayerSubView: () => {}, setOrgTab: () => {}, setLang: () => {},
-  setSidebarOpen: () => {}, setSupportOpen: () => {},
+  setSidebarOpen: () => {}, setSupportOpen: () => {}, setFeedbackOpen: () => {},
 });
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>({
     view: "dashboard", playerSubView: "overview", orgTab: "about",
-    selectedPlayer: null, lang: "cs", sidebarOpen: false, supportOpen: false,
+    selectedPlayer: null, lang: "cs", sidebarOpen: false, supportOpen: false, feedbackOpen: false,
   });
 
   const navigateTo  = (view: BaseView)        => setState(s => ({ ...s, view, playerSubView: "overview", orgTab: "about", sidebarOpen: false }));
@@ -55,9 +57,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setLang     = (lang: Lang)            => setState(s => ({ ...s, lang }));
   const setSidebarOpen = (open: boolean)      => setState(s => ({ ...s, sidebarOpen: open }));
   const setSupportOpen = (open: boolean)      => setState(s => ({ ...s, supportOpen: open }));
+  const setFeedbackOpen = (open: boolean)     => setState(s => ({ ...s, feedbackOpen: open }));
 
   return (
-    <AppContext.Provider value={{ ...state, navigateTo, openPlayer, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen }}>
+    <AppContext.Provider value={{ ...state, navigateTo, openPlayer, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen, setFeedbackOpen }}>
       {children}
     </AppContext.Provider>
   );

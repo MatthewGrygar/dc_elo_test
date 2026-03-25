@@ -9,9 +9,8 @@ import { t, Lang } from "@/lib/i18n";
 import {
   LayoutDashboard, Trophy, TrendingUp, Activity, Medal,
   GitCompare, Newspaper, Building2, Moon, Sun,
-  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart, Handshake,
+  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart, Handshake, MessageSquarePlus,
 } from "lucide-react";
-import SupportModal from "./SupportModal";
 
 const MAIN_NAV: { id: BaseView; icon: React.ElementType; tKey: string }[] = [
   { id: "dashboard",   icon: LayoutDashboard, tKey: "dashboard"  },
@@ -43,8 +42,8 @@ const LANGS: { code: Lang; flag: string; label: string }[] = [
 export default function Sidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const { mode, setMode } = useRatingMode();
-  const { view, playerSubView, orgTab, selectedPlayer, lang, sidebarOpen, supportOpen,
-          navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen } = useAppNav();
+  const { view, playerSubView, orgTab, selectedPlayer, lang, sidebarOpen, supportOpen, feedbackOpen,
+          navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen, setFeedbackOpen } = useAppNav();
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const isDark = resolvedTheme === "dark";
@@ -252,6 +251,15 @@ export default function Sidebar() {
           ))}
         </div>
       )}
+
+      {/* Feedback button */}
+      <button onClick={() => setFeedbackOpen(true)} title={collapsed ? "Zpětná vazba" : undefined}
+        style={{ display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 10, width: "100%", padding: collapsed ? "8px 0" : "8px 12px", borderRadius: 10, border: "1px solid hsl(262,70%,60%,0.3)", background: "hsl(262,70%,60%,0.07)", color: "hsl(262,70%,60%)", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)", transition: "all 0.18s", flexShrink: 0, marginBottom: 4 }}
+        onMouseEnter={e => { e.currentTarget.style.background = "hsl(262,70%,60%,0.14)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "hsl(262,70%,60%,0.07)"; }}>
+        <MessageSquarePlus size={14} style={{ flexShrink: 0 }} />
+        {!collapsed && <span>Zpětná vazba</span>}
+      </button>
 
       {/* Support button */}
       <button onClick={() => setSupportOpen(true)} title={collapsed ? "Podpořit" : undefined}
