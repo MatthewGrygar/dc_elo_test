@@ -25,26 +25,6 @@ function GC({ children, style, glow }: { children: React.ReactNode; style?: Reac
   );
 }
 
-function RecordTag({ label, entry, catColor }: { label: string; entry: RecordEntry | null; catColor?: string }) {
-  if (!entry || entry.value === "—") return null;
-  const col = catColor ?? "hsl(var(--primary))";
-  return (
-    <div title={entry.detail ? `${entry.player ?? ""} · ${entry.detail}` : entry.player ?? label} style={{
-      display: "inline-flex", flexDirection: "column", gap: 2,
-      padding: "8px 12px", borderRadius: 10,
-      background: `${col}0f`, border: `1px solid ${col}2a`,
-      minWidth: 90, maxWidth: 190, flexShrink: 0,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-        <span style={{ fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em", color: col, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-        {entry.isAllTime && <span style={{ fontSize: 8, flexShrink: 0 }}>👑</span>}
-      </div>
-      <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", lineHeight: 1, letterSpacing: "-0.03em" }}>{entry.value}</div>
-      {entry.player && <div style={{ fontSize: 10, fontFamily: "var(--font-display)", fontWeight: 700, color: col, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.player}</div>}
-    </div>
-  );
-}
-
 function CategoryCard({ category }: { category: RecordCategory }) {
   const Icon = CAT_ICONS[category.icon] ?? Trophy;
   const color = CAT_COLORS[category.icon] ?? "hsl(var(--primary))";
@@ -61,10 +41,26 @@ function CategoryCard({ category }: { category: RecordCategory }) {
           <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{validRecords.length} záznamů</div>
         </div>
       </div>
-      <div style={{ padding: "8px 14px 14px", display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {validRecords.map((r) => (
-          <RecordTag key={r.label} label={r.label} entry={r.entry} catColor={color} />
-        ))}
+      <div style={{ padding: "4px 0 6px" }}>
+        {validRecords.map((r, i) => {
+          const isLast = i === validRecords.length - 1;
+          return (
+            <div key={r.label} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+              padding: "9px 18px",
+              borderBottom: isLast ? "none" : "1px solid hsl(var(--border) / 0.18)",
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontFamily: "var(--font-display)", fontWeight: 600, color: "hsl(var(--foreground))", lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.label}</div>
+                {r.entry?.player && <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.player}</div>}
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                {r.entry?.isAllTime && <div style={{ fontSize: 7, fontFamily: "var(--font-mono)", color: "hsl(42,80%,52%)", letterSpacing: "0.08em", marginBottom: 1 }}>👑 ALL-TIME</div>}
+                <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", letterSpacing: "-0.02em", lineHeight: 1 }}>{r.entry?.value}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </GC>
   );

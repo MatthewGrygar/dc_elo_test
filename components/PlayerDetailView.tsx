@@ -217,49 +217,64 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
           </div>
         </GC>
 
-        {/* Panel 3 — Community records */}
+        {/* Panel 3 — Perf stats */}
         <GC>
           <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Rekordy komunity</div>
-            {(() => {
-              const playerRecs = communityRecords?.categories.flatMap(cat =>
-                cat.records
-                  .filter(r => r.entry?.player === s.name)
-                  .map(r => ({ icon: cat.icon, label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime }))
-              ) ?? [];
-              if (playerRecs.length > 0) {
-                return (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, flex: 1, alignContent: "flex-start" }}>
-                    {playerRecs.slice(0, 10).map((r, i) => (
-                      <span key={`cr-${i}`} title={`${r.label}: ${r.value}`} style={{
-                        fontSize: 9, padding: "3px 9px", borderRadius: 99,
-                        background: `${amber}14`, border: `1px solid ${amber}30`, color: amber,
-                        fontFamily: "var(--font-mono)", fontWeight: 700,
-                        display: "inline-flex", alignItems: "center", gap: 4,
-                        maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>
-                        {r.icon}{r.isAllTime ? " 👑" : ""} {r.label.length > 22 ? r.label.slice(0, 20) + "…" : r.label}
-                      </span>
-                    ))}
-                  </div>
-                );
-              }
-              return (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, flex: 1, alignContent: "start" }}>
-                  <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                    <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Perf. Rating</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{fmt(c.performanceRating)}</div>
-                  </div>
-                  <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                    <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bayesian WR</div>
-                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{s.bayesianWR ?? "—"}</div>
-                  </div>
-                </div>
-              );
-            })()}
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Výkonnost</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, flex: 1, alignContent: "start" }}>
+              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Perf. Rating</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{fmt(c.performanceRating)}</div>
+              </div>
+              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bayesian WR</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{s.bayesianWR ?? "—"}</div>
+              </div>
+              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Expected wins Δ</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: c.expectedWinDiff >= 0 ? green : red }}>{c.expectedWinDiff >= 0 ? "+" : ""}{c.expectedWinDiff.toFixed(1)}</div>
+              </div>
+              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Avg. soupeř</div>
+                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))" }}>{fmt(s.avgOppElo)}</div>
+              </div>
+            </div>
           </div>
         </GC>
       </div>
+
+      {/* ── RECORD TAGS ── */}
+      {(() => {
+        const isNeg = (label: string) => /prohr|ztráta|ztrát|série.*proher|nejdelší.*proher/i.test(label);
+        const chipGreen = "hsl(142,60%,36%)";
+        const chipRed   = "hsl(0,62%,46%)";
+        const playerRecs = communityRecords?.categories.flatMap(cat =>
+          cat.records
+            .filter(r => r.entry?.player === s.name)
+            .map(r => ({ label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime }))
+        ) ?? [];
+        if (playerRecs.length === 0) return null;
+        return (
+          <GC style={{ flexShrink: 0 }}>
+            <div style={{ padding: "14px 18px 16px" }}>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Tagy rekordů</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                {playerRecs.map((r, i) => (
+                  <span key={i} title={`${r.label}: ${r.value}`} style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "8px 14px", borderRadius: 8,
+                    background: isNeg(r.label) ? chipRed : chipGreen,
+                    color: "#fff", fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}>
+                    {r.isAllTime && <span style={{ fontSize: 10 }}>👑</span>}{r.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </GC>
+        );
+      })()}
 
       {/* ── ELO CHART ── */}
       <GC style={{ flexShrink: 0 }}>
