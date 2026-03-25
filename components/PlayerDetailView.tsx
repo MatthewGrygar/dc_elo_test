@@ -15,6 +15,13 @@ import {
   Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame,
 } from "lucide-react";
 
+const VT_META = {
+  VT1: { label: "Class A", color: "hsl(152,72%,45%)", bg: "hsl(152 72% 45% / .12)", border: "hsl(152 72% 45% / .3)" },
+  VT2: { label: "Class B", color: "hsl(42,92%,52%)",  bg: "hsl(42 92% 52% / .12)",  border: "hsl(42 92% 52% / .3)"  },
+  VT3: { label: "Class C", color: "hsl(24,88%,56%)",  bg: "hsl(24 88% 56% / .12)",  border: "hsl(24 88% 56% / .3)"  },
+  VT4: { label: "Class D", color: "hsl(0,70%,58%)",   bg: "hsl(0 70% 58% / .12)",   border: "hsl(0 70% 58% / .3)"   },
+} as const;
+
 // ─── Glass card ───────────────────────────────────────────────────────────────
 function GC({ children, style, className }: { children: React.ReactNode; style?: React.CSSProperties; className?: string }) {
   return (
@@ -157,6 +164,11 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
                 <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.28)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em" }}>{mode}</span>
+                  {(() => {
+                    const vtc = (selectedPlayer as any)?.vtClass as keyof typeof VT_META | undefined;
+                    const m = vtc ? VT_META[vtc] : null;
+                    return m ? <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: m.bg, color: m.color, border: `1px solid ${m.border}`, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{m.label}</span> : null;
+                  })()}
                   <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
                 </div>
               </div>
@@ -191,10 +203,10 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
                 { label: "Prohry", short: "L", value: s.losses, color: red, pct: lPct },
                 { label: "Remízy", short: "D", value: s.draws, color: amber, pct: dPct },
               ].map(r => (
-                <div key={r.short} style={{ flex: 1, padding: "8px 6px", borderRadius: 10, background: `${r.color}12`, border: `1px solid ${r.color}30`, textAlign: "center", display: "flex", flexDirection: "column", gap: 2 }}>
+                <div key={r.short} style={{ flex: 1, padding: "8px 6px", borderRadius: 10, background: `${r.color}12`, border: `1px solid ${r.color}30`, textAlign: "center", display: "flex", flexDirection: "column", gap: 1 }}>
                   <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1, letterSpacing: "-0.03em" }}>{r.value}</div>
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: r.color, opacity: 0.8 }}>{r.pct}%</div>
-                  <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{r.label}</div>
+                  <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em", textTransform: "uppercase" as const, marginTop: 2 }}>{r.label}</div>
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: r.color, opacity: 0.75 }}>{r.pct}%</div>
                 </div>
               ))}
             </div>

@@ -25,36 +25,22 @@ function GC({ children, style, glow }: { children: React.ReactNode; style?: Reac
   );
 }
 
-function RecordRow({ label, entry, isLast, catColor }: { label: string; entry: RecordEntry | null; isLast?: boolean; catColor?: string }) {
+function RecordTag({ label, entry, catColor }: { label: string; entry: RecordEntry | null; catColor?: string }) {
   if (!entry || entry.value === "—") return null;
-  const col = catColor ?? "hsl(var(--muted-foreground))";
+  const col = catColor ?? "hsl(var(--primary))";
   return (
-    <div style={{ padding: "8px 0", borderBottom: isLast ? "none" : "1px solid hsl(var(--border) / 0.25)" }}>
-      {/* Tag row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-        <span style={{
-          display: "inline-block", fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700,
-          letterSpacing: "0.06em", padding: "2px 8px", borderRadius: 99,
-          background: `${col}14`, border: `1px solid ${col}30`, color: col,
-          maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }} title={label}>
-          {label}
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-          {entry.isAllTime && (
-            <span style={{ fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700, padding: "1px 5px", borderRadius: 99, background: "hsl(42,80%,52%/0.15)", color: "hsl(42,80%,52%)", border: "1px solid hsl(42,80%,52%/0.3)", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
-              👑 ALL-TIME
-            </span>
-          )}
-          <span style={{ fontSize: 16, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", letterSpacing: "-0.03em" }}>{entry.value}</span>
-        </div>
+    <div title={entry.detail ? `${entry.player ?? ""} · ${entry.detail}` : entry.player ?? label} style={{
+      display: "inline-flex", flexDirection: "column", gap: 2,
+      padding: "8px 12px", borderRadius: 10,
+      background: `${col}0f`, border: `1px solid ${col}2a`,
+      minWidth: 90, maxWidth: 190, flexShrink: 0,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+        <span style={{ fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em", color: col, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+        {entry.isAllTime && <span style={{ fontSize: 8, flexShrink: 0 }}>👑</span>}
       </div>
-      {/* Player + detail */}
-      {entry.player && (
-        <div style={{ fontSize: 12, fontFamily: "var(--font-display)", fontWeight: 700, color: "hsl(var(--primary))", lineHeight: 1.3 }}>{entry.player}</div>
-      )}
-      {entry.detail && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground) / 0.7)", fontFamily: "var(--font-mono)", marginTop: 2 }}>{entry.detail}</div>}
-      {entry.detail2 && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground) / 0.55)", fontFamily: "var(--font-mono)", marginTop: 1 }}>{entry.detail2}</div>}
+      <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", lineHeight: 1, letterSpacing: "-0.03em" }}>{entry.value}</div>
+      {entry.player && <div style={{ fontSize: 10, fontFamily: "var(--font-display)", fontWeight: 700, color: col, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.player}</div>}
     </div>
   );
 }
@@ -75,9 +61,9 @@ function CategoryCard({ category }: { category: RecordCategory }) {
           <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{validRecords.length} záznamů</div>
         </div>
       </div>
-      <div style={{ padding: "4px 18px 12px" }}>
-        {validRecords.map((r, i) => (
-          <RecordRow key={r.label} label={r.label} entry={r.entry} isLast={i === validRecords.length - 1} catColor={color} />
+      <div style={{ padding: "8px 14px 14px", display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {validRecords.map((r) => (
+          <RecordTag key={r.label} label={r.label} entry={r.entry} catColor={color} />
         ))}
       </div>
     </GC>
