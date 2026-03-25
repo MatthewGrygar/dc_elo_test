@@ -11,6 +11,7 @@ import {
   Swords, TrendingUp, TrendingDown, X, BarChart2,
 } from "lucide-react";
 import type { PrefetchCache } from "@/app/page";
+import { useWinSize } from "@/hooks/useWinSize";
 
 type SortKey = "id" | "rating" | "games" | "win" | "loss" | "draw" | "peak" | "winrate";
 
@@ -49,6 +50,8 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
   const red   = "hsl(0,68%,56%)";
   const amber = "hsl(42,90%,52%)";
   const vtClass = (player as any).vtClass as keyof typeof VT_META | undefined;
+  const { wBp } = useWinSize();
+  const isMobile = wBp === "xs" || wBp === "sm";
 
   const baseStats = [
     { label: "Rating",     value: player.rating.toLocaleString("cs-CZ"), color: "hsl(var(--primary))" },
@@ -77,22 +80,10 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--primary)), transparent 70%)" }} />
 
       <div style={{ position: "relative", zIndex: 1, padding: "14px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
-          {/* Avatar */}
-          <div style={{
-            width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-            background: "hsl(var(--primary) / 0.18)",
-            border: "1.5px solid hsl(var(--primary) / 0.35)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 17, fontWeight: 800, color: "hsl(var(--primary))",
-            fontFamily: "var(--font-display)",
-          }}>
-            {avatarInitials(player.name)}
-          </div>
-
-          {/* Name + rank */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 3 }}>
+        {isMobile ? (
+          /* Mobile layout: name full-width, then rank + class + Detail on one row */
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>
               {player.name}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -106,38 +97,98 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
                   border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)",
                 }}>{VT_META[vtClass].label}</span>
               )}
+              <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                <button
+                  onClick={() => onOpen(player)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "6px 12px", borderRadius: 9,
+                    background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))",
+                    border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700,
+                    fontFamily: "var(--font-body)",
+                    boxShadow: "0 3px 12px hsl(var(--primary) / 0.35)",
+                  }}
+                >
+                  Detail
+                </button>
+                <button
+                  onClick={onClose}
+                  style={{
+                    width: 30, height: 30, borderRadius: 8,
+                    background: "hsl(var(--muted) / 0.5)", border: "1px solid hsl(var(--border))",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "hsl(var(--muted-foreground))", cursor: "pointer",
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              </div>
             </div>
           </div>
+        ) : (
+          /* Desktop layout: avatar + name/rank + actions */
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            {/* Avatar */}
+            <div style={{
+              width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+              background: "hsl(var(--primary) / 0.18)",
+              border: "1.5px solid hsl(var(--primary) / 0.35)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 17, fontWeight: 800, color: "hsl(var(--primary))",
+              fontFamily: "var(--font-display)",
+            }}>
+              {avatarInitials(player.name)}
+            </div>
 
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-            <button
-              onClick={() => onOpen(player)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "7px 14px", borderRadius: 9,
-                background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))",
-                border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700,
-                fontFamily: "var(--font-body)",
-                boxShadow: "0 3px 12px hsl(var(--primary) / 0.35)",
-              }}
-            >
-              <Activity size={12} />
-              Detail hráče
-            </button>
-            <button
-              onClick={onClose}
-              style={{
-                width: 30, height: 30, borderRadius: 8,
-                background: "hsl(var(--muted) / 0.5)", border: "1px solid hsl(var(--border))",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "hsl(var(--muted-foreground))", cursor: "pointer",
-              }}
-            >
-              <X size={13} />
-            </button>
+            {/* Name + rank */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 3 }}>
+                {player.name}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
+                  Rank #{player.id}
+                </span>
+                {vtClass && VT_META[vtClass] && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 4,
+                    background: VT_META[vtClass].bg, color: VT_META[vtClass].color,
+                    border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)",
+                  }}>{VT_META[vtClass].label}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={() => onOpen(player)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "7px 14px", borderRadius: 9,
+                  background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))",
+                  border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700,
+                  fontFamily: "var(--font-body)",
+                  boxShadow: "0 3px 12px hsl(var(--primary) / 0.35)",
+                }}
+              >
+                <Activity size={12} />
+                Detail hráče
+              </button>
+              <button
+                onClick={onClose}
+                style={{
+                  width: 30, height: 30, borderRadius: 8,
+                  background: "hsl(var(--muted) / 0.5)", border: "1px solid hsl(var(--border))",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "hsl(var(--muted-foreground))", cursor: "pointer",
+                }}
+              >
+                <X size={13} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Stats row */}
         <div className="lb-mini-stats" style={{

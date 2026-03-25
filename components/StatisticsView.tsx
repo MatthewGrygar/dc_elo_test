@@ -345,7 +345,7 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
                     <div style={{ padding: "12px 14px 0", flexShrink: 0 }}>
                       <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>Výkonnostní třídy — počet hráčů</div>
                     </div>
-                    <div style={{ flex: 1, minHeight: 0, padding: "4px 10px 12px" }}>
+                    <div className="vt-chart-panel" style={{ flex: 1, minHeight: 0, padding: "4px 10px 12px" }}>
                       <VtBarChart data={data?.vtDistribution ?? []} />
                     </div>
                   </GC>

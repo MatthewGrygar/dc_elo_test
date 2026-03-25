@@ -332,6 +332,9 @@
   /* Statistics ELO dist chart grid — override inline height: 360 */
   .stats-elo-grid { height: auto !important; }
 
+  /* Statistics VT bar chart fixed height on mobile */
+  .vt-chart-panel { height: 160px !important; }
+
   /* Opponents / Tournaments chart panel fixed height on mobile */
   .opp-chart-panel { height: 280px !important; }
   .tour-chart-panel { height: 280px !important; }

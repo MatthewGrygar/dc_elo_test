@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Heart, CreditCard, Copy, Check, Send, ExternalLink } from "lucide-react";
+import { useWinSize } from "@/hooks/useWinSize";
 
 interface ContactFormState {
   name: string;
@@ -116,6 +117,9 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default function SupportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [showForm, setShowForm] = useState(false);
+  const [payTab, setPayTab] = useState<"bank" | "paypal">("bank");
+  const { wBp } = useWinSize();
+  const isMobile = wBp === "xs" || wBp === "sm";
 
   if (!open) return null;
 
@@ -165,46 +169,71 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
           <div style={{ overflowY: "auto", flex: 1, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 18 }}>
 
             {/* Payment panels */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-
-              {/* Bank account */}
-              <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <CreditCard size={14} style={{ color: amber }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>Bankovní převod</span>
+            <div>
+              {/* Mobile tab switcher */}
+              {isMobile && (
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                  {(["bank", "paypal"] as const).map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setPayTab(tab)}
+                      style={{
+                        flex: 1, padding: "9px 0", borderRadius: 10,
+                        background: payTab === tab ? "hsl(var(--primary))" : "hsl(var(--muted)/0.6)",
+                        color: payTab === tab ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))",
+                        border: payTab === tab ? "none" : "1px solid hsl(var(--border))",
+                        fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-display)",
+                      }}
+                    >
+                      {tab === "bank" ? "Bankovní účet" : "PayPal"}
+                    </button>
+                  ))}
                 </div>
-                {/* QR code */}
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-                  <img src="/QR.png" alt="QR kód — bankovní účet" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                </div>
-                <InfoRow label="Majitel účtu" value="Matthew Grygar" />
-                <InfoRow label="Číslo účtu" value="2640017029 / 3030" />
-                <InfoRow label="IBAN" value="CZ03 3030 0000 0026 4001 7029" />
-                <InfoRow label="BIC (SWIFT)" value="AIRACZP" />
-              </div>
+              )}
 
-              {/* PayPal */}
-              <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 3, background: blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: 9, fontWeight: 900, color: "#fff" }}>P</span>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
+
+                {/* Bank account */}
+                {(!isMobile || payTab === "bank") && (
+                  <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <CreditCard size={14} style={{ color: amber }} />
+                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>Bankovní převod</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                      <img src="/QR.png" alt="QR kód — bankovní účet" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                    <InfoRow label="Majitel účtu" value="Matthew Grygar" />
+                    <InfoRow label="Číslo účtu" value="2640017029 / 3030" />
+                    <InfoRow label="IBAN" value="CZ03 3030 0000 0026 4001 7029" />
+                    <InfoRow label="BIC (SWIFT)" value="AIRACZP" />
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>PayPal</span>
-                </div>
-                {/* QR code */}
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-                  <img src="/QR2.png" alt="QR kód — PayPal" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
-                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                </div>
-                <InfoRow label="PayPal e-mail" value="matthew.grygar@seznam.cz" />
-                <div style={{ padding: "6px 0", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid hsl(var(--border)/0.3)" }}>
-                  <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>PayPal Me</span>
-                  <a href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer"
-                    style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: blue, textDecoration: "none" }}>
-                    paypal.me/GrailSeriesELO <ExternalLink size={10} />
-                  </a>
-                </div>
+                )}
+
+                {/* PayPal */}
+                {(!isMobile || payTab === "paypal") && (
+                  <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                      <div style={{ width: 14, height: 14, borderRadius: 3, background: blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 9, fontWeight: 900, color: "#fff" }}>P</span>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>PayPal</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                      <img src="/QR2.png" alt="QR kód — PayPal" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                    <InfoRow label="PayPal e-mail" value="matthew.grygar@seznam.cz" />
+                    <div style={{ padding: "6px 0", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid hsl(var(--border)/0.3)" }}>
+                      <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>PayPal Me</span>
+                      <a href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: blue, textDecoration: "none" }}>
+                        paypal.me/GrailSeriesELO <ExternalLink size={10} />
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
