@@ -41,8 +41,8 @@ function GlassPanel({ children, style, accent, className }: {
 }
 
 // ── Mini player card shown below table when player row is clicked ──────────────
-function PlayerMiniCard({ player, onClose, onOpen }: {
-  player: Player; onClose: () => void; onOpen: (p: Player) => void;
+function PlayerMiniCard({ player, onClose, onOpen, mode }: {
+  player: Player; onClose: () => void; onOpen: (p: Player) => void; mode: string;
 }) {
   const wr = player.winrate <= 1 ? player.winrate * 100 : player.winrate;
   const green = "hsl(152,72%,50%)";
@@ -50,15 +50,18 @@ function PlayerMiniCard({ player, onClose, onOpen }: {
   const amber = "hsl(42,90%,52%)";
   const vtClass = (player as any).vtClass as keyof typeof VT_META | undefined;
 
-  const stats = [
+  const baseStats = [
     { label: "Rating",     value: player.rating.toLocaleString("cs-CZ"), color: "hsl(var(--primary))" },
-    { label: "Peak",       value: player.peak.toLocaleString("cs-CZ"),   color: amber },
-    { label: "Zápasy",     value: player.games.toString(),               color: "hsl(var(--foreground))" },
+    { label: "Winrate",    value: wr.toFixed(1) + "%",                   color: wr >= 55 ? green : wr >= 45 ? amber : red },
     { label: "Výhry",      value: player.win.toString(),                 color: green },
     { label: "Prohry",     value: player.loss.toString(),                color: red   },
     { label: "Remízy",     value: player.draw.toString(),                color: amber },
-    { label: "Winrate",    value: wr.toFixed(1) + "%",                   color: wr >= 55 ? green : wr >= 45 ? amber : red },
+    { label: "Zápasy",     value: player.games.toString(),               color: "hsl(var(--foreground))" },
+    { label: "Peak",       value: player.peak.toLocaleString("cs-CZ"),   color: amber },
   ];
+  const stats = mode === "DCPR"
+    ? baseStats
+    : [baseStats[0], baseStats[6], baseStats[5], baseStats[2], baseStats[3], baseStats[4], baseStats[1]];
 
   return (
     <div className="anim-slide-up" style={{ position: "relative", borderRadius: 14, overflow: "hidden", flexShrink: 0 }}>
@@ -260,7 +263,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
       {/* Table */}
       <GlassPanel style={{ flex: 1, minHeight: 0 }} className="anim-slide-up s2">
         <div style={{ overflowY: "auto", overflowX: "hidden", flex: 1, minHeight: 0 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="lb-table" style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
                 <th onClick={() => handleSort("id")} style={{ ...thS(), color: sortKey === "id" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}>
@@ -330,11 +333,11 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                       )}
                     </td>
                     <td style={td}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: isSelected ? "hsl(var(--primary) / 0.25)" : "hsl(var(--primary) / 0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="lb-avatar" style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: isSelected ? "hsl(var(--primary) / 0.25)" : "hsl(var(--primary) / 0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)" }}>
                           {avatarInitials(p.name)}
                         </div>
-                        <span style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
+                        <span className="lb-name" style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                         {vtClass && VT_META[vtClass] && (
                           <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: VT_META[vtClass].bg, color: VT_META[vtClass].color, border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)" }}>
                             {VT_META[vtClass].label}
@@ -367,6 +370,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
       {selectedCard && (
         <PlayerMiniCard
           player={selectedCard}
+          mode={mode}
           onClose={() => setSelectedCard(null)}
           onOpen={(p) => { openPlayer(p); setSelectedCard(null); }}
         />

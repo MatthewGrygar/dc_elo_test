@@ -174,85 +174,77 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
 
         {/* Panel 2 — W/L/D */}
         <GC>
-          <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10, height: "100%" }}>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Win / Loss / Draw</div>
-            <div style={{ display: "flex", gap: 6, flex: 1 }}>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Win / Loss / Draw</div>
+              <span style={{ fontSize: 8, padding: "1px 7px", borderRadius: 99, background: "hsl(var(--primary)/0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.28)", fontFamily: "var(--font-mono)", fontWeight: 700 }}>{mode}</span>
+            </div>
+            {/* W/L/D bar first */}
+            <div style={{ display: "flex", height: 6, borderRadius: 99, overflow: "hidden", gap: 1, flexShrink: 0 }}>
+              <div style={{ flex: wPct || 0.5, background: green, borderRadius: "99px 0 0 99px", transition: "flex 0.5s ease" }} />
+              <div style={{ flex: lPct || 0.5, background: red, transition: "flex 0.5s ease" }} />
+              <div style={{ flex: dPct || 0.5, background: amber, borderRadius: "0 99px 99px 0", transition: "flex 0.5s ease" }} />
+            </div>
+            <div style={{ display: "flex", gap: 5, flex: 1 }}>
               {[
-                { label: "W", value: s.wins, color: green, pct: wPct },
-                { label: "L", value: s.losses, color: red, pct: lPct },
-                { label: "D", value: s.draws, color: amber, pct: dPct },
+                { label: "Výhry", short: "W", value: s.wins, color: green, pct: wPct },
+                { label: "Prohry", short: "L", value: s.losses, color: red, pct: lPct },
+                { label: "Remízy", short: "D", value: s.draws, color: amber, pct: dPct },
               ].map(r => (
-                <div key={r.label} style={{ flex: 1, padding: "10px 8px", borderRadius: 12, background: `${r.color}15`, border: `1px solid ${r.color}35`, textAlign: "center" }}>
-                  <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1 }}>{r.value}</div>
-                  <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{r.label} · {r.pct}%</div>
+                <div key={r.short} style={{ flex: 1, padding: "8px 6px", borderRadius: 10, background: `${r.color}12`, border: `1px solid ${r.color}30`, textAlign: "center", display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1, letterSpacing: "-0.03em" }}>{r.value}</div>
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: r.color, opacity: 0.8 }}>{r.pct}%</div>
+                  <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>{r.label}</div>
                 </div>
               ))}
             </div>
-            {/* W/L/D bar */}
-            <div style={{ display: "flex", height: 5, borderRadius: 99, overflow: "hidden", gap: 1 }}>
-              <div style={{ flex: wPct, background: green, borderRadius: "99px 0 0 99px" }} />
-              <div style={{ flex: lPct, background: red }} />
-              <div style={{ flex: dPct || 1, background: amber, borderRadius: "0 99px 99px 0" }} />
-            </div>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>
-              {s.totalGames} her · WR <span style={{ color: s.winrate >= 0.5 ? green : red, fontWeight: 700 }}>{(s.winrate * 100).toFixed(1)}%</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{s.totalGames} her</span>
+              <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 700, color: s.winrate >= 0.5 ? green : red }}>WR {(s.winrate * 100).toFixed(1)}%</span>
             </div>
           </div>
         </GC>
 
-        {/* Panel 3 — Records / badges */}
+        {/* Panel 3 — Community records */}
         <GC>
           <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Profil & rekordy</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Rekordy komunity</div>
             {(() => {
               const playerRecs = communityRecords?.categories.flatMap(cat =>
                 cat.records
                   .filter(r => r.entry?.player === s.name)
                   .map(r => ({ icon: cat.icon, label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime }))
               ) ?? [];
-              return playerRecs.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, paddingBottom: 4, borderBottom: "1px solid hsl(var(--border)/0.3)" }}>
-                  {playerRecs.slice(0, 8).map((r, i) => (
-                    <span key={`cr-${i}`} title={r.label} style={{ fontSize: 8, padding: "2px 7px", borderRadius: 99, background: `${amber}16`, border: `1px solid ${amber}32`, color: amber, fontFamily: "var(--font-mono)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}>
-                      {r.icon} {r.isAllTime ? "👑 " : ""}{r.value}
-                    </span>
-                  ))}
+              if (playerRecs.length > 0) {
+                return (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, flex: 1, alignContent: "flex-start" }}>
+                    {playerRecs.slice(0, 10).map((r, i) => (
+                      <span key={`cr-${i}`} title={`${r.label}: ${r.value}`} style={{
+                        fontSize: 9, padding: "3px 9px", borderRadius: 99,
+                        background: `${amber}14`, border: `1px solid ${amber}30`, color: amber,
+                        fontFamily: "var(--font-mono)", fontWeight: 700,
+                        display: "inline-flex", alignItems: "center", gap: 4,
+                        maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      }}>
+                        {r.icon}{r.isAllTime ? " 👑" : ""} {r.label.length > 22 ? r.label.slice(0, 20) + "…" : r.label}
+                      </span>
+                    ))}
+                  </div>
+                );
+              }
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, flex: 1, alignContent: "start" }}>
+                  <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                    <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Perf. Rating</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{fmt(c.performanceRating)}</div>
+                  </div>
+                  <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
+                    <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bayesian WR</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{s.bayesianWR ?? "—"}</div>
+                  </div>
                 </div>
-              ) : null;
+              );
             })()}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-              {c.currentStreak.length > 0 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${streakColor}18`, border: `1px solid ${streakColor}35`, color: streakColor, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{streakLabel} ×{c.currentStreak.length}</span>
-              )}
-              {s.longestWinStreak > 0 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${green}14`, border: `1px solid ${green}30`, color: green, fontFamily: "var(--font-mono)", fontWeight: 700 }}>🔥 Best streak ×{s.longestWinStreak}</span>
-              )}
-              {c.eloChange30d > 20 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${green}14`, border: `1px solid ${green}30`, color: green, fontFamily: "var(--font-mono)", fontWeight: 700 }}>📈 +{fmt(c.eloChange30d)} 30d</span>
-              )}
-              {c.momentumIndex >= 70 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: "hsl(var(--primary)/0.14)", border: "1px solid hsl(var(--primary)/0.3)", color: "hsl(var(--primary))", fontFamily: "var(--font-mono)", fontWeight: 700 }}>⚡ Hot momentum</span>
-              )}
-              {c.consistencyScore >= 75 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${amber}14`, border: `1px solid ${amber}30`, color: amber, fontFamily: "var(--font-mono)", fontWeight: 700 }}>🎯 Consistent</span>
-              )}
-              {selectedPlayer?.id === 1 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: `${amber}18`, border: `1px solid ${amber}35`, color: amber, fontFamily: "var(--font-mono)", fontWeight: 700 }}>👑 #1 hráč</span>
-              )}
-              {c.upsetRate > 30 && (
-                <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 99, background: "hsl(265,65%,60%/0.14)", border: "1px solid hsl(265,65%,60%/0.3)", color: "hsl(265,65%,60%)", fontFamily: "var(--font-mono)", fontWeight: 700 }}>⚡ Upset King {c.upsetRate}%</span>
-              )}
-            </div>
-            <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Perf. Rating</div>
-                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{fmt(c.performanceRating)}</div>
-              </div>
-              <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bayesian WR</div>
-                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{s.bayesianWR ?? "—"}</div>
-              </div>
-            </div>
           </div>
         </GC>
       </div>

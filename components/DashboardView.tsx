@@ -165,7 +165,7 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
   };
 
   return (
-    <div className="hero-slider" style={{ position: "relative", borderRadius: 16, overflow: "hidden", flex: 1, minHeight: isCompact ? 220 : 0 }}>
+    <div className="hero-slider" style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: isCompact ? 180 : "100%" }}>
       <style>{`@keyframes slider-progress { from { width: 0% } to { width: 100% } }`}</style>
       {/* glass bg */}
       <div style={{ position: "absolute", inset: 0, background: "hsl(var(--card) / 0.80)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid hsl(var(--card-border) / 0.85)" }} />
@@ -418,7 +418,7 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
         style={{
           display: "grid",
           gridTemplateColumns: isCompact || isMid ? "1fr" : "1.55fr 1fr",
-          gap: 10, flex: isCompact ? undefined : 1, minHeight: isCompact ? 280 : 0, flexShrink: 0,
+          gap: 10, height: isCompact ? "auto" : 280, flexShrink: 0,
         }}
       >
         {/* Hero slider */}

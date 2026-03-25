@@ -339,6 +339,11 @@
   /* Dashboard ELO distribution chart */
   .dist-chart { height: 140px !important; }
 
+  /* Leaderboard table: compact cells on mobile */
+  .lb-table td, .lb-table th { padding: 8px 8px !important; }
+  .lb-table .lb-avatar { width: 24px !important; height: 24px !important; font-size: 8px !important; }
+  .lb-table .lb-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* Hero slider minimum height on mobile */
   .hero-slider { min-height: 220px; }
 }
