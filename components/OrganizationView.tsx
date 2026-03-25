@@ -392,9 +392,6 @@ export default function OrganizationView() {
           </div>
         </Card>
 
-        {/* Carousel */}
-        <NewsCarousel />
-
         {/* Tým */}
         <div>
           <h3 style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800, letterSpacing: "-0.025em", marginBottom: 14, color: "hsl(var(--foreground))" }}>{t(lang, "org_team")}</h3>

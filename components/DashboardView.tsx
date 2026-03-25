@@ -109,38 +109,42 @@ function CT({ active, payload, label }: any) {
 // ── Hero Slider ───────────────────────────────────────────────────────────────
 const SLIDES = [
   {
-    tag: "🏆 Sezóna aktivní",
-    headline: "JAK FUNGUJE VÝPOČET ELO?",
-    subHeadline: "Aktuální žebříčky",
-    text: "Vše o ELO a DCPR, proč kalibraci a jak fungují Rating Classy? To a mnohem víc se dozvíte v článku od tvůrce celého řešení.",
-    cta: "Statistiky",
-    person: { name: "Ervin Kuč", title: "Člen DCPR Komise,\nSpoluzakladatel Grail Series &" },
-    slide: "/slide2.png",
-    accent: "hsl(152,72%,50%)",
-  },
-  {
-    tag: "⚡ Live data",
-    headline: "REAL-TIME ŽEBŘÍČKY",
-    subHeadline: "Živá data",
-    text: "Tvůj rating se aktualizuje po každém zápase. Sleduj přesně kde stojíš v kompetitivní hierarchii Duel Commander scény.",
-    cta: "Žebříček",
-    person: { name: "Matthew Grygar", title: "Předseda DCPR Komise,\nSpoluzakladatel Grail Series &" },
+    tag: "🏛 DCPR Komise",
+    headline: "ZALOŽENÍ DCPR KOMISE",
+    subHeadline: "Organizace",
+    text: "Zakládáme Komisi DCPR jako nezávislý orgán pro zajištění nestrannosti, transparentnosti a funkčnosti DC ELO systému a komunikaci s vedením lig napříč českou a zahraniční Duel Commander scénou.",
+    cta: "Zjistit více",
+    action: "organization" as const,
+    person: null,
     slide: "/slide1.png",
     accent: "hsl(195,78%,50%)",
   },
   {
-    tag: "🎯 Turnajový režim",
-    headline: "DCPR TOURNAMENT EDITION",
-    subHeadline: "Výkonnostní rating",
-    text: "DCPR sleduje tvůj turnajový výkon odděleně. Postupuj v kompetitivních řadách a získej své místo na vrcholu.",
-    cta: "DCPR žebříček",
+    tag: "📊 Metodika",
+    headline: "JAK FUNGUJE VÝPOČET ELO?",
+    subHeadline: "Článek",
+    text: "Jak počítáme Elo a DCPR, proč právě tato kalibrace a jak vznikají třídy Rating Classy? To a mnohem víc se dozvíte v článku od tvůrce celého řešení.",
+    cta: "Přečíst článek",
+    action: "articles" as const,
+    person: null,
+    slide: "/slide2.png",
+    accent: "hsl(152,72%,50%)",
+  },
+  {
+    tag: "❤️ Podpora",
+    headline: "PODPOŘTE NÁS",
+    subHeadline: "DC ELO projekt",
+    text: "DC ELO je komunitní projekt, který žije díky vám. Pokud se vám naše práce líbí a chcete nás podpořit, budeme moc rádi — každá pomoc nás motivuje projekt dál rozvíjet.",
+    cta: "Podpořit projekt",
+    action: "support" as const,
     person: null,
     slide: "/slide3.png",
-    accent: "hsl(265,65%,60%)",
+    accent: "hsl(42,80%,52%)",
   },
 ];
 
 function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
+  const { setSupportOpen } = useAppNav();
   const { wBp } = useWinSize();
   const isCompact = wBp === "xs" || wBp === "sm";
   const [current, setCurrent] = useState(0);
@@ -261,7 +265,10 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
 
           {/* CTA */}
           <button
-            onClick={() => onNavigate("statistics")}
+            onClick={() => {
+              if (slide.action === "support") setSupportOpen(true);
+              else onNavigate(slide.action);
+            }}
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
               padding: "8px 18px", borderRadius: 10,
