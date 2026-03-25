@@ -115,7 +115,6 @@ const SLIDES = [
     text: "Zakládáme Komisi DCPR jako nezávislý orgán pro zajištění nestrannosti, transparentnosti a funkčnosti DC ELO systému a komunikaci s vedením lig napříč českou a zahraniční Duel Commander scénou.",
     cta: "Zjistit více",
     action: "organization" as const,
-    person: null,
     slide: "/slide1.png",
     accent: "hsl(195,78%,50%)",
   },
@@ -126,7 +125,6 @@ const SLIDES = [
     text: "Jak počítáme Elo a DCPR, proč právě tato kalibrace a jak vznikají třídy Rating Classy? To a mnohem víc se dozvíte v článku od tvůrce celého řešení.",
     cta: "Přečíst článek",
     action: "articles" as const,
-    person: null,
     slide: "/slide2.png",
     accent: "hsl(152,72%,50%)",
   },
@@ -137,7 +135,6 @@ const SLIDES = [
     text: "DC ELO je komunitní projekt, který žije díky vám. Pokud se vám naše práce líbí a chcete nás podpořit, budeme moc rádi — každá pomoc nás motivuje projekt dál rozvíjet.",
     cta: "Podpořit projekt",
     action: "support" as const,
-    person: null,
     slide: "/slide3.png",
     accent: "hsl(42,80%,52%)",
   },
@@ -282,17 +279,9 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
           </button>
         </div>
 
-        {/* person label + dots */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-          {slide.person && (
-            <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", lineHeight: 1.4 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))", fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
-                {slide.person.name}
-              </div>
-              {slide.person.title.split("\n").map((l, i) => <div key={i}>{l}</div>)}
-            </div>
-          )}
-          {!slide.person && <div />}
+        {/* dots */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
+          <div />
           {/* dots */}
           <div style={{ display: "flex", gap: 6 }}>
             {SLIDES.map((_, i) => (
