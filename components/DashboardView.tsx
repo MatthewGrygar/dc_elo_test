@@ -166,134 +166,119 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
   };
 
   return (
-    <div className="hero-slider" style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: isCompact ? 180 : "100%" }}>
+    <div className="hero-slider" style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: isCompact ? 200 : "100%", border: "1px solid hsl(var(--card-border)/0.6)" }}>
       <style>{`@keyframes slider-progress { from { width: 0% } to { width: 100% } }`}</style>
-      {/* glass bg */}
-      <div style={{ position: "absolute", inset: 0, background: "hsl(var(--card) / 0.80)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: "1px solid hsl(var(--card-border) / 0.85)" }} />
 
-      {/* Nav arrows — bottom-right corner, above progress bar */}
-      <div style={{ position: "absolute", right: 12, bottom: 16, zIndex: 10, display: "flex", gap: 4 }}>
-        <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
-          style={{ width: 28, height: 28, borderRadius: 8, border: "1px solid hsl(var(--border))",
-            background: "hsl(var(--card)/0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "hsl(var(--muted-foreground))", transition: "all 0.15s" }}
-          onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--card))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "hsl(var(--card)/0.7)"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}>
-          <ChevronLeft size={14} />
-        </button>
-        <button onClick={() => goTo((current + 1) % SLIDES.length)}
-          style={{ width: 28, height: 28, borderRadius: 8, border: "1px solid hsl(var(--border))",
-            background: "hsl(var(--card)/0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "hsl(var(--muted-foreground))", transition: "all 0.15s" }}
-          onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--card))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "hsl(var(--card)/0.7)"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}>
-          <ChevronRight size={14} />
-        </button>
-      </div>
+      {/* Full-bleed image */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={slide.slide}
+        src={slide.slide}
+        alt=""
+        style={{
+          position: "absolute", inset: 0, width: "100%", height: "100%",
+          objectFit: "cover", objectPosition: "center",
+          opacity: anim ? 0 : 1, transition: "opacity 0.35s ease",
+        }}
+      />
 
-      {/* Progress bar */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "hsl(var(--border)/0.3)", zIndex: 10 }}>
-        <div key={progKey} style={{ height: "100%", background: slide.accent, borderRadius: 99,
-          animation: "slider-progress 6s linear forwards" }} />
-      </div>
+      {/* Gradient overlays — bottom-heavy for text legibility */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, hsl(0 0% 0% / 0.82) 0%, hsl(0 0% 0% / 0.45) 45%, hsl(0 0% 0% / 0.12) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, hsl(0 0% 0% / 0.35) 0%, transparent 60%)" }} />
 
-      {/* person photo — 4:3 image fading leftward from ~50% */}
-      {slide.slide && (
-        <div style={{
-          position: "absolute", right: 0, top: 0, bottom: 0,
-          width: "52%",
-          opacity: anim ? 0 : 0.85,
-          transition: "opacity 0.32s ease",
-          pointerEvents: "none",
-        }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={slide.slide} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
-          {/* Fade from left: strong at 0% → transparent at ~55% */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, hsl(var(--card)) 0%, hsl(var(--card)) 15%, transparent 55%)" }} />
-          {/* Fade at right and bottom edges */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent 60%, hsl(var(--card)) 100%)" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "28%", background: "linear-gradient(transparent, hsl(var(--card)))" }} />
-        </div>
-      )}
+      {/* Left/right nav arrows — vertically centered */}
+      <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
+        style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", zIndex: 10, width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; e.currentTarget.style.color = "#fff"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}>
+        <ChevronLeft size={15} />
+      </button>
+      <button onClick={() => goTo((current + 1) % SLIDES.length)}
+        style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", zIndex: 10, width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
+        onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; e.currentTarget.style.color = "#fff"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}>
+        <ChevronRight size={15} />
+      </button>
 
-      {/* content */}
+      {/* Content — bottom-left overlay */}
       <div style={{
-        position: "relative", zIndex: 2,
-        padding: "22px 24px",
-        height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between",
-        opacity: anim ? 0 : 1, transition: "opacity 0.32s ease",
+        position: "absolute", inset: 0, zIndex: 5,
+        display: "flex", flexDirection: "column", justifyContent: "flex-end",
+        padding: isCompact ? "16px" : "22px 24px",
+        opacity: anim ? 0 : 1, transition: "opacity 0.35s ease",
       }}>
-        <div>
-          {/* tag */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "4px 12px", borderRadius: 99, marginBottom: 16,
-            background: `${slide.accent}18`, border: `1px solid ${slide.accent}40`,
-            color: slide.accent, fontSize: 10, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em",
-          }}>
-            <Zap size={9} color={slide.accent} /> {slide.tag.replace(/^[^ ]+ /, "")}
-          </div>
+        {/* Tag badge */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 5, alignSelf: "flex-start",
+          padding: "3px 10px", borderRadius: 99, marginBottom: 10,
+          background: `${slide.accent}30`, border: `1px solid ${slide.accent}60`,
+          color: slide.accent, fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.08em",
+          backdropFilter: "blur(4px)",
+        }}>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: slide.accent }} />
+          {slide.tag.replace(/^[^ ]+ /, "").toUpperCase()}
+        </div>
 
-          {/* main headline */}
-          <h2 style={{
-            fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 900,
-            letterSpacing: "-0.04em", lineHeight: 1.05, marginBottom: 10, color: "hsl(var(--foreground))",
-            maxWidth: "58%",
-          }}>
-            {slide.headline.split(" ").map((w, i) => (
-              <span key={i} style={{ color: i === 0 || i === 1 ? "hsl(var(--foreground))" : slide.accent }}>{i > 0 ? " " : ""}{w}</span>
-            ))}
-          </h2>
+        {/* Headline */}
+        <h2 style={{
+          fontFamily: "var(--font-display)", fontWeight: 900,
+          fontSize: isCompact ? 18 : 24,
+          letterSpacing: "-0.03em", lineHeight: 1.1,
+          color: "#fff", marginBottom: 8,
+          maxWidth: isCompact ? "100%" : "60%",
+          textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+        }}>
+          {slide.headline}
+        </h2>
 
-          {/* sub headline */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "3px 10px", borderRadius: 99, marginBottom: 12,
-            background: `${slide.accent}14`, color: slide.accent,
-            fontSize: 11, fontWeight: 700, fontFamily: "var(--font-display)",
+        {/* Description */}
+        {!isCompact && (
+          <p style={{
+            fontSize: 12, lineHeight: 1.65,
+            color: "rgba(255,255,255,0.78)",
+            maxWidth: "55%", marginBottom: 16,
+            textShadow: "0 1px 6px rgba(0,0,0,0.5)",
           }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: slide.accent, animation: "logo-pulse 1.4s ease-in-out infinite" }} />
-            {slide.subHeadline}
-          </div>
-
-          <p style={{ fontSize: 12, lineHeight: 1.65, color: "hsl(var(--muted-foreground))", maxWidth: "52%", marginBottom: 16 }}>
             {slide.text}
           </p>
+        )}
 
-          {/* CTA */}
+        {/* CTA + dots row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => {
               if (slide.action === "support") setSupportOpen(true);
               else onNavigate(slide.action);
             }}
             style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
+              display: "inline-flex", alignItems: "center", gap: 7,
               padding: "8px 18px", borderRadius: 10,
               background: slide.accent, color: "#fff",
               fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)",
               border: "none", cursor: "pointer",
-              boxShadow: `0 4px 18px -4px ${slide.accent}80`,
+              boxShadow: `0 4px 20px -4px ${slide.accent}90`,
             }}
           >
-            {slide.cta} <ArrowRight size={13} />
+            {slide.cta} <ArrowRight size={12} />
           </button>
-        </div>
 
-        {/* dots */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end" }}>
-          <div />
-          {/* dots */}
+          {/* Dots */}
           <div style={{ display: "flex", gap: 6 }}>
             {SLIDES.map((_, i) => (
               <button key={i} onClick={() => goTo(i)} style={{
-                width: i === current ? 20 : 6, height: 6, borderRadius: 99,
-                background: i === current ? slide.accent : "hsl(var(--border))",
+                width: i === current ? 22 : 6, height: 6, borderRadius: 99,
+                background: i === current ? slide.accent : "rgba(255,255,255,0.35)",
                 border: "none", cursor: "pointer", padding: 0,
                 transition: "all 0.3s ease",
               }} />
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "rgba(255,255,255,0.12)", zIndex: 10 }}>
+        <div key={progKey} style={{ height: "100%", background: slide.accent, borderRadius: 99, animation: "slider-progress 6s linear forwards" }} />
       </div>
     </div>
   );
