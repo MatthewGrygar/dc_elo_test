@@ -195,8 +195,8 @@ export default function Sidebar() {
       {CONTENT_NAV.map(n => (
         <NavBtn key={n.id} icon={n.icon} label={t(lang, n.tKey as any)} active={view === n.id && !(n.id === "organization" && orgTab === "spoluprace")} onClick={() => navigateTo(n.id)} />
       ))}
-      {/* Spolupráce sub-item */}
-      <div style={{ paddingLeft: collapsed ? 0 : 14 }}>
+      {/* Spolupráce sub-item — zobrazí se jen když je aktivní Organization */}
+      {view === "organization" && <div style={{ paddingLeft: collapsed ? 0 : 14 }}>
         <button
           onClick={() => { navigateTo("organization"); setOrgTab("spoluprace"); }}
           title={collapsed ? "Spolupráce" : undefined}
@@ -231,7 +231,7 @@ export default function Sidebar() {
             </>
           )}
         </button>
-      </div>
+      </div>}
 
       <div style={{ flex: 1 }} />
 

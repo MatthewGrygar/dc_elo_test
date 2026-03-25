@@ -198,7 +198,8 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
                     onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                 </div>
                 <InfoRow label="PayPal e-mail" value="matthew.grygar@seznam.cz" />
-                <div style={{ padding: "6px 0" }}>
+                <div style={{ padding: "6px 0", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid hsl(var(--border)/0.3)" }}>
+                  <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>PayPal Me</span>
                   <a href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer"
                     style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: blue, textDecoration: "none" }}>
                     paypal.me/GrailSeriesELO <ExternalLink size={10} />

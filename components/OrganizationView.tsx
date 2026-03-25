@@ -283,27 +283,10 @@ export default function OrganizationView() {
     <div style={{ height: "100%", overflowY: "auto" }} className="scrollbar-thin">
       <div style={{ display: "flex", flexDirection: "column", gap: 18, paddingBottom: 24 }}>
 
-        {/* Nadpis + tab bar */}
+        {/* Nadpis */}
         <div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 2, color: "hsl(var(--foreground))" }}>{t(lang, "organization")}</h2>
           <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginBottom: 14 }}>{t(lang, "sub_organization")}</p>
-          {/* Tab bar */}
-          <div style={{ display: "flex", gap: 4, borderBottom: "1px solid hsl(var(--border)/0.5)", paddingBottom: 0 }}>
-            {([
-              { id: "about",      label: lang === "en" ? "About" : lang === "fr" ? "À propos" : "O nás" },
-              { id: "spoluprace", label: lang === "en" ? "Cooperation" : lang === "fr" ? "Coopération" : "Spolupráce" },
-            ] as const).map(tab => (
-              <button key={tab.id} onClick={() => setOrgTab(tab.id)}
-                style={{ padding: "7px 16px", borderRadius: "10px 10px 0 0", border: "1px solid transparent", borderBottom: "none", fontSize: 12, fontWeight: 700, fontFamily: "var(--font-body)", cursor: "pointer", transition: "all 0.15s", position: "relative", bottom: -1,
-                  ...(orgTab === tab.id
-                    ? { background: "hsl(var(--card))", borderColor: "hsl(var(--border)/0.5)", color: "hsl(var(--foreground))" }
-                    : { background: "transparent", color: "hsl(var(--muted-foreground))" }
-                  )
-                }}>
-                {tab.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* ── TAB: SPOLUPRÁCE ── */}
