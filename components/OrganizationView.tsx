@@ -264,8 +264,7 @@ function ContactForm({ subject }: { subject?: string }) {
 }
 
 export default function OrganizationView() {
-  const { lang } = useAppNav();
-  const [orgTab, setOrgTab] = useState<"about" | "spoluprace">("about");
+  const { lang, orgTab, setOrgTab } = useAppNav();
   const introText = {
     cs: "DCPR komise vznikla jako organizační a metodický orgán projektu DC ELO pro formát Duel Commander (MtG). Jejím cílem je dlouhodobě budovat stabilní, transparentní a férové kompetitivní prostředí pro hráče v České republice i v širším regionu.",
     en: "The DCPR Committee was established as the organisational and methodological body of the DC ELO project for the Duel Commander (MtG) format. Its goal is to build a stable, transparent and fair competitive environment for players in the Czech Republic and the wider region.",

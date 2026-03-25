@@ -9,7 +9,7 @@ import { t, Lang } from "@/lib/i18n";
 import {
   LayoutDashboard, Trophy, TrendingUp, Activity, Medal,
   GitCompare, Newspaper, Building2, Moon, Sun,
-  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart,
+  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart, Handshake,
 } from "lucide-react";
 import SupportModal from "./SupportModal";
 
@@ -43,8 +43,8 @@ const LANGS: { code: Lang; flag: string; label: string }[] = [
 export default function Sidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const { mode, setMode } = useRatingMode();
-  const { view, playerSubView, selectedPlayer, lang, sidebarOpen,
-          navigateTo, closePlayer, setPlayerSubView, setLang, setSidebarOpen } = useAppNav();
+  const { view, playerSubView, orgTab, selectedPlayer, lang, sidebarOpen,
+          navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen } = useAppNav();
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
@@ -193,8 +193,45 @@ export default function Sidebar() {
       {/* Content nav */}
       <Divider label="Obsah" />
       {CONTENT_NAV.map(n => (
-        <NavBtn key={n.id} icon={n.icon} label={t(lang, n.tKey as any)} active={view === n.id} onClick={() => navigateTo(n.id)} />
+        <NavBtn key={n.id} icon={n.icon} label={t(lang, n.tKey as any)} active={view === n.id && !(n.id === "organization" && orgTab === "spoluprace")} onClick={() => navigateTo(n.id)} />
       ))}
+      {/* Spolupráce sub-item */}
+      <div style={{ paddingLeft: collapsed ? 0 : 14 }}>
+        <button
+          onClick={() => { navigateTo("organization"); setOrgTab("spoluprace"); }}
+          title={collapsed ? "Spolupráce" : undefined}
+          style={{
+            display: "flex", alignItems: "center",
+            gap: collapsed ? 0 : 10,
+            padding: collapsed ? "9px 0" : "7px 12px",
+            justifyContent: collapsed ? "center" : "flex-start",
+            width: "100%", borderRadius: 10,
+            ...(view === "organization" && orgTab === "spoluprace" ? {
+              background: "hsl(var(--primary) / 0.12)",
+              border: "1px solid hsl(var(--primary) / 0.28)",
+              color: "hsl(var(--primary))",
+            } : {
+              background: "transparent",
+              border: "1px solid transparent",
+              color: "hsl(var(--muted-foreground))",
+            }),
+            fontFamily: "var(--font-body)", fontWeight: 600, fontSize: 12,
+            cursor: "pointer", transition: "all 0.18s", textAlign: "left",
+          }}
+          onMouseEnter={e => { if (!(view === "organization" && orgTab === "spoluprace")) { e.currentTarget.style.background = "hsl(var(--muted) / 0.7)"; e.currentTarget.style.color = "hsl(var(--foreground))"; } }}
+          onMouseLeave={e => { if (!(view === "organization" && orgTab === "spoluprace")) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; } }}
+        >
+          <Handshake size={13} style={{ flexShrink: 0, opacity: view === "organization" && orgTab === "spoluprace" ? 1 : 0.7 }} />
+          {!collapsed && (
+            <>
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {lang === "en" ? "Cooperation" : lang === "fr" ? "Coopération" : "Spolupráce"}
+              </span>
+              {view === "organization" && orgTab === "spoluprace" && <div style={{ width: 5, height: 5, borderRadius: "50%", background: "hsl(var(--primary))", flexShrink: 0 }} />}
+            </>
+          )}
+        </button>
+      </div>
 
       <div style={{ flex: 1 }} />
 
