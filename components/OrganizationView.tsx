@@ -39,24 +39,42 @@ function Card({
 }
 
 // ── News Carousel ─────────────────────────────────────────────────────────────
-const SLIDE_COUNT = 3;
+const SLIDES = [
+  {
+    img: "/slide1.png",
+    title: "ZALOŽENÍ DCPR KOMISE",
+    desc: "Zakládáme Komisi DCPR jako nezávislý orgán pro zajištění nestrannosti, transparentnosti a funkčnosti DC ELO systému a komunikaci s vedením lig napříč českou a zahraniční Duel Commander scénou.",
+    action: "organization" as const,
+    label: "Zjistit více",
+  },
+  {
+    img: "/slide2.png",
+    title: "JAK FUNGUJE VÝPOČET ELO?",
+    desc: "Jak počítáme Elo a DCPR, proč právě tato kalibrace a jak vznikají třídy Rating Classy? To a mnohem víc se dozvíte v článku od tvůrce celého řešení.",
+    action: "articles" as const,
+    label: "Přečíst článek",
+  },
+  {
+    img: "/slide3.png",
+    title: "PODPOŘTE NÁS",
+    desc: "DC ELO je komunitní projekt, který žije díky vám. Pokud se vám naše práce líbí a chcete nás podpořit, budeme moc rádi — každá pomoc nás motivuje projekt dál rozvíjet.",
+    action: "support" as const,
+    label: "Podpořit projekt",
+  },
+];
 
-function NewsCarousel({ lang }: { lang: string }) {
+function NewsCarousel() {
+  const { navigateTo, setSupportOpen } = useAppNav();
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const goTo = useCallback((next: number) => {
     setFade(false);
-    setTimeout(() => {
-      setIdx(next);
-      setFade(true);
-    }, 180);
+    setTimeout(() => { setIdx(next); setFade(true); }, 180);
   }, []);
 
-  const advance = useCallback(() => {
-    setIdx(i => (i + 1) % SLIDE_COUNT);
-  }, []);
+  const advance = useCallback(() => { setIdx(i => (i + 1) % SLIDES.length); }, []);
 
   useEffect(() => {
     timerRef.current = setInterval(advance, 5000);
@@ -68,39 +86,43 @@ function NewsCarousel({ lang }: { lang: string }) {
     timerRef.current = setInterval(advance, 5000);
   };
 
-  const prev = () => { goTo((idx - 1 + SLIDE_COUNT) % SLIDE_COUNT); reset(); };
-  const next = () => { goTo((idx + 1) % SLIDE_COUNT); reset(); };
-  const dot  = (i: number) => { goTo(i); reset(); };
+  const prev = (e: React.MouseEvent) => { e.stopPropagation(); goTo((idx - 1 + SLIDES.length) % SLIDES.length); reset(); };
+  const next = (e: React.MouseEvent) => { e.stopPropagation(); goTo((idx + 1) % SLIDES.length); reset(); };
 
-  // Naming convention: /{n}_{lang}.png, fallback to /{n}_cs.png
-  const src = `/${idx + 1}_${lang}.png`;
+  const slide = SLIDES[idx];
+
+  const handleAction = () => {
+    if (slide.action === "support") { setSupportOpen(true); }
+    else if (slide.action === "organization") { navigateTo("organization"); }
+    else { navigateTo(slide.action); }
+  };
 
   return (
-    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.3)", userSelect: "none" }}>
-      {/* Slide image */}
-      <div style={{ position: "relative", width: "100%", paddingTop: "33.3%", overflow: "hidden" }}>
-        <img
-          key={src}
-          src={src}
-          alt={`Slide ${idx + 1}`}
-          onError={e => { const el = e.currentTarget; if (!el.src.endsWith("_cs.png")) el.src = `/${idx + 1}_cs.png`; }}
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover",
-            opacity: fade ? 1 : 0,
-            transition: "opacity 0.18s ease",
-          }}
-        />
+    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.3)", userSelect: "none", cursor: "pointer" }} onClick={handleAction}>
+      {/* Image */}
+      <div style={{ position: "relative", width: "100%", paddingTop: "33.3%" }}>
+        <img key={slide.img} src={slide.img} alt={slide.title}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: fade ? 1 : 0, transition: "opacity 0.18s ease" }} />
+        {/* Dark gradient overlay for text */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, hsl(0 0% 0% / 0.72) 0%, hsl(0 0% 0% / 0.35) 55%, transparent 100%)" }} />
+        {/* Text overlay */}
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "20px 28px", opacity: fade ? 1 : 0, transition: "opacity 0.18s ease" }}>
+          <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.18em", color: "hsl(var(--primary))", marginBottom: 7, textTransform: "uppercase" }}>{slide.title}</div>
+          <p style={{ fontSize: 12, lineHeight: 1.65, color: "rgba(255,255,255,0.88)", maxWidth: 420, marginBottom: 14 }}>{slide.desc}</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 8, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-body)", alignSelf: "flex-start" }}>
+            {slide.label} →
+          </div>
+        </div>
       </div>
 
-      {/* Prev / Next buttons */}
-      <button onClick={prev} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 32, height: 32, borderRadius: 8, background: "hsl(var(--background)/0.75)", border: "1px solid hsl(var(--border))", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--foreground))", fontSize: 16, fontWeight: 700, lineHeight: 1 }}>‹</button>
-      <button onClick={next} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", width: 32, height: 32, borderRadius: 8, background: "hsl(var(--background)/0.75)", border: "1px solid hsl(var(--border))", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--foreground))", fontSize: 16, fontWeight: 700, lineHeight: 1 }}>›</button>
+      {/* Prev / Next */}
+      <button onClick={prev} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 30, height: 30, borderRadius: 7, background: "hsl(var(--background)/0.7)", border: "1px solid hsl(var(--border))", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--foreground))", fontSize: 16, fontWeight: 700 }}>‹</button>
+      <button onClick={next} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", width: 30, height: 30, borderRadius: 7, background: "hsl(var(--background)/0.7)", border: "1px solid hsl(var(--border))", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--foreground))", fontSize: 16, fontWeight: 700 }}>›</button>
 
-      {/* Dot indicators */}
+      {/* Dots */}
       <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 6 }}>
-        {Array.from({ length: SLIDE_COUNT }, (_, i) => (
-          <button key={i} onClick={() => dot(i)} style={{ width: i === idx ? 20 : 7, height: 7, borderRadius: 99, background: i === idx ? "hsl(var(--primary))" : "hsl(var(--background)/0.6)", border: "1px solid hsl(var(--border)/0.5)", cursor: "pointer", transition: "all 0.25s ease", padding: 0 }} />
+        {SLIDES.map((_, i) => (
+          <button key={i} onClick={e => { e.stopPropagation(); goTo(i); reset(); }} style={{ width: i === idx ? 20 : 7, height: 7, borderRadius: 99, background: i === idx ? "hsl(var(--primary))" : "rgba(255,255,255,0.4)", border: "none", cursor: "pointer", transition: "all 0.25s ease", padding: 0 }} />
         ))}
       </div>
     </div>
@@ -369,6 +391,9 @@ export default function OrganizationView() {
             ))}
           </div>
         </Card>
+
+        {/* Carousel */}
+        <NewsCarousel />
 
         {/* Tým */}
         <div>

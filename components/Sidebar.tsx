@@ -43,11 +43,10 @@ const LANGS: { code: Lang; flag: string; label: string }[] = [
 export default function Sidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const { mode, setMode } = useRatingMode();
-  const { view, playerSubView, orgTab, selectedPlayer, lang, sidebarOpen,
-          navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen } = useAppNav();
+  const { view, playerSubView, orgTab, selectedPlayer, lang, sidebarOpen, supportOpen,
+          navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen } = useAppNav();
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [supportOpen, setSupportOpen] = useState(false);
   const isDark = resolvedTheme === "dark";
 
   useEffect(() => setMounted(true), []);
@@ -275,7 +274,6 @@ export default function Sidebar() {
 
   return (
     <>
-      <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       {sidebarOpen && <div className="sidebar-overlay md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside
         style={{ width: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", minWidth: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", transition: "width .28s cubic-bezier(.4,0,.2,1), min-width .28s cubic-bezier(.4,0,.2,1), transform .3s ease", borderRight: "1px solid hsl(var(--border) / 0.65)", display: "flex", flexDirection: "column", zIndex: 40, flexShrink: 0, overflow: "hidden" }}
