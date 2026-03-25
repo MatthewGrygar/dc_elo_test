@@ -53,6 +53,8 @@ function CategoryCard({ category }: { category: RecordCategory }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontFamily: "var(--font-display)", fontWeight: 600, color: "hsl(var(--foreground))", lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.label}</div>
                 {r.entry?.player && <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.player}</div>}
+                {r.entry?.detail && <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.detail}</div>}
+                {r.entry?.detail2 && <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground) / 0.65)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.detail2}</div>}
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
                 {r.entry?.isAllTime && <div style={{ fontSize: 7, fontFamily: "var(--font-mono)", color: "hsl(42,80%,52%)", letterSpacing: "0.08em", marginBottom: 1 }}>👑 ALL-TIME</div>}

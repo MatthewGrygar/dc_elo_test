@@ -259,17 +259,23 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
             <div style={{ padding: "14px 18px 16px" }}>
               <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Tagy rekordů</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
-                {playerRecs.map((r, i) => (
-                  <span key={i} title={`${r.label}: ${r.value}`} style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    padding: "8px 14px", borderRadius: 8,
-                    background: isNeg(r.label) ? chipRed : chipGreen,
-                    color: "#fff", fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}>
-                    {r.isAllTime && <span style={{ fontSize: 10 }}>👑</span>}{r.label}
-                  </span>
-                ))}
+                {playerRecs.map((r, i) => {
+                  const neg = isNeg(r.label);
+                  const bg  = neg ? chipRed : chipGreen;
+                  return (
+                    <span key={i} title={`${r.label}: ${r.value}`} style={{
+                      display: "inline-flex", alignItems: "center", gap: 4,
+                      padding: "5px 11px", borderRadius: 6,
+                      background: `${bg}22`,
+                      border: `1px solid ${bg}55`,
+                      color: neg ? "hsl(0,72%,62%)" : "hsl(142,65%,50%)",
+                      fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700,
+                      whiteSpace: "nowrap", letterSpacing: "0.01em",
+                    }}>
+                      {r.isAllTime && <span style={{ fontSize: 9, opacity: 0.85 }}>👑</span>}{r.label}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           </GC>
