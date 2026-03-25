@@ -4,271 +4,174 @@ import { useState } from "react";
 import { useAppNav } from "./AppContext";
 import { t } from "@/lib/i18n";
 import {
-  Newspaper, Clock, User, Trophy, TrendingUp,
-  Megaphone, FileText, ChevronRight, Calendar, Tag,
+  Newspaper, Clock, User, TrendingUp, ChevronLeft, Calendar,
 } from "lucide-react";
 
-type Category = "all" | "tournament" | "analysis" | "news" | "report";
+type Section =
+  | { type: "p";    text: string }
+  | { type: "h2";   text: string }
+  | { type: "code"; text: string }
+  | { type: "ul";   items: string[] };
 
 interface Article {
   id: number;
-  title: Record<string, string>;
-  excerpt: Record<string, string>;
-  body?: Record<string, string>;
-  category: Exclude<Category, "all">;
+  title: string;
+  excerpt: string;
+  body: Section[];
   tag: string;
   author: string;
   date: string;
   readTime: number;
-  featured?: boolean;
 }
 
-// ── Real article from the screenshot + more placeholders ──────────────────────
 const ARTICLES: Article[] = [
   {
     id: 1,
-    title: {
-      cs: "DCPR komise – organizační & metodický orgán projektu DC ELO",
-      en: "DCPR Committee – Organisational & Methodological Body of DC ELO",
-      fr: "Comité DCPR – Organe Organisationnel et Méthodologique du Projet DC ELO",
-    },
-    excerpt: {
-      cs: "DCPR komise vznikla jako organizační a metodický orgán projektu DC ELO pro formát Duel Commander (MtG). Jejím cílem je dlouhodobě budovat stabilní, transparentní a férové kompetitivní prostředí pro hráče v České republice i v širším regionu.",
-      en: "The DCPR committee was established as the organisational and methodological body of the DC ELO project for the Duel Commander (MtG) format. Its goal is to build a stable, transparent and fair competitive environment for players in the Czech Republic and the wider region.",
-      fr: "Le comité DCPR a été créé en tant qu'organe organisationnel et méthodologique du projet DC ELO pour le format Duel Commander (MtG). Son objectif est de construire un environnement compétitif stable, transparent et équitable.",
-    },
-    category: "news",
-    tag: "DCPR",
+    title: "Metodika hodnocení hráčů — DC ELO systém",
+    excerpt: "V Duel Commander komunitě používáme systém hodnocení, jehož cílem je dlouhodobě, transparentně a konzistentně odhadovat výkonnost hráčů na základě skutečně odehraných matchů.",
+    tag: "Analytika",
     author: "DCPR Komise",
     date: "2025-03-01",
-    readTime: 6,
-    featured: true,
-  },
-  {
-    id: 2,
-    title: {
-      cs: "Jarní série 2025 – výsledky a analýza",
-      en: "Spring Series 2025 – Results and Analysis",
-      fr: "Série de Printemps 2025 – Résultats et Analyse",
-    },
-    excerpt: {
-      cs: "Jarní série turnajů 2025 přinesla řadu překvapení. Podívejte se na výsledky, pohyby v žebříčku a analýzu nejzajímavějších zápasů celé série.",
-      en: "The Spring 2025 tournament series brought many surprises. Check out the results, ranking movements and analysis of the most interesting matches.",
-      fr: "La série de tournois du printemps 2025 a apporté de nombreuses surprises. Découvrez les résultats, les mouvements du classement et l'analyse des matchs.",
-    },
-    category: "tournament",
-    tag: "Turnaj",
-    author: "DC Admin",
-    date: "2025-04-10",
     readTime: 8,
-    featured: false,
-  },
-  {
-    id: 3,
-    title: {
-      cs: "Analýza ELO inflace v DC formátu – 2025",
-      en: "ELO Inflation Analysis in DC Format – 2025",
-      fr: "Analyse de l'Inflation ELO dans le Format DC – 2025",
-    },
-    excerpt: {
-      cs: "Jak se vyvíjí průměrné ELO komunity? Podrobná analýza trendů, inflace ratingu a zdraví celého systému za posledních 12 měsíců.",
-      en: "How is the community's average ELO evolving? Detailed analysis of trends, rating inflation and system health over the last 12 months.",
-      fr: "Comment évolue l'ELO moyen de la communauté ? Analyse détaillée des tendances, de l'inflation du classement et de la santé du système.",
-    },
-    category: "analysis",
-    tag: "Analytika",
-    author: "Data Team",
-    date: "2025-03-22",
-    readTime: 10,
-    featured: false,
-  },
-  {
-    id: 4,
-    title: {
-      cs: "Zimní liga 2024/25 – závěrečná zpráva",
-      en: "Winter League 2024/25 – Final Report",
-      fr: "Ligue d'Hiver 2024/25 – Rapport Final",
-    },
-    excerpt: {
-      cs: "Zimní liga 2024/25 je za námi. Přinášíme kompletní zprávu: statistiky, pohyby v ratingu, nejlepší výkony a přehled všech odehraných turnajů.",
-      en: "Winter League 2024/25 is behind us. We bring a complete report: statistics, rating movements, top performances and an overview of all tournaments played.",
-      fr: "La ligue d'hiver 2024/25 est derrière nous. Rapport complet : statistiques, mouvements de classement, meilleures performances.",
-    },
-    category: "report",
-    tag: "Zpráva",
-    author: "DCPR Komise",
-    date: "2025-02-28",
-    readTime: 12,
-    featured: false,
-  },
-  {
-    id: 5,
-    title: {
-      cs: "Top 10 nejlepších zápasů DC komunity – rok 2024",
-      en: "Top 10 Best Matches of the DC Community – 2024",
-      fr: "Top 10 des Meilleurs Matchs de la Communauté DC – 2024",
-    },
-    excerpt: {
-      cs: "Rekapitulujeme deset nejdramatičtějších a nejnapínavějších zápasů roku 2024. Epické duely, velká překvapení a historické momenty komunity.",
-      en: "We recap the ten most dramatic and exciting matches of 2024. Epic duels, big upsets and historic moments for the community.",
-      fr: "Nous résumons les dix matchs les plus dramatiques de 2024. Duels épiques, grandes surprises et moments historiques.",
-    },
-    category: "analysis",
-    tag: "Best Of",
-    author: "DC Analytics",
-    date: "2025-01-15",
-    readTime: 7,
-    featured: false,
-  },
-  {
-    id: 6,
-    title: {
-      cs: "Nová sezóna 2025 – změny pravidel a formátu",
-      en: "New Season 2025 – Rule and Format Changes",
-      fr: "Nouvelle Saison 2025 – Changements de Règles et de Format",
-    },
-    excerpt: {
-      cs: "Co přináší sezóna 2025? Přehled všech změn pravidel, nových formátů turnajů a úprav hodnotícího systému, které vstoupí v platnost.",
-      en: "What does the 2025 season bring? Overview of all rule changes, new tournament formats and rating system adjustments coming into effect.",
-      fr: "Que réserve la saison 2025 ? Aperçu de tous les changements de règles, nouveaux formats de tournois et ajustements du système de classement.",
-    },
-    category: "news",
-    tag: "Novinky",
-    author: "DC Admin",
-    date: "2025-01-02",
-    readTime: 4,
-    featured: false,
+    body: [
+      { type: "p", text: "V Duel Commander komunitě používáme systém hodnocení, jehož cílem je dlouhodobě, transparentně a konzistentně odhadovat výkonnost hráčů na základě skutečně odehraných matchů. Základem je modifikovaný model Elo, doplněný o datově řízenou segmentaci hráčů do čtyř tříd (Class A–D)." },
+      { type: "p", text: "Metodicky vycházíme z kalibrace používané v MTG Elo Project, která je navržena pro prostředí karetních her s vyšší variancí výsledků. Cílem není vytvořit agresivní žebříček s extrémními rozdíly, ale stabilní a realistický odhad relativní síly hráčů." },
+
+      { type: "h2", text: "Elo jako průběžný odhad výkonnosti" },
+      { type: "p", text: "Každý hráč vstupuje do systému s počátečním ratingem 1500 bodů. Rating se následně upravuje po každém odehraném matchi podle klasického Elo principu: změna je úměrná rozdílu mezi očekávaným a skutečným výsledkem." },
+      { type: "p", text: "Použitý vývojový parametr je K = 36. Tento relativně vyšší faktor odráží skutečnost, že v komunitním prostředí je počet her na hráče omezený a variabilita výsledků vyšší než například v šachu." },
+
+      { type: "h2", text: "Očekávané skóre" },
+      { type: "code", text: "E = 1 / (1 + 10^((Rb − Ra) / 1135))" },
+      { type: "p", text: "Klíčovým parametrem je konstanta 1135, která určuje „plošnost" křivky očekávání. V praxi znamená, že rozdíl 200 ratingových bodů odpovídá přibližně 60% očekávané úspěšnosti silnějšího hráče. Oproti klasické šachové škále (400) je tedy model výrazně méně strmý. Tato volba reflektuje vyšší míru variance v karetních hrách (náhoda, matchupy, prostředí) a záměrně „brzdí" význam ratingových rozdílů." },
+
+      { type: "h2", text: "Aktualizace ratingu" },
+      { type: "code", text: "R′ = R + K · (S − E)" },
+      { type: "p", text: "S je skutečný výsledek: 1 (výhra), 0 (prohra), 0.5 (remíza). Interně jsou ratingy vedeny s desetinnou přesností, aby nedocházelo k systematickým zaokrouhlovacím chybám. Navenek zobrazujeme hodnoty zaokrouhlené na celé body." },
+
+      { type: "h2", text: "Co se do modelu započítává — a co ne" },
+      { type: "p", text: "Model pracuje výhradně s výsledkem matchu. Skóre 2–0 a 2–1 má z hlediska ratingu stejný dopad. Hodnotíme pouze win/loss/draw, nikoli margin vítězství. Tento přístup odpovídá původní filozofii Elo a zabraňuje nežádoucím efektům spojeným s „optimalizací rozdílu skóre"." },
+      { type: "ul", items: [
+        "BYE nemá na rating žádný vliv.",
+        "Nevalidní nebo neúplné záznamy se nezapočítávají.",
+        "Rating reflektuje pouze skutečně odehrané head‑to‑head zápasy mezi dvěma hráči.",
+      ]},
+
+      { type: "h2", text: "Praktická interpretace ratingových rozdílů" },
+      { type: "p", text: "Orientačně (díky konstantě 1135):" },
+      { type: "ul", items: [
+        "rozdíl 0 bodů → 50 % očekávání",
+        "rozdíl ~100 bodů → 55 %",
+        "rozdíl 200 bodů → 60 %",
+        "rozdíl 300 bodů → ~65 %",
+        "rozdíl 400 bodů → ~69 %",
+      ]},
+      { type: "p", text: "Zásadní je pochopení, že i rozdíl 200 bodů nepředstavuje dominanci, ale pouze mírnou až střední výhodu. To odpovídá charakteru karetní hry a je to vědomý designový cíl převzatý z MTG Elo Project." },
+
+      { type: "h2", text: "Od spojitého ratingu k třídám A–D" },
+      { type: "p", text: "Samotné Elo poskytuje spojitou metriku výkonnosti. Pro potřeby komunity je však užitečné doplnit ji o přehlednou segmentaci. Proto nad ratingem aplikujeme shlukovou analýzu pomocí algoritmu k‑means." },
+      { type: "p", text: "Clustering se aplikuje pouze na hráče, kteří splňují dvě podmínky:" },
+      { type: "ul", items: [
+        "mají rating alespoň 1500,",
+        "odehráli minimálně 10 her.",
+      ]},
+      { type: "p", text: "Používáme parametr k = 4 (čtyři clustery), které mapujeme na Class A (nejvyšší) až Class D (nejnižší v rámci filtrovaného souboru). Algoritmus minimalizuje součet čtverců vzdáleností hráčů od centroidů (inertia), takže třídy vznikají z přirozené struktury dat, nikoli podle předem daných hranic." },
+      { type: "p", text: "Pozn.: k‑means může konvergovat do lokálního minima a výsledek závisí na inicializaci centroidů. Proto je vhodné použít více startů (např. n_init) a vybrat řešení s nejnižší hodnotou inertia." },
+
+      { type: "h2", text: "Empirická struktura tříd" },
+      { type: "p", text: "Při vizualizaci ratingů jsou obvykle patrná čtyři relativně zřetelná výšková pásma: Class A (typicky jen několik hráčů kolem ~1680), pod nimi kompaktní horní střed Class B (~1600–1640), střední pás Class C (~1540–1580) a nejnižší pás po filtru ≥1500 odpovídá třídě Class D (blízko ~1500–1520)." },
+      { type: "p", text: "Důležité je, že hranice mezi třídami nejsou pevně definované konkrétním číslem. Vznikají emergentně z aktuálního rozložení ratingů v komunitě." },
+
+      { type: "h2", text: "Provozní režim systému" },
+      { type: "p", text: "Hodnocení i klasifikace jsou plně automatizované. Po každé aktualizaci nebo opravě dat:" },
+      { type: "ul", items: [
+        "se přepočítají všechny ratingy,",
+        "následně se znovu provede clustering na kvalifikovaných hráčích.",
+      ]},
+      { type: "p", text: "Systém je tedy dynamický a reaguje na vývoj komunity v reálném čase." },
+
+      { type: "h2", text: "Závěrečné shrnutí" },
+      { type: "p", text: "Použitý model kombinuje modifikované Elo s plošší škálou očekávání a datově řízený k‑means clustering. Výsledkem je:" },
+      { type: "ul", items: [
+        "konzistentní odhad výkonnosti založený výhradně na odehraných zápasech,",
+        "realistická interpretace ratingových rozdílů v prostředí karetní hry,",
+        "přehledná segmentace hráčské základny bez arbitrárních hranic.",
+      ]},
+      { type: "p", text: "Jedná se o první systematickou verzi hodnocení, která je připravena k dalším metodologickým úpravám podle vývoje dat i potřeb komunity." },
+    ],
   },
 ];
 
-const CAT_META: Record<Exclude<Category, "all">, { icon: React.ElementType; color: string; bg: string; border: string }> = {
-  tournament: { icon: Trophy,     color: "hsl(42,92%,52%)",  bg: "hsl(42 92% 52% / 0.12)",  border: "hsl(42 92% 52% / 0.3)"  },
-  analysis:   { icon: TrendingUp, color: "hsl(152,72%,45%)", bg: "hsl(152 72% 45% / 0.12)", border: "hsl(152 72% 45% / 0.3)" },
-  news:       { icon: Megaphone,  color: "hsl(195,78%,48%)", bg: "hsl(195 78% 48% / 0.12)", border: "hsl(195 78% 48% / 0.3)" },
-  report:     { icon: FileText,   color: "hsl(265,65%,60%)", bg: "hsl(265 65% 60% / 0.12)", border: "hsl(265 65% 60% / 0.3)" },
-};
+const accentColor = "hsl(152,72%,45%)";
+const accentBg    = "hsl(152 72% 45% / 0.12)";
+const accentBorder = "hsl(152 72% 45% / 0.3)";
 
-function formatDate(dateStr: string, lang: string): string {
-  const d = new Date(dateStr);
-  if (lang === "cs") return d.toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-  if (lang === "fr") return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
 }
 
-function ArticleCard({ article, featured }: { article: Article; featured?: boolean }) {
-  const { lang } = useAppNav();
-  const meta  = CAT_META[article.category];
-  const Icon  = meta.icon;
-  const title   = article.title[lang]   || article.title.cs;
-  const excerpt = article.excerpt[lang] || article.excerpt.cs;
-
+function ArticleDetail({ article, onBack }: { article: Article; onBack: () => void }) {
   return (
-    <div
-      className="article-hover shine"
-      style={{
-        position: "relative",
-        borderRadius: featured ? 18 : 14,
-        overflow: "hidden",
-        cursor: "pointer",
-        gridColumn: featured ? "1 / -1" : undefined,
-      }}
-    >
-      {/* glass bg */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background: "hsl(var(--card) / 0.82)",
-        backdropFilter: "blur(20px) saturate(160%)",
-        WebkitBackdropFilter: "blur(20px) saturate(160%)",
-        border: `1px solid ${featured ? meta.border : "hsl(var(--card-border) / 0.85)"}`,
-        borderRadius: featured ? 18 : 14,
-      }} />
-      {/* accent stripe */}
-      {featured && (
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${meta.color}, transparent 60%)` }} />
-      )}
+    <div style={{ height: "100%", overflowY: "auto" }} className="scrollbar-thin">
+      <div style={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: 0, paddingBottom: 32 }}>
 
-      <div style={{ position: "relative", zIndex: 1, padding: featured ? "24px 26px" : "18px 20px" }}>
-        {/* badges */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 5,
-            padding: "3px 10px", borderRadius: 99,
-            background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color,
-          }}>
-            <Icon size={9} />
-            <span style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
-              {article.tag}
-            </span>
+        {/* Back button */}
+        <button onClick={onBack}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 20, padding: "6px 12px", borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.5)", color: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)", alignSelf: "flex-start" }}>
+          <ChevronLeft size={13} />Zpět na články
+        </button>
+
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99, background: accentBg, border: `1px solid ${accentBorder}`, color: accentColor, marginBottom: 14 }}>
+            <TrendingUp size={9} />
+            <span style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>{article.tag}</span>
           </div>
-          {featured && (
-            <span style={{
-              padding: "3px 10px", borderRadius: 99, fontSize: 9, fontWeight: 700,
-              fontFamily: "var(--font-mono)", letterSpacing: "0.05em",
-              background: "hsl(var(--primary) / 0.12)",
-              border: "1px solid hsl(var(--primary) / 0.28)",
-              color: "hsl(var(--primary))",
-            }}>FEATURED</span>
-          )}
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.2, marginBottom: 14, color: "hsl(var(--foreground))" }}>{article.title}</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><User size={10} />{article.author}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Calendar size={10} />{formatDate(article.date)}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Clock size={10} />{article.readTime} min čtení</span>
+          </div>
         </div>
 
-        {/* title */}
-        <h3 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: featured ? 20 : 14,
-          fontWeight: 800, letterSpacing: "-0.025em",
-          lineHeight: 1.25, marginBottom: 10,
-          color: "hsl(var(--foreground))",
-        }}>{title}</h3>
-
-        {/* excerpt */}
-        <p style={{
-          fontSize: 12, lineHeight: 1.7,
-          color: "hsl(var(--muted-foreground))",
-          marginBottom: 14,
-          display: "-webkit-box",
-          WebkitLineClamp: featured ? 3 : 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        } as React.CSSProperties}>{excerpt}</p>
-
-        {/* meta row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 10, color: "hsl(var(--muted-foreground))" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <User size={9} />{article.author}
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Calendar size={9} />{formatDate(article.date, lang)}
-          </span>
-          <span style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
-            <Clock size={9} />{article.readTime} {t(lang, "min_read")}
-          </span>
-          <ChevronRight size={11} color={meta.color} />
+        {/* Body */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {article.body.map((section, i) => {
+            if (section.type === "h2") return (
+              <h2 key={i} style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 800, letterSpacing: "-0.025em", color: "hsl(var(--foreground))", marginTop: 10, marginBottom: 2, paddingTop: 10, borderTop: "1px solid hsl(var(--border)/0.5)" }}>{section.text}</h2>
+            );
+            if (section.type === "p") return (
+              <p key={i} style={{ fontSize: 13, lineHeight: 1.8, color: "hsl(var(--muted-foreground))", margin: 0 }}>{section.text}</p>
+            );
+            if (section.type === "code") return (
+              <div key={i} style={{ padding: "12px 16px", borderRadius: 10, background: "hsl(var(--muted)/0.6)", border: "1px solid hsl(var(--border))", fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: accentColor, letterSpacing: "0.02em" }}>{section.text}</div>
+            );
+            if (section.type === "ul") return (
+              <ul key={i} style={{ margin: 0, paddingLeft: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                {section.items.map((item, j) => (
+                  <li key={j} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, lineHeight: 1.65, color: "hsl(var(--muted-foreground))" }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: accentColor, flexShrink: 0, marginTop: 7 }} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            );
+            return null;
+          })}
         </div>
       </div>
     </div>
   );
 }
 
-const CAT_TKEYS: Record<Category, string> = {
-  all: "article_all", tournament: "article_tournament",
-  analysis: "article_analysis", news: "article_news", report: "article_report",
-};
-
 export default function ArticlesView() {
   const { lang } = useAppNav();
-  const [cat, setCat] = useState<Category>("all");
+  const [selected, setSelected] = useState<Article | null>(null);
 
-  const filtered = cat === "all" ? ARTICLES : ARTICLES.filter(a => a.category === cat);
-  const featured = cat === "all" ? filtered.find(a => a.featured) : undefined;
-  const rest     = filtered.filter(a => !a.featured || cat !== "all");
+  if (selected) return <ArticleDetail article={selected} onBack={() => setSelected(null)} />;
 
-  const cats: { id: Category; icon: React.ElementType }[] = [
-    { id: "all",        icon: Newspaper  },
-    { id: "tournament", icon: Trophy     },
-    { id: "analysis",   icon: TrendingUp },
-    { id: "news",       icon: Megaphone  },
-    { id: "report",     icon: FileText   },
-  ];
+  const article = ARTICLES[0];
 
   return (
     <div style={{ height: "100%", overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -282,64 +185,35 @@ export default function ArticlesView() {
         </p>
       </div>
 
-      {/* category filters */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }} className="anim-slide-up s2">
-        {cats.map(c => {
-          const active = cat === c.id;
-          const meta = c.id !== "all" ? CAT_META[c.id as Exclude<Category, "all">] : null;
-          const col    = meta?.color  ?? "hsl(var(--primary))";
-          const bg     = meta?.bg     ?? "hsl(var(--primary) / 0.12)";
-          const border = meta?.border ?? "hsl(var(--primary) / 0.28)";
-          const Icon   = c.icon;
-          return (
-            <button
-              key={c.id}
-              onClick={() => setCat(c.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "6px 14px", borderRadius: 99,
-                border: `1px solid ${active ? border : "hsl(var(--border))"}`,
-                background: active ? bg : "hsl(var(--muted) / 0.4)",
-                color: active ? col : "hsl(var(--muted-foreground))",
-                fontSize: 12, fontWeight: 600, cursor: "pointer",
-                fontFamily: "var(--font-body)", transition: "all .18s",
-              }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "hsl(var(--muted)/0.7)"; e.currentTarget.style.color = "hsl(var(--foreground))"; } }}
-              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "hsl(var(--muted)/0.4)"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; } }}
-            >
-              <Icon size={11} />
-              {t(lang, CAT_TKEYS[c.id] as any)}
-            </button>
-          );
-        })}
-      </div>
+      {/* single article card */}
+      <div className="anim-slide-up s2" onClick={() => setSelected(article)}
+        style={{ position: "relative", borderRadius: 18, overflow: "hidden", cursor: "pointer" }}>
+        {/* glass bg */}
+        <div style={{ position: "absolute", inset: 0, background: "hsl(var(--card) / 0.82)", backdropFilter: "blur(20px) saturate(160%)", WebkitBackdropFilter: "blur(20px) saturate(160%)", border: `1px solid ${accentBorder}`, borderRadius: 18 }} />
+        {/* accent stripe */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${accentColor}, transparent 60%)` }} />
 
-      {/* featured */}
-      {featured && (
-        <div className="anim-slide-up s3">
-          <ArticleCard article={featured} featured />
+        <div style={{ position: "relative", zIndex: 1, padding: "24px 26px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99, background: accentBg, border: `1px solid ${accentBorder}`, color: accentColor }}>
+              <TrendingUp size={9} />
+              <span style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>{article.tag}</span>
+            </div>
+            <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", background: "hsl(var(--primary) / 0.12)", border: "1px solid hsl(var(--primary) / 0.28)", color: "hsl(var(--primary))" }}>FEATURED</span>
+          </div>
+
+          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.25, marginBottom: 10, color: "hsl(var(--foreground))" }}>{article.title}</h3>
+
+          <p style={{ fontSize: 12, lineHeight: 1.7, color: "hsl(var(--muted-foreground))", marginBottom: 16, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{article.excerpt}</p>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 10, color: "hsl(var(--muted-foreground))" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><User size={9} />{article.author}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar size={9} />{formatDate(article.date)}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}><Clock size={9} />{article.readTime} {t(lang, "min_read")}</span>
+            <span style={{ fontSize: 11, color: accentColor, fontWeight: 600 }}>Číst →</span>
+          </div>
         </div>
-      )}
-
-      {/* grid */}
-      <div
-        className="anim-slide-up s4"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 14,
-          paddingBottom: 8,
-        }}
-      >
-        {rest.map(a => <ArticleCard key={a.id} article={a} />)}
       </div>
-
-      {filtered.length === 0 && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 48, gap: 12 }}>
-          <Newspaper size={32} color="hsl(var(--muted-foreground))" />
-          <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>{t(lang, "no_data")}</p>
-        </div>
-      )}
     </div>
   );
 }
