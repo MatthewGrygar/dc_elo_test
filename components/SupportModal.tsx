@@ -13,6 +13,7 @@ interface ContactFormState {
 function ContactForm({ subject }: { subject?: string }) {
   const [form, setForm] = useState<ContactFormState>({ name: "", email: "", phone: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
+  const [errMsg, setErrMsg] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,8 +24,15 @@ function ContactForm({ subject }: { subject?: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, subject: subject ?? "Zpráva z DC ELO" }),
       });
-      setStatus(res.ok ? "ok" : "err");
-    } catch {
+      if (res.ok) {
+        setStatus("ok");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setErrMsg(data.error ?? `HTTP ${res.status}`);
+        setStatus("err");
+      }
+    } catch (e: any) {
+      setErrMsg(e?.message ?? "Network error");
       setStatus("err");
     }
   };
@@ -71,7 +79,7 @@ function ContactForm({ subject }: { subject?: string }) {
         <textarea required rows={4} style={{ ...inp, resize: "vertical", minHeight: 90 }} placeholder="Napiš nám..." value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
       </div>
       {status === "err" && (
-        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Odeslání selhalo — zkus to prosím znovu.</div>
+        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Chyba: {errMsg || "Odeslání selhalo"}</div>
       )}
       <button type="submit" disabled={status === "sending"} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", borderRadius: 10, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", border: "none", fontSize: 13, fontWeight: 700, cursor: status === "sending" ? "wait" : "pointer", opacity: status === "sending" ? 0.7 : 1, fontFamily: "var(--font-body)" }}>
         <Send size={13} />{status === "sending" ? "Odesílám…" : "Odeslat zprávu"}
