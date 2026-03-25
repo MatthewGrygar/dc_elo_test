@@ -25,62 +25,44 @@ function GC({ children, style, glow }: { children: React.ReactNode; style?: Reac
   );
 }
 
-function RecordPanel({ label, entry, color }: { label: string; entry: RecordEntry | null; color: string }) {
-  if (!entry || entry.value === "—") return null;
-  return (
-    <div style={{
-      display: "flex", flexDirection: "column", gap: 3,
-      padding: "9px 13px", borderRadius: 10,
-      background: `${color}09`,
-      border: `1px solid ${color}1e`,
-      minWidth: 110, maxWidth: 220, flexShrink: 0,
-    }}>
-      {/* label + crown */}
-      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-        <span style={{
-          fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700,
-          letterSpacing: "0.05em", color, opacity: 0.85,
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }}>{label}</span>
-        {entry.isAllTime && <span style={{ fontSize: 8, flexShrink: 0, opacity: 0.7 }}>👑</span>}
-      </div>
-      {/* value */}
-      <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", lineHeight: 1, letterSpacing: "-0.03em" }}>{entry.value}</div>
-      {/* player */}
-      {entry.player && (
-        <div style={{ fontSize: 10, fontFamily: "var(--font-display)", fontWeight: 700, color, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.player}</div>
-      )}
-      {/* detail */}
-      {entry.detail && (
-        <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.detail}</div>
-      )}
-      {entry.detail2 && (
-        <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground) / 0.6)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.detail2}</div>
-      )}
-    </div>
-  );
-}
-
 function CategoryCard({ category }: { category: RecordCategory }) {
   const Icon = CAT_ICONS[category.icon] ?? Trophy;
   const color = CAT_COLORS[category.icon] ?? "hsl(var(--primary))";
   const validRecords = category.records.filter(r => r.entry && r.entry.value !== "—");
   if (validRecords.length === 0) return null;
   return (
-    <GC glow={`${color}18`}>
-      <div style={{ padding: "13px 16px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid hsl(var(--border) / 0.22)" }}>
-        <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${color}16`, boxShadow: `0 0 12px -4px ${color}38` }}>
-          <Icon size={14} style={{ color, opacity: 0.85 }} />
+    <GC glow={`${color}28`}>
+      <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid hsl(var(--border) / 0.3)" }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: `${color}20`, boxShadow: `0 0 14px -4px ${color}50` }}>
+          <Icon size={16} style={{ color }} />
         </div>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", color: "hsl(var(--foreground))", lineHeight: 1 }}>{category.title}</div>
-          <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{validRecords.length} záznamů</div>
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)", color: "hsl(var(--foreground))", lineHeight: 1 }}>{category.title}</div>
+          <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{validRecords.length} záznamů</div>
         </div>
       </div>
-      <div style={{ padding: "10px 14px 12px", display: "flex", flexWrap: "wrap", gap: 7 }}>
-        {validRecords.map((r) => (
-          <RecordPanel key={r.label} label={r.label} entry={r.entry} color={color} />
-        ))}
+      <div style={{ padding: "4px 0 6px" }}>
+        {validRecords.map((r, i) => {
+          const isLast = i === validRecords.length - 1;
+          return (
+            <div key={r.label} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+              padding: "9px 18px",
+              borderBottom: isLast ? "none" : "1px solid hsl(var(--border) / 0.18)",
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontFamily: "var(--font-display)", fontWeight: 600, color: "hsl(var(--foreground))", lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.label}</div>
+                {r.entry?.player && <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.player}</div>}
+                {r.entry?.detail && <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.detail}</div>}
+                {r.entry?.detail2 && <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground) / 0.65)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.detail2}</div>}
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                {r.entry?.isAllTime && <div style={{ fontSize: 7, fontFamily: "var(--font-mono)", color: "hsl(42,80%,52%)", letterSpacing: "0.08em", marginBottom: 1 }}>👑 ALL-TIME</div>}
+                <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", letterSpacing: "-0.02em", lineHeight: 1 }}>{r.entry?.value}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </GC>
   );

@@ -245,34 +245,34 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
 
       {/* ── RECORD TAGS ── */}
       {(() => {
-        const isNeg = (label: string) => /prohr|ztráta|ztrát|série.*proher|nejdelší.*proher/i.test(label);
-        const chipGreen = "hsl(142,60%,36%)";
-        const chipRed   = "hsl(0,62%,46%)";
+        const CAT_CHIP_COLORS: Record<string, string> = {
+          "👑": "hsl(38,75%,44%)",  "📈": "hsl(142,55%,32%)", "🔥": "hsl(22,80%,44%)",
+          "⚡": "hsl(260,55%,48%)", "⚔️": "hsl(0,58%,44%)",   "🏆": "hsl(38,75%,44%)",
+          "📊": "hsl(210,60%,42%)",
+        };
         const playerRecs = communityRecords?.categories.flatMap(cat =>
           cat.records
             .filter(r => r.entry?.player === s.name)
-            .map(r => ({ label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime }))
+            .map(r => ({ label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime, catIcon: cat.icon }))
         ) ?? [];
         if (playerRecs.length === 0) return null;
         return (
           <GC style={{ flexShrink: 0 }}>
             <div style={{ padding: "14px 18px 16px" }}>
               <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Tagy rekordů</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center" }}>
                 {playerRecs.map((r, i) => {
-                  const neg = isNeg(r.label);
-                  const bg  = neg ? chipRed : chipGreen;
+                  const bg = CAT_CHIP_COLORS[r.catIcon] ?? "hsl(var(--primary))";
                   return (
                     <span key={i} title={`${r.label}: ${r.value}`} style={{
                       display: "inline-flex", alignItems: "center", gap: 4,
-                      padding: "5px 11px", borderRadius: 6,
-                      background: `${bg}22`,
-                      border: `1px solid ${bg}55`,
-                      color: neg ? "hsl(0,72%,62%)" : "hsl(142,65%,50%)",
-                      fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700,
+                      padding: "5px 10px", borderRadius: 6,
+                      background: bg, color: "#fff",
+                      fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 600,
                       whiteSpace: "nowrap", letterSpacing: "0.01em",
+                      boxShadow: `0 1px 4px ${bg}55`,
                     }}>
-                      {r.isAllTime && <span style={{ fontSize: 9, opacity: 0.85 }}>👑</span>}{r.label}
+                      {r.isAllTime && <span style={{ fontSize: 9 }}>👑</span>}{r.label}
                     </span>
                   );
                 })}
