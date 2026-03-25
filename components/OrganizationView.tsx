@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 import {
   Zap, Users, Globe, Mail, MessageCircle, Youtube, Twitter,
   CheckCircle, ChevronRight, ExternalLink, MapPin, Calendar,
-  Database, BarChart2, Network, Flame, Trophy,
+  Database, BarChart2, Network, Flame, Trophy, Send, Check,
 } from "lucide-react";
 
 // ── Card bez overflow:hidden – zabraňuje oříznutí obsahu ─────────────────────
@@ -192,8 +192,80 @@ function MemberCard({ member }: { member: typeof TEAM[0] }) {
   );
 }
 
+function ContactForm({ subject }: { subject?: string }) {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, subject: subject ?? "Zpráva z DC ELO" }),
+      });
+      setStatus(res.ok ? "ok" : "err");
+    } catch {
+      setStatus("err");
+    }
+  };
+
+  if (status === "ok") {
+    return (
+      <div style={{ textAlign: "center", padding: "32px 16px" }}>
+        <div style={{ width: 52, height: 52, borderRadius: "50%", background: "hsl(142,65%,45%,0.12)", border: "1px solid hsl(142,65%,45%,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+          <Check size={24} style={{ color: "hsl(142,65%,45%)" }} />
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 6 }}>Zpráva odeslána!</div>
+        <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Ozveme se ti co nejdříve na uvedený e-mail.</div>
+      </div>
+    );
+  }
+
+  const inp: React.CSSProperties = {
+    width: "100%", padding: "10px 13px", borderRadius: 10,
+    border: "1px solid hsl(var(--border))",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
+    fontSize: 13, fontFamily: "var(--font-body)",
+    outline: "none", boxSizing: "border-box",
+  };
+
+  return (
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div>
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>JMÉNO *</label>
+          <input required style={inp} placeholder="Jan Novák" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>E-MAIL *</label>
+          <input required type="email" style={inp} placeholder="jan@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        </div>
+      </div>
+      <div>
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>TELEFON</label>
+        <input style={inp} placeholder="+420 000 000 000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+      </div>
+      <div>
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>ZPRÁVA *</label>
+        <textarea required rows={5} style={{ ...inp, resize: "vertical", minHeight: 100 }} placeholder="Napiš nám..." value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
+      </div>
+      {status === "err" && (
+        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Odeslání selhalo — zkus to prosím znovu.</div>
+      )}
+      <button type="submit" disabled={status === "sending"}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 22px", borderRadius: 10, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", border: "none", fontSize: 13, fontWeight: 700, cursor: status === "sending" ? "wait" : "pointer", opacity: status === "sending" ? 0.7 : 1, fontFamily: "var(--font-body)", alignSelf: "flex-start" as const }}>
+        <Send size={13} />{status === "sending" ? "Odesílám…" : "Odeslat zprávu"}
+      </button>
+    </form>
+  );
+}
+
 export default function OrganizationView() {
   const { lang } = useAppNav();
+  const [orgTab, setOrgTab] = useState<"about" | "spoluprace">("about");
   const introText = {
     cs: "DCPR komise vznikla jako organizační a metodický orgán projektu DC ELO pro formát Duel Commander (MtG). Jejím cílem je dlouhodobě budovat stabilní, transparentní a férové kompetitivní prostředí pro hráče v České republice i v širším regionu.",
     en: "The DCPR Committee was established as the organisational and methodological body of the DC ELO project for the Duel Commander (MtG) format. Its goal is to build a stable, transparent and fair competitive environment for players in the Czech Republic and the wider region.",
@@ -204,11 +276,71 @@ export default function OrganizationView() {
     <div style={{ height: "100%", overflowY: "auto" }} className="scrollbar-thin">
       <div style={{ display: "flex", flexDirection: "column", gap: 18, paddingBottom: 24 }}>
 
-        {/* Nadpis */}
+        {/* Nadpis + tab bar */}
         <div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 2, color: "hsl(var(--foreground))" }}>{t(lang, "organization")}</h2>
-          <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{t(lang, "sub_organization")}</p>
+          <p style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", marginBottom: 14 }}>{t(lang, "sub_organization")}</p>
+          {/* Tab bar */}
+          <div style={{ display: "flex", gap: 4, borderBottom: "1px solid hsl(var(--border)/0.5)", paddingBottom: 0 }}>
+            {([
+              { id: "about",      label: lang === "en" ? "About" : lang === "fr" ? "À propos" : "O nás" },
+              { id: "spoluprace", label: lang === "en" ? "Cooperation" : lang === "fr" ? "Coopération" : "Spolupráce" },
+            ] as const).map(tab => (
+              <button key={tab.id} onClick={() => setOrgTab(tab.id)}
+                style={{ padding: "7px 16px", borderRadius: "10px 10px 0 0", border: "1px solid transparent", borderBottom: "none", fontSize: 12, fontWeight: 700, fontFamily: "var(--font-body)", cursor: "pointer", transition: "all 0.15s", position: "relative", bottom: -1,
+                  ...(orgTab === tab.id
+                    ? { background: "hsl(var(--card))", borderColor: "hsl(var(--border)/0.5)", color: "hsl(var(--foreground))" }
+                    : { background: "transparent", color: "hsl(var(--muted-foreground))" }
+                  )
+                }}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* ── TAB: SPOLUPRÁCE ── */}
+        {orgTab === "spoluprace" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <Card accentColor="hsl(195,78%,50%)" style={{ padding: "26px 28px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 11, background: "hsl(195 78% 50% / 0.12)", border: "1px solid hsl(195 78% 50% / 0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Users size={18} style={{ color: "hsl(195,78%,50%)" }} />
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", margin: 0, color: "hsl(var(--foreground))" }}>
+                    {lang === "en" ? "Want to work with us?" : lang === "fr" ? "Envie de collaborer ?" : "Chcete s námi spolupracovat?"}
+                  </h3>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, lineHeight: 1.78, color: "hsl(var(--foreground))", marginBottom: 10 }}>
+                {lang === "en"
+                  ? "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with development, or just share your ideas with us."
+                  : lang === "fr"
+                  ? "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement ou simplement partager vos idées."
+                  : "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, nebo se s námi prostě podělit o své nápady."}
+              </p>
+              <p style={{ fontSize: 13, lineHeight: 1.72, color: "hsl(var(--muted-foreground))", marginBottom: 0 }}>
+                {lang === "en"
+                  ? "Fill in the form below and we'll get back to you as soon as possible."
+                  : lang === "fr"
+                  ? "Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais."
+                  : "Vyplňte formulář níže a ozveme se vám co nejdříve."}
+              </p>
+            </Card>
+
+            <Card style={{ padding: "24px 26px" }}>
+              <h3 style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, color: "hsl(var(--foreground))" }}>
+                <Send size={14} style={{ color: "hsl(var(--primary))" }} />
+                {lang === "en" ? "Contact form" : lang === "fr" ? "Formulaire de contact" : "Kontaktní formulář"}
+              </h3>
+              <ContactForm subject="Spolupráce — DC ELO organizace" />
+            </Card>
+          </div>
+        )}
+
+        {/* ── TAB: O NÁS ── */}
+        {orgTab === "about" && (<>
 
         {/* Hero */}
         <Card accentColor="hsl(152,72%,50%)">
@@ -348,6 +480,8 @@ export default function OrganizationView() {
             })}
           </div>
         </div>
+
+        </>)}
 
       </div>
     </div>

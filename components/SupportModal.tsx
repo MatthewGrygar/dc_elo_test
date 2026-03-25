@@ -1,0 +1,235 @@
+"use client";
+
+import { useState } from "react";
+import { X, Heart, CreditCard, Copy, Check, Send, ExternalLink } from "lucide-react";
+
+interface ContactFormState {
+  name: string;
+  email: string;
+  phone: string;
+  message: string;
+}
+
+function ContactForm({ subject }: { subject?: string }) {
+  const [form, setForm] = useState<ContactFormState>({ name: "", email: "", phone: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, subject: subject ?? "Zpráva z DC ELO" }),
+      });
+      setStatus(res.ok ? "ok" : "err");
+    } catch {
+      setStatus("err");
+    }
+  };
+
+  if (status === "ok") {
+    return (
+      <div style={{ textAlign: "center", padding: "28px 16px" }}>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "hsl(142,65%,45%,0.12)", border: "1px solid hsl(142,65%,45%,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+          <Check size={22} style={{ color: "hsl(142,65%,45%)" }} />
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 6 }}>Zpráva odeslána!</div>
+        <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Ozveme se ti co nejdříve.</div>
+      </div>
+    );
+  }
+
+  const inp: React.CSSProperties = {
+    width: "100%", padding: "9px 12px", borderRadius: 9,
+    border: "1px solid hsl(var(--border))",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
+    fontSize: 13, fontFamily: "var(--font-body)",
+    outline: "none", boxSizing: "border-box",
+  };
+
+  return (
+    <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div>
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>JMÉNO *</label>
+          <input required style={inp} placeholder="Jan Novák" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+        </div>
+        <div>
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>E-MAIL *</label>
+          <input required type="email" style={inp} placeholder="jan@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        </div>
+      </div>
+      <div>
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>TELEFON</label>
+        <input style={inp} placeholder="+420 000 000 000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+      </div>
+      <div>
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>ZPRÁVA *</label>
+        <textarea required rows={4} style={{ ...inp, resize: "vertical", minHeight: 90 }} placeholder="Napiš nám..." value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
+      </div>
+      {status === "err" && (
+        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Odeslání selhalo — zkus to prosím znovu.</div>
+      )}
+      <button type="submit" disabled={status === "sending"} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", borderRadius: 10, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", border: "none", fontSize: 13, fontWeight: 700, cursor: status === "sending" ? "wait" : "pointer", opacity: status === "sending" ? 0.7 : 1, fontFamily: "var(--font-body)" }}>
+        <Send size={13} />{status === "sending" ? "Odesílám…" : "Odeslat zprávu"}
+      </button>
+    </form>
+  );
+}
+
+function CopyBtn({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  };
+  return (
+    <button onClick={copy} title="Kopírovat" style={{ background: "none", border: "none", cursor: "pointer", padding: "1px 4px", borderRadius: 4, color: copied ? "hsl(142,65%,45%)" : "hsl(var(--muted-foreground))", display: "inline-flex", alignItems: "center" }}>
+      {copied ? <Check size={11} /> : <Copy size={11} />}
+    </button>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid hsl(var(--border)/0.3)" }}>
+      <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>{label}</span>
+      <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: "hsl(var(--foreground))" }}>
+        {value}<CopyBtn text={value} />
+      </span>
+    </div>
+  );
+}
+
+export default function SupportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [showForm, setShowForm] = useState(false);
+
+  if (!open) return null;
+
+  const amber = "hsl(42,80%,52%)";
+  const blue = "hsl(210,80%,55%)";
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 200, background: "hsl(222 28% 5% / 0.72)", backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)" }}
+      />
+
+      {/* Modal */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 201,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "16px",
+        pointerEvents: "none",
+      }}>
+        <div style={{
+          width: "100%", maxWidth: 740, maxHeight: "90vh",
+          background: "hsl(var(--card))",
+          border: "1px solid hsl(var(--card-border))",
+          borderRadius: 20, overflow: "hidden",
+          display: "flex", flexDirection: "column",
+          pointerEvents: "all",
+          boxShadow: "0 24px 80px -12px hsl(0 0% 0% / 0.45)",
+        }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "18px 22px", borderBottom: "1px solid hsl(var(--border)/0.5)", flexShrink: 0 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: `${amber}20`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 18px -4px ${amber}60`, flexShrink: 0 }}>
+              <Heart size={18} style={{ color: amber }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "var(--font-display)", letterSpacing: "-0.02em", lineHeight: 1 }}>Podpořit DC ELO</div>
+              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>Pomoz nám udržet projekt živý 🙌</div>
+            </div>
+            <button onClick={onClose} style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.5)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div style={{ overflowY: "auto", flex: 1, padding: "20px 22px", display: "flex", flexDirection: "column", gap: 18 }}>
+
+            {/* Payment panels */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+
+              {/* Bank account */}
+              <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <CreditCard size={14} style={{ color: amber }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>Bankovní převod</span>
+                </div>
+                {/* QR code */}
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                  <img src="/QR.png" alt="QR kód — bankovní účet" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                </div>
+                <InfoRow label="Majitel účtu" value="Matthew Grygar" />
+                <InfoRow label="Číslo účtu" value="2640017029 / 3030" />
+                <InfoRow label="IBAN" value="CZ03 3030 0000 0026 4001 7029" />
+                <InfoRow label="BIC (SWIFT)" value="AIRACZP" />
+              </div>
+
+              {/* PayPal */}
+              <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 3, background: blue, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, color: "#fff" }}>P</span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>PayPal</span>
+                </div>
+                {/* QR code */}
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                  <img src="/QR2.png" alt="QR kód — PayPal" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
+                    onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                </div>
+                <InfoRow label="PayPal e-mail" value="matthew.grygar@seznam.cz" />
+                <div style={{ padding: "6px 0" }}>
+                  <a href="https://paypal.me/GrailSeriesELO" target="_blank" rel="noopener noreferrer"
+                    style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 600, color: blue, textDecoration: "none" }}>
+                    paypal.me/GrailSeriesELO <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Thank you */}
+            <div style={{ textAlign: "center", padding: "14px 20px", borderRadius: 12, background: `${amber}10`, border: `1px solid ${amber}25` }}>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", color: amber, marginBottom: 4 }}>Moc díky za každou podporu! 🙏</div>
+              <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.65 }}>
+                Váš příspěvek pomáhá udržovat projekt DC ELO, pokrývat náklady na hosting a rozvíjet komunitu Duel Commanderu v ČR.
+              </div>
+            </div>
+
+            {/* Other support */}
+            <div style={{ borderRadius: 12, border: "1px solid hsl(var(--border))", padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" as const }}>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 4 }}>Chceš nás podpořit jinak?</div>
+                  <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", lineHeight: 1.6 }}>
+                    Máš nápad, chceš spolupracovat nebo pomoci s projektem jiným způsobem? Napiš nám — rádi si promluvíme.
+                  </div>
+                </div>
+                <button onClick={() => setShowForm(f => !f)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, background: showForm ? "hsl(var(--primary)/0.15)" : "hsl(var(--muted)/0.7)", border: `1px solid ${showForm ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`, color: showForm ? "hsl(var(--primary))" : "hsl(var(--foreground))", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" as const }}>
+                  <Send size={12} />{showForm ? "Skrýt formulář" : "Napsat zprávu"}
+                </button>
+              </div>
+              {showForm && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid hsl(var(--border)/0.5)" }}>
+                  <ContactForm subject="Podpora / spolupráce z DC ELO" />
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

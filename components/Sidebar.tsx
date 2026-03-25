@@ -9,8 +9,9 @@ import { t, Lang } from "@/lib/i18n";
 import {
   LayoutDashboard, Trophy, TrendingUp, Activity, Medal,
   GitCompare, Newspaper, Building2, Moon, Sun,
-  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap,
+  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart,
 } from "lucide-react";
+import SupportModal from "./SupportModal";
 
 const MAIN_NAV: { id: BaseView; icon: React.ElementType; tKey: string }[] = [
   { id: "dashboard",   icon: LayoutDashboard, tKey: "dashboard"  },
@@ -46,6 +47,7 @@ export default function Sidebar() {
           navigateTo, closePlayer, setPlayerSubView, setLang, setSidebarOpen } = useAppNav();
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const isDark = resolvedTheme === "dark";
 
   useEffect(() => setMounted(true), []);
@@ -215,6 +217,15 @@ export default function Sidebar() {
         </div>
       )}
 
+      {/* Support button */}
+      <button onClick={() => setSupportOpen(true)} title={collapsed ? "Podpořit" : undefined}
+        style={{ display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 10, width: "100%", padding: collapsed ? "8px 0" : "8px 12px", borderRadius: 10, border: "1px solid hsl(42,80%,52%,0.35)", background: "hsl(42,80%,52%,0.08)", color: "hsl(42,80%,52%)", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)", transition: "all 0.18s", flexShrink: 0, marginBottom: 4 }}
+        onMouseEnter={e => { e.currentTarget.style.background = "hsl(42,80%,52%,0.16)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background = "hsl(42,80%,52%,0.08)"; }}>
+        <Heart size={14} style={{ flexShrink: 0 }} />
+        {!collapsed && <span>Podpořit projekt</span>}
+      </button>
+
       {/* Theme toggle */}
       <button onClick={() => setTheme(isDark ? "light" : "dark")} style={{ display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 10, width: "100%", padding: collapsed ? "8px 0" : "8px 12px", borderRadius: 10, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted) / 0.4)", color: "hsl(var(--muted-foreground))", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)", transition: "all 0.18s", flexShrink: 0 }}
         onMouseEnter={e => { e.currentTarget.style.background = "hsl(var(--muted))"; e.currentTarget.style.color = "hsl(var(--foreground))"; }}
@@ -227,6 +238,7 @@ export default function Sidebar() {
 
   return (
     <>
+      <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       {sidebarOpen && <div className="sidebar-overlay md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside
         style={{ width: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", minWidth: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", transition: "width .28s cubic-bezier(.4,0,.2,1), min-width .28s cubic-bezier(.4,0,.2,1), transform .3s ease", borderRight: "1px solid hsl(var(--border) / 0.65)", display: "flex", flexDirection: "column", zIndex: 40, flexShrink: 0, overflow: "hidden" }}

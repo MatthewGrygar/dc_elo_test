@@ -517,35 +517,6 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
           </div>
         </GC>
 
-        {/* Weekday */}
-        <GC>
-          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Výkon dle dne</div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 4px" }}>Winrate per den v týdnu</div>
-          <div style={{ height: 160, padding: "4px 4px 8px 8px" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weekdayPerf} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-                <XAxis dataKey="shortDay" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} />
-                <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={24} domain={[0, 100]} />
-                <ReferenceLine y={50} stroke="hsl(var(--border))" strokeDasharray="4 2" />
-                <Tooltip content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const d = payload[0]?.payload;
-                  return (
-                    <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                      <div style={{ fontWeight: 600 }}>{d.day}</div>
-                      <div style={{ color: "hsl(var(--primary))" }}>Winrate: {d.winrate}%</div>
-                      <div style={{ color: "hsl(var(--muted-foreground))" }}>Hry: {d.games}</div>
-                    </div>
-                  );
-                }} />
-                <Bar dataKey="winrate" name="Winrate %" radius={[4, 4, 0, 0]}>
-                  {weekdayPerf.map((d, i) => <Cell key={i} fill={d.winrate >= 55 ? green : d.winrate >= 45 ? amber : red} fillOpacity={0.85} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </GC>
 
         {/* Rolling momentum */}
         <GC>
