@@ -43,14 +43,14 @@ const ARTICLES: Article[] = [
 
       { type: "h2", text: "Očekávané skóre" },
       { type: "code", text: "E = 1 / (1 + 10^((Rb − Ra) / 1135))" },
-      { type: "p", text: "Klíčovým parametrem je konstanta 1135, která určuje „plošnost" křivky očekávání. V praxi znamená, že rozdíl 200 ratingových bodů odpovídá přibližně 60% očekávané úspěšnosti silnějšího hráče. Oproti klasické šachové škále (400) je tedy model výrazně méně strmý. Tato volba reflektuje vyšší míru variance v karetních hrách (náhoda, matchupy, prostředí) a záměrně „brzdí" význam ratingových rozdílů." },
+      { type: "p", text: "Klíčovým parametrem je konstanta 1135, která určuje 'plošnost' křivky očekávání. V praxi znamená, že rozdíl 200 ratingových bodů odpovídá přibližně 60% očekávané úspěšnosti silnějšího hráče. Oproti klasické šachové škále (400) je tedy model výrazně méně strmý. Tato volba reflektuje vyšší míru variance v karetních hrách (náhoda, matchupy, prostředí) a záměrně 'brzdí' význam ratingových rozdílů." },
 
       { type: "h2", text: "Aktualizace ratingu" },
       { type: "code", text: "R′ = R + K · (S − E)" },
       { type: "p", text: "S je skutečný výsledek: 1 (výhra), 0 (prohra), 0.5 (remíza). Interně jsou ratingy vedeny s desetinnou přesností, aby nedocházelo k systematickým zaokrouhlovacím chybám. Navenek zobrazujeme hodnoty zaokrouhlené na celé body." },
 
       { type: "h2", text: "Co se do modelu započítává — a co ne" },
-      { type: "p", text: "Model pracuje výhradně s výsledkem matchu. Skóre 2–0 a 2–1 má z hlediska ratingu stejný dopad. Hodnotíme pouze win/loss/draw, nikoli margin vítězství. Tento přístup odpovídá původní filozofii Elo a zabraňuje nežádoucím efektům spojeným s „optimalizací rozdílu skóre"." },
+      { type: "p", text: "Model pracuje výhradně s výsledkem matchu. Skóre 2–0 a 2–1 má z hlediska ratingu stejný dopad. Hodnotíme pouze win/loss/draw, nikoli margin vítězství. Tento přístup odpovídá původní filozofii Elo a zabraňuje nežádoucím efektům spojeným s 'optimalizací rozdílu skóre'." },
       { type: "ul", items: [
         "BYE nemá na rating žádný vliv.",
         "Nevalidní nebo neúplné záznamy se nezapočítávají.",
