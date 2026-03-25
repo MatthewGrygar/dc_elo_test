@@ -154,11 +154,11 @@ function MemberCard({ member }: { member: typeof TEAM[0] }) {
   const roles = member.roles[lang as keyof typeof member.roles] || member.roles.cs;
   const badge = member.badge[lang as keyof typeof member.badge] || member.badge.cs;
   return (
-    <div style={{ borderRadius: 16, background: "hsl(var(--card))", border: `1px solid ${member.border}`, transition: "transform .22s, box-shadow .22s", position: "relative" }}
+    <div style={{ borderRadius: 16, background: "hsl(var(--card))", border: `1px solid ${member.border}`, transition: "transform .22s, box-shadow .22s", position: "relative", overflow: "hidden" }}
       onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-4px)"; el.style.boxShadow = `0 20px 48px -8px ${member.color}28`; }}
       onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "none"; el.style.boxShadow = "none"; }}
     >
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "16px 16px 0 0", background: `linear-gradient(90deg, ${member.color}, transparent 70%)`, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${member.color}, transparent 70%)`, pointerEvents: "none" }} />
       <div style={{ padding: 22, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
         <div style={{ width: 96, height: 96, borderRadius: 22, overflow: "hidden", border: `2px solid ${member.border}`, background: member.bg, flexShrink: 0, position: "relative" }}>
           {(member as any).photo && (
@@ -274,7 +274,7 @@ function ContactForm({ subject }: { subject?: string }) {
 export default function OrganizationView() {
   const { lang, orgTab, setOrgTab } = useAppNav();
   const introText = {
-    cs: "DCPR komise vznikla jako organizační a metodický orgán projektu DC ELO pro formát Duel Commander (MtG). Jejím cílem je dlouhodobě budovat stabilní, transparentní a férové kompetitivní prostředí pro hráče v České republice i v širším regionu.",
+    cs: "DCPR komise vznikla jako organizační a metodický orgán projektu DC ELO pro formát Duel Commander (MtG). Jejím cílem je dlouhodobě budovat stabilní, transparentní a férové kompetitivní prostředí pro hráče v České republice i v širším mezinárodním prostředí a aktivně se snažit o rozšíření projektu napříč jednotlivými zeměmi, kde se Duel Commander hraje.",
     en: "The DCPR Committee was established as the organisational and methodological body of the DC ELO project for the Duel Commander (MtG) format. Its goal is to build a stable, transparent and fair competitive environment for players in the Czech Republic and the wider region.",
     fr: "Le Comité DCPR a été créé en tant qu'organe organisationnel et méthodologique du projet DC ELO pour le format Duel Commander (MtG). Son objectif est de construire un environnement compétitif stable, transparent et équitable.",
   };
@@ -303,19 +303,12 @@ export default function OrganizationView() {
                   </h3>
                 </div>
               </div>
-              <p style={{ fontSize: 13, lineHeight: 1.78, color: "hsl(var(--foreground))", marginBottom: 10 }}>
+              <p style={{ fontSize: 13, lineHeight: 1.78, color: "hsl(var(--foreground))", marginBottom: 0 }}>
                 {lang === "en"
-                  ? "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with development, or just share your ideas with us."
+                  ? "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with the project's development, join the DCPR committee, or simply share your ideas with us."
                   : lang === "fr"
-                  ? "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement ou simplement partager vos idées."
-                  : "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, nebo se s námi prostě podělit o své nápady."}
-              </p>
-              <p style={{ fontSize: 13, lineHeight: 1.72, color: "hsl(var(--muted-foreground))", marginBottom: 0 }}>
-                {lang === "en"
-                  ? "Fill in the form below and we'll get back to you as soon as possible."
-                  : lang === "fr"
-                  ? "Remplissez le formulaire ci-dessous et nous vous répondrons dans les plus brefs délais."
-                  : "Vyplňte formulář níže a ozveme se vám co nejdříve."}
+                  ? "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement du projet, rejoindre le comité DCPR ou simplement partager vos idées."
+                  : "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, chcete se stát součástí DCPR komise, nebo se s námi prostě podělit o své nápady."}
               </p>
             </Card>
 
@@ -364,10 +357,10 @@ export default function OrganizationView() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", borderTop: "1px solid hsl(var(--border))" }}>
             {[
-              { val: "50+",  lbl: lang === "en" ? "Active Players" : lang === "fr" ? "Joueurs Actifs" : "Aktivní hráči", col: "hsl(152,72%,50%)" },
-              { val: "24",   lbl: lang === "en" ? "Tournaments"    : lang === "fr" ? "Tournois"       : "Turnaje",        col: "hsl(42,92%,52%)"  },
+              { val: "450+", lbl: lang === "en" ? "Active Players" : lang === "fr" ? "Joueurs Actifs" : "Aktivní hráči", col: "hsl(152,72%,50%)" },
+              { val: "150+", lbl: lang === "en" ? "Tournaments"    : lang === "fr" ? "Tournois"       : "Turnaje",        col: "hsl(42,92%,52%)"  },
               { val: "2",    lbl: lang === "en" ? "Rating Systems" : lang === "fr" ? "Systèmes"       : "Rating systémy", col: "hsl(195,78%,50%)" },
-              { val: "2022", lbl: lang === "en" ? "Founded"        : lang === "fr" ? "Fondée"         : "Rok vzniku",     col: "hsl(265,65%,60%)" },
+              { val: "2025", lbl: lang === "en" ? "Founded"        : lang === "fr" ? "Fondée"         : "Rok vzniku",     col: "hsl(265,65%,60%)" },
             ].map(({ val, lbl, col }, i, arr) => (
               <div key={lbl} style={{ padding: "14px 12px", textAlign: "center", borderRight: i < arr.length - 1 ? "1px solid hsl(var(--border))" : "none" }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, letterSpacing: "-0.04em", color: col, lineHeight: 1 }}>{val}</div>
@@ -417,59 +410,24 @@ export default function OrganizationView() {
 
         {/* Spolupráce */}
         <Card accentColor="hsl(195,78%,50%)" style={{ padding: "22px 24px" }}>
-          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800, letterSpacing: "-0.025em", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, color: "hsl(var(--foreground))" }}>
+          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800, letterSpacing: "-0.025em", marginBottom: 12, display: "flex", alignItems: "center", gap: 8, color: "hsl(var(--foreground))" }}>
             <Users size={15} color="hsl(195,78%,50%)" />
             {t(lang, "org_cooperation")}
           </h3>
-          <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 260 }}>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: "hsl(var(--foreground))", marginBottom: 10 }}>
-                {lang === "en" ? "Are you interested in working with us, joining your tournament into the DC ELO system, or becoming a member of our organisation?" : lang === "fr" ? "Êtes-vous intéressé à collaborer avec nous, à rejoindre votre tournoi dans le système DC ELO, ou à devenir membre de notre organisation ?" : "Máte zájem s námi spolupracovat, zapojit svůj turnaj do systému DC ELO, nebo se stát členem naší organizace?"}
-              </p>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>
-                {lang === "en" ? "Contact us:" : lang === "fr" ? "Contactez-nous :" : "Neváhejte nás kontaktovat na e-mailu:"}
-              </p>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-mono)", marginBottom: 10 }}>prague-dc-series@seznam.cz</p>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: "hsl(var(--muted-foreground))" }}>
-                {lang === "en" ? "We will be happy to discuss collaboration opportunities and further development of the Duel Commander scene." : lang === "fr" ? "Nous serons heureux de discuter des possibilités de coopération et du développement de la scène Duel Commander." : "Rádi s vámi probereme možnosti spolupráce a dalšího rozvoje Duel Commander scény."}
-              </p>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 200 }}>
-              <a href="mailto:prague-dc-series@seznam.cz" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderRadius: 10, background: "hsl(var(--primary) / 0.10)", border: "1px solid hsl(var(--primary) / 0.30)", color: "hsl(var(--primary))", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
-                <Mail size={14} />{lang === "en" ? "Send email" : lang === "fr" ? "Envoyer un e-mail" : "Napsat email"}<ChevronRight size={12} style={{ marginLeft: "auto" }} />
-              </a>
-              <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderRadius: 10, background: "hsl(235,86%,65%,0.12)", border: "1px solid hsl(235,86%,65%,0.30)", color: "hsl(235,86%,65%)", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
-                <MessageCircle size={14} />Discord<ChevronRight size={12} style={{ marginLeft: "auto" }} />
-              </a>
-            </div>
-          </div>
+          <p style={{ fontSize: 13, lineHeight: 1.75, color: "hsl(var(--muted-foreground))", marginBottom: 16 }}>
+            {lang === "en"
+              ? "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with the project's development, join the DCPR committee, or simply share your ideas with us."
+              : lang === "fr"
+              ? "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement du projet, rejoindre le comité DCPR ou simplement partager vos idées."
+              : "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, chcete se stát součástí DCPR komise, nebo se s námi prostě podělit o své nápady."}
+          </p>
+          <button onClick={() => setOrgTab("spoluprace")}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 10, background: "hsl(195,78%,50%,0.12)", border: "1px solid hsl(195,78%,50%,0.3)", color: "hsl(195,78%,50%)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)" }}>
+            {lang === "en" ? "More about cooperation" : lang === "fr" ? "En savoir plus" : "Více o spolupráci"}
+            <ChevronRight size={13} />
+          </button>
         </Card>
 
-        {/* Sociální sítě */}
-        <div style={{ paddingBottom: 8 }}>
-          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 800, letterSpacing: "-0.025em", marginBottom: 12, color: "hsl(var(--foreground))" }}>
-            {lang === "en" ? "Follow us" : lang === "fr" ? "Suivez-nous" : "Sledujte nás"}
-          </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 10 }}>
-            {SOCIAL.map((s, i) => {
-              const Icon = s.icon;
-              return (
-                <a key={i} href={s.url} target={s.url.startsWith("mailto") ? undefined : "_blank"} rel="noopener noreferrer"
-                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: s.bg, border: `1px solid ${s.color}30`, color: s.color, textDecoration: "none", transition: "all .18s" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${s.color}20`; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = s.bg; }}
-                >
-                  <Icon size={16} />
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{s.label}</div>
-                    <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{s.handle}</div>
-                  </div>
-                  <ExternalLink size={9} style={{ marginLeft: "auto", opacity: 0.5, color: s.color }} />
-                </a>
-              );
-            })}
-          </div>
-        </div>
 
         </>)}
 
