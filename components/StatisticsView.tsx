@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useAppNav } from "./AppContext";
 import { useWinSize } from "@/hooks/useWinSize";
 import { GeneralStats } from "@/lib/dataFetchers";
 import type { PrefetchCache } from "@/app/page";
+import { t } from "@/lib/i18n";
 import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -59,15 +61,15 @@ function SB({ icon: Icon, label, value, sub, color }: {
 }
 
 // ─── W/D/L bar ────────────────────────────────────────────────────────────────
-function WDLBar({ wins, losses, draws }: { wins: number; losses: number; draws: number }) {
+function WDLBar({ wins, losses, draws, lang }: { wins: number; losses: number; draws: number; lang: "cs" | "en" | "fr" }) {
   const total = wins + losses + draws || 1;
   const fmt = (n: number) => n.toLocaleString("cs-CZ");
   return (
     <GC>
       <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 10 }}>Výhry / Prohry / Remízy</div>
+        <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 10 }}>{t(lang, "stat_wr_bar")}</div>
         <div style={{ display: "flex", gap: 20, marginBottom: 10 }}>
-          {[["Výhry", wins, "hsl(142 65% 50%)"], ["Prohry", losses, "hsl(0 65% 55%)"], ["Remízy", draws, "hsl(var(--muted-foreground))"]] .map(([l, v, c]) => (
+          {[[t(lang, "wins"), wins, "hsl(142 65% 50%)"], [t(lang, "losses"), losses, "hsl(0 65% 55%)"], [t(lang, "draws"), draws, "hsl(var(--muted-foreground))"]] .map(([l, v, c]) => (
             <div key={l as string}>
               <div style={{ fontSize: 22, fontWeight: 600, color: c as string, fontFamily: "var(--font-mono)", lineHeight: 1 }}>{fmt(v as number)}</div>
               <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{l as string}</div>
@@ -123,14 +125,14 @@ function VtBarChart({ data }: { data: GeneralStats["vtDistribution"] }) {
 }
 
 // ─── VT ranked scatter — like the K-means chart in the image ─────────────────
-function VtRankedScatter({ data }: { data: GeneralStats["vtScatter"] }) {
+function VtRankedScatter({ data, lang }: { data: GeneralStats["vtScatter"]; lang: "cs" | "en" | "fr" }) {
   const [tooltip, setTooltip] = useState<{ name: string; elo: number; vt: string; rank: number; x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
   if (!data || data.length === 0) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "hsl(var(--muted-foreground))", fontSize: 12, fontFamily: "var(--font-mono)" }}>
-        Žádná data výkonnostních tříd
+        {t(lang, "stat_no_vt_data")}
       </div>
     );
   }
@@ -264,6 +266,7 @@ function VtRankedScatter({ data }: { data: GeneralStats["vtScatter"] }) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function StatisticsView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { lang } = useAppNav();
   const [data, setData] = useState<GeneralStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -286,41 +289,41 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid hsl(var(--border) / 0.4)" }}>
         <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "hsl(var(--primary))", background: "hsl(var(--primary) / 0.12)", border: "1px solid hsl(var(--primary) / 0.25)", padding: "3px 10px", borderRadius: 99 }}>{mode}</div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600 }}>Obecné statistiky</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600 }}>{t(lang, "stat_general")}</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20, paddingBottom: 28, flex: 1, minHeight: 0 }}>
 
         {/* ── 1. ZÁPASOVÉ STATISTIKY ────────────────────────────────────────── */}
         <div>
-          <SH>Zápasové statistiky</SH>
+          <SH>{t(lang, "stat_match_stats")}</SH>
           <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8, marginTop: 8 }}>
             {loading ? [1,2,3,4].map(i => <Sk key={i} />) : <>
-              <WDLBar wins={data?.totalWins ?? 0} losses={data?.totalLosses ?? 0} draws={data?.totalDraws ?? 0} />
-              <SB icon={Target} label="Globální winrate"  value={`${data?.globalWinrate?.toFixed(1) ?? "—"}%`} sub="Výhry / Celkem"       color={green} />
-              <SB icon={Hash}   label="Průměr her / hráč" value={fmt(data?.avgGamesPerPlayer)}                 sub="Aktivita hráčů"       color={blue}  />
-              <SB icon={Shield} label="Avg. rozdíl ELO"   value={fmt(data?.avgMatchmakingDiff)}                sub="Matchmaking fairness" color={amber} />
+              <WDLBar wins={data?.totalWins ?? 0} losses={data?.totalLosses ?? 0} draws={data?.totalDraws ?? 0} lang={lang} />
+              <SB icon={Target} label={t(lang, "stat_global_wr")}       value={`${data?.globalWinrate?.toFixed(1) ?? "—"}%`} sub={t(lang, "stat_wins_total")}      color={green} />
+              <SB icon={Hash}   label={t(lang, "stat_avg_games_player")} value={fmt(data?.avgGamesPerPlayer)}                 sub={t(lang, "stat_player_activity")} color={blue}  />
+              <SB icon={Shield} label={t(lang, "stat_avg_elo_diff")}     value={fmt(data?.avgMatchmakingDiff)}                sub={t(lang, "stat_matchmaking")}     color={amber} />
             </>}
           </div>
         </div>
 
         {/* ── 2. PŘEHLED ────────────────────────────────────────────────────── */}
         <div>
-          <SH>Přehled</SH>
+          <SH>{t(lang, "stat_overview")}</SH>
           <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginTop: 8 }}>
             {loading ? [1,2,3,4,5].map(i => <Sk key={i} />) : <>
-              <SB icon={Swords}    label="Zápasy celkem"    value={fmt(data?.totalGames)}       sub="Unique Match ID"     color={green} />
-              <SB icon={Trophy}    label="Hráči celkem"     value={fmt(data?.playerCount)}      sub="Registrovaných"      color={blue}  />
-              <SB icon={UserCheck} label="Aktivní (30 dní)" value={fmt(data?.activePlayers30d)} sub="Posl. měsíc"         color={green} />
-              <SB icon={Star}      label="Medián ELO"       value={fmt(data?.medianElo)}        sub="Střed komunity"      color={amber} />
-              <SB icon={Activity}  label="Zápasy (30 dní)"  value={fmt(data?.matchesLast30d)}   sub="Nedávná aktivita"    color={blue}  />
+              <SB icon={Swords}    label={t(lang, "stat_total_matches")} value={fmt(data?.totalGames)}       sub={t(lang, "stat_unique_match_id")}  color={green} />
+              <SB icon={Trophy}    label={t(lang, "stat_total_players")} value={fmt(data?.playerCount)}      sub={t(lang, "dash_registered")}       color={blue}  />
+              <SB icon={UserCheck} label={t(lang, "stat_active_30d")}    value={fmt(data?.activePlayers30d)} sub={t(lang, "stat_last_month")}       color={green} />
+              <SB icon={Star}      label={t(lang, "dash_median_elo")}    value={fmt(data?.medianElo)}        sub={t(lang, "stat_community_center")} color={amber} />
+              <SB icon={Activity}  label={t(lang, "stat_matches_30d")}   value={fmt(data?.matchesLast30d)}   sub={t(lang, "stat_recent_activity")}  color={blue}  />
             </>}
           </div>
         </div>
 
         {/* ── 3. ELO DISTRIBUCE ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
-          <SH>ELO distribuce</SH>
+          <SH>{t(lang, "stat_elo_dist_section")}</SH>
           {/* Fixed height grid — both columns stretch to same bottom */}
           <div className="mobile-stack stats-elo-grid" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8, marginTop: 8, height: 360, alignItems: "stretch" }}>
 
@@ -332,13 +335,13 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
                   {/* Nejhranější turnaj */}
                   <GC>
                     <div style={{ padding: "13px 15px" }}>
-                      <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 6 }}>Nejhranější turnaj</div>
+                      <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 6 }}>{t(lang, "stat_most_played_tourney")}</div>
                       <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)", color: "hsl(var(--foreground))", lineHeight: 1.35, marginBottom: 4, wordBreak: "break-word" as const }}>
                         {data?.mostPlayedTournament.name || "—"}
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
                         <span style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-mono)", color: blue }}>{fmt(data?.mostPlayedTournament.matches)}</span>
-                        <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>zápasů</span>
+                        <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "stat_matches")}</span>
                       </div>
                     </div>
                   </GC>
@@ -346,7 +349,7 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
                   {/* VT class bar chart — flex-grows to fill rest of left column */}
                   <GC style={{ flex: 1, minHeight: 0 }}>
                     <div style={{ padding: "12px 14px 0", flexShrink: 0 }}>
-                      <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>Výkonnostní třídy — počet hráčů</div>
+                      <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>{t(lang, "stat_vt_count")}</div>
                     </div>
                     <div className="vt-chart-panel" style={{ flex: 1, minHeight: 0, padding: "4px 10px 12px" }}>
                       <VtBarChart data={data?.vtDistribution ?? []} />
@@ -362,11 +365,11 @@ export default function StatisticsView({ prefetchCache }: { prefetchCache?: Pref
               : (
                 <GC style={{ display: "flex", flexDirection: "column", height: "100%" }}>
                   <div style={{ padding: "12px 16px 0", flexShrink: 0 }}>
-                    <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>Rozložení hráčů v třídách podle ELO</div>
-                    <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 1, marginBottom: 4 }}>hráči seřazeni dle ELO — najeď na bod pro jméno</div>
+                    <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>{t(lang, "stat_elo_scatter")}</div>
+                    <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 1, marginBottom: 4 }}>{t(lang, "stat_scatter_hint")}</div>
                   </div>
                   <div style={{ flex: 1, minHeight: 0, padding: "4px 16px 16px 10px", position: "relative" }}>
-                    <VtRankedScatter data={data?.vtScatter ?? []} />
+                    <VtRankedScatter data={data?.vtScatter ?? []} lang={lang} />
                   </div>
                 </GC>
               )

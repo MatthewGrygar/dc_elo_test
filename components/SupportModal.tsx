@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { X, Heart, CreditCard, Copy, Check, Send, ExternalLink } from "lucide-react";
 import { useWinSize } from "@/hooks/useWinSize";
+import { useAppNav } from "./AppContext";
+import { t } from "@/lib/i18n";
 
 interface ContactFormState {
   name: string;
@@ -11,7 +13,7 @@ interface ContactFormState {
   message: string;
 }
 
-function ContactForm({ subject }: { subject?: string }) {
+function ContactForm({ subject, lang }: { subject?: string; lang: "cs"|"en"|"fr" }) {
   const [form, setForm] = useState<ContactFormState>({ name: "", email: "", phone: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
   const [errMsg, setErrMsg] = useState("");
@@ -44,8 +46,8 @@ function ContactForm({ subject }: { subject?: string }) {
         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "hsl(142,65%,45%,0.12)", border: "1px solid hsl(142,65%,45%,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
           <Check size={22} style={{ color: "hsl(142,65%,45%)" }} />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 6 }}>Zpráva odeslána!</div>
-        <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Ozveme se ti co nejdříve.</div>
+        <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 6 }}>{t(lang, "form_sent")}</div>
+        <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{t(lang, "form_sent_desc")}</div>
       </div>
     );
   }
@@ -63,27 +65,27 @@ function ContactForm({ subject }: { subject?: string }) {
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <div>
-          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>JMÉNO *</label>
-          <input required style={inp} placeholder="Jan Novák" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "form_name")}</label>
+          <input required style={inp} placeholder={t(lang, "form_name_ph")} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
         </div>
         <div>
-          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>E-MAIL *</label>
-          <input required type="email" style={inp} placeholder="jan@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "form_email")}</label>
+          <input required type="email" style={inp} placeholder={t(lang, "form_email_ph")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
         </div>
       </div>
       <div>
-        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>TELEFON</label>
-        <input style={inp} placeholder="+420 000 000 000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "form_phone")}</label>
+        <input style={inp} placeholder={t(lang, "form_phone_ph")} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
       </div>
       <div>
-        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>ZPRÁVA *</label>
-        <textarea required rows={4} style={{ ...inp, resize: "vertical", minHeight: 90 }} placeholder="Napiš nám..." value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "form_message")}</label>
+        <textarea required rows={4} style={{ ...inp, resize: "vertical", minHeight: 90 }} placeholder={t(lang, "form_message_ph")} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
       </div>
       {status === "err" && (
-        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Chyba: {errMsg || "Odeslání selhalo"}</div>
+        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>{t(lang, "form_error_prefix")} {errMsg || t(lang, "form_error_fallback")}</div>
       )}
       <button type="submit" disabled={status === "sending"} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", borderRadius: 10, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", border: "none", fontSize: 13, fontWeight: 700, cursor: status === "sending" ? "wait" : "pointer", opacity: status === "sending" ? 0.7 : 1, fontFamily: "var(--font-body)" }}>
-        <Send size={13} />{status === "sending" ? "Odesílám…" : "Odeslat zprávu"}
+        <Send size={13} />{status === "sending" ? t(lang, "form_sending") : t(lang, "form_send")}
       </button>
     </form>
   );
@@ -119,6 +121,7 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
   const [showForm, setShowForm] = useState(false);
   const [payTab, setPayTab] = useState<"bank" | "paypal">("bank");
   const { wBp } = useWinSize();
+  const { lang } = useAppNav();
   const isMobile = wBp === "xs" || wBp === "sm";
 
   if (!open) return null;
@@ -157,8 +160,8 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
               <Heart size={18} style={{ color: amber }} />
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "var(--font-display)", letterSpacing: "-0.02em", lineHeight: 1 }}>Podpořit DC ELO</div>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>Pomoz nám udržet projekt živý 🙌</div>
+              <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "var(--font-display)", letterSpacing: "-0.02em", lineHeight: 1 }}>{t(lang, "sup_title")}</div>
+              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>{t(lang, "sup_subtitle")}</div>
             </div>
             <button onClick={onClose} style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.5)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
               <X size={14} />
@@ -185,7 +188,7 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
                         fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-display)",
                       }}
                     >
-                      {tab === "bank" ? "Bankovní účet" : "PayPal"}
+                      {tab === "bank" ? t(lang, "sup_bank_tab") : t(lang, "sup_paypal_tab")}
                     </button>
                   ))}
                 </div>
@@ -198,16 +201,16 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
                   <div style={{ borderRadius: 14, border: "1px solid hsl(var(--border))", padding: "16px", background: "hsl(var(--background))" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                       <CreditCard size={14} style={{ color: amber }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>Bankovní převod</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "sup_bank_title")}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
                       <img src="/QR.png" alt="QR kód — bankovní účet" style={{ width: 140, height: 140, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 6 }}
                         onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                     </div>
-                    <InfoRow label="Majitel účtu" value="Matthew Grygar" />
-                    <InfoRow label="Číslo účtu" value="2640017029 / 3030" />
-                    <InfoRow label="IBAN" value="CZ03 3030 0000 0026 4001 7029" />
-                    <InfoRow label="BIC (SWIFT)" value="AIRACZP" />
+                    <InfoRow label={t(lang, "sup_owner")} value="Matthew Grygar" />
+                    <InfoRow label={t(lang, "sup_account")} value="2640017029 / 3030" />
+                    <InfoRow label={t(lang, "sup_iban")} value="CZ03 3030 0000 0026 4001 7029" />
+                    <InfoRow label={t(lang, "sup_bic")} value="AIRACZP" />
                   </div>
                 )}
 
@@ -239,9 +242,9 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
 
             {/* Thank you */}
             <div style={{ textAlign: "center", padding: "14px 20px", borderRadius: 12, background: `${amber}10`, border: `1px solid ${amber}25` }}>
-              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", color: amber, marginBottom: 4 }}>Moc díky za každou podporu! 🙏</div>
+              <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", color: amber, marginBottom: 4 }}>{t(lang, "sup_thanks")}</div>
               <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.65 }}>
-                Váš příspěvek pomáhá udržovat projekt DC ELO, pokrývat náklady na hosting a rozvíjet komunitu Duel Commanderu v ČR.
+                {t(lang, "sup_thanks_desc")}
               </div>
             </div>
 
@@ -249,18 +252,18 @@ export default function SupportModal({ open, onClose }: { open: boolean; onClose
             <div style={{ borderRadius: 12, border: "1px solid hsl(var(--border))", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" as const }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 4 }}>Chceš nás podpořit jinak?</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 4 }}>{t(lang, "sup_other_title")}</div>
                   <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", lineHeight: 1.6 }}>
-                    Máš nápad, chceš spolupracovat nebo pomoci s projektem jiným způsobem? Napiš nám — rádi si promluvíme.
+                    {t(lang, "sup_other_desc")}
                   </div>
                 </div>
                 <button onClick={() => setShowForm(f => !f)} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", borderRadius: 10, background: showForm ? "hsl(var(--primary)/0.15)" : "hsl(var(--muted)/0.7)", border: `1px solid ${showForm ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`, color: showForm ? "hsl(var(--primary))" : "hsl(var(--foreground))", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0, fontFamily: "var(--font-body)", whiteSpace: "nowrap" as const }}>
-                  <Send size={12} />{showForm ? "Skrýt formulář" : "Napsat zprávu"}
+                  <Send size={12} />{showForm ? t(lang, "sup_hide_form") : t(lang, "sup_write")}
                 </button>
               </div>
               {showForm && (
                 <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid hsl(var(--border)/0.5)" }}>
-                  <ContactForm subject="Podpora / spolupráce z DC ELO" />
+                  <ContactForm subject="Podpora / spolupráce z DC ELO" lang={lang} />
                 </div>
               )}
             </div>

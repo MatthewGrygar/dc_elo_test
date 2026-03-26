@@ -107,56 +107,28 @@ function CT({ active, payload, label }: any) {
 }
 
 // ── Hero Slider ───────────────────────────────────────────────────────────────
-const SLIDES = [
-  {
-    tag: "🏛 DCPR Komise",
-    headline: "ZALOŽENÍ DCPR KOMISE",
-    subHeadline: "Organizace",
-    text: "Zakládáme Komisi DCPR jako nezávislý orgán pro zajištění nestrannosti, transparentnosti a funkčnosti DC ELO systému a komunikaci s vedením lig napříč českou a zahraniční Duel Commander scénou.",
-    cta: "Zjistit více",
-    action: "organization" as const,
-    slide: "/slide1.png",
-    accent: "hsl(195,78%,50%)",
-  },
-  {
-    tag: "📊 Metodika",
-    headline: "JAK FUNGUJE VÝPOČET ELO?",
-    subHeadline: "Článek",
-    text: "Jak počítáme Elo a DCPR, proč právě tato kalibrace a jak vznikají třídy Rating Classy? To a mnohem víc se dozvíte v článku od tvůrce celého řešení.",
-    cta: "Přečíst článek",
-    action: "articles" as const,
-    slide: "/slide2.png",
-    accent: "hsl(152,72%,50%)",
-  },
-  {
-    tag: "❤️ Podpora",
-    headline: "PODPOŘTE NÁS",
-    subHeadline: "DC ELO projekt",
-    text: "DC ELO je komunitní projekt, který žije díky vám. Pokud se vám naše práce líbí a chcete nás podpořit, budeme moc rádi — každá pomoc nás motivuje projekt dál rozvíjet.",
-    cta: "Podpořit projekt",
-    action: "support" as const,
-    slide: "/slide3.png",
-    accent: "hsl(42,80%,52%)",
-  },
-];
-
 function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
-  const { setSupportOpen } = useAppNav();
+  const { setSupportOpen, lang } = useAppNav();
   const { wBp } = useWinSize();
+  const slides = [
+    { slide: "/slide1.png", headline: t(lang, "slide1_title"), tag: t(lang, "slide1_tag"), text: t(lang, "slide1_desc"), cta: t(lang, "slide1_btn"), action: "organization" as const, accent: "hsl(195,78%,50%)" },
+    { slide: "/slide2.png", headline: t(lang, "slide2_title"), tag: t(lang, "slide2_tag"), text: t(lang, "slide2_desc"), cta: t(lang, "slide2_btn"), action: "articles" as const, accent: "hsl(152,72%,50%)" },
+    { slide: "/slide3.png", headline: t(lang, "slide3_title"), tag: t(lang, "slide3_tag"), text: t(lang, "slide3_desc"), cta: t(lang, "slide3_btn"), action: "support" as const, accent: "hsl(42,80%,52%)" },
+  ];
   const isCompact = wBp === "xs" || wBp === "sm";
   const [current, setCurrent] = useState(0);
   const [anim, setAnim] = useState(false);
   const [progKey, setProgKey] = useState(0);
-  const slide = SLIDES[current];
+  const slide = slides[current];
 
   useEffect(() => {
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       setAnim(true);
       setProgKey(k => k + 1);
-      setTimeout(() => { setCurrent(c => (c + 1) % SLIDES.length); setAnim(false); }, 320);
+      setTimeout(() => { setCurrent(c => (c + 1) % slides.length); setAnim(false); }, 320);
     }, 6000);
-    return () => clearInterval(t);
-  }, []);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   const goTo = (i: number) => {
     if (i === current) return;
@@ -164,6 +136,7 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
     setProgKey(k => k + 1);
     setTimeout(() => { setCurrent(i); setAnim(false); }, 320);
   };
+
 
   return (
     <div className="hero-slider" style={{ position: "relative", borderRadius: 16, overflow: "hidden", height: isCompact ? 200 : "100%", border: "1px solid hsl(var(--card-border)/0.6)" }}>
@@ -188,13 +161,13 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
 
       {/* Nav arrows — top-right corner */}
       <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10, display: "flex", gap: 4 }}>
-        <button onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
+        <button onClick={() => goTo((current - 1 + slides.length) % slides.length)}
           style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}>
           <ChevronLeft size={14} />
         </button>
-        <button onClick={() => goTo((current + 1) % SLIDES.length)}
+        <button onClick={() => goTo((current + 1) % slides.length)}
           style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", background: "rgba(0,0,0,0.35)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.85)", transition: "all 0.15s" }}
           onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.6)"; }}
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.35)"; }}>
@@ -218,7 +191,7 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
           backdropFilter: "blur(4px)",
         }}>
           <div style={{ width: 5, height: 5, borderRadius: "50%", background: slide.accent }} />
-          {slide.tag.replace(/^[^ ]+ /, "").toUpperCase()}
+          {slide.tag}
         </div>
 
         {/* Headline */}
@@ -262,11 +235,12 @@ function HeroSlider({ onNavigate }: { onNavigate: (view: any) => void }) {
             }}
           >
             {slide.cta} <ArrowRight size={12} />
+
           </button>
 
           {/* Dots */}
           <div style={{ display: "flex", gap: 6 }}>
-            {SLIDES.map((_, i) => (
+            {slides.map((_, i) => (
               <button key={i} onClick={() => goTo(i)} style={{
                 width: i === current ? 22 : 6, height: 6, borderRadius: 99,
                 background: i === current ? slide.accent : "rgba(255,255,255,0.35)",
@@ -388,11 +362,11 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
           gap: 8, flexShrink: 0,
         }}
       >
-        <KpiCard icon={Swords}   label="Total Games" value={(stats?.totalGames ?? 0).toLocaleString("cs-CZ")} sub={mode}  accent />
-        <KpiCard icon={Users}    label="Hráči"        value={(stats?.uniquePlayers ?? 0).toString()}          sub="registrovaných" />
-        <KpiCard icon={Activity} label="Medián ELO"   value={(stats?.medianElo ?? 0).toLocaleString("cs-CZ")} sub="ELO střed" />
-        <KpiCard icon={Trophy}   label="Turnaje"      value={(stats?.uniqueTournaments ?? 0).toString()}      sub="celkem" />
-        <KpiCard icon={Clock}    label="Poslední data" value={stats?.lastDataEntry ? stats.lastDataEntry.split(" ")[0] : "—"} sub="nejnovější záznam" />
+        <KpiCard icon={Swords}   label={t(lang, "dash_total_games")} value={(stats?.totalGames ?? 0).toLocaleString("cs-CZ")} sub={mode}  accent />
+        <KpiCard icon={Users}    label={t(lang, "dash_players")}     value={(stats?.uniquePlayers ?? 0).toString()}          sub={t(lang, "dash_registered")} />
+        <KpiCard icon={Activity} label={t(lang, "dash_median_elo")}  value={(stats?.medianElo ?? 0).toLocaleString("cs-CZ")} sub={t(lang, "dash_elo_center")} />
+        <KpiCard icon={Trophy}   label={t(lang, "dash_tournaments")} value={(stats?.uniqueTournaments ?? 0).toString()}      sub={t(lang, "dash_total")} />
+        <KpiCard icon={Clock}    label={t(lang, "dash_last_data")}   value={stats?.lastDataEntry ? stats.lastDataEntry.split(" ")[0] : "—"} sub={t(lang, "dash_newest_record")} />
       </div>
 
       {/* ── Row 2: Hero + matches ── */}
@@ -411,7 +385,7 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
         <Panel style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "12px 14px 10px", flexShrink: 0, borderBottom: "1px solid hsl(var(--border) / 0.5)" }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginBottom: 4 }}>
-              Zajímavé zápasy
+              {t(lang, "dash_interesting_matches")}
             </div>
           </div>
           <div style={{ overflowY: "auto", flex: 1, minHeight: 0, padding: "4px 0" }}>
@@ -426,8 +400,8 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                   <>
                     <div style={{ padding: "8px 14px 4px", display: "flex", alignItems: "center", gap: 6 }}>
                       <Trophy size={10} color="hsl(var(--primary))" />
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Největší ELO</span>
-                      <span style={{ marginLeft: "auto", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>avg ELO</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_biggest_elo")}</span>
+                      <span style={{ marginLeft: "auto", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_avg_elo")}</span>
                     </div>
                     {(data?.topMatchElo ?? []).slice(0, 2).map((m, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderBottom: "1px solid hsl(var(--border) / 0.3)" }}>
@@ -460,8 +434,8 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                   <>
                     <div style={{ padding: "8px 14px 4px", display: "flex", alignItems: "center", gap: 6 }}>
                       <TrendingUp size={10} color="hsl(24,88%,56%)" />
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Největší rozdíl ELO</span>
-                      <span style={{ marginLeft: "auto", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Δ ELO</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_biggest_diff")}</span>
+                      <span style={{ marginLeft: "auto", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_delta_elo")}</span>
                     </div>
                     {(data?.topMatchDiff ?? []).slice(0, 2).map((m, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderBottom: i < 1 ? "1px solid hsl(var(--border) / 0.3)" : "none" }}>
@@ -502,12 +476,12 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
         <Panel style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "10px 14px 8px", flexShrink: 0, borderBottom: "1px solid hsl(var(--border) / 0.5)" }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-              Milníky
+              {t(lang, "dash_milestones")}
             </div>
           </div>
           <div style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
             {milestones.length === 0 ? (
-              <div style={{ padding: "16px 14px", textAlign: "center", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>Žádné milníky</div>
+              <div style={{ padding: "16px 14px", textAlign: "center", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>{t(lang, "dash_no_milestones")}</div>
             ) : milestones.slice(0, 4).map((m, i, arr) => (
               <MilestoneRow key={i} m={m} last={i === arr.length - 1} />
             ))}
@@ -518,7 +492,7 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
         <Panel style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "10px 14px 8px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid hsl(var(--border) / 0.5)" }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-              ELO Distribution
+              {t(lang, "dash_elo_dist")}
             </div>
             <div style={{ display: "flex", gap: 2 }}>
               {(["ELO", "DCPR"] as const).map(m => (
@@ -531,7 +505,7 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
               ))}
             </div>
             <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-              {(prefetchCache?.[distMode]?.players?.length ?? stats?.uniquePlayers ?? 0)} hráčů · ×50
+              {(prefetchCache?.[distMode]?.players?.length ?? stats?.uniquePlayers ?? 0)} {t(lang, "dash_players_x50")}
             </span>
           </div>
           <div className="dist-chart" style={{ flex: 1, padding: "8px 10px 4px", minHeight: isCompact ? 140 : 0 }}>
@@ -555,13 +529,13 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
         <Panel accent style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "10px 14px 8px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid hsl(var(--border) / 0.5)" }}>
             <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-              Top hráči
+              {t(lang, "dash_top_players")}
             </div>
             <button
               onClick={() => navigateTo("leaderboard")}
               style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 9, fontWeight: 600, color: "hsl(var(--primary))", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono)" }}
             >
-              Celý žebříček <ArrowRight size={9} />
+              {t(lang, "dash_full_leaderboard")} <ArrowRight size={9} />
             </button>
           </div>
           <div style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>

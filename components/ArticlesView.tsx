@@ -15,8 +15,8 @@ type Section =
 
 interface Article {
   id: number;
-  title: string;
-  excerpt: string;
+  title: { cs: string; en: string; fr: string };
+  excerpt: { cs: string; en: string; fr: string };
   body: Section[];
   tag: string;
   author: string;
@@ -27,8 +27,16 @@ interface Article {
 const ARTICLES: Article[] = [
   {
     id: 1,
-    title: "Metodika hodnocení hráčů — DC ELO systém",
-    excerpt: "V Duel Commander komunitě používáme systém hodnocení, jehož cílem je dlouhodobě, transparentně a konzistentně odhadovat výkonnost hráčů na základě skutečně odehraných matchů.",
+    title: {
+      cs: "Metodika hodnocení hráčů — DC ELO systém",
+      en: "Player Rating Methodology — DC ELO System",
+      fr: "Méthodologie de classement des joueurs — Système DC ELO",
+    },
+    excerpt: {
+      cs: "V Duel Commander komunitě používáme systém hodnocení, jehož cílem je dlouhodobě, transparentně a konzistentně odhadovat výkonnost hráčů na základě skutečně odehraných matchů.",
+      en: "In the Duel Commander community we use a rating system designed to estimate player performance consistently and transparently based on actually played matches.",
+      fr: "Dans la communauté Duel Commander, nous utilisons un système de classement conçu pour estimer les performances des joueurs de manière cohérente et transparente sur la base des matchs réellement joués.",
+    },
     tag: "Analytika",
     author: "DCPR Komise",
     date: "2025-03-01",
@@ -106,11 +114,12 @@ const accentColor = "hsl(152,72%,45%)";
 const accentBg    = "hsl(152 72% 45% / 0.12)";
 const accentBorder = "hsl(152 72% 45% / 0.3)";
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
+function formatDate(dateStr: string, lang: "cs" | "en" | "fr"): string {
+  const locale = lang === "en" ? "en-GB" : lang === "fr" ? "fr-FR" : "cs-CZ";
+  return new Date(dateStr).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
 }
 
-function ArticleDetail({ article, onBack }: { article: Article; onBack: () => void }) {
+function ArticleDetail({ article, onBack, lang }: { article: Article; onBack: () => void; lang: "cs" | "en" | "fr" }) {
   return (
     <div style={{ height: "100%", overflowY: "auto" }} className="scrollbar-thin">
       <div style={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: 0, paddingBottom: 32 }}>
@@ -118,7 +127,7 @@ function ArticleDetail({ article, onBack }: { article: Article; onBack: () => vo
         {/* Back button */}
         <button onClick={onBack}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 20, padding: "6px 12px", borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.5)", color: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)", alignSelf: "flex-start" }}>
-          <ChevronLeft size={13} />Zpět na články
+          <ChevronLeft size={13} />{t(lang, "art_back")}
         </button>
 
         {/* Header */}
@@ -127,11 +136,11 @@ function ArticleDetail({ article, onBack }: { article: Article; onBack: () => vo
             <TrendingUp size={9} />
             <span style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>{article.tag}</span>
           </div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.2, marginBottom: 14, color: "hsl(var(--foreground))" }}>{article.title}</h1>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 900, letterSpacing: "-0.035em", lineHeight: 1.2, marginBottom: 14, color: "hsl(var(--foreground))" }}>{article.title[lang]}</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
             <span style={{ display: "flex", alignItems: "center", gap: 5 }}><User size={10} />{article.author}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Calendar size={10} />{formatDate(article.date)}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Clock size={10} />{article.readTime} min čtení</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Calendar size={10} />{formatDate(article.date, lang)}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Clock size={10} />{article.readTime} {t(lang, "min_read")}</span>
           </div>
         </div>
 
@@ -169,7 +178,7 @@ export default function ArticlesView() {
   const { lang } = useAppNav();
   const [selected, setSelected] = useState<Article | null>(null);
 
-  if (selected) return <ArticleDetail article={selected} onBack={() => setSelected(null)} />;
+  if (selected) return <ArticleDetail article={selected} onBack={() => setSelected(null)} lang={lang} />;
 
   const article = ARTICLES[0];
 
@@ -199,18 +208,18 @@ export default function ArticlesView() {
               <TrendingUp size={9} />
               <span style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>{article.tag}</span>
             </div>
-            <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", background: "hsl(var(--primary) / 0.12)", border: "1px solid hsl(var(--primary) / 0.28)", color: "hsl(var(--primary))" }}>FEATURED</span>
+            <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.05em", background: "hsl(var(--primary) / 0.12)", border: "1px solid hsl(var(--primary) / 0.28)", color: "hsl(var(--primary))" }}>{t(lang, "art_featured")}</span>
           </div>
 
-          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.25, marginBottom: 10, color: "hsl(var(--foreground))" }}>{article.title}</h3>
+          <h3 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, letterSpacing: "-0.025em", lineHeight: 1.25, marginBottom: 10, color: "hsl(var(--foreground))" }}>{article.title[lang]}</h3>
 
-          <p style={{ fontSize: 12, lineHeight: 1.7, color: "hsl(var(--muted-foreground))", marginBottom: 16, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{article.excerpt}</p>
+          <p style={{ fontSize: 12, lineHeight: 1.7, color: "hsl(var(--muted-foreground))", marginBottom: 16, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>{article.excerpt[lang]}</p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 10, color: "hsl(var(--muted-foreground))" }}>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}><User size={9} />{article.author}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar size={9} />{formatDate(article.date)}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar size={9} />{formatDate(article.date, lang)}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}><Clock size={9} />{article.readTime} {t(lang, "min_read")}</span>
-            <span style={{ fontSize: 11, color: accentColor, fontWeight: 600 }}>Číst →</span>
+            <span style={{ fontSize: 11, color: accentColor, fontWeight: 600 }}>{t(lang, "art_read")}</span>
           </div>
         </div>
       </div>

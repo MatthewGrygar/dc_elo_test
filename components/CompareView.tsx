@@ -70,9 +70,9 @@ function DiffRow({ label, a, b, fmt = String }: { label: string; a: number; b: n
 }
 
 // ── Player Selector ───────────────────────────────────────────────────────────
-function PlayerSelector({ players, selected, onSelect, accentColor, placeholder, excludeId, label }: {
+function PlayerSelector({ players, selected, onSelect, accentColor, placeholder, excludeId, label, lang }: {
   players: Player[]; selected: Player | null; onSelect: (p: Player | null) => void;
-  accentColor: string; placeholder: string; excludeId?: number; label: string;
+  accentColor: string; placeholder: string; excludeId?: number; label: string; lang: "cs" | "en" | "fr";
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -119,13 +119,13 @@ function PlayerSelector({ players, selected, onSelect, accentColor, placeholder,
           <div style={{ padding: "9px 12px", borderBottom: "1px solid hsl(var(--border)/0.6)", display: "flex", alignItems: "center", gap: 8, background: "hsl(var(--muted)/0.35)" }}>
             <Search size={13} color={mt} style={{ flexShrink: 0 }} />
             <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === "Escape") setOpen(false); }}
-              placeholder="Zadejte jméno hráče…"
+              placeholder={t(lang, "cmp_search_player")}
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 13, fontFamily: "var(--font-body)", color: "hsl(var(--foreground))" }} />
             {query && <button onClick={() => setQuery("")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", color: mt, padding: 0 }}><X size={12} /></button>}
           </div>
           <div style={{ maxHeight: 290, overflowY: "auto" }}>
             {filtered.length === 0 ? (
-              <div style={{ padding: "16px 14px", textAlign: "center", fontSize: 12, color: mt }}>Žádný hráč nenalezen</div>
+              <div style={{ padding: "16px 14px", textAlign: "center", fontSize: 12, color: mt }}>{t(lang, "cmp_not_found")}</div>
             ) : filtered.map((p, i) => (
               <button key={p.id} type="button" onClick={() => { onSelect(p); setOpen(false); }}
                 style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "9px 14px", background: "transparent", border: "none", borderBottom: i < filtered.length - 1 ? "1px solid hsl(var(--border)/0.30)" : "none", cursor: "pointer", textAlign: "left", transition: "background .12s" }}
@@ -145,7 +145,7 @@ function PlayerSelector({ players, selected, onSelect, accentColor, placeholder,
 }
 
 // ── Merged ELO trend chart ────────────────────────────────────────────────────
-function EloOverlayChart({ dataA, dataB, nameA, nameB }: { dataA: PlayerDetailData["eloTrend"]; dataB: PlayerDetailData["eloTrend"]; nameA: string; nameB: string }) {
+function EloOverlayChart({ dataA, dataB, nameA, nameB, lang }: { dataA: PlayerDetailData["eloTrend"]; dataB: PlayerDetailData["eloTrend"]; nameA: string; nameB: string; lang: "cs"|"en"|"fr" }) {
   // Align by index (match number) - each player gets their own x axis
   const maxLen = Math.max(dataA.length, dataB.length);
   const chartData = Array.from({ length: maxLen }, (_, i) => ({
@@ -178,7 +178,7 @@ function EloOverlayChart({ dataA, dataB, nameA, nameB }: { dataA: PlayerDetailDa
           if (!active || !payload?.length) return null;
           return (
             <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, boxShadow: "0 4px 16px hsl(var(--foreground)/0.12)" }}>
-              <div style={{ color: mt, marginBottom: 3, fontSize: 9 }}>Zápas #{label}</div>
+              <div style={{ color: mt, marginBottom: 3, fontSize: 9 }}>{t(lang, "pd_match_id")} #{label}</div>
               {payload.map((p, i) => p.value != null && (
                 <div key={i} style={{ color: p.stroke as string, fontWeight: 600 }}>{p.name}: {(p.value as number).toLocaleString("cs-CZ")}</div>
               ))}
@@ -285,11 +285,11 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
 
       {/* ── selectors ── */}
       <div className="mobile-compare-grid" style={{ display: "grid", gridTemplateColumns: "1fr 48px 1fr", gap: 12, alignItems: "flex-start", flexShrink: 0, position: "relative", zIndex: 200 }}>
-        <PlayerSelector players={players} selected={pA} onSelect={setPA} accentColor={CA} placeholder={t(lang, "select_player_a")} label="Hráč A" excludeId={pB?.id} />
+        <PlayerSelector players={players} selected={pA} onSelect={setPA} accentColor={CA} placeholder={t(lang, "select_player_a")} label={t(lang, "cmp_player_a")} excludeId={pB?.id} lang={lang} />
         <div className="vs-divider" style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 28 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 12, color: mt }}>vs</div>
         </div>
-        <PlayerSelector players={players} selected={pB} onSelect={setPB} accentColor={CB} placeholder={t(lang, "select_player_b")} label="Hráč B" excludeId={pA?.id} />
+        <PlayerSelector players={players} selected={pB} onSelect={setPB} accentColor={CB} placeholder={t(lang, "select_player_b")} label={t(lang, "cmp_player_b")} excludeId={pA?.id} lang={lang} />
       </div>
 
       {/* ── empty state ── */}
@@ -301,11 +301,11 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
             </div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700 }}>{t(lang, "compare_title")}</div>
             <div style={{ fontSize: 13, color: mt, textAlign: "center", maxWidth: 340 }}>
-              {listLoading ? "Načítání hráčů…" : players.length === 0 ? "Žádní hráči k dispozici" : t(lang, "compare_desc")}
+              {listLoading ? t(lang, "cmp_loading") : players.length === 0 ? t(lang, "cmp_no_players") : t(lang, "compare_desc")}
             </div>
             {!listLoading && players.length > 0 && (
               <div style={{ fontSize: 11, color: "hsl(var(--primary))", fontFamily: "var(--font-mono)", padding: "5px 14px", borderRadius: 99, background: "hsl(var(--primary)/0.10)", border: "1px solid hsl(var(--primary)/0.25)" }}>
-                {players.length} hráčů k dispozici
+                {players.length} {t(lang, "cmp_available")}
               </div>
             )}
           </div>
@@ -361,10 +361,10 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
                       {/* Key stats */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                         {[
-                          { l: "Winrate", v: fmtPct(wr) },
-                          { l: "Peak ELO", v: fmt(s.peakElo) },
-                          { l: "30d Δ", v: `${eloChange >= 0 ? "+" : ""}${fmt(eloChange)}` },
-                          { l: "Celkem her", v: fmt(s.totalGames) },
+                          { l: t(lang, "winrate"), v: fmtPct(wr) },
+                          { l: t(lang, "pd_peak_elo"), v: fmt(s.peakElo) },
+                          { l: t(lang, "cmp_elo_delta_30d"), v: `${eloChange >= 0 ? "+" : ""}${fmt(eloChange)}` },
+                          { l: t(lang, "cmp_total_games"), v: fmt(s.totalGames) },
                         ].map(kv => (
                           <div key={kv.l} style={{ padding: "5px 8px", borderRadius: 7, background: "hsl(var(--muted)/0.3)" }}>
                             <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: mt, letterSpacing: "0.07em", textTransform: "uppercase" }}>{kv.l}</div>
@@ -389,7 +389,7 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
           {dataA && dataB && (
             <GPanel style={{ padding: "16px 18px" }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
-                <TrendingUp size={14} color="hsl(var(--primary))" />Vývoj ELO — překryv
+                <TrendingUp size={14} color="hsl(var(--primary))" />{t(lang, "cmp_elo_overlap")}
               </div>
               <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
                 {[{ name: pA.name, color: CA }, { name: pB.name, color: CB }].map(l => (
@@ -398,7 +398,7 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
                   </div>
                 ))}
               </div>
-              <EloOverlayChart dataA={dataA.eloTrend} dataB={dataB.eloTrend} nameA={pA.name} nameB={pB.name} />
+              <EloOverlayChart dataA={dataA.eloTrend} dataB={dataB.eloTrend} nameA={pA.name} nameB={pB.name} lang={lang} />
             </GPanel>
           )}
 
@@ -456,22 +456,22 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
               {/* Direct diff table */}
               <GPanel style={{ padding: 20 }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Swords size={13} color="hsl(var(--primary))" />Přímé srovnání
+                  <Swords size={13} color="hsl(var(--primary))" />{t(lang, "cmp_direct")}
                 </div>
                 <DiffRow label={t(lang, "rating")} a={pA.rating} b={pB.rating} />
                 <DiffRow label={t(lang, "peak")}   a={pA.peak}   b={pB.peak} />
-                <DiffRow label="ELO Δ 30d"         a={dataA.computed.eloChange30d} b={dataB.computed.eloChange30d} fmt={v => (v >= 0 ? "+" : "") + fmt(v)} />
+                <DiffRow label={t(lang, "cmp_elo_delta_30d")} a={dataA.computed.eloChange30d} b={dataB.computed.eloChange30d} fmt={v => (v >= 0 ? "+" : "") + fmt(v)} />
                 <DiffRow label={t(lang, "games")}  a={pA.games}  b={pB.games} />
                 <DiffRow label={t(lang, "wins")}   a={pA.win}    b={pB.win} />
                 <DiffRow label="WR %"              a={parseFloat(wrA.toFixed(1))} b={parseFloat(wrB.toFixed(1))} fmt={fmtPct} />
-                <DiffRow label="Avg Δ/game"        a={dataA.computed.avgDelta} b={dataB.computed.avgDelta} fmt={v => (v >= 0 ? "+" : "") + v.toFixed(1)} />
-                <DiffRow label="Win Δ"             a={dataA.computed.avgWinDelta} b={dataB.computed.avgWinDelta} fmt={v => "+" + v.toFixed(1)} />
+                <DiffRow label={t(lang, "cmp_avg_delta")} a={dataA.computed.avgDelta} b={dataB.computed.avgDelta} fmt={v => (v >= 0 ? "+" : "") + v.toFixed(1)} />
+                <DiffRow label={t(lang, "cmp_win_delta")} a={dataA.computed.avgWinDelta} b={dataB.computed.avgWinDelta} fmt={v => "+" + v.toFixed(1)} />
               </GPanel>
 
               {/* Weekday performance */}
               <GPanel style={{ padding: 20 }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
-                  Winrate — den v týdnu
+                  {t(lang, "cmp_wr_day")}
                 </div>
                 <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
                   {[{ name: pA.name, color: CA }, { name: pB.name, color: CB }].map(l => (
@@ -489,7 +489,7 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
           {dataA && dataB && (
             <GPanel style={{ padding: 20 }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
-                Rolling momentum
+                {t(lang, "cmp_rolling")}
               </div>
               <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
                 {[{ name: pA.name, color: CA }, { name: pB.name, color: CB }].map(l => (
@@ -534,7 +534,11 @@ export default function CompareView({ prefetchCache }: { prefetchCache?: Prefetc
           {/* ── Loading overlay when data is being fetched ── */}
           {(loadingA || loadingB) && (
             <div style={{ padding: "12px 16px", borderRadius: 12, background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border))", fontSize: 12, fontFamily: "var(--font-mono)", color: mt, textAlign: "center" }}>
-              {loadingA && loadingB ? `Načítám data pro ${pA.name} a ${pB.name}…` : loadingA ? `Načítám data pro ${pA.name}…` : `Načítám data pro ${pB.name}…`}
+              {loadingA && loadingB
+                ? t(lang, "cmp_loading_data_both").replace("{a}", pA.name).replace("{b}", pB.name)
+                : loadingA
+                  ? t(lang, "cmp_loading_data_one").replace("{name}", pA.name)
+                  : t(lang, "cmp_loading_data_one").replace("{name}", pB.name)}
             </div>
           )}
         </>

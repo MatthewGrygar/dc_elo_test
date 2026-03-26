@@ -39,32 +39,9 @@ function Card({
 }
 
 // ── News Carousel ─────────────────────────────────────────────────────────────
-const SLIDES = [
-  {
-    img: "/slide1.png",
-    title: "ZALOŽENÍ DCPR KOMISE",
-    desc: "Zakládáme Komisi DCPR jako nezávislý orgán pro zajištění nestrannosti, transparentnosti a funkčnosti DC ELO systému a komunikaci s vedením lig napříč českou a zahraniční Duel Commander scénou.",
-    action: "organization" as const,
-    label: "Zjistit více",
-  },
-  {
-    img: "/slide2.png",
-    title: "JAK FUNGUJE VÝPOČET ELO?",
-    desc: "Jak počítáme Elo a DCPR, proč právě tato kalibrace a jak vznikají třídy Rating Classy? To a mnohem víc se dozvíte v článku od tvůrce celého řešení.",
-    action: "articles" as const,
-    label: "Přečíst článek",
-  },
-  {
-    img: "/slide3.png",
-    title: "PODPOŘTE NÁS",
-    desc: "DC ELO je komunitní projekt, který žije díky vám. Pokud se vám naše práce líbí a chcete nás podpořit, budeme moc rádi — každá pomoc nás motivuje projekt dál rozvíjet.",
-    action: "support" as const,
-    label: "Podpořit projekt",
-  },
-];
 
 function NewsCarousel() {
-  const { navigateTo, setSupportOpen } = useAppNav();
+  const { navigateTo, setSupportOpen, lang } = useAppNav();
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -74,7 +51,12 @@ function NewsCarousel() {
     setTimeout(() => { setIdx(next); setFade(true); }, 180);
   }, []);
 
-  const advance = useCallback(() => { setIdx(i => (i + 1) % SLIDES.length); }, []);
+  const slides = [
+    { img: "/slide1.png", title: t(lang, "slide1_title"), desc: t(lang, "slide1_desc"), action: "organization" as const, label: t(lang, "slide1_btn") },
+    { img: "/slide2.png", title: t(lang, "slide2_title"), desc: t(lang, "slide2_desc"), action: "articles" as const,      label: t(lang, "slide2_btn") },
+    { img: "/slide3.png", title: t(lang, "slide3_title"), desc: t(lang, "slide3_desc"), action: "support" as const,       label: t(lang, "slide3_btn") },
+  ];
+  const advance = useCallback(() => { setIdx(i => (i + 1) % slides.length); }, [slides.length]);
 
   useEffect(() => {
     timerRef.current = setInterval(advance, 5000);
@@ -86,10 +68,10 @@ function NewsCarousel() {
     timerRef.current = setInterval(advance, 5000);
   };
 
-  const prev = (e: React.MouseEvent) => { e.stopPropagation(); goTo((idx - 1 + SLIDES.length) % SLIDES.length); reset(); };
-  const next = (e: React.MouseEvent) => { e.stopPropagation(); goTo((idx + 1) % SLIDES.length); reset(); };
+  const prev = (e: React.MouseEvent) => { e.stopPropagation(); goTo((idx - 1 + slides.length) % slides.length); reset(); };
+  const next = (e: React.MouseEvent) => { e.stopPropagation(); goTo((idx + 1) % slides.length); reset(); };
 
-  const slide = SLIDES[idx];
+  const slide = slides[idx];
 
   const handleAction = () => {
     if (slide.action === "support") { setSupportOpen(true); }
@@ -121,7 +103,7 @@ function NewsCarousel() {
 
       {/* Dots */}
       <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 6 }}>
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button key={i} onClick={e => { e.stopPropagation(); goTo(i); reset(); }} style={{ width: i === idx ? 20 : 7, height: 7, borderRadius: 99, background: i === idx ? "hsl(var(--primary))" : "rgba(255,255,255,0.4)", border: "none", cursor: "pointer", transition: "all 0.25s ease", padding: 0 }} />
         ))}
       </div>
@@ -214,7 +196,7 @@ function MemberCard({ member }: { member: typeof TEAM[0] }) {
   );
 }
 
-function ContactForm({ subject }: { subject?: string }) {
+function ContactForm({ subject, lang }: { subject?: string; lang: "cs"|"en"|"fr" }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
   const [errMsg, setErrMsg] = useState("");
@@ -247,8 +229,8 @@ function ContactForm({ subject }: { subject?: string }) {
         <div style={{ width: 52, height: 52, borderRadius: "50%", background: "hsl(142,65%,45%,0.12)", border: "1px solid hsl(142,65%,45%,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
           <Check size={24} style={{ color: "hsl(142,65%,45%)" }} />
         </div>
-        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 6 }}>Zpráva odeslána!</div>
-        <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Ozveme se ti co nejdříve na uvedený e-mail.</div>
+        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 6 }}>{t(lang, "form_sent")}</div>
+        <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{t(lang, "form_sent_desc2")}</div>
       </div>
     );
   }
@@ -266,28 +248,28 @@ function ContactForm({ subject }: { subject?: string }) {
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <div>
-          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>JMÉNO *</label>
-          <input required style={inp} placeholder="Jan Novák" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>{t(lang, "form_name")}</label>
+          <input required style={inp} placeholder={t(lang, "form_name_ph")} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
         </div>
         <div>
-          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>E-MAIL *</label>
-          <input required type="email" style={inp} placeholder="jan@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+          <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>{t(lang, "form_email")}</label>
+          <input required type="email" style={inp} placeholder={t(lang, "form_email_ph")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
         </div>
       </div>
       <div>
-        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>TELEFON</label>
-        <input style={inp} placeholder="+420 000 000 000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>{t(lang, "form_phone")}</label>
+        <input style={inp} placeholder={t(lang, "form_phone_ph")} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
       </div>
       <div>
-        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>ZPRÁVA *</label>
-        <textarea required rows={5} style={{ ...inp, resize: "vertical", minHeight: 100 }} placeholder="Napiš nám..." value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
+        <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 5 }}>{t(lang, "form_message")}</label>
+        <textarea required rows={5} style={{ ...inp, resize: "vertical", minHeight: 100 }} placeholder={t(lang, "form_message_ph")} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
       </div>
       {status === "err" && (
-        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Chyba: {errMsg || "Odeslání selhalo"}</div>
+        <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>{t(lang, "form_error_prefix")} {errMsg || t(lang, "form_error_fallback")}</div>
       )}
       <button type="submit" disabled={status === "sending"}
         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "11px 22px", borderRadius: 10, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", border: "none", fontSize: 13, fontWeight: 700, cursor: status === "sending" ? "wait" : "pointer", opacity: status === "sending" ? 0.7 : 1, fontFamily: "var(--font-body)", alignSelf: "flex-start" as const }}>
-        <Send size={13} />{status === "sending" ? "Odesílám…" : "Odeslat zprávu"}
+        <Send size={13} />{status === "sending" ? t(lang, "form_sending") : t(lang, "form_send")}
       </button>
     </form>
   );
@@ -295,11 +277,7 @@ function ContactForm({ subject }: { subject?: string }) {
 
 export default function OrganizationView() {
   const { lang, orgTab, setOrgTab } = useAppNav();
-  const introText = {
-    cs: "DCPR komise vznikla jako organizační a metodický orgán projektu DC ELO pro formát Duel Commander (MtG). Jejím cílem je dlouhodobě budovat stabilní, transparentní a férové kompetitivní prostředí pro hráče v České republice i v širším mezinárodním prostředí a aktivně se snažit o rozšíření projektu napříč jednotlivými zeměmi, kde se Duel Commander hraje.",
-    en: "The DCPR Committee was established as the organisational and methodological body of the DC ELO project for the Duel Commander (MtG) format. Its goal is to build a stable, transparent and fair competitive environment for players in the Czech Republic and the wider region.",
-    fr: "Le Comité DCPR a été créé en tant qu'organe organisationnel et méthodologique du projet DC ELO pour le format Duel Commander (MtG). Son objectif est de construire un environnement compétitif stable, transparent et équitable.",
-  };
+  const introText = t(lang, "org_intro_desc");
 
   return (
     <div style={{ height: "100%", overflowY: "auto" }} className="scrollbar-thin">
@@ -321,25 +299,21 @@ export default function OrganizationView() {
                 </div>
                 <div>
                   <h3 style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.02em", margin: 0, color: "hsl(var(--foreground))" }}>
-                    {lang === "en" ? "Want to work with us?" : lang === "fr" ? "Envie de collaborer ?" : "Chcete s námi spolupracovat?"}
+                    {t(lang, "org_coop_title")}
                   </h3>
                 </div>
               </div>
               <p style={{ fontSize: 13, lineHeight: 1.78, color: "hsl(var(--foreground))", marginBottom: 0 }}>
-                {lang === "en"
-                  ? "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with the project's development, join the DCPR committee, or simply share your ideas with us."
-                  : lang === "fr"
-                  ? "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement du projet, rejoindre le comité DCPR ou simplement partager vos idées."
-                  : "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, chcete se stát součástí DCPR komise, nebo se s námi prostě podělit o své nápady."}
+                {t(lang, "org_coop_desc")}
               </p>
             </Card>
 
             <Card style={{ padding: "24px 26px" }}>
               <h3 style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 20, display: "flex", alignItems: "center", gap: 8, color: "hsl(var(--foreground))" }}>
                 <Send size={14} style={{ color: "hsl(var(--primary))" }} />
-                {lang === "en" ? "Contact form" : lang === "fr" ? "Formulaire de contact" : "Kontaktní formulář"}
+                {t(lang, "org_contact_form")}
               </h3>
-              <ContactForm subject="Spolupráce — DC ELO organizace" />
+              <ContactForm subject="Spolupráce — DC ELO organizace" lang={lang} />
             </Card>
           </div>
         )}
@@ -362,13 +336,13 @@ export default function OrganizationView() {
                   DCPR Komise · Czech Republic · Duel Commander MtG
                 </div>
                 <p style={{ fontSize: 13, lineHeight: 1.72, color: "hsl(var(--muted-foreground))", maxWidth: 560 }}>
-                  {introText[lang as keyof typeof introText] || introText.cs}
+                  {introText}
                 </p>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {[
                   { icon: MapPin, text: "Czech Republic" },
-                  { icon: Calendar, text: lang === "fr" ? "Fondée 2022" : lang === "en" ? "Est. 2022" : "Od roku 2022" },
+                  { icon: Calendar, text: t(lang, "org_est") },
                 ].map(({ icon: Icon, text }) => (
                   <div key={text} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 99, background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
                     <Icon size={9} />{text}
@@ -379,10 +353,10 @@ export default function OrganizationView() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", borderTop: "1px solid hsl(var(--border))" }}>
             {[
-              { val: "450+", lbl: lang === "en" ? "Active Players" : lang === "fr" ? "Joueurs Actifs" : "Aktivní hráči", col: "hsl(152,72%,50%)" },
-              { val: "150+", lbl: lang === "en" ? "Tournaments"    : lang === "fr" ? "Tournois"       : "Turnaje",        col: "hsl(42,92%,52%)"  },
-              { val: "2",    lbl: lang === "en" ? "Rating Systems" : lang === "fr" ? "Systèmes"       : "Rating systémy", col: "hsl(195,78%,50%)" },
-              { val: "2025", lbl: lang === "en" ? "Founded"        : lang === "fr" ? "Fondée"         : "Rok vzniku",     col: "hsl(265,65%,60%)" },
+              { val: "450+", lbl: t(lang, "org_stats_players"),     col: "hsl(152,72%,50%)" },
+              { val: "150+", lbl: t(lang, "org_stats_tournaments"), col: "hsl(42,92%,52%)"  },
+              { val: "2",    lbl: t(lang, "org_rating_systems"),    col: "hsl(195,78%,50%)" },
+              { val: "2025", lbl: t(lang, "org_founded_year"),      col: "hsl(265,65%,60%)" },
             ].map(({ val, lbl, col }, i, arr) => (
               <div key={lbl} style={{ padding: "14px 12px", textAlign: "center", borderRight: i < arr.length - 1 ? "1px solid hsl(var(--border))" : "none" }}>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, letterSpacing: "-0.04em", color: col, lineHeight: 1 }}>{val}</div>
@@ -437,15 +411,11 @@ export default function OrganizationView() {
             {t(lang, "org_cooperation")}
           </h3>
           <p style={{ fontSize: 13, lineHeight: 1.75, color: "hsl(var(--muted-foreground))", marginBottom: 16 }}>
-            {lang === "en"
-              ? "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with the project's development, join the DCPR committee, or simply share your ideas with us."
-              : lang === "fr"
-              ? "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement du projet, rejoindre le comité DCPR ou simplement partager vos idées."
-              : "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, chcete se stát součástí DCPR komise, nebo se s námi prostě podělit o své nápady."}
+            {t(lang, "org_coop_desc")}
           </p>
           <button onClick={() => setOrgTab("spoluprace")}
             style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 10, background: "hsl(195,78%,50%,0.12)", border: "1px solid hsl(195,78%,50%,0.3)", color: "hsl(195,78%,50%)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-body)" }}>
-            {lang === "en" ? "More about cooperation" : lang === "fr" ? "En savoir plus" : "Více o spolupráci"}
+            {t(lang, "org_coop_more")}
             <ChevronRight size={13} />
           </button>
         </Card>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAppNav } from "./AppContext";
 import { useRatingMode } from "./RatingModeProvider";
+import { t, Lang } from "@/lib/i18n";
 import { avatarInitials } from "@/lib/utils";
 import { PlayerDetailData, RecordsData } from "@/lib/dataFetchers";
 import {
@@ -88,7 +89,7 @@ function Skeleton({ h = 60 }: { h?: number }) {
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; communityRecords?: RecordsData | null }) {
-  const { selectedPlayer } = useAppNav();
+  const { selectedPlayer, lang } = useAppNav();
   const { mode } = useRatingMode();
   const { summary: s, computed: c, eloTrend, rollingMomentum, deltaDistribution, weekdayPerf } = data;
 
@@ -188,7 +189,7 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Win / Loss / Draw</div>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>{t(lang, "pd_win_loss_draw")}</div>
               <span style={{ fontSize: 8, padding: "1px 7px", borderRadius: 99, background: "hsl(var(--primary)/0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.28)", fontFamily: "var(--font-mono)", fontWeight: 700 }}>{mode}</span>
             </div>
             {/* W/L/D bar first */}
@@ -199,9 +200,9 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
             </div>
             <div style={{ display: "flex", gap: 5, flex: 1 }}>
               {[
-                { label: "Výhry", short: "W", value: s.wins, color: green, pct: wPct },
-                { label: "Prohry", short: "L", value: s.losses, color: red, pct: lPct },
-                { label: "Remízy", short: "D", value: s.draws, color: amber, pct: dPct },
+                { label: t(lang, "wins"), short: "W", value: s.wins, color: green, pct: wPct },
+                { label: t(lang, "losses"), short: "L", value: s.losses, color: red, pct: lPct },
+                { label: t(lang, "draws"), short: "D", value: s.draws, color: amber, pct: dPct },
               ].map(r => (
                 <div key={r.short} style={{ flex: 1, padding: "8px 6px", borderRadius: 10, background: `${r.color}12`, border: `1px solid ${r.color}30`, textAlign: "center", display: "flex", flexDirection: "column", gap: 1 }}>
                   <div style={{ fontSize: 26, fontWeight: 900, fontFamily: "var(--font-mono)", color: r.color, lineHeight: 1, letterSpacing: "-0.03em" }}>{r.value}</div>
@@ -211,7 +212,7 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{s.totalGames} her</span>
+              <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{s.totalGames} {t(lang, "pd_her_label")}</span>
               <span style={{ fontSize: 12, fontFamily: "var(--font-mono)", fontWeight: 700, color: s.winrate >= 0.5 ? green : red }}>WR {(s.winrate * 100).toFixed(1)}%</span>
             </div>
           </div>
@@ -220,22 +221,22 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         {/* Panel 3 — Perf stats */}
         <GC>
           <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, height: "100%" }}>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>Výkonnost</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" }}>{t(lang, "pd_performance")}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, flex: 1, alignContent: "start" }}>
               <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Perf. Rating</div>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_perf_rating")}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{fmt(c.performanceRating)}</div>
               </div>
               <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bayesian WR</div>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_bayesian_wr")}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))" }}>{s.bayesianWR ?? "—"}</div>
               </div>
               <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Expected wins Δ</div>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_expected_wins")}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: c.expectedWinDiff >= 0 ? green : red }}>{c.expectedWinDiff >= 0 ? "+" : ""}{c.expectedWinDiff.toFixed(1)}</div>
               </div>
               <div style={{ padding: "7px 10px", borderRadius: 9, background: "hsl(var(--muted)/0.35)", border: "1px solid hsl(var(--border)/0.4)" }}>
-                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Avg. soupeř</div>
+                <div style={{ fontSize: 8, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_avg_opp")}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))" }}>{fmt(s.avgOppElo)}</div>
               </div>
             </div>
@@ -259,7 +260,7 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         return (
           <GC style={{ flexShrink: 0 }}>
             <div style={{ padding: "14px 18px 16px" }}>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>Tagy rekordů</div>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t(lang, "pd_record_tags")}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center" }}>
                 {playerRecs.map((r, i) => {
                   const bg = CAT_CHIP_COLORS[r.catIcon] ?? "hsl(var(--primary))";
@@ -285,10 +286,10 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
       {/* ── ELO CHART ── */}
       <GC style={{ flexShrink: 0 }}>
         <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>Vývoj {mode} v čase</div>
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_time")} — {mode}</div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
-              {([["matchid", "Match ID"], ["date", "Datum"]] as const).map(([v, label]) => (
+              {([["matchid", t(lang, "pd_match_id")], ["date", t(lang, "pd_hist_date")]] as [string, string][]).map(([v, label]) => (
                 <button key={v} onClick={() => setTrendMode(v)}
                   style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer", transition: "all 0.15s",
                     background: trendMode === v ? "hsl(var(--card))" : "transparent",
@@ -345,17 +346,17 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         {/* ELO overview */}
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>ELO přehled</SH>
+            <SH>{t(lang, "pd_elo_overview")}</SH>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <KV label="Peak ELO" value={fmt(s.peakElo)} color={amber} size="lg" />
-              <KV label="Min ELO" value={fmt(s.minElo)} color={red} size="md" />
-              <KV label="ELO Range" value={fmt(c.eloRange)} />
-              <KV label="Dní od peak" value={s.daysSincePeak > 0 ? `${s.daysSincePeak}d` : "Aktuální peak"} color={s.daysSincePeak <= 7 ? green : "hsl(var(--foreground))"} />
-              <KV label="Peak Retention" value={`${c.peakRetention}%`} color={c.peakRetention >= 90 ? green : amber} />
-              <KV label="Bayesian WR" value={s.bayesianWR ?? "—"} color="hsl(var(--primary))" />
+              <KV label={t(lang, "pd_peak_elo")} value={fmt(s.peakElo)} color={amber} size="lg" />
+              <KV label={t(lang, "pd_min_elo")} value={fmt(s.minElo)} color={red} size="md" />
+              <KV label={t(lang, "pd_elo_range")} value={fmt(c.eloRange)} />
+              <KV label={t(lang, "pd_days_from_peak")} value={s.daysSincePeak > 0 ? `${s.daysSincePeak}d` : t(lang, "pd_current_peak")} color={s.daysSincePeak <= 7 ? green : "hsl(var(--foreground))"} />
+              <KV label={t(lang, "pd_peak_retention")} value={`${c.peakRetention}%`} color={c.peakRetention >= 90 ? green : amber} />
+              <KV label={t(lang, "pd_bayesian_wr")} value={s.bayesianWR ?? "—"} color="hsl(var(--primary))" />
             </div>
             <div style={{ marginTop: 2 }}>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>Peak retention</div>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginBottom: 4 }}>{t(lang, "pd_peak_retention")}</div>
               <div style={{ height: 5, borderRadius: 99, background: "hsl(var(--muted))" }}>
                 <div style={{ height: "100%", width: `${c.peakRetention}%`, background: c.peakRetention >= 90 ? green : amber, borderRadius: 99 }} />
               </div>
@@ -366,18 +367,18 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         {/* Activity */}
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>Aktivita & ELO změny</SH>
+            <SH>{t(lang, "pd_activity")}</SH>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <KV label="Hry celkem" value={fmt(s.totalGames)} />
-              <KV label="Avg ELO soupeřů" value={fmt(s.avgOppElo)} />
-              <KV label="Δ 7 dní" value={(c.eloChange7d >= 0 ? "+" : "") + fmt(c.eloChange7d)} color={c.eloChange7d >= 0 ? green : red} />
-              <KV label="Δ 30 dní" value={(c.eloChange30d >= 0 ? "+" : "") + fmt(c.eloChange30d)} color={c.eloChange30d >= 0 ? green : red} />
-              <KV label="Avg změna" value={fmtS(c.avgDelta)} color={c.avgDelta >= 0 ? green : red} />
-              <KV label="EV / zápas" value={fmtS(c.ev)} color={c.ev >= 0 ? green : red} />
-              <KV label="Max zisk" value={`+${fmt(c.biggestSingleGain)}`} color={green} size="sm" />
-              <KV label="Max ztráta" value={fmt(c.biggestSingleLoss)} color={red} size="sm" />
-              <KV label="Perf. Rating" value={fmt(c.performanceRating)} color="hsl(var(--primary))" size="sm" />
-              <KV label="ELO Ceiling" value={`~${fmt(c.eloCeilingEstimate)}`} color={amber} size="sm" />
+              <KV label={t(lang, "pd_total_games")} value={fmt(s.totalGames)} />
+              <KV label={t(lang, "pd_avg_opp_elo")} value={fmt(s.avgOppElo)} />
+              <KV label={t(lang, "pd_delta_7d")} value={(c.eloChange7d >= 0 ? "+" : "") + fmt(c.eloChange7d)} color={c.eloChange7d >= 0 ? green : red} />
+              <KV label={t(lang, "pd_delta_30d")} value={(c.eloChange30d >= 0 ? "+" : "") + fmt(c.eloChange30d)} color={c.eloChange30d >= 0 ? green : red} />
+              <KV label={t(lang, "pd_avg_change")} value={fmtS(c.avgDelta)} color={c.avgDelta >= 0 ? green : red} />
+              <KV label={t(lang, "pd_ev_match")} value={fmtS(c.ev)} color={c.ev >= 0 ? green : red} />
+              <KV label={t(lang, "pd_max_gain")} value={`+${fmt(c.biggestSingleGain)}`} color={green} size="sm" />
+              <KV label={t(lang, "pd_max_loss")} value={fmt(c.biggestSingleLoss)} color={red} size="sm" />
+              <KV label={t(lang, "pd_perf_rating")} value={fmt(c.performanceRating)} color="hsl(var(--primary))" size="sm" />
+              <KV label={t(lang, "pd_elo_ceiling")} value={`~${fmt(c.eloCeilingEstimate)}`} color={amber} size="sm" />
             </div>
           </div>
         </GC>
@@ -385,12 +386,12 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         {/* Soupeřský blok */}
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>Soupeřský blok</SH>
+            <SH>{t(lang, "pd_opp_block")}</SH>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {[
-                { label: "WR vs. slabší (−100)", value: `${c.winVsWeaker}%`, color: c.winVsWeaker >= 60 ? green : amber },
-                { label: "WR vs. podobní (±100)", value: `${c.winVsSimilar}%`, color: c.winVsSimilar >= 50 ? green : red },
-                { label: "WR vs. silnější (+100)", value: `${c.winVsStronger}%`, color: c.winVsStronger >= 40 ? green : red },
+                { label: t(lang, "pd_wr_weaker"), value: `${c.winVsWeaker}%`, color: c.winVsWeaker >= 60 ? green : amber },
+                { label: t(lang, "pd_wr_similar"), value: `${c.winVsSimilar}%`, color: c.winVsSimilar >= 50 ? green : red },
+                { label: t(lang, "pd_wr_stronger"), value: `${c.winVsStronger}%`, color: c.winVsStronger >= 40 ? green : red },
               ].map(r => (
                 <div key={r.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 8px", borderRadius: 8, background: "hsl(var(--muted)/0.3)" }}>
                   <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{r.label}</div>
@@ -400,20 +401,20 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
             </div>
             <div style={{ paddingTop: 8, borderTop: "1px solid hsl(var(--border)/0.3)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
               <div>
-                <div style={{ fontSize: 9, color: red, fontFamily: "var(--font-mono)", marginBottom: 1 }}>💀 Nemesis</div>
+                <div style={{ fontSize: 9, color: red, fontFamily: "var(--font-mono)", marginBottom: 1 }}>{t(lang, "pd_nemesis")}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{c.nemesis ?? "—"}</div>
                 {c.nemesis && c.nemesis !== "—" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>WR: {c.nemesisWR}%</div>}
               </div>
               <div>
-                <div style={{ fontSize: 9, color: green, fontFamily: "var(--font-mono)", marginBottom: 1 }}>🏆 Prey</div>
+                <div style={{ fontSize: 9, color: green, fontFamily: "var(--font-mono)", marginBottom: 1 }}>{t(lang, "pd_prey")}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{c.prey ?? "—"}</div>
                 {c.prey && c.prey !== "—" && <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>WR: {c.preyWR}%</div>}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejčastější soupeř</div>
+              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_most_freq_opp")}</div>
               <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{c.mostPlayedOpponent.name}</div>
-              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{c.mostPlayedOpponent.games} her · {c.mostPlayedOpponent.winrate}% WR</div>
+              <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{c.mostPlayedOpponent.games} {t(lang, "pd_games_dot")} {c.mostPlayedOpponent.winrate}% {t(lang, "pd_wr")}</div>
             </div>
           </div>
         </GC>
@@ -424,20 +425,20 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         {/* Pokročilé indexy */}
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-            <SH>Pokročilé indexy</SH>
-            <IndexBar label="Stability Index" value={c.stabilityIndex} tip="100 = stabilní výkyvy ELO; 0 = extrémní výkyvy" />
-            <IndexBar label="Momentum Index" value={c.momentumIndex} tip="% výher v posledních 20 hrách" />
-            <IndexBar label="Consistency Score" value={c.consistencyScore} tip="Konzistence výkonu v blocích po 10 hrách" />
-            <IndexBar label="Clutch Faktor" value={c.clutchFactor} tip="Winrate vs. silnější soupeři (ELO > tvoje)" />
-            <IndexBar label="Tilt Index" value={c.tiltIndex} tip="Průměrný WR v 5 hrách po každé prohře" />
-            <IndexBar label="Clutch pod tlakem" value={c.clutchUnderPressure} tip="Výhry jako outsider po 2 předchozích prohrách %" />
+            <SH>{t(lang, "pd_advanced")}</SH>
+            <IndexBar label={t(lang, "pd_stability")} value={c.stabilityIndex} tip={t(lang, "pd_stability_hint")} />
+            <IndexBar label={t(lang, "pd_momentum")} value={c.momentumIndex} tip={t(lang, "pd_momentum_hint")} />
+            <IndexBar label={t(lang, "pd_consistency")} value={c.consistencyScore} tip={t(lang, "pd_consistency_hint")} />
+            <IndexBar label={t(lang, "pd_clutch")} value={c.clutchFactor} tip={t(lang, "pd_clutch_hint")} />
+            <IndexBar label={t(lang, "pd_tilt")} value={c.tiltIndex} tip={t(lang, "pd_tilt_hint")} />
+            <IndexBar label={t(lang, "pd_clutch_pressure")} value={c.clutchUnderPressure} tip={t(lang, "pd_clutch_pressure_hint")} />
             <div style={{ marginTop: 4, paddingTop: 10, borderTop: "1px solid hsl(var(--border)/0.3)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              <KV label="Gain/Loss ratio" value={c.gainLossRatio.toFixed(2)} color={c.gainLossRatio >= 1 ? green : red} size="sm" />
-              <KV label="Upset Rate" value={`${c.upsetRate}%`} size="sm" />
-              <KV label="Choking Index" value={`${c.chokingIndex}%`} color={c.chokingIndex >= 30 ? red : amber} size="sm" />
-              <KV label="Hot Hand" value={fmtS(c.hotHandEffect, 2)} color={c.hotHandEffect > 0.15 ? green : "hsl(var(--foreground))"} size="sm" />
-              <KV label="OQA Winrate" value={`${c.oqaWR}%`} color="hsl(var(--primary))" size="sm" />
-              <KV label="True Skill ±" value={`±${c.trueSkillSigma}`} color="hsl(var(--muted-foreground))" size="sm" />
+              <KV label={t(lang, "pd_gain_loss")} value={c.gainLossRatio.toFixed(2)} color={c.gainLossRatio >= 1 ? green : red} size="sm" />
+              <KV label={t(lang, "pd_upset_rate")} value={`${c.upsetRate}%`} size="sm" />
+              <KV label={t(lang, "pd_choking")} value={`${c.chokingIndex}%`} color={c.chokingIndex >= 30 ? red : amber} size="sm" />
+              <KV label={t(lang, "pd_hot_hand")} value={fmtS(c.hotHandEffect, 2)} color={c.hotHandEffect > 0.15 ? green : "hsl(var(--foreground))"} size="sm" />
+              <KV label={t(lang, "pd_oqa_wr")} value={`${c.oqaWR}%`} color="hsl(var(--primary))" size="sm" />
+              <KV label={t(lang, "pd_true_skill")} value={`±${c.trueSkillSigma}`} color="hsl(var(--muted-foreground))" size="sm" />
             </div>
           </div>
         </GC>
@@ -445,44 +446,44 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
         {/* Streak blok */}
         <GC>
           <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SH>Streak blok</SH>
+            <SH>{t(lang, "pd_streak_block")}</SH>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
               <div style={{ padding: "8px 10px", borderRadius: 10, background: `${green}15`, border: `1px solid ${green}35`, textAlign: "center" }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejdelší win</div>
+                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_longest_win")}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: green }}>{s.longestWinStreak}×</div>
               </div>
               <div style={{ padding: "8px 10px", borderRadius: 10, background: `${red}15`, border: `1px solid ${red}35`, textAlign: "center" }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Nejdelší lose</div>
+                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_longest_lose")}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: red }}>{s.longestLoseStreak}×</div>
               </div>
               <div style={{ padding: "8px 10px", borderRadius: 10, background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border)/0.4)", textAlign: "center" }}>
-                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>Bez prohry</div>
+                <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_no_loss")}</div>
                 <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "var(--font-mono)", color: amber }}>{c.longestUnbeaten ?? 0}×</div>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
-              <KV label="Tilt Recovery" value={`${c.tiltRecovery ?? 0}%`} color={(c.tiltRecovery ?? 0) >= 50 ? green : red} />
-              <KV label="Comeback Rate" value={`${c.comebackRate ?? 0}%`} color={(c.comebackRate ?? 0) >= 50 ? green : amber} />
-              <KV label="Největší comeback" value={`+${fmt(c.biggestComeback ?? 0)}`} color={green} />
-              <KV label="Grind Efficiency" value={fmtS(c.grindEfficiency, 2)} color="hsl(var(--primary))" />
-              <KV label="Nejlepší měsíc" value={c.bestMonth ?? "—"} size="sm" />
-              <KV label="Zisk best měs." value={c.bestMonthGain > 0 ? `+${fmt(c.bestMonthGain)}` : "—"} color={green} size="sm" />
-              <KV label="Nejhorší měsíc" value={c.worstMonth ?? "—"} size="sm" />
-              <KV label="Ztráta worst měs." value={c.worstMonthLoss < 0 ? fmt(c.worstMonthLoss) : "—"} color={red} size="sm" />
+              <KV label={t(lang, "pd_tilt_recovery")} value={`${c.tiltRecovery ?? 0}%`} color={(c.tiltRecovery ?? 0) >= 50 ? green : red} />
+              <KV label={t(lang, "pd_comeback_rate")} value={`${c.comebackRate ?? 0}%`} color={(c.comebackRate ?? 0) >= 50 ? green : amber} />
+              <KV label={t(lang, "pd_biggest_comeback")} value={`+${fmt(c.biggestComeback ?? 0)}`} color={green} />
+              <KV label={t(lang, "pd_grind_eff")} value={fmtS(c.grindEfficiency, 2)} color="hsl(var(--primary))" />
+              <KV label={t(lang, "pd_best_month")} value={c.bestMonth ?? "—"} size="sm" />
+              <KV label={t(lang, "pd_best_month_gain")} value={c.bestMonthGain > 0 ? `+${fmt(c.bestMonthGain)}` : "—"} color={green} size="sm" />
+              <KV label={t(lang, "pd_worst_month")} value={c.worstMonth ?? "—"} size="sm" />
+              <KV label={t(lang, "pd_worst_month_loss")} value={c.worstMonthLoss < 0 ? fmt(c.worstMonthLoss) : "—"} color={red} size="sm" />
             </div>
           </div>
         </GC>
 
         {/* ELO Brackets */}
         <GC>
-          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>WR dle ELO pásma soupeře</div>
+          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{t(lang, "pd_wr_elo_range")}</div>
           <div style={{ padding: "10px 16px 16px" }}>
             {(c.eloBrackets ?? []).map((b, i) => (
               <div key={i} style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
                   <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", fontWeight: 500 }}>{b.bracket}</div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{b.games} her</span>
+                    <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{b.games} {t(lang, "pd_her_label")}</span>
                     <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", color: b.games === 0 ? "hsl(var(--muted-foreground))" : b.winrate >= 55 ? green : b.winrate >= 45 ? amber : red }}>{b.games > 0 ? `${b.winrate}%` : "—"}</span>
                   </div>
                 </div>
@@ -499,8 +500,8 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10, flexShrink: 0, paddingBottom: 16 }}>
         {/* Delta distribuce */}
         <GC>
-          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Distribuce ELO změn</div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>Zelená = zisk, červená = ztráta</div>
+          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{t(lang, "pd_delta_dist")}</div>
+          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>{t(lang, "pd_delta_sub")}</div>
           <div style={{ height: 160, padding: "8px 4px 8px 8px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={deltaDistribution} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
@@ -520,8 +521,8 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
 
         {/* Rolling momentum */}
         <GC>
-          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Rolling Momentum</div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>Forma — výhry v posledních 20 hrách (%)</div>
+          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{t(lang, "pd_rolling_mom")}</div>
+          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>{t(lang, "pd_rolling_sub")}</div>
           <div style={{ height: 160, padding: "8px 4px 8px 8px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={rollingMomentum} margin={{ top: 4, right: 12, bottom: 0, left: 0 }}>
@@ -544,8 +545,8 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
 
         {/* Winrate vs opponent ELO */}
         <GC>
-          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>Winrate vs. ELO soupeře</div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>% výher v závislosti na síle soupeře</div>
+          <div style={{ padding: "14px 16px 0", fontSize: 13, fontWeight: 600, fontFamily: "var(--font-display)" }}>{t(lang, "pd_wr_opp")}</div>
+          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", padding: "0 16px 0" }}>{t(lang, "pd_wr_opp_sub")}</div>
           <div style={{ height: 160, padding: "8px 4px 8px 8px" }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data.winrateVsOpp} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
@@ -577,6 +578,7 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
 }
 function OpponentsTab({ data }: { data: PlayerDetailData }) {
   const { opponents, computed: c } = data;
+  const { lang } = useAppNav();
   const green = "hsl(142,65%,50%)";
   const red = "hsl(0,65%,55%)";
   const amber = "hsl(42,80%,55%)";
@@ -599,10 +601,10 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
       {/* ── HERO STATS ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, flexShrink: 0 }}>
         {[
-          { label: "Soupeři celkem", value: String(opponents.length), color: "hsl(var(--primary))" },
-          { label: "Nejlepší bilance", value: c.bestOpponent.name, sub: `${c.bestOpponent.winrate}% WR`, color: green },
-          { label: "Nejhorší bilance", value: c.worstOpponent.name, sub: `${c.worstOpponent.winrate}% WR`, color: red },
-          { label: "Nejhranější", value: opponents[0]?.name ?? "—", sub: opponents[0] ? `${opponents[0].games} her` : "", color: amber },
+          { label: t(lang, "pd_opp_count"), value: String(opponents.length), color: "hsl(var(--primary))" },
+          { label: t(lang, "pd_best_record"), value: c.bestOpponent.name, sub: `${c.bestOpponent.winrate}% WR`, color: green },
+          { label: t(lang, "pd_worst_record"), value: c.worstOpponent.name, sub: `${c.worstOpponent.winrate}% WR`, color: red },
+          { label: t(lang, "pd_most_played"), value: opponents[0]?.name ?? "—", sub: opponents[0] ? `${opponents[0].games} ${t(lang, "pd_her_label")}` : "", color: amber },
         ].map(s => (
           <GC key={s.label}>
             <div style={{ padding: "12px 14px" }}>
@@ -620,12 +622,12 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
         {/* Left: enriched opponent list */}
         <GC style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
           <div style={{ padding: "14px 16px 8px", flexShrink: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 8 }}>H2H přehled</div>
+            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", marginBottom: 8 }}>{t(lang, "pd_h2h")}</div>
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Hledat soupeře…"
+                placeholder={t(lang, "pd_search_opp")}
                 style={{ flex: 1, padding: "5px 10px", borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.4)", color: "hsl(var(--foreground))", fontSize: 11, fontFamily: "var(--font-mono)", outline: "none" }}
               />
               <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 1 }}>
@@ -679,8 +681,8 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
         {/* Right: winrate chart */}
         <GC style={{ display: "flex", flexDirection: "column" }} className="opp-chart-panel">
           <div style={{ padding: "14px 16px 0", flexShrink: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Winrate — top soupeři</div>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Nejhranější soupeři · zelená &gt;50%, červená &lt;50%</div>
+            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_wr_top_opp")}</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{t(lang, "pd_wr_top_opp_sub")}</div>
           </div>
           <div style={{ flex: 1, padding: "8px 8px 16px 0", minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -718,6 +720,7 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
 // ─── Tournaments Tab ──────────────────────────────────────────────────────────
 function TournamentsTab({ data }: { data: PlayerDetailData }) {
   const { tournamentPerf } = data;
+  const { lang } = useAppNav();
   const green = "hsl(142,65%,50%)";
   const red = "hsl(0,65%,55%)";
   const amber = "hsl(42,80%,55%)";
@@ -733,10 +736,10 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
       {tournamentPerf.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, flexShrink: 0 }}>
           {[
-            { label: "Turnaje celkem", value: String(tournamentPerf.length), color: "hsl(var(--primary))" },
-            { label: "Nejlepší turnaj", value: bestT?.name ?? "—", sub: bestT ? `+${bestT.totalDelta} ELO` : "", color: green },
-            { label: "Nejhorší turnaj", value: worstT?.name ?? "—", sub: worstT ? `${worstT.totalDelta} ELO` : "", color: red },
-            { label: "Nejvíce her", value: mostGamesT?.name ?? "—", sub: mostGamesT ? `${mostGamesT.games} zápasů` : "", color: amber },
+            { label: t(lang, "pd_tour_count"), value: String(tournamentPerf.length), color: "hsl(var(--primary))" },
+            { label: t(lang, "pd_best_tour"), value: bestT?.name ?? "—", sub: bestT ? `+${bestT.totalDelta} ELO` : "", color: green },
+            { label: t(lang, "pd_worst_tour"), value: worstT?.name ?? "—", sub: worstT ? `${worstT.totalDelta} ELO` : "", color: red },
+            { label: t(lang, "pd_most_games_tour"), value: mostGamesT?.name ?? "—", sub: mostGamesT ? `${mostGamesT.games} ${t(lang, "pd_zapasu_label")}` : "", color: amber },
           ].map(s => (
             <GC key={s.label}>
               <div style={{ padding: "12px 14px" }}>
@@ -754,10 +757,10 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
 
         {/* Left: enriched tournament cards */}
         <GC style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: "14px 16px 8px", flexShrink: 0, fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>ELO výkon per turnaj</div>
+          <div style={{ padding: "14px 16px 8px", flexShrink: 0, fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_perf_tour")}</div>
           <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }} className="scrollbar-thin">
             {tournamentPerf.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 40, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>Žádná turnajová data</div>
+              <div style={{ textAlign: "center", padding: 40, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>{t(lang, "pd_no_tour_data")}</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 {tournamentPerf.map((t, i) => {
@@ -799,8 +802,8 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
         {/* Right: avg delta chart */}
         <GC style={{ display: "flex", flexDirection: "column" }} className="tour-chart-panel">
           <div style={{ padding: "14px 16px 4px", flexShrink: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Průměrná Δ ELO per turnaj</div>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>Průměrný zisk/ztráta na zápas</div>
+            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_avg_delta_tour")}</div>
+            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{t(lang, "pd_avg_delta_sub")}</div>
           </div>
           <div style={{ flex: 1, padding: "4px 8px 12px 4px", minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -847,6 +850,7 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
 
 // ─── History Tab ──────────────────────────────────────────────────────────────
 function HistoryTab({ data }: { data: PlayerDetailData }) {
+  const { lang } = useAppNav();
   const green  = "hsl(142,65%,50%)";
   const red    = "hsl(0,65%,55%)";
   const amber  = "hsl(42,80%,55%)";
@@ -895,7 +899,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
         <input
           value={search}
           onChange={e => handleFilter(() => setSearch(e.target.value))}
-          placeholder="Hledat soupeře, turnaj, datum…"
+          placeholder={t(lang, "pd_search_hist")}
           style={{ flex: 1, minWidth: 180, padding: "6px 10px", borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.4)", color: "hsl(var(--foreground))", fontSize: 12, fontFamily: "var(--font-mono)", outline: "none" }}
         />
         {/* Result filter */}
@@ -907,7 +911,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
                 background: filterResult === r ? (r === "Won" ? `${green}22` : r === "Lost" ? `${red}22` : r === "Draw" ? `${amber}22` : "hsl(var(--primary)/0.15)") : "transparent",
                 color: filterResult === r ? (r === "Won" ? green : r === "Lost" ? red : r === "Draw" ? amber : "hsl(var(--primary))") : muted,
               }}>
-              {r === "all" ? "Vše" : r === "Won" ? "Výhra" : r === "Lost" ? "Prohra" : "Remíza"}
+              {r === "all" ? t(lang, "pd_filter_all") : r === "Won" ? t(lang, "pd_filter_won") : r === "Lost" ? t(lang, "pd_filter_lost") : t(lang, "pd_filter_draw")}
             </button>
           ))}
         </div>
@@ -915,7 +919,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
         {tournaments.length > 0 && (
           <select value={filterTournament} onChange={e => handleFilter(() => setFilterTournament(e.target.value))}
             style={{ padding: "5px 8px", borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.4)", color: "hsl(var(--foreground))", fontSize: 11, fontFamily: "var(--font-mono)", cursor: "pointer" }}>
-            <option value="all">Všechny typy</option>
+            <option value="all">{t(lang, "pd_all_types")}</option>
             {tournaments.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         )}
@@ -924,10 +928,10 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
       {/* ── Summary strip ── */}
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
         {[
-          { label: "Celkem", value: filtered.length, color: "hsl(var(--foreground))" },
-          { label: "Výhry", value: wins, color: green },
-          { label: "Prohry", value: losses, color: red },
-          { label: "Remízy", value: draws, color: amber },
+          { label: t(lang, "pd_total"), value: filtered.length, color: "hsl(var(--foreground))" },
+          { label: t(lang, "pd_wins_label"), value: wins, color: green },
+          { label: t(lang, "pd_losses_label"), value: losses, color: red },
+          { label: t(lang, "pd_draws_label"), value: draws, color: amber },
           { label: "WR%", value: filtered.length > 0 ? `${Math.round(wins / filtered.length * 100)}%` : "—", color: wins / (filtered.length||1) >= 0.5 ? green : red },
           { label: "Σ ELO", value: (totalDelta >= 0 ? "+" : "") + totalDelta, color: totalDelta >= 0 ? green : red },
         ].map(s => (
@@ -942,14 +946,14 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
       <div style={{ flex: 1, overflow: "hidden", borderRadius: 12, border: "1px solid hsl(var(--border)/0.4)", background: "hsl(var(--card)/0.6)", backdropFilter: "blur(12px)", display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <div className="history-row" style={{ display: "grid", gridTemplateColumns: "90px 1fr 130px 90px 90px 80px 70px", gap: 0, padding: "8px 14px", borderBottom: "1px solid hsl(var(--border)/0.4)", flexShrink: 0 }}>
-          {["Datum", "Soupeř", "Turnaj", "ELO před", "ELO po", "Změna", "Výsledek"].map(h => (
+          {[t(lang,"pd_hist_date"), t(lang,"pd_hist_opp"), t(lang,"pd_hist_tour"), t(lang,"pd_hist_elo_before"), t(lang,"pd_hist_elo_after"), t(lang,"pd_hist_change"), t(lang,"pd_hist_result")].map(h => (
             <div key={h} className="history-cell" style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: muted, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>{h}</div>
           ))}
         </div>
         {/* Rows */}
         <div style={{ flex: 1, overflowY: "auto" }} className="scrollbar-thin">
           {pageData.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: muted, fontFamily: "var(--font-mono)", fontSize: 12 }}>Žádné zápasy neodpovídají filtru</div>
+            <div style={{ textAlign: "center", padding: 40, color: muted, fontFamily: "var(--font-mono)", fontSize: 12 }}>{t(lang, "pd_no_matches")}</div>
           ) : pageData.map((m, i) => (
             <div key={`${m.matchId}-${i}`}
               className="history-row"
@@ -997,7 +1001,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
             <button onClick={() => setPage(p => Math.max(0, p-1))} disabled={page === 0}
               style={{ padding: "4px 12px", borderRadius: 7, border: "1px solid hsl(var(--border)/0.4)", background: "transparent", color: page === 0 ? muted : "hsl(var(--foreground))", cursor: page === 0 ? "default" : "pointer", fontSize: 12, opacity: page === 0 ? 0.4 : 1 }}>‹</button>
             <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: muted }}>
-              {page + 1} / {totalPages} · {filtered.length} zápasů
+              {page + 1} / {totalPages} · {filtered.length} {t(lang, "pd_matches")}
             </span>
             <button onClick={() => setPage(p => Math.min(totalPages-1, p+1))} disabled={page === totalPages-1}
               style={{ padding: "4px 12px", borderRadius: 7, border: "1px solid hsl(var(--border)/0.4)", background: "transparent", color: page === totalPages-1 ? muted : "hsl(var(--foreground))", cursor: page === totalPages-1 ? "default" : "pointer", fontSize: 12, opacity: page === totalPages-1 ? 0.4 : 1 }}>›</button>
@@ -1010,7 +1014,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export default function PlayerDetailView() {
-  const { selectedPlayer, playerSubView } = useAppNav();
+  const { selectedPlayer, playerSubView, lang } = useAppNav();
   const { mode } = useRatingMode();
   const [data, setData] = useState<PlayerDetailData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -1045,8 +1049,8 @@ export default function PlayerDetailView() {
 
   if (error || !data) return (
     <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-      <div style={{ fontSize: 14, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>Nepodařilo se načíst data pro {selectedPlayer.name}</div>
-      <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground)/0.7)", fontFamily: "var(--font-mono)" }}>Zkus znovu nebo zkontroluj propojení s Google Sheets</div>
+      <div style={{ fontSize: 14, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>{t(lang, "pd_load_error")} {selectedPlayer.name}</div>
+      <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground)/0.7)", fontFamily: "var(--font-mono)" }}>{t(lang, "pd_load_error2")}</div>
     </div>
   );
 

@@ -42,8 +42,8 @@ function GlassPanel({ children, style, accent, className }: {
 }
 
 // ── Mini player card shown below table when player row is clicked ──────────────
-function PlayerMiniCard({ player, onClose, onOpen, mode }: {
-  player: Player; onClose: () => void; onOpen: (p: Player) => void; mode: string;
+function PlayerMiniCard({ player, onClose, onOpen, mode, lang }: {
+  player: Player; onClose: () => void; onOpen: (p: Player) => void; mode: string; lang: "cs" | "en" | "fr";
 }) {
   const wr = player.winrate <= 1 ? player.winrate * 100 : player.winrate;
   const green = "hsl(152,72%,50%)";
@@ -54,13 +54,13 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
   const isMobile = wBp === "xs" || wBp === "sm";
 
   const baseStats = [
-    { label: "Rating",     value: player.rating.toLocaleString("cs-CZ"), color: "hsl(var(--primary))" },
-    { label: "Winrate",    value: wr.toFixed(1) + "%",                   color: wr >= 55 ? green : wr >= 45 ? amber : red },
-    { label: "Výhry",      value: player.win.toString(),                 color: green },
-    { label: "Prohry",     value: player.loss.toString(),                color: red   },
-    { label: "Remízy",     value: player.draw.toString(),                color: amber },
-    { label: "Zápasy",     value: player.games.toString(),               color: "hsl(var(--foreground))" },
-    { label: "Peak",       value: player.peak.toLocaleString("cs-CZ"),   color: amber },
+    { label: t(lang, "rating"),  value: player.rating.toLocaleString("cs-CZ"), color: "hsl(var(--primary))" },
+    { label: t(lang, "winrate"), value: wr.toFixed(1) + "%",                   color: wr >= 55 ? green : wr >= 45 ? amber : red },
+    { label: t(lang, "wins"),    value: player.win.toString(),                 color: green },
+    { label: t(lang, "losses"),  value: player.loss.toString(),                color: red   },
+    { label: t(lang, "draws"),   value: player.draw.toString(),                color: amber },
+    { label: t(lang, "games"),   value: player.games.toString(),               color: "hsl(var(--foreground))" },
+    { label: t(lang, "peak"),    value: player.peak.toLocaleString("cs-CZ"),   color: amber },
   ];
   const stats = mode === "DCPR"
     ? baseStats
@@ -109,7 +109,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
                     boxShadow: "0 3px 12px hsl(var(--primary) / 0.35)",
                   }}
                 >
-                  Detail
+                  {t(lang, "lb_detail")}
                 </button>
                 <button
                   onClick={onClose}
@@ -173,7 +173,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
                 }}
               >
                 <Activity size={12} />
-                Detail hráče
+                {t(lang, "lb_detail_player")}
               </button>
               <button
                 onClick={onClose}
@@ -212,9 +212,9 @@ function PlayerMiniCard({ player, onClose, onOpen, mode }: {
         {/* ELO bar — visual representation */}
         <div style={{ marginTop: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-            <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase" }}>ELO pozice</span>
+            <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", letterSpacing: "0.08em", textTransform: "uppercase" }}>{t(lang, "lb_elo_pos")}</span>
             <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-              {wr.toFixed(1)}% winrate · {player.games} zápasů
+              {wr.toFixed(1)}% {t(lang, "winrate")} · {player.games} {t(lang, "games")}
             </span>
           </div>
           <div style={{ height: 5, background: "hsl(var(--border) / 0.5)", borderRadius: 99, overflow: "hidden" }}>
@@ -422,6 +422,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
         <PlayerMiniCard
           player={selectedCard}
           mode={mode}
+          lang={lang}
           onClose={() => setSelectedCard(null)}
           onOpen={(p) => { openPlayer(p); setSelectedCard(null); }}
         />

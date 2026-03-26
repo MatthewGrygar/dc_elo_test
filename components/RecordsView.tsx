@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useAppNav } from "./AppContext";
 import { RecordsData, RecordEntry, RecordCategory } from "@/lib/dataFetchers";
 import type { PrefetchCache } from "@/app/page";
+import { t } from "@/lib/i18n";
 import { Crown, TrendingUp, Flame, Zap, Swords, Trophy, BarChart2, AlertCircle } from "lucide-react";
 
 const CAT_ICONS: Record<string, React.ElementType> = {
@@ -26,6 +28,7 @@ function GC({ children, style, glow }: { children: React.ReactNode; style?: Reac
 }
 
 function CategoryCard({ category }: { category: RecordCategory }) {
+  const { lang } = useAppNav();
   const Icon = CAT_ICONS[category.icon] ?? Trophy;
   const color = CAT_COLORS[category.icon] ?? "hsl(var(--primary))";
   const validRecords = category.records.filter(r => r.entry && r.entry.value !== "—");
@@ -38,7 +41,7 @@ function CategoryCard({ category }: { category: RecordCategory }) {
         </div>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)", color: "hsl(var(--foreground))", lineHeight: 1 }}>{category.title}</div>
-          <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{validRecords.length} záznamů</div>
+          <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{validRecords.length} {t(lang, "rec_count")}</div>
         </div>
       </div>
       <div style={{ padding: "4px 0 6px" }}>
@@ -57,7 +60,7 @@ function CategoryCard({ category }: { category: RecordCategory }) {
                 {r.entry?.detail2 && <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground) / 0.65)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.entry.detail2}</div>}
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                {r.entry?.isAllTime && <div style={{ fontSize: 7, fontFamily: "var(--font-mono)", color: "hsl(42,80%,52%)", letterSpacing: "0.08em", marginBottom: 1 }}>👑 ALL-TIME</div>}
+                {r.entry?.isAllTime && <div style={{ fontSize: 7, fontFamily: "var(--font-mono)", color: "hsl(42,80%,52%)", letterSpacing: "0.08em", marginBottom: 1 }}>{t(lang, "rec_all_time_crown")}</div>}
                 <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", letterSpacing: "-0.02em", lineHeight: 1 }}>{r.entry?.value}</div>
               </div>
             </div>
@@ -72,6 +75,7 @@ function HeroCard({ icon: Icon, label, value, player, detail, color }: {
   icon: React.ElementType; label: string; value: string;
   player?: string; detail?: string; color: string;
 }) {
+  const { lang } = useAppNav();
   return (
     <GC glow={`${color}45`}>
       <div style={{ padding: "18px 20px 22px" }}>
@@ -80,7 +84,7 @@ function HeroCard({ icon: Icon, label, value, player, detail, color }: {
             <Icon size={19} style={{ color }} />
           </div>
           <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" as const, color, background: `${color}18`, border: `1px solid ${color}35`, borderRadius: 99, padding: "2px 8px" }}>
-            ALL-TIME 👑
+            {t(lang, "rec_all_time_crown")}
           </div>
         </div>
         <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase" as const, marginBottom: 4 }}>{label}</div>
@@ -98,6 +102,7 @@ function Sk({ h = 120 }: { h?: number }) {
 
 export default function RecordsView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { lang } = useAppNav();
   const [data, setData] = useState<RecordsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -130,8 +135,8 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
           <Crown size={22} style={{ color: amber }} />
         </div>
         <div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, lineHeight: 1 }}>Síň slávy — Rekordy</div>
-          <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>Historická maxima komunity · {mode} systém</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, lineHeight: 1 }}>{t(lang, "rec_hall")}</div>
+          <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>{t(lang, "rec_historical")} {mode}</div>
         </div>
         <div style={{ marginLeft: "auto", fontSize: 11, fontFamily: "var(--font-mono)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "hsl(var(--primary))", background: "hsl(var(--primary) / 0.12)", border: "1px solid hsl(var(--primary) / 0.25)", padding: "4px 12px", borderRadius: 99 }}>{mode}</div>
       </div>
@@ -152,7 +157,7 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
       {error && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, padding: 60 }}>
           <AlertCircle size={32} style={{ color: "hsl(var(--muted-foreground))" }} />
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>Nepodařilo se načíst rekordy — zkontroluj propojení se Sheets</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>{t(lang, "rec_error")}</div>
         </div>
       )}
 
@@ -161,10 +166,10 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
           {/* Hero row */}
           {(allTimePeak || biggestGain || longestWin || biggestUpset) && (
             <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-              {allTimePeak?.player  && <HeroCard icon={Crown}     label="All-time Peak ELO"        value={allTimePeak.value}  player={allTimePeak.player}  detail={allTimePeak.detail}              color={amber} />}
-              {biggestGain?.player  && <HeroCard icon={TrendingUp} label="Největší jednorázový zisk" value={biggestGain.value}  player={biggestGain.player}  detail={biggestGain.detail ?? ""}        color={green} />}
-              {longestWin?.player   && <HeroCard icon={Flame}      label="Nejdelší win streak"       value={longestWin.value}   player={longestWin.player}   detail={longestWin.detail}              color={orange}/>}
-              {biggestUpset?.player && <HeroCard icon={Swords}     label="Největší upset"            value={biggestUpset.value} player={biggestUpset.player} detail={biggestUpset.detail2 ?? biggestUpset.detail} color={red} />}
+              {allTimePeak?.player  && <HeroCard icon={Crown}     label={t(lang, "rec_hero_peak")}       value={allTimePeak.value}  player={allTimePeak.player}  detail={allTimePeak.detail}              color={amber} />}
+              {biggestGain?.player  && <HeroCard icon={TrendingUp} label={t(lang, "rec_hero_gain")}       value={biggestGain.value}  player={biggestGain.player}  detail={biggestGain.detail ?? ""}        color={green} />}
+              {longestWin?.player   && <HeroCard icon={Flame}      label={t(lang, "rec_hero_streak")}     value={longestWin.value}   player={longestWin.player}   detail={longestWin.detail}              color={orange}/>}
+              {biggestUpset?.player && <HeroCard icon={Swords}     label={t(lang, "rec_hero_upset")}      value={biggestUpset.value} player={biggestUpset.player} detail={biggestUpset.detail2 ?? biggestUpset.detail} color={red} />}
             </div>
           )}
 
@@ -182,7 +187,7 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
           </div>
 
           <div style={{ textAlign: "center", fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground) / 0.45)", paddingBottom: 8 }}>
-            Rekordy počítány z live dat · Přepni ELO ↔ DCPR pro jiné rekordy
+            {t(lang, "rec_footer")}
           </div>
         </div>
       )}

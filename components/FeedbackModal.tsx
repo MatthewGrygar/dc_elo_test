@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { X, MessageSquarePlus, Check, Send, Bug, Lightbulb, Sparkles, Pencil } from "lucide-react";
+import { useAppNav } from "./AppContext";
+import { t } from "@/lib/i18n";
 
 type Category = "bug" | "feature" | "improvement" | "idea";
 
-const CATEGORIES: { id: Category; label: string; icon: React.ElementType; color: string }[] = [
-  { id: "bug",         label: "Chyba",       icon: Bug,             color: "hsl(0,65%,55%)"    },
-  { id: "feature",     label: "Nová funkce",  icon: Sparkles,        color: "hsl(262,70%,60%)"  },
-  { id: "improvement", label: "Úprava",       icon: Pencil,          color: "hsl(210,75%,55%)"  },
-  { id: "idea",        label: "Nápad",        icon: Lightbulb,       color: "hsl(42,88%,52%)"   },
+const CATEGORY_DEFS: { id: Category; icon: React.ElementType; color: string }[] = [
+  { id: "bug",         icon: Bug,       color: "hsl(0,65%,55%)"    },
+  { id: "feature",     icon: Sparkles,  color: "hsl(262,70%,60%)"  },
+  { id: "improvement", icon: Pencil,    color: "hsl(210,75%,55%)"  },
+  { id: "idea",        icon: Lightbulb, color: "hsl(42,88%,52%)"   },
 ];
 
 const inp: React.CSSProperties = {
@@ -22,6 +24,7 @@ const inp: React.CSSProperties = {
 };
 
 export default function FeedbackModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { lang } = useAppNav();
   const [category, setCategory] = useState<Category>("idea");
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
@@ -32,6 +35,10 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
   if (!open) return null;
 
   const accent = "hsl(262,70%,60%)";
+  const CATEGORIES = CATEGORY_DEFS.map(c => ({
+    ...c,
+    label: t(lang, c.id === "bug" ? "fb_bug" : c.id === "feature" ? "fb_feature" : c.id === "improvement" ? "fb_improvement" : "fb_idea"),
+  }));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +92,8 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
               <MessageSquarePlus size={18} style={{ color: accent }} />
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "var(--font-display)", letterSpacing: "-0.02em", lineHeight: 1 }}>Zpětná vazba</div>
-              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>Pomoz nám aplikaci zlepšovat</div>
+              <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "var(--font-display)", letterSpacing: "-0.02em", lineHeight: 1 }}>{t(lang, "fb_title")}</div>
+              <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 3 }}>{t(lang, "fb_subtitle")}</div>
             </div>
             <button onClick={onClose} style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.5)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
               <X size={14} />
@@ -98,9 +105,9 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
 
             {/* Beta notice */}
             <div style={{ borderRadius: 12, padding: "14px 16px", background: `hsl(262,70%,60%,0.07)`, border: `1px solid hsl(262,70%,60%,0.2)` }}>
-              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", color: accent, marginBottom: 6 }}>Aplikace je v beta verzi</div>
+              <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", color: accent, marginBottom: 6 }}>{t(lang, "fb_beta_title")}</div>
               <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.7 }}>
-                DC ELO je momentálně v testovacím provozu a aktivně ho rozvíjíme. Jaká data ti tu chybí? Co bys přidal nebo odebral? Napadl tě zajímavý rekord, achievement nebo tag pro hráče? Nebo jsi narazil na chybu? Každý podnět je pro nás cenný — budeme moc rádi, pokud ho tu zanecháš.
+                {t(lang, "fb_beta_desc")}
               </div>
             </div>
 
@@ -109,15 +116,15 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
                 <div style={{ width: 52, height: 52, borderRadius: "50%", background: "hsl(142,65%,45%,0.12)", border: "1px solid hsl(142,65%,45%,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
                   <Check size={24} style={{ color: "hsl(142,65%,45%)" }} />
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "var(--font-display)", marginBottom: 6 }}>Díky za feedback!</div>
-                <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.6 }}>Tvůj podnět jsme dostali a pečlivě ho zvážíme.</div>
+                <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "var(--font-display)", marginBottom: 6 }}>{t(lang, "fb_thanks")}</div>
+                <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", lineHeight: 1.6 }}>{t(lang, "fb_thanks_desc")}</div>
               </div>
             ) : (
               <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
                 {/* Category selector */}
                 <div>
-                  <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Typ feedbacku</div>
+                  <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>{t(lang, "fb_type")}</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
                     {CATEGORIES.map(cat => {
                       const Icon = cat.icon;
@@ -149,29 +156,29 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
                 {/* Name + email */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
-                    <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>JMÉNO *</label>
-                    <input required style={inp} placeholder="Jan Novák" value={name} onChange={e => setName(e.target.value)} />
+                    <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "form_name")}</label>
+                    <input required style={inp} placeholder={t(lang, "form_name_ph")} value={name} onChange={e => setName(e.target.value)} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>E-MAIL *</label>
-                    <input required type="email" style={inp} placeholder="jan@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                    <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "form_email")}</label>
+                    <input required type="email" style={inp} placeholder={t(lang, "form_email_ph")} value={email} onChange={e => setEmail(e.target.value)} />
                   </div>
                 </div>
 
                 {/* Message */}
                 <div>
-                  <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>TVŮJ FEEDBACK *</label>
+                  <label style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", display: "block", marginBottom: 4 }}>{t(lang, "fb_message")}</label>
                   <textarea
                     required rows={5}
                     style={{ ...inp, resize: "vertical", minHeight: 110 }}
-                    placeholder="Popiš svůj nápad, chybu nebo připomínku…"
+                    placeholder={t(lang, "fb_placeholder")}
                     value={message}
                     onChange={e => setMessage(e.target.value)}
                   />
                 </div>
 
                 {status === "err" && (
-                  <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>Chyba: {errMsg || "Odeslání selhalo"}</div>
+                  <div style={{ fontSize: 11, color: "hsl(0,65%,55%)", fontFamily: "var(--font-mono)" }}>{t(lang, "form_error_prefix")} {errMsg || t(lang, "form_error_fallback")}</div>
                 )}
 
                 <button
@@ -179,7 +186,7 @@ export default function FeedbackModal({ open, onClose }: { open: boolean; onClos
                   disabled={status === "sending"}
                   style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px 20px", borderRadius: 10, background: accent, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: status === "sending" ? "wait" : "pointer", opacity: status === "sending" ? 0.7 : 1, fontFamily: "var(--font-body)" }}
                 >
-                  <Send size={13} />{status === "sending" ? "Odesílám…" : "Odeslat feedback"}
+                  <Send size={13} />{status === "sending" ? t(lang, "form_sending") : t(lang, "fb_send")}
                 </button>
               </form>
             )}

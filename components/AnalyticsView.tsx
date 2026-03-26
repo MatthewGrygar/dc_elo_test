@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useAppNav } from "./AppContext";
 import { AnalyticsData } from "@/lib/dataFetchers";
 import type { PrefetchCache } from "@/app/page";
+import { t, Lang } from "@/lib/i18n";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, AreaChart, Area, ScatterChart, Scatter, Cell,
@@ -48,11 +50,11 @@ function Sk({ h = 200 }: { h?: number }) {
 }
 
 // ─── Row 1a: ELO Histogram ─────────────────────────────────────────────────────
-function EloHistogram({ data }: { data: AnalyticsData["eloHistogram"] }) {
+function EloHistogram({ data, lang }: { data: AnalyticsData["eloHistogram"]; lang: Lang }) {
   const avgX = data.length ? data.reduce((s, d) => s + d.x * d.count, 0) / data.reduce((s, d) => s + d.count, 0) : 0;
   return (
     <GlassCard style={{ height: 240 }}>
-      <CH title="ELO Distribuce" sub="Počet hráčů v každém ELO pásmu (kroky po 50)" />
+      <CH title={t(lang, "an_elo_hist")} sub={t(lang, "an_elo_hist_sub")} />
       <div style={{ flex: 1, padding: "8px 4px 8px 8px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
@@ -61,7 +63,7 @@ function EloHistogram({ data }: { data: AnalyticsData["eloHistogram"] }) {
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={28} />
             <Tooltip content={<CT />} />
             <ReferenceLine x={String(Math.round(avgX / 50) * 50)} stroke="hsl(var(--primary))" strokeDasharray="4 2" label={{ value: "avg", fontSize: 9, fill: "hsl(var(--primary))" }} />
-            <Bar dataKey="count" name="Hráčů" fill="hsl(var(--primary))" radius={[3,3,0,0]} />
+            <Bar dataKey="count" name={t(lang, "an_players")} fill="hsl(var(--primary))" radius={[3,3,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -70,10 +72,10 @@ function EloHistogram({ data }: { data: AnalyticsData["eloHistogram"] }) {
 }
 
 // ─── Row 1b: Winrate Distribution ─────────────────────────────────────────────
-function WinrateDistribution({ data }: { data: AnalyticsData["winrateDistribution"] }) {
+function WinrateDistribution({ data, lang }: { data: AnalyticsData["winrateDistribution"]; lang: Lang }) {
   return (
     <GlassCard style={{ height: 240 }}>
-      <CH title="Winrate distribuce" sub="Kolik hráčů má jaký winrate (0–100 %, kroky 5 %)" />
+      <CH title={t(lang, "an_wr_dist")} sub={t(lang, "an_wr_dist_sub")} />
       <div style={{ flex: 1, padding: "8px 4px 8px 8px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
@@ -82,7 +84,7 @@ function WinrateDistribution({ data }: { data: AnalyticsData["winrateDistributio
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={28} />
             <Tooltip content={<CT />} />
             <ReferenceLine x="50%" stroke="hsl(var(--primary))" strokeDasharray="4 2" label={{ value: "50%", fontSize: 9, fill: "hsl(var(--primary))", position: "insideTopLeft" }} />
-            <Bar dataKey="count" name="Hráčů" radius={[3,3,0,0]}>
+            <Bar dataKey="count" name={t(lang, "an_players")} radius={[3,3,0,0]}>
               {data.map((entry, i) => <Cell key={i} fill={entry.from >= 50 ? "hsl(142,65%,50%)" : "hsl(0,65%,55%)"} fillOpacity={0.85} />)}
             </Bar>
           </BarChart>
@@ -93,10 +95,10 @@ function WinrateDistribution({ data }: { data: AnalyticsData["winrateDistributio
 }
 
 // ─── Row 2a: Games over time ───────────────────────────────────────────────────
-function GamesOverTime({ data }: { data: AnalyticsData["gamesOverTime"] }) {
+function GamesOverTime({ data, lang }: { data: AnalyticsData["gamesOverTime"]; lang: Lang }) {
   return (
     <GlassCard style={{ height: 220 }}>
-      <CH title="Zápasy v čase" sub="Počet odehraných zápasů per měsíc — aktivita komunity" />
+      <CH title={t(lang, "an_games_time")} sub={t(lang, "an_games_time_sub")} />
       <div style={{ flex: 1, padding: "8px 4px 8px 8px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
@@ -110,7 +112,7 @@ function GamesOverTime({ data }: { data: AnalyticsData["gamesOverTime"] }) {
             <XAxis dataKey="period" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={32} />
             <Tooltip content={<CT />} />
-            <Area type="monotone" dataKey="games" name="Zápasy" stroke="hsl(var(--primary))" fill="url(#gGames)" strokeWidth={2} dot={false} />
+            <Area type="monotone" dataKey="games" name={t(lang, "an_games")} stroke="hsl(var(--primary))" fill="url(#gGames)" strokeWidth={2} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -119,10 +121,10 @@ function GamesOverTime({ data }: { data: AnalyticsData["gamesOverTime"] }) {
 }
 
 // ─── Row 2b: Median ELO trend ──────────────────────────────────────────────────
-function MedianEloTrend({ data }: { data: AnalyticsData["medianEloTrend"] }) {
+function MedianEloTrend({ data, lang }: { data: AnalyticsData["medianEloTrend"]; lang: Lang }) {
   return (
     <GlassCard style={{ height: 220 }}>
-      <CH title="Medián ELO v čase" sub="Medián ratingu celé komunity per měsíc — inflace/deflace" />
+      <CH title={t(lang, "an_median_time")} sub={t(lang, "an_median_time_sub")} />
       <div style={{ flex: 1, padding: "8px 4px 8px 8px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 12, bottom: 0, left: 0 }}>
@@ -136,7 +138,7 @@ function MedianEloTrend({ data }: { data: AnalyticsData["medianEloTrend"] }) {
             <XAxis dataKey="period" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval="preserveStartEnd" />
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={36} domain={["auto","auto"]} />
             <Tooltip content={<CT />} />
-            <Area type="monotone" dataKey="medianElo" name="Medián ELO" stroke="hsl(210,70%,55%)" fill="url(#gMed)" strokeWidth={2} dot={false} />
+            <Area type="monotone" dataKey="medianElo" name={t(lang, "an_median_time")} stroke="hsl(210,70%,55%)" fill="url(#gMed)" strokeWidth={2} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -145,15 +147,15 @@ function MedianEloTrend({ data }: { data: AnalyticsData["medianEloTrend"] }) {
 }
 
 // ─── Row 3: ELO vs games (full width, tall) ────────────────────────────────────
-function EloVsGamesScatter({ data }: { data: AnalyticsData["eloVsGames"] }) {
+function EloVsGamesScatter({ data, lang }: { data: AnalyticsData["eloVsGames"]; lang: Lang }) {
   return (
     <GlassCard style={{ height: 300 }}>
-      <CH title="ELO vs. počet her" sub="Korelace zkušeností a ratingu — každý bod = jeden hráč" />
+      <CH title={t(lang, "an_elo_vs_games")} sub={t(lang, "an_elo_vs_games_sub")} />
       <div style={{ flex: 1, padding: "8px 4px 8px 8px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 4, right: 16, bottom: 0, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-            <XAxis dataKey="games" name="Hry" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} type="number" domain={[0, "auto"]} padding={{ left: 20, right: 8 }} label={{ value: "Počet her", position: "insideBottomRight", offset: -4, fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+            <XAxis dataKey="games" name={t(lang, "an_games")} tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} type="number" domain={[0, "auto"]} padding={{ left: 20, right: 8 }} label={{ value: t(lang, "an_games_count"), position: "insideBottomRight", offset: -4, fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
             <YAxis dataKey="elo" name="ELO" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={36} domain={["auto","auto"]} label={{ value: "ELO", angle: -90, position: "insideLeft", fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
             <Tooltip cursor={{ strokeDasharray: "3 3" }} content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
@@ -162,7 +164,7 @@ function EloVsGamesScatter({ data }: { data: AnalyticsData["eloVsGames"] }) {
                 <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
                   <div style={{ fontWeight: 700, marginBottom: 3 }}>{d?.name}</div>
                   <div style={{ color: "hsl(var(--primary))" }}>ELO: {d?.elo?.toLocaleString("cs-CZ")}</div>
-                  <div style={{ color: "hsl(var(--muted-foreground))" }}>Hry: {d?.games}</div>
+                  <div style={{ color: "hsl(var(--muted-foreground))" }}>{t(lang, "an_games_label")} {d?.games}</div>
                 </div>
               );
             }} />
@@ -177,7 +179,7 @@ function EloVsGamesScatter({ data }: { data: AnalyticsData["eloVsGames"] }) {
 // ─── Row 4: Top N ELO history (full width, tall, toggle TOP5/TOP10/TOP15) ──────
 const TOPN_COLORS = ["hsl(152,65%,50%)","hsl(210,70%,55%)","hsl(42,80%,55%)","hsl(265,65%,60%)","hsl(0,65%,55%)","hsl(185,60%,50%)","hsl(320,60%,55%)","hsl(45,85%,55%)","hsl(280,60%,58%)","hsl(180,60%,50%)","hsl(60,70%,50%)","hsl(30,80%,55%)","hsl(200,65%,55%)","hsl(340,60%,55%)","hsl(90,60%,50%)"];
 
-function TopNHistory({ data5, data10, data15, top10 }: { data5: AnalyticsData["top5History"]; data10: AnalyticsData["top10History"]; data15: AnalyticsData["top15History"]; top10: AnalyticsData["top10"] }) {
+function TopNHistory({ data5, data10, data15, top10, lang }: { data5: AnalyticsData["top5History"]; data10: AnalyticsData["top10History"]; data15: AnalyticsData["top15History"]; top10: AnalyticsData["top10"]; lang: Lang }) {
   const [n, setN] = useState<5 | 10>(5);
   const names = n === 5 ? top10.slice(0, 5).map(p => p.name) : top10.slice(0, 10).map(p => p.name);
   // fall back to data5 if higher datasets are empty (data not yet loaded)
@@ -189,8 +191,8 @@ function TopNHistory({ data5, data10, data15, top10 }: { data5: AnalyticsData["t
     <GlassCard style={{ height: "auto" }}>
       <div style={{ padding: "14px 18px 0", flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700, color: "hsl(var(--foreground))" }}>Top hráčů — ELO vývoj</div>
-          <div style={{ fontSize: 11, color: mt, marginTop: 2, fontFamily: "var(--font-mono)" }}>Historie ratingu nejlepších hráčů v čase</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700, color: "hsl(var(--foreground))" }}>{t(lang, "an_top_history")}</div>
+          <div style={{ fontSize: 11, color: mt, marginTop: 2, fontFamily: "var(--font-mono)" }}>{t(lang, "an_top_history_sub")}</div>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           {([5, 10] as const).map(v => (
@@ -219,16 +221,16 @@ function TopNHistory({ data5, data10, data15, top10 }: { data5: AnalyticsData["t
 }
 
 // ─── Row 5a: Activity heatmap ─────────────────────────────────────────────────
-function ActivityHeatmap({ data }: { data: AnalyticsData["activityHeatmap"] }) {
+function ActivityHeatmap({ data, lang }: { data: AnalyticsData["activityHeatmap"]; lang: Lang }) {
   const parsed = data.map(d => ({ ...d, year: parseInt(d.period.split("-")[0]), month: parseInt(d.period.split("-")[1]) }));
   const max = Math.max(...parsed.map(d => d.count), 1);
   const years = [...new Set(parsed.map(d => d.year))].sort((a,b) => a - b);
   const months = [1,2,3,4,5,6,7,8,9,10,11,12];
-  const monthNames = ["Led","Úno","Bře","Dub","Kvě","Čvn","Čvc","Srp","Zář","Říj","Lis","Pro"];
+  const monthNames = [t(lang,"month_jan"),t(lang,"month_feb"),t(lang,"month_mar"),t(lang,"month_apr"),t(lang,"month_may"),t(lang,"month_jun"),t(lang,"month_jul"),t(lang,"month_aug"),t(lang,"month_sep"),t(lang,"month_oct"),t(lang,"month_nov"),t(lang,"month_dec")];
 
   return (
     <GlassCard style={{ height: "auto" }}>
-      <CH title="Aktivita — heatmapa" sub="Počet zápasů per měsíc — celý měsíc" />
+      <CH title={t(lang, "an_heatmap")} sub={t(lang, "an_heatmap_sub")} />
       <div style={{ padding: "10px 12px 12px" }}>
         <div style={{ display: "grid", gridTemplateColumns: `38px repeat(12, 1fr)`, gap: 2, marginBottom: 2 }}>
           <div />
@@ -252,7 +254,7 @@ function ActivityHeatmap({ data }: { data: AnalyticsData["activityHeatmap"] }) {
 }
 
 // ─── Row 5b: Tournament pie (uses col D — tournament_detail) ──────────────────
-function TournamentPie({ data }: { data: AnalyticsData["tournamentPie"] }) {
+function TournamentPie({ data, lang }: { data: AnalyticsData["tournamentPie"]; lang: Lang }) {
   const total = data.reduce((s, d) => s + d.count, 0) || 1;
   const [hovered, setHovered] = useState<string | null>(null);
   const RADIAN = Math.PI / 180;
@@ -272,7 +274,7 @@ function TournamentPie({ data }: { data: AnalyticsData["tournamentPie"] }) {
 
   return (
     <GlassCard style={{ height: "auto" }}>
-      <CH title="Zápasy per turnaj" sub="Nejhranější turnaje dle tournament_detail (sloupec D)" />
+      <CH title={t(lang, "an_tournament_pie")} sub={t(lang, "an_tournament_pie_sub")} />
       <div style={{ height: 280, padding: "8px 8px 4px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -327,23 +329,23 @@ const wrColor = (wr: number) => {
   return red;
 };
 
-const WRFooter = ({ totalGames, bucketCount, avgActualWR, avgThWR }: { totalGames: number; bucketCount: number; avgActualWR: number; avgThWR: number }) => (
+const WRFooter = ({ totalGames, bucketCount, avgActualWR, avgThWR, lang }: { totalGames: number; bucketCount: number; avgActualWR: number; avgThWR: number; lang: Lang }) => (
   <div style={{ display: "flex", gap: 16, padding: "8px 16px 12px", borderTop: "1px solid hsl(var(--border)/0.3)", flexWrap: "wrap" }}>
     <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: muted }}>
-      <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>{totalGames.toLocaleString("cs-CZ")}</span> zápasů ·{" "}
-      <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>{bucketCount}</span> bucketů
+      <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>{totalGames.toLocaleString("cs-CZ")}</span> {t(lang, "an_matches_dot")}{" "}
+      <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>{bucketCount}</span> {t(lang, "an_buckets_n")}
     </div>
     <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: muted }}>
-      Prům. WR: <span style={{ color: wrColor(avgActualWR), fontWeight: 600 }}>{avgActualWR}%</span>
-      {" "}vs. teoret. <span style={{ color: blue, fontWeight: 600 }}>{avgThWR}%</span>
-      {" · odchylka: "}<span style={{ color: avgActualWR - avgThWR >= 0 ? green : red, fontWeight: 600 }}>{avgActualWR - avgThWR >= 0 ? "+" : ""}{Math.round((avgActualWR - avgThWR) * 10) / 10}%</span>
+      {t(lang, "an_avg_wr")} <span style={{ color: wrColor(avgActualWR), fontWeight: 600 }}>{avgActualWR}%</span>
+      {" "}{t(lang, "an_vs_theor")} <span style={{ color: blue, fontWeight: 600 }}>{avgThWR}%</span>
+      {" · "}{t(lang, "an_deviation")}<span style={{ color: avgActualWR - avgThWR >= 0 ? green : red, fontWeight: 600 }}>{avgActualWR - avgThWR >= 0 ? "+" : ""}{Math.round((avgActualWR - avgThWR) * 10) / 10}%</span>
     </div>
-    <div style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)" }}>— přerušovaná modrá = teor. ELO winrate (1/[1+10^(-Δ/1135)])</div>
+    <div style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)" }}>{t(lang, "an_theor_note")}</div>
   </div>
 );
 
 // ─── Row 6: Buckety ELO ───────────────────────────────────────────────────────
-function WRBucketyElo({ data }: { data: WROppData }) {
+function WRBucketyElo({ data, lang }: { data: WROppData; lang: Lang }) {
   const [minGames, setMinGames] = useState<10 | 20>(10);
   const chartData = data.byOppElo.filter(d => d.games >= minGames);
   const totalGames = chartData.reduce((s, d) => s + d.games, 0);
@@ -369,11 +371,11 @@ function WRBucketyElo({ data }: { data: WROppData }) {
     <GlassCard style={{ height: "auto" }}>
       <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Winrate vs. ELO soupeře — Buckety ELO</div>
-          <div style={{ fontSize: 11, color: muted, marginTop: 2, fontFamily: "var(--font-mono)" }}>Komunita · winrate per pásmo absolutního ELO soupeře</div>
+          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "an_wr_bucket")}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 2, fontFamily: "var(--font-mono)" }}>{t(lang, "an_wr_bucket_sub")}</div>
         </div>
         <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)", marginRight: 4 }}>Min. zápasů/bucket:</span>
+          <span style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)", marginRight: 4 }}>{t(lang, "an_min_matches")}</span>
           {(([10, 20] as const)).map(v => (
             <button key={v} onClick={() => setMinGames(v)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 9px", borderRadius: 6, border: "1px solid", cursor: "pointer", borderColor: minGames === v ? primary : "hsl(var(--border)/0.5)", background: minGames === v ? "hsl(var(--primary)/0.15)" : "transparent", color: minGames === v ? primary : muted, fontWeight: minGames === v ? 700 : 400 }}>{v}</button>
           ))}
@@ -383,25 +385,25 @@ function WRBucketyElo({ data }: { data: WROppData }) {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-            <XAxis dataKey="bucket" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.floor(chartData.length / 12))} label={{ value: "ELO soupeře", position: "insideBottomRight", offset: -4, fontSize: 9, fill: muted }} />
+            <XAxis dataKey="bucket" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.floor(chartData.length / 12))} label={{ value: t(lang, "an_opp_elo"), position: "insideBottomRight", offset: -4, fontSize: 9, fill: muted }} />
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={30} domain={[0, 100]} />
             <ReferenceLine y={50} stroke={muted} strokeDasharray="4 2" label={{ value: "50%", fontSize: 9, fill: muted, position: "insideTopLeft" }} />
             <ReferenceLine x={data.avgCommunityElo} stroke={amber} strokeDasharray="3 2" label={{ value: `Avg ${data.avgCommunityElo}`, fontSize: 9, fill: amber, position: "insideTopRight" }} />
             <Tooltip content={<TT />} />
-            <Bar dataKey="winrate" name="Winrate %" radius={[3,3,0,0]}>
+            <Bar dataKey="winrate" name={t(lang, "an_actual_wr")} radius={[3,3,0,0]}>
               {chartData.map((d, i) => <Cell key={i} fill={wrColor(d.winrate)} fillOpacity={0.82} />)}
             </Bar>
-            <Line type="monotone" dataKey="theorWR" name="Teoret. ELO" stroke={blue} strokeWidth={2} strokeDasharray="5 3" dot={false} />
+            <Line type="monotone" dataKey="theorWR" name={t(lang, "an_theor_elo")} stroke={blue} strokeWidth={2} strokeDasharray="5 3" dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <WRFooter totalGames={totalGames} bucketCount={chartData.length} avgActualWR={avgActualWR} avgThWR={avgThWR} />
+      <WRFooter totalGames={totalGames} bucketCount={chartData.length} avgActualWR={avgActualWR} avgThWR={avgThWR} lang={lang} />
     </GlassCard>
   );
 }
 
 // ─── Row 7: ELO Rozdíl ────────────────────────────────────────────────────────
-function WREloRozdil({ data }: { data: WROppData }) {
+function WREloRozdil({ data, lang }: { data: WROppData; lang: Lang }) {
   const [minGames, setMinGames] = useState<10 | 20>(10);
   const chartData = data.byEloDiff.filter(d => d.games >= minGames);
   const totalGames = chartData.reduce((s, d) => s + d.games, 0);
@@ -427,11 +429,11 @@ function WREloRozdil({ data }: { data: WROppData }) {
     <GlassCard style={{ height: "auto" }}>
       <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Winrate vs. ELO soupeře — ELO Rozdíl</div>
-          <div style={{ fontSize: 11, color: muted, marginTop: 2, fontFamily: "var(--font-mono)" }}>Komunita · winrate dle rozdílu ELO (ty − soupeř)</div>
+          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "an_wr_diff")}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 2, fontFamily: "var(--font-mono)" }}>{t(lang, "an_wr_diff_sub")}</div>
         </div>
         <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)", marginRight: 4 }}>Min. zápasů/bucket:</span>
+          <span style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)", marginRight: 4 }}>{t(lang, "an_min_matches")}</span>
           {(([10, 20] as const)).map(v => (
             <button key={v} onClick={() => setMinGames(v)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 9px", borderRadius: 6, border: "1px solid", cursor: "pointer", borderColor: minGames === v ? primary : "hsl(var(--border)/0.5)", background: minGames === v ? "hsl(var(--primary)/0.15)" : "transparent", color: minGames === v ? primary : muted, fontWeight: minGames === v ? 700 : 400 }}>{v}</button>
           ))}
@@ -441,23 +443,23 @@ function WREloRozdil({ data }: { data: WROppData }) {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-            <XAxis dataKey="bucket" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.floor(chartData.length / 14))} label={{ value: "ELO rozdíl (ty − soupeř)", position: "insideBottomRight", offset: -4, fontSize: 9, fill: muted }} />
+            <XAxis dataKey="bucket" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.floor(chartData.length / 14))} label={{ value: t(lang, "an_elo_diff_label"), position: "insideBottomRight", offset: -4, fontSize: 9, fill: muted }} />
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={30} domain={[0, 100]} />
             <ReferenceLine y={50} stroke={muted} strokeDasharray="4 2" />
-            <ReferenceLine x={0} stroke={amber} strokeDasharray="3 2" label={{ value: "Rovnocenní", fontSize: 9, fill: amber, position: "insideTopLeft" }} />
+            <ReferenceLine x={0} stroke={amber} strokeDasharray="3 2" label={{ value: t(lang, "an_equal"), fontSize: 9, fill: amber, position: "insideTopLeft" }} />
             <Tooltip content={<TT />} />
-            <Line type="monotone" dataKey="winrate" name="Skutečný WR %" stroke={green} strokeWidth={2.5} dot={{ r: 3, fill: green, stroke: "none" }} activeDot={{ r: 5 }} />
-            <Line type="monotone" dataKey="theorWR" name="Teoret. ELO" stroke={blue} strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
+            <Line type="monotone" dataKey="winrate" name={t(lang, "an_actual_wr")} stroke={green} strokeWidth={2.5} dot={{ r: 3, fill: green, stroke: "none" }} activeDot={{ r: 5 }} />
+            <Line type="monotone" dataKey="theorWR" name={t(lang, "an_theor_elo")} stroke={blue} strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <WRFooter totalGames={totalGames} bucketCount={chartData.length} avgActualWR={avgActualWR} avgThWR={avgThWR} />
+      <WRFooter totalGames={totalGames} bucketCount={chartData.length} avgActualWR={avgActualWR} avgThWR={avgThWR} lang={lang} />
     </GlassCard>
   );
 }
 
 // ─── Row 8: Bubble ────────────────────────────────────────────────────────────
-function WRBubble({ data }: { data: WROppData }) {
+function WRBubble({ data, lang }: { data: WROppData; lang: Lang }) {
   const [minGames, setMinGames] = useState<10 | 20>(10);
   const chartData = data.byOppElo.filter(d => d.games >= minGames);
   const maxGames = Math.max(...chartData.map(d => d.games), 1);
@@ -467,11 +469,11 @@ function WRBubble({ data }: { data: WROppData }) {
     <GlassCard style={{ height: "auto" }}>
       <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>Winrate vs. ELO soupeře — Bubble</div>
-          <div style={{ fontSize: 11, color: muted, marginTop: 2, fontFamily: "var(--font-mono)" }}>Komunita · velikost bubliny = počet zápasů v bucketu</div>
+          <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "an_wr_bubble")}</div>
+          <div style={{ fontSize: 11, color: muted, marginTop: 2, fontFamily: "var(--font-mono)" }}>{t(lang, "an_wr_bubble_sub")}</div>
         </div>
         <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)", marginRight: 4 }}>Min. zápasů/bucket:</span>
+          <span style={{ fontSize: 10, color: muted, fontFamily: "var(--font-mono)", marginRight: 4 }}>{t(lang, "an_min_matches")}</span>
           {(([10, 20] as const)).map(v => (
             <button key={v} onClick={() => setMinGames(v)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 9px", borderRadius: 6, border: "1px solid", cursor: "pointer", borderColor: minGames === v ? primary : "hsl(var(--border)/0.5)", background: minGames === v ? "hsl(var(--primary)/0.15)" : "transparent", color: minGames === v ? primary : muted, fontWeight: minGames === v ? 700 : 400 }}>{v}</button>
           ))}
@@ -481,15 +483,15 @@ function WRBubble({ data }: { data: WROppData }) {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 16, right: 20, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-            <XAxis dataKey="bucket" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.floor(chartData.length / 12))} label={{ value: "ELO soupeře", position: "insideBottomRight", offset: -4, fontSize: 9, fill: muted }} />
+            <XAxis dataKey="bucket" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.floor(chartData.length / 12))} label={{ value: t(lang, "an_opp_elo"), position: "insideBottomRight", offset: -4, fontSize: 9, fill: muted }} />
             <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={30} domain={[0, 100]} />
             <ReferenceLine y={50} stroke={muted} strokeDasharray="4 2" label={{ value: "50%", fontSize: 9, fill: muted, position: "insideTopLeft" }} />
             <ReferenceLine x={data.avgCommunityElo} stroke={amber} strokeDasharray="3 2" label={{ value: `Avg ${data.avgCommunityElo}`, fontSize: 9, fill: amber, position: "insideTopRight" }} />
-            <Line type="monotone" dataKey="theorWR" name="Teoret. ELO" stroke={blue} strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
-            <Line type="monotone" dataKey="winrate" name="Skutečný WR %" stroke={green} strokeWidth={1.8} dot={false} strokeOpacity={0.5} />
+            <Line type="monotone" dataKey="theorWR" name={t(lang, "an_theor_elo")} stroke={blue} strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
+            <Line type="monotone" dataKey="winrate" name={t(lang, "an_actual_wr")} stroke={green} strokeWidth={1.8} dot={false} strokeOpacity={0.5} />
             <Scatter
               dataKey="winrate"
-              name="Buckety"
+              name={t(lang, "an_buckets")}
               shape={(props: any) => {
                 const { cx, cy, payload } = props;
                 const r = Math.max(5, Math.sqrt(payload.games / maxGames) * MAX_BUBBLE);
@@ -524,6 +526,7 @@ function WRBubble({ data }: { data: WROppData }) {
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export default function AnalyticsView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { lang } = useAppNav();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -564,39 +567,39 @@ export default function AnalyticsView({ prefetchCache }: { prefetchCache?: Prefe
           <>
             {/* Row 1: ELO Distribuce | Winrate distribuce */}
             <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <EloHistogram data={data.eloHistogram} />
-              <WinrateDistribution data={data.winrateDistribution} />
+              <EloHistogram data={data.eloHistogram} lang={lang} />
+              <WinrateDistribution data={data.winrateDistribution} lang={lang} />
             </div>
 
             {/* Row 2: Zápasy v čase | Medián ELO v čase */}
             <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <GamesOverTime data={data.gamesOverTime} />
-              <MedianEloTrend data={data.medianEloTrend ?? []} />
+              <GamesOverTime data={data.gamesOverTime} lang={lang} />
+              <MedianEloTrend data={data.medianEloTrend ?? []} lang={lang} />
             </div>
 
             {/* Row 3: ELO vs počet her — full width, taller */}
-            <EloVsGamesScatter data={data.eloVsGames} />
+            <EloVsGamesScatter data={data.eloVsGames} lang={lang} />
 
             {/* Row 4: Top N ELO vývoj — full width, taller */}
-            <TopNHistory data5={data.top5History} data10={data.top10History ?? []} data15={data.top15History ?? []} top10={data.top10} />
+            <TopNHistory data5={data.top5History} data10={data.top10History ?? []} data15={data.top15History ?? []} top10={data.top10} lang={lang} />
 
             {/* Row 5: Aktivita heatmapa | Zápasy per turnaj */}
             <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "5fr 7fr", gap: 12, alignItems: "start" }}>
-              <ActivityHeatmap data={data.activityHeatmap} />
-              <TournamentPie data={data.tournamentPie} />
+              <ActivityHeatmap data={data.activityHeatmap} lang={lang} />
+              <TournamentPie data={data.tournamentPie} lang={lang} />
             </div>
 
             {/* Row 6: Buckety ELO */}
-            {data.communityWinrateVsOpp && <WRBucketyElo data={data.communityWinrateVsOpp} />}
+            {data.communityWinrateVsOpp && <WRBucketyElo data={data.communityWinrateVsOpp} lang={lang} />}
 
             {/* Row 7: ELO Rozdíl */}
-            {data.communityWinrateVsOpp && <WREloRozdil data={data.communityWinrateVsOpp} />}
+            {data.communityWinrateVsOpp && <WREloRozdil data={data.communityWinrateVsOpp} lang={lang} />}
 
             {/* Row 8: Bubble */}
-            {data.communityWinrateVsOpp && <WRBubble data={data.communityWinrateVsOpp} />}
+            {data.communityWinrateVsOpp && <WRBubble data={data.communityWinrateVsOpp} lang={lang} />}
           </>
         ) : (
-          <div style={{ textAlign: "center", padding: 40, color: muted, fontFamily: "var(--font-mono)", fontSize: 13 }}>Nepodařilo se načíst data</div>
+          <div style={{ textAlign: "center", padding: 40, color: muted, fontFamily: "var(--font-mono)", fontSize: 13 }}>{t(lang, "error")}</div>
         )}
       </div>
       <style jsx global>{`@keyframes an-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
