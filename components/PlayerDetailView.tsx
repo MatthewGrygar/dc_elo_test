@@ -289,7 +289,7 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
           <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_time")} — {mode}</div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
-              {([["matchid", t(lang, "pd_match_id")], ["date", t(lang, "pd_hist_date")]] as [string, string][]).map(([v, label]) => (
+              {([["matchid", t(lang, "pd_match_id")], ["date", t(lang, "pd_hist_date")]] as ["matchid" | "date", string][]).map(([v, label]) => (
                 <button key={v} onClick={() => setTrendMode(v)}
                   style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer", transition: "all 0.15s",
                     background: trendMode === v ? "hsl(var(--card))" : "transparent",
