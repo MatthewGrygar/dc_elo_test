@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RatingModeProvider } from "@/components/RatingModeProvider";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "DC ELO — Rating Dashboard",
@@ -17,6 +18,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="color-scheme" content="dark light" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-VQCJQ857B1" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-VQCJQ857B1');
+        `}</Script>
       </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="dc-elo-theme">
