@@ -206,6 +206,8 @@ export const translations = {
     form_sent: "Zpráva odeslána!", form_sent_desc: "Ozveme se ti co nejdříve.",
     form_sent_desc2: "Ozveme se ti co nejdříve na uvedený e-mail.",
     form_error_prefix: "Chyba:", form_error_fallback: "Odeslání selhalo",
+    // Sidebar buttons
+    side_feedback: "Zpětná vazba", side_support: "Podpořit projekt",
     // Organization
     org_coop_title: "Chcete s námi spolupracovat?",
     org_coop_desc: "Jsme otevřeni jakékoli formě spolupráce — ať už chcete zapojit svůj turnaj do systému DC ELO, stát se partnerskou organizací, pomoci s rozvojem projektu, chcete se stát součástí DCPR komise, nebo se s námi prostě podělit o své nápady.",
@@ -443,6 +445,7 @@ export const translations = {
     form_sent: "Message sent!", form_sent_desc: "We'll get back to you as soon as possible.",
     form_sent_desc2: "We'll get back to you shortly at your email address.",
     form_error_prefix: "Error:", form_error_fallback: "Sending failed",
+    side_feedback: "Feedback", side_support: "Support the project",
     org_coop_title: "Want to work with us?",
     org_coop_desc: "We are open to any form of cooperation — whether you want to join your tournament into the DC ELO system, become a partner organisation, help with the project's development, join the DCPR committee, or simply share your ideas with us.",
     org_contact_form: "Contact form",
@@ -674,6 +677,7 @@ export const translations = {
     form_sent: "Message envoyé !", form_sent_desc: "Nous vous répondrons dès que possible.",
     form_sent_desc2: "Nous vous répondrons bientôt à l'adresse e-mail fournie.",
     form_error_prefix: "Erreur :", form_error_fallback: "Échec de l'envoi",
+    side_feedback: "Retour d'expérience", side_support: "Soutenir le projet",
     org_coop_title: "Envie de collaborer ?",
     org_coop_desc: "Nous sommes ouverts à toute forme de coopération — que vous souhaitiez intégrer votre tournoi dans le système DC ELO, devenir une organisation partenaire, aider au développement du projet, rejoindre le comité DCPR ou simplement partager vos idées avec nous.",
     org_contact_form: "Formulaire de contact",

@@ -253,21 +253,21 @@ export default function Sidebar() {
       )}
 
       {/* Feedback button */}
-      <button onClick={() => setFeedbackOpen(true)} title={collapsed ? "Zpětná vazba" : undefined}
+      <button onClick={() => setFeedbackOpen(true)} title={collapsed ? t(lang, "side_feedback") : undefined}
         style={{ display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 10, width: "100%", padding: collapsed ? "8px 0" : "8px 12px", borderRadius: 10, border: "1px solid hsl(262,70%,60%,0.3)", background: "hsl(262,70%,60%,0.07)", color: "hsl(262,70%,60%)", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)", transition: "all 0.18s", flexShrink: 0, marginBottom: 4 }}
         onMouseEnter={e => { e.currentTarget.style.background = "hsl(262,70%,60%,0.14)"; }}
         onMouseLeave={e => { e.currentTarget.style.background = "hsl(262,70%,60%,0.07)"; }}>
         <MessageSquarePlus size={14} style={{ flexShrink: 0 }} />
-        {!collapsed && <span>Zpětná vazba</span>}
+        {!collapsed && <span>{t(lang, "side_feedback")}</span>}
       </button>
 
       {/* Support button */}
-      <button onClick={() => setSupportOpen(true)} title={collapsed ? "Podpořit" : undefined}
+      <button onClick={() => setSupportOpen(true)} title={collapsed ? t(lang, "side_support") : undefined}
         style={{ display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "flex-start", gap: 10, width: "100%", padding: collapsed ? "8px 0" : "8px 12px", borderRadius: 10, border: "1px solid hsl(42,80%,52%,0.35)", background: "hsl(42,80%,52%,0.08)", color: "hsl(42,80%,52%)", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)", transition: "all 0.18s", flexShrink: 0, marginBottom: 4 }}
         onMouseEnter={e => { e.currentTarget.style.background = "hsl(42,80%,52%,0.16)"; }}
         onMouseLeave={e => { e.currentTarget.style.background = "hsl(42,80%,52%,0.08)"; }}>
         <Heart size={14} style={{ flexShrink: 0 }} />
-        {!collapsed && <span>Podpořit projekt</span>}
+        {!collapsed && <span>{t(lang, "side_support")}</span>}
       </button>
 
       {/* Theme toggle */}
