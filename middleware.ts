@@ -7,8 +7,9 @@ const secret = () =>
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always allow the login page
+  // Always allow the login page and the auth endpoint itself
   if (pathname === "/admin/login") return NextResponse.next();
+  if (pathname === "/api/admin/auth") return NextResponse.next();
 
   const token = request.cookies.get("dc-admin-token")?.value;
 
