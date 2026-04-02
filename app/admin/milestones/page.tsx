@@ -35,7 +35,6 @@ function PreviewMilestoneRow({ m, onRemove }: {
   onRemove?: () => void;
 }) {
   const col = MILESTONE_COLORS[m.cat] ?? "hsl(var(--primary))";
-  const bg  = col.replace(")", " / .14)").replace("hsl(", "hsl(");
   return (
     <div style={{
       display: "flex", alignItems: "flex-start", gap: 8,
@@ -148,11 +147,8 @@ export default function MilestonesPage() {
     setAdding(false);
   }
 
-  // What's currently shown on the main page
   const activeMilestones = milestones.filter((m) => m.visible);
-  const previewMs: AutoMilestone[] = activeMilestones.length > 0
-    ? activeMilestones
-    : autoMs;
+  const previewMs: AutoMilestone[] = activeMilestones.length > 0 ? activeMilestones : autoMs;
 
   return (
     <div style={{ maxWidth: 1100 }}>
@@ -163,95 +159,43 @@ export default function MilestonesPage() {
         </p>
       </div>
 
-      {/* ── Two-column top section ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>
-        {/* Left: auto-generated */}
-        <div style={{
-          background: yellowBg, border: `1px solid ${yellowBorder}`,
-          borderRadius: 14, padding: "1.1rem", overflow: "hidden",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.9rem" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: yellow }}>⚡ Automaticky generované</div>
-            <button onClick={loadAuto} disabled={autoLoading} style={{
-              display: "flex", alignItems: "center", gap: 5, padding: "3px 9px",
-              background: yellowBg, border: `1px solid ${yellowBorder}`,
-              borderRadius: 6, fontSize: 11, color: yellow, cursor: "pointer", fontFamily: "var(--font-body)",
-            }}>
-              <RefreshCw size={10} style={{ animation: autoLoading ? "spin 1s linear infinite" : "none" }} /> Obnovit
-            </button>
+      {/* ── TOP: Currently on main page ── */}
+      <div style={{
+        background: "hsl(var(--card)/0.6)", border: `1px solid ${greenBorder}`,
+        borderRadius: 14, overflow: "hidden", marginBottom: "1.25rem",
+      }}>
+        <div style={{ padding: "1rem 1.1rem 0.75rem", borderBottom: "1px solid hsl(var(--border))" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: green, marginBottom: 2 }}>
+            ✓ Aktuálně na hlavní stránce
           </div>
-          {autoLoading ? (
-            <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Načítám…</div>
-          ) : autoMs.length === 0 ? (
-            <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Žádné automatické milníky.</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              {autoMs.map((m, i) => (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "8px 10px", background: "hsl(var(--card)/0.6)",
-                  border: `1px solid ${yellowBorder}`, borderRadius: 8,
-                }}>
-                  <span style={{ fontSize: 17, flexShrink: 0 }}>{m.icon}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</div>
-                    <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>
-                      {m.date} · <span style={{ padding: "1px 5px", borderRadius: 99, fontSize: 8, fontWeight: 700, background: yellowBg, border: `1px solid ${yellowBorder}`, color: yellow, fontFamily: "var(--font-mono)" }}>{m.cat}</span>
-                    </div>
-                  </div>
-                  <button onClick={() => adoptAuto(m)} disabled={adopting === m.text} title="Převzít jako vlastní" style={{
-                    display: "flex", alignItems: "center", gap: 4, padding: "4px 9px",
-                    background: greenBg, border: `1px solid ${greenBorder}`,
-                    borderRadius: 6, color: green, cursor: "pointer", fontSize: 11, fontWeight: 600,
-                    fontFamily: "var(--font-body)", flexShrink: 0,
-                    opacity: adopting === m.text ? 0.5 : 1,
-                  }}>
-                    <ArrowRight size={10} /> Převzít
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
+            {activeMilestones.length > 0
+              ? `${activeMilestones.length} vlastní${activeMilestones.length > 1 ? "ch" : ""} milník${activeMilestones.length > 1 ? "ů" : ""} — kliknutím ✕ odebereš z hlavní stránky`
+              : "Automaticky generované (žádné vlastní aktivní) — zobrazeno jako náhled"}
+          </div>
         </div>
-
-        {/* Right: currently on main page */}
-        <div style={{
-          background: "hsl(var(--card)/0.6)", border: `1px solid ${greenBorder}`,
-          borderRadius: 14, overflow: "hidden",
-        }}>
-          <div style={{ padding: "1.1rem 1.1rem 0.75rem", borderBottom: "1px solid hsl(var(--border))" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: green, marginBottom: 2 }}>
-              ✓ Aktuálně na hlavní stránce
-            </div>
-            <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
-              {activeMilestones.length > 0
-                ? `${activeMilestones.length} vlastní${activeMilestones.length > 1 ? "ch" : ""} milník${activeMilestones.length > 1 ? "ů" : ""}`
-                : "Automaticky generované (žádné vlastní aktivní)"}
-            </div>
-          </div>
-          <div style={{ overflowY: "auto", maxHeight: 300 }}>
-            {previewMs.length === 0 ? (
-              <div style={{ padding: "1.5rem", textAlign: "center", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Prázdné</div>
-            ) : (
-              previewMs.map((m, i) => {
-                const custom = activeMilestones.find((x) => x.text === m.text);
-                return (
-                  <PreviewMilestoneRow
-                    key={i}
-                    m={m}
-                    onRemove={custom ? () => toggleVisible(custom) : undefined}
-                  />
-                );
-              })
-            )}
-          </div>
+        <div style={{ overflowY: "auto", maxHeight: 220 }}>
+          {previewMs.length === 0 ? (
+            <div style={{ padding: "1.5rem", textAlign: "center", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Prázdné</div>
+          ) : (
+            previewMs.map((m, i) => {
+              const custom = activeMilestones.find((x) => x.text === m.text);
+              return (
+                <PreviewMilestoneRow
+                  key={i}
+                  m={m}
+                  onRemove={custom ? () => toggleVisible(custom) : undefined}
+                />
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* ── Add form ── */}
+      {/* ── MIDDLE: Add custom milestone form ── */}
       <div style={{
         background: "hsl(var(--card)/0.7)", border: `1px solid ${greenBorder}`,
-        borderRadius: 14, padding: "1.1rem", marginBottom: "1.5rem",
+        borderRadius: 14, padding: "1.1rem", marginBottom: "1.25rem",
       }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: green, marginBottom: "0.9rem" }}>
           <Plus size={13} style={{ display: "inline", marginRight: 5 }} />Přidat vlastní milník
@@ -304,54 +248,119 @@ export default function MilestonesPage() {
         </form>
       </div>
 
-      {/* ── Custom milestone list ── */}
-      <div style={{ fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))", marginBottom: "0.6rem" }}>
-        Vlastní milníky ({activeMilestones.length} aktivní)
-      </div>
-      {loading ? (
-        <div style={{ padding: "1.5rem", textAlign: "center", color: "hsl(var(--muted-foreground))", fontSize: 13 }}>Načítám…</div>
-      ) : milestones.length === 0 ? (
-        <div style={{ padding: "1.5rem", textAlign: "center", background: "hsl(var(--card)/0.5)", borderRadius: 10, border: "1px dashed hsl(var(--border))", color: "hsl(var(--muted-foreground))", fontSize: 13 }}>
-          Žádné vlastní milníky.
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          {milestones.map((m) => (
-            <div key={m.id} style={{
-              display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-              background: m.visible ? "hsl(var(--card)/0.8)" : "hsl(var(--muted)/0.2)",
-              border: `1px solid ${m.visible ? greenBorder : "hsl(var(--border))"}`,
-              borderRadius: 9, opacity: saving === m.id ? 0.6 : 1, transition: "all .2s",
+      {/* ── BOTTOM: Two columns ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+
+        {/* Left: auto-generated */}
+        <div style={{
+          background: yellowBg, border: `1px solid ${yellowBorder}`,
+          borderRadius: 14, padding: "1.1rem", overflow: "hidden",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.9rem" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: yellow }}>⚡ Automaticky generované ELO systémem</div>
+            <button onClick={loadAuto} disabled={autoLoading} style={{
+              display: "flex", alignItems: "center", gap: 5, padding: "3px 9px",
+              background: yellowBg, border: `1px solid ${yellowBorder}`,
+              borderRadius: 6, fontSize: 11, color: yellow, cursor: "pointer", fontFamily: "var(--font-body)",
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{m.icon}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", marginBottom: 1 }}>{m.text}</div>
-                <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))" }}>
-                  {m.date} · <span style={{ padding: "1px 5px", borderRadius: 99, fontSize: 8, fontWeight: 700, background: greenBg, border: `1px solid ${greenBorder}`, color: green, fontFamily: "var(--font-mono)" }}>{m.cat}</span>
+              <RefreshCw size={10} style={{ animation: autoLoading ? "spin 1s linear infinite" : "none" }} /> Obnovit
+            </button>
+          </div>
+          {autoLoading ? (
+            <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Načítám…</div>
+          ) : autoMs.length === 0 ? (
+            <div style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Žádné automatické milníky.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {autoMs.map((m, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "8px 10px", background: "hsl(var(--card)/0.6)",
+                  border: `1px solid ${yellowBorder}`, borderRadius: 8,
+                }}>
+                  <span style={{ fontSize: 17, flexShrink: 0 }}>{m.icon}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</div>
+                    <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", marginTop: 1 }}>
+                      {m.date} · <span style={{ padding: "1px 5px", borderRadius: 99, fontSize: 8, fontWeight: 700, background: yellowBg, border: `1px solid ${yellowBorder}`, color: yellow, fontFamily: "var(--font-mono)" }}>{m.cat}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => adoptAuto(m)} disabled={adopting === m.text} title="Převzít jako vlastní" style={{
+                    display: "flex", alignItems: "center", gap: 4, padding: "4px 9px",
+                    background: greenBg, border: `1px solid ${greenBorder}`,
+                    borderRadius: 6, color: green, cursor: "pointer", fontSize: 11, fontWeight: 600,
+                    fontFamily: "var(--font-body)", flexShrink: 0,
+                    opacity: adopting === m.text ? 0.5 : 1,
+                  }}>
+                    <ArrowRight size={10} /> Převzít
+                  </button>
                 </div>
-              </div>
-              {/* Activate/deactivate = move to right column */}
-              <button onClick={() => toggleVisible(m)} title={m.visible ? "Odebrat z hlavní stránky" : "Zobrazit na hlavní stránce"} style={{
-                display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, cursor: "pointer",
-                borderColor: m.visible ? greenBorder : "hsl(var(--border))",
-                background: m.visible ? greenBg : "hsl(var(--muted)/0.4)",
-                color: m.visible ? green : "hsl(var(--muted-foreground))",
-                border: "1px solid", fontSize: 11, fontWeight: 600, fontFamily: "var(--font-body)",
-              }}>
-                {m.visible ? <><EyeOff size={11} /> Skrýt</> : <><Eye size={11} /> Aktivovat</>}
-              </button>
-              <button onClick={() => handleDelete(m.id)} title="Smazat" style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: 30, height: 30, borderRadius: 7, cursor: "pointer",
-                background: "hsl(var(--destructive)/0.1)", border: "1px solid hsl(var(--destructive)/0.3)",
-                color: "hsl(var(--destructive))",
-              }}>
-                <Trash2 size={12} />
-              </button>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
+
+        {/* Right: custom milestones list */}
+        <div style={{
+          background: "hsl(var(--card)/0.5)", border: "1px solid hsl(var(--border))",
+          borderRadius: 14, overflow: "hidden",
+        }}>
+          <div style={{ padding: "1.1rem 1.1rem 0.75rem", borderBottom: "1px solid hsl(var(--border))" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))" }}>
+              Vlastní milníky
+              <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 500, padding: "1px 7px", borderRadius: 99, background: activeMilestones.length > 0 ? greenBg : "hsl(var(--muted)/0.5)", border: `1px solid ${activeMilestones.length > 0 ? greenBorder : "hsl(var(--border))"}`, color: activeMilestones.length > 0 ? green : "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
+                {activeMilestones.length} aktivní
+              </span>
+            </div>
+          </div>
+          <div style={{ overflowY: "auto", maxHeight: 360 }}>
+            {loading ? (
+              <div style={{ padding: "1.5rem", textAlign: "center", color: "hsl(var(--muted-foreground))", fontSize: 13 }}>Načítám…</div>
+            ) : milestones.length === 0 ? (
+              <div style={{ padding: "1.5rem", textAlign: "center", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>Žádné vlastní milníky. Přidej je pomocí formuláře výše nebo tlačítkem Převzít.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                {milestones.map((m) => (
+                  <div key={m.id} style={{
+                    display: "flex", alignItems: "center", gap: 8, padding: "9px 12px",
+                    background: m.visible ? "hsl(var(--card)/0.8)" : "transparent",
+                    borderBottom: "1px solid hsl(var(--border)/0.4)",
+                    opacity: saving === m.id ? 0.6 : 1, transition: "all .2s",
+                  }}>
+                    {/* Active indicator */}
+                    <div style={{ width: 4, height: 28, borderRadius: 2, flexShrink: 0, background: m.visible ? green : "hsl(var(--border))" }} />
+                    <span style={{ fontSize: 16, flexShrink: 0 }}>{m.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "hsl(var(--foreground))", marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</div>
+                      <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>
+                        {m.date} · <span style={{ padding: "1px 4px", borderRadius: 99, fontSize: 7, fontWeight: 700, background: greenBg, border: `1px solid ${greenBorder}`, color: green, fontFamily: "var(--font-mono)" }}>{m.cat}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => toggleVisible(m)} title={m.visible ? "Skrýt z hlavní stránky" : "Zobrazit na hlavní stránce"} style={{
+                      display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, cursor: "pointer",
+                      borderColor: m.visible ? greenBorder : "hsl(var(--border))",
+                      background: m.visible ? greenBg : "hsl(var(--muted)/0.4)",
+                      color: m.visible ? green : "hsl(var(--muted-foreground))",
+                      border: "1px solid", fontSize: 10, fontWeight: 600, fontFamily: "var(--font-body)",
+                    }}>
+                      {m.visible ? <><EyeOff size={10} /> Skrýt</> : <><Eye size={10} /> Aktivovat</>}
+                    </button>
+                    <button onClick={() => handleDelete(m.id)} title="Smazat" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      width: 26, height: 26, borderRadius: 6, cursor: "pointer",
+                      background: "hsl(var(--destructive)/0.1)", border: "1px solid hsl(var(--destructive)/0.3)",
+                      color: "hsl(var(--destructive))", flexShrink: 0,
+                    }}>
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
     </div>
   );

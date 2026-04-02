@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Save, RefreshCw, Search, X, ChevronDown } from "lucide-react";
+import { Save, RefreshCw, Search, X, ChevronDown, Sparkles, Zap, Star, Trophy } from "lucide-react";
 
 interface Match {
   matchId: string;
@@ -41,7 +41,7 @@ function resultLetter(r: string) {
 }
 
 // ── Per-match category picker ─────────────────────────────────────────────────
-function CategoryPicker({ value, onChange }: {
+function CategoryPicker({ value, onChange, matchId }: {
   value: FeaturedMatch | null;
   onChange: (fm: FeaturedMatch | null) => void;
   matchId: string;
@@ -49,12 +49,10 @@ function CategoryPicker({ value, onChange }: {
   const [customLabel, setCustomLabel] = useState("");
   const [customEmoji, setCustomEmoji] = useState("🎯");
   const [showCustom, setShowCustom] = useState(false);
-  const isPreset = value && value.category !== "custom";
   const isCustom = value?.category === "custom";
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-      {/* None */}
       <button onClick={() => { onChange(null); setShowCustom(false); }} style={{
         padding: "3px 9px", borderRadius: 6, fontSize: 11, cursor: "pointer",
         border: "1px solid", fontFamily: "var(--font-mono)", fontWeight: 600,
@@ -63,11 +61,10 @@ function CategoryPicker({ value, onChange }: {
         color: !value ? green : "hsl(var(--muted-foreground))",
       }}>—</button>
 
-      {/* Preset categories */}
       {PRESET_CATS.map((p) => {
         const active = value?.category === p.category;
         return (
-          <button key={p.category} onClick={() => { onChange({ matchId: value?.matchId ?? "", category: p.category, categoryLabel: p.label, categoryEmoji: p.emoji }); setShowCustom(false); }} style={{
+          <button key={p.category} onClick={() => { onChange({ matchId, category: p.category, categoryLabel: p.label, categoryEmoji: p.emoji }); setShowCustom(false); }} style={{
             padding: "3px 9px", borderRadius: 6, fontSize: 11, cursor: "pointer",
             border: "1px solid", fontFamily: "var(--font-mono)", fontWeight: 600,
             borderColor: active ? greenBorder : "hsl(var(--border))",
@@ -77,7 +74,6 @@ function CategoryPicker({ value, onChange }: {
         );
       })}
 
-      {/* Custom toggle */}
       <button onClick={() => setShowCustom((s) => !s)} style={{
         padding: "3px 9px", borderRadius: 6, fontSize: 11, cursor: "pointer",
         border: "1px solid", fontFamily: "var(--font-mono)", fontWeight: 600,
@@ -86,10 +82,9 @@ function CategoryPicker({ value, onChange }: {
         color: isCustom ? green : "hsl(var(--muted-foreground))",
         display: "flex", alignItems: "center", gap: 4,
       }}>
-        {isCustom ? `${value.categoryEmoji} ${value.categoryLabel}` : "Vlastní"} <ChevronDown size={10} />
+        {isCustom ? `${value!.categoryEmoji} ${value!.categoryLabel}` : "Vlastní"} <ChevronDown size={10} />
       </button>
 
-      {/* Custom form */}
       {showCustom && (
         <div style={{
           width: "100%", marginTop: 4, padding: "10px 12px", borderRadius: 8,
@@ -115,7 +110,7 @@ function CategoryPicker({ value, onChange }: {
           />
           <button onClick={() => {
             if (!customLabel.trim()) return;
-            onChange({ matchId: value?.matchId ?? "", category: "custom", categoryLabel: customLabel.trim(), categoryEmoji: customEmoji });
+            onChange({ matchId, category: "custom", categoryLabel: customLabel.trim(), categoryEmoji: customEmoji });
             setShowCustom(false);
           }} style={{
             padding: "5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: "pointer",
@@ -127,15 +122,174 @@ function CategoryPicker({ value, onChange }: {
   );
 }
 
+// ── Compact match card (used in recommendations and preview) ──────────────────
+function MatchCard({ m, badge, action, actionLabel, onRemove }: {
+  m: Match;
+  badge?: string;
+  action?: () => void;
+  actionLabel?: string;
+  onRemove?: () => void;
+}) {
+  return (
+    <div style={{
+      borderRadius: 8, overflow: "hidden",
+      background: "hsl(var(--card)/0.8)", border: "1px solid hsl(var(--border))",
+      position: "relative",
+    }}>
+      <div style={{ height: 2, background: `linear-gradient(90deg, ${green}, transparent)` }} />
+      <div style={{ padding: "8px 10px" }}>
+        {onRemove && (
+          <button onClick={onRemove} title="Odebrat" style={{
+            position: "absolute", top: 6, right: 6,
+            width: 18, height: 18, borderRadius: 4, border: "none", cursor: "pointer",
+            background: "hsl(var(--destructive)/0.15)", color: "hsl(var(--destructive))",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 10, fontWeight: 900, padding: 0,
+          }}>✕</button>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, paddingRight: onRemove ? 20 : 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: resultColor(m.result1), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player1}</div>
+            <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>ELO {m.elo1}</div>
+          </div>
+          <div style={{
+            padding: "2px 7px", borderRadius: 5, fontSize: 9, fontWeight: 800,
+            background: "hsl(var(--muted)/0.5)", color: "hsl(var(--muted-foreground))",
+            fontFamily: "var(--font-mono)", flexShrink: 0,
+          }}>
+            {resultLetter(m.result1)} — {resultLetter(m.result2)}
+          </div>
+          <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: resultColor(m.result2), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player2}</div>
+            <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>ELO {m.elo2}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", marginTop: 4, display: "flex", gap: 8, alignItems: "center" }}>
+          <span>{m.date}</span>
+          <span>Δ {Math.round(m.eloDiff)}</span>
+          <span>⌀ {Math.round(m.avgElo)}</span>
+          {badge && <span style={{ marginLeft: "auto", fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: greenBg, border: `1px solid ${greenBorder}`, color: green, fontFamily: "var(--font-mono)" }}>{badge}</span>}
+          {action && actionLabel && (
+            <button onClick={action} style={{
+              marginLeft: "auto", padding: "2px 8px", borderRadius: 5, fontSize: 10, fontWeight: 700, cursor: "pointer",
+              background: greenBg, border: `1px solid ${greenBorder}`, color: green, fontFamily: "var(--font-body)",
+            }}>{actionLabel}</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Recommendations section ───────────────────────────────────────────────────
+function RecommendedSection({ pool, featured, onAdd }: {
+  pool: Match[];
+  featured: FeaturedMatch[];
+  onAdd: (matchId: string, fm: Omit<FeaturedMatch, "matchId">) => void;
+}) {
+  const featuredSet = useMemo(() => new Set(featured.map((f) => f.matchId)), [featured]);
+
+  const recs = useMemo(() => {
+    if (pool.length === 0) return [];
+
+    // Highest average ELO
+    const byAvg = [...pool].sort((a, b) => b.avgElo - a.avgElo).slice(0, 3);
+
+    // Biggest ELO difference
+    const byDiff = [...pool].sort((a, b) => b.eloDiff - a.eloDiff).slice(0, 3);
+
+    // Biggest upsets: higher-rated player lost
+    const upsets = pool.filter((m) => {
+      const p1stronger = m.elo1 > m.elo2;
+      const p1won = m.result1.startsWith("Won");
+      return (p1stronger && !p1won && !m.result1.startsWith("Draw")) ||
+             (!p1stronger && p1won);
+    }).sort((a, b) => b.eloDiff - a.eloDiff).slice(0, 3);
+
+    // Most recent high-stakes (top 20% by avgElo among last 30d)
+    const sortedByDate = [...pool].sort((a, b) => {
+      const parse = (s: string) => {
+        const p = s.split("."); return new Date(+p[2], +p[1]-1, +p[0]).getTime();
+      };
+      return parse(b.date) - parse(a.date);
+    });
+    const recent = sortedByDate.slice(0, Math.max(10, Math.floor(pool.length * 0.25)));
+    const recentHighElo = [...recent].sort((a, b) => b.avgElo - a.avgElo).slice(0, 3);
+
+    return [
+      { label: "Nejvyšší ELO průměr", emoji: "⭐", category: "high-elo", categoryLabel: "Nejvyšší ELO", matches: byAvg },
+      { label: "Největší rozdíl ELO", emoji: "⚡", category: "elo-diff", categoryLabel: "Největší rozdíl ELO", matches: byDiff },
+      { label: "Největší Upsets", emoji: "🎭", category: "custom", categoryLabel: "Upsets", matches: upsets },
+      { label: "Poslední zajímavé", emoji: "🔥", category: "high-elo", categoryLabel: "Nejnovější", matches: recentHighElo },
+    ].filter((g) => g.matches.length > 0);
+  }, [pool]);
+
+  const [open, setOpen] = useState(true);
+
+  if (recs.length === 0) return null;
+
+  return (
+    <div style={{
+      marginBottom: "1rem",
+      background: "hsl(var(--card)/0.4)", border: "1px solid hsl(var(--border))",
+      borderRadius: 10, overflow: "hidden",
+    }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", gap: 8,
+          padding: "10px 14px", background: "none", border: "none", cursor: "pointer",
+          fontFamily: "var(--font-body)", textAlign: "left",
+        }}
+      >
+        <Sparkles size={13} style={{ color: "hsl(42,80%,55%)", flexShrink: 0 }} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: "hsl(42,80%,55%)" }}>Doporučené zápasy</span>
+        <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", flex: 1 }}>— navrhujeme přidat do výběru</span>
+        <ChevronDown size={13} style={{ color: "hsl(var(--muted-foreground))", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+      </button>
+
+      {open && (
+        <div style={{ borderTop: "1px solid hsl(var(--border))", padding: "10px 14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+            {recs.map((group) => (
+              <div key={group.category + group.label}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", marginBottom: 6 }}>
+                  {group.emoji} {group.label}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  {group.matches.slice(0, 2).map((m) => {
+                    const alreadyIn = featuredSet.has(m.matchId);
+                    return (
+                      <MatchCard
+                        key={m.matchId}
+                        m={m}
+                        badge={alreadyIn ? "✓ Přidáno" : undefined}
+                        action={alreadyIn ? undefined : () => onAdd(m.matchId, { category: group.category, categoryLabel: group.categoryLabel, categoryEmoji: group.emoji })}
+                        actionLabel={alreadyIn ? undefined : "+ Přidat"}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Preview panel ─────────────────────────────────────────────────────────────
-function PreviewPanel({ featured, pool, onRemove }: {
+function PreviewPanel({ featured, pool, onRemove, onSave, saving, saved }: {
   featured: FeaturedMatch[];
   pool: Match[];
   onRemove: (matchId: string) => void;
+  onSave: () => void;
+  saving: boolean;
+  saved: boolean;
 }) {
   const matchMap = useMemo(() => new Map(pool.map((m) => [m.matchId, m])), [pool]);
 
-  // Group by category
   const groups = useMemo(() => {
     const map = new Map<string, { label: string; emoji: string; matches: { fm: FeaturedMatch; m: Match }[] }>();
     for (const fm of featured) {
@@ -154,16 +308,33 @@ function PreviewPanel({ featured, pool, onRemove }: {
       background: "hsl(var(--card)/0.5)", border: "1px solid hsl(var(--border))",
       borderRadius: 14, overflow: "hidden",
     }}>
-      <div style={{ padding: "10px 14px", borderBottom: "1px solid hsl(var(--border))", background: "hsl(var(--card)/0.6)" }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>
-          Náhled — Zajímavé zápasy
+      {/* Header with Save button */}
+      <div style={{
+        padding: "10px 14px", borderBottom: "1px solid hsl(var(--border))",
+        background: "hsl(var(--card)/0.6)",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+      }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))" }}>
+            Náhled — Zajímavé zápasy
+          </div>
+          <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
+            {featured.length === 0 ? "Bez výběru = automatické" : `${featured.length} zápasů, ${groups.length} kategorií`}
+          </div>
         </div>
-        <div style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", marginTop: 2 }}>
-          {featured.length === 0 ? "Bez výběru = automatické" : `${featured.length} zápasů, ${groups.length} kategorií`}
-        </div>
+        <button onClick={onSave} disabled={saving} style={{
+          display: "flex", alignItems: "center", gap: 5, padding: "5px 12px",
+          background: saving ? greenBg : saved ? "hsl(var(--card))" : green,
+          color: saving || saved ? green : "#000",
+          border: `1px solid ${greenBorder}`, borderRadius: 7, flexShrink: 0,
+          fontWeight: 700, fontSize: 11, cursor: saving ? "not-allowed" : "pointer",
+          fontFamily: "var(--font-body)",
+        }}>
+          <Save size={11} /> {saving ? "Ukládám…" : saved ? "Uloženo ✓" : "Uložit"}
+        </button>
       </div>
 
-      <div style={{ maxHeight: "calc(100vh - 200px)", overflowY: "auto", padding: "10px" }}>
+      <div style={{ maxHeight: "calc(100vh - 240px)", overflowY: "auto", padding: "10px" }}>
         {groups.length === 0 ? (
           <div style={{
             padding: "1.5rem 1rem", textAlign: "center", borderRadius: 8,
@@ -175,7 +346,6 @@ function PreviewPanel({ featured, pool, onRemove }: {
         ) : (
           groups.map((group, gi) => (
             <div key={gi} style={{ marginBottom: 12 }}>
-              {/* Group header */}
               <div style={{
                 fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
                 color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)",
@@ -184,50 +354,9 @@ function PreviewPanel({ featured, pool, onRemove }: {
               }}>
                 <span>{group.emoji}</span> {group.label}
               </div>
-
-              {/* Matches in group */}
               {group.matches.map(({ fm, m }) => (
-                <div key={fm.matchId} style={{
-                  borderRadius: 8, overflow: "hidden", marginBottom: 5,
-                  background: "hsl(var(--card)/0.8)",
-                  border: "1px solid hsl(var(--border))",
-                  position: "relative",
-                }}>
-                  <div style={{ height: 2, background: `linear-gradient(90deg, ${gi % 2 === 0 ? green : "hsl(42,80%,52%)"}, transparent)` }} />
-                  <div style={{ padding: "8px 10px 8px 10px" }}>
-                    {/* Remove button */}
-                    <button onClick={() => onRemove(fm.matchId)} title="Odebrat" style={{
-                      position: "absolute", top: 6, right: 6,
-                      width: 18, height: 18, borderRadius: 4, border: "none", cursor: "pointer",
-                      background: "hsl(var(--destructive)/0.15)",
-                      color: "hsl(var(--destructive))",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 10, fontWeight: 900, padding: 0,
-                    }}>✕</button>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, paddingRight: 20 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: resultColor(m.result1), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player1}</div>
-                        <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>ELO {m.elo1}</div>
-                      </div>
-                      <div style={{
-                        padding: "2px 7px", borderRadius: 5, fontSize: 9, fontWeight: 800,
-                        background: "hsl(var(--muted)/0.5)", color: "hsl(var(--muted-foreground))",
-                        fontFamily: "var(--font-mono)", flexShrink: 0,
-                      }}>
-                        {resultLetter(m.result1)} — {resultLetter(m.result2)}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: resultColor(m.result2), overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player2}</div>
-                        <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))" }}>ELO {m.elo2}</div>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", marginTop: 4, display: "flex", gap: 8 }}>
-                      <span>{m.date}</span>
-                      <span>Δ {Math.round(m.eloDiff)}</span>
-                      <span>⌀ {Math.round(m.avgElo)}</span>
-                    </div>
-                  </div>
+                <div key={fm.matchId} style={{ marginBottom: 5 }}>
+                  <MatchCard m={m} onRemove={() => onRemove(fm.matchId)} />
                 </div>
               ))}
             </div>
@@ -259,6 +388,14 @@ export default function MatchesPage() {
     if (poolRes.ok)     setPool(await poolRes.json());
     if (featuredRes.ok) setFeatured(await featuredRes.json());
     setLoading(false);
+  }
+
+  function addMatch(matchId: string, cat: Omit<FeaturedMatch, "matchId">) {
+    setFeatured((prev) => {
+      if (prev.find((x) => x.matchId === matchId)) return prev;
+      return [...prev, { ...cat, matchId }];
+    });
+    setSaved(false);
   }
 
   function setMatchCategory(matchId: string, fm: FeaturedMatch | null) {
@@ -310,6 +447,11 @@ export default function MatchesPage() {
           </p>
         </div>
 
+        {/* Recommendations */}
+        {!loading && pool.length > 0 && (
+          <RecommendedSection pool={pool} featured={featured} onAdd={addMatch} />
+        )}
+
         {/* Controls bar */}
         <div style={{
           display: "flex", alignItems: "center", gap: 8, marginBottom: "1rem",
@@ -344,16 +486,6 @@ export default function MatchesPage() {
             )}
           </div>
           <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{featured.length} vybráno</span>
-          <button onClick={save} disabled={saving} style={{
-            display: "flex", alignItems: "center", gap: 6, padding: "6px 14px",
-            background: saving ? greenBg : saved ? "hsl(var(--card))" : green,
-            color: saving || saved ? green : "#000",
-            border: `1px solid ${greenBorder}`, borderRadius: 7,
-            fontWeight: 700, fontSize: 12, cursor: saving ? "not-allowed" : "pointer",
-            fontFamily: "var(--font-body)",
-          }}>
-            <Save size={12} /> {saving ? "Ukládám…" : saved ? "Uloženo ✓" : "Uložit"}
-          </button>
         </div>
 
         {/* Match list */}
@@ -377,9 +509,7 @@ export default function MatchesPage() {
                   border: `1px solid ${checked ? greenBorder : "hsl(var(--border))"}`,
                   borderRadius: 10, transition: "border-color .15s",
                 }}>
-                  {/* Match info row */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: checked ? 8 : 0 }}>
-                    {/* Checkbox */}
                     <div
                       onClick={() => setMatchCategory(m.matchId, checked ? null : { matchId: m.matchId, category: "high-elo", categoryLabel: "Nejvyšší ELO", categoryEmoji: "⭐" })}
                       style={{
@@ -390,7 +520,6 @@ export default function MatchesPage() {
                       }}>
                       {checked && <span style={{ color: "#000", fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
                     </div>
-
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))" }}>
                         <span style={{ color: resultColor(m.result1) }}>{m.player1}</span>
@@ -402,8 +531,6 @@ export default function MatchesPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Category picker (only when selected) */}
                   {checked && (
                     <div style={{ paddingLeft: 27 }}>
                       <CategoryPicker
@@ -421,7 +548,14 @@ export default function MatchesPage() {
       </div>
 
       {/* ── Right: preview ── */}
-      <PreviewPanel featured={featured} pool={pool} onRemove={removeMatch} />
+      <PreviewPanel
+        featured={featured}
+        pool={pool}
+        onRemove={removeMatch}
+        onSave={save}
+        saving={saving}
+        saved={saved}
+      />
     </div>
   );
 }
