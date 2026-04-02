@@ -111,7 +111,6 @@ export default function PlayerTournamentsLibraryPage() {
       subtitle="Výkonnost hráče v jednotlivých turnajích a agregátní turnajové statistiky."
       icon="🏟️"
       metrics={metrics}
-      pageId="player-tournaments"
     />
   );
 }

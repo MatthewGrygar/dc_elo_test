@@ -131,7 +131,6 @@ export default function AnalyticsLibraryPage() {
       subtitle="Grafy a pokročilé vizualizace distribucí, trendů a síťových vztahů v komunitě."
       icon="🔬"
       metrics={metrics}
-      pageId="analytics"
     />
   );
 }

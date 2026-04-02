@@ -123,7 +123,6 @@ export default function PlayerOpponentsLibraryPage() {
       subtitle="Analýza vzájemných zápasů, rivalů a statistik head-to-head."
       icon="⚔️"
       metrics={metrics}
-      pageId="player-opponents"
     />
   );
 }

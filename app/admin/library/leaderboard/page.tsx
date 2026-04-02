@@ -87,7 +87,6 @@ export default function LeaderboardLibraryPage() {
       subtitle="Metriky zobrazované v hlavní tabulce žebříčku hráčů."
       icon="📊"
       metrics={metrics}
-      pageId="leaderboard"
     />
   );
 }

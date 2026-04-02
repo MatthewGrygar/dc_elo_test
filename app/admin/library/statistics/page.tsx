@@ -138,7 +138,6 @@ export default function StatisticsLibraryPage() {
       subtitle="Komunitní statistiky a agregátní metriky celého ELO systému."
       icon="📈"
       metrics={metrics}
-      pageId="statistics"
     />
   );
 }

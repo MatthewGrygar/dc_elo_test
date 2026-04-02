@@ -95,7 +95,6 @@ export default function DashboardLibraryPage() {
       subtitle="Metriky a hodnoty zobrazované na hlavní přehledové stránce komunity."
       icon="🏠"
       metrics={metrics}
-      pageId="dashboard"
     />
   );
 }
