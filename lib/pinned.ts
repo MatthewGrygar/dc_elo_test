@@ -3,6 +3,14 @@
  * Falls back gracefully when KV is not configured.
  */
 
+export interface FeaturedMatch {
+  matchId: string;
+  /** "high-elo" | "elo-diff" | "custom" */
+  category: string;
+  categoryLabel: string;
+  categoryEmoji: string;
+}
+
 export interface PinnedMilestone {
   id: string;
   icon: string;
@@ -91,18 +99,23 @@ export async function deleteMilestone(id: string): Promise<boolean> {
 // FEATURED MATCHES
 // ══════════════════════════════════════════════════════════════════════════════
 
-export async function getFeaturedMatchIds(): Promise<string[]> {
+export async function getFeaturedMatches(): Promise<FeaturedMatch[]> {
   if (!kvAvailable()) return [];
   try {
     const kv = await getKV();
-    return (await kv.get<string[]>(FEATURED_MATCHES_KEY)) ?? [];
+    return (await kv.get<FeaturedMatch[]>(FEATURED_MATCHES_KEY)) ?? [];
   } catch {
     return [];
   }
 }
 
-export async function setFeaturedMatchIds(ids: string[]): Promise<void> {
+/** Backward-compat: just the IDs */
+export async function getFeaturedMatchIds(): Promise<string[]> {
+  return (await getFeaturedMatches()).map((m) => m.matchId);
+}
+
+export async function setFeaturedMatches(matches: FeaturedMatch[]): Promise<void> {
   if (!kvAvailable()) throw new Error("KV not configured");
   const kv = await getKV();
-  await kv.set(FEATURED_MATCHES_KEY, ids);
+  await kv.set(FEATURED_MATCHES_KEY, matches);
 }

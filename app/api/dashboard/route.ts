@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import { fetchDashboardData, fetchRecentMatches } from "@/lib/sheets";
-import { getVisibleMilestones, getFeaturedMatchIds } from "@/lib/pinned";
+import { fetchDashboardData, fetchRecentMatches, type InterestingMatch } from "@/lib/sheets";
+import { getVisibleMilestones, getFeaturedMatches } from "@/lib/pinned";
+
+export interface MatchGroup {
+  label: string;
+  emoji: string;
+  matches: InterestingMatch[];
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("mode") === "DCPR" ? "DCPR" : "ELO";
   try {
-    const [data, pinnedMs, featuredIds] = await Promise.all([
+    const [data, pinnedMs, featuredMs] = await Promise.all([
       fetchDashboardData(mode),
       getVisibleMilestones(),
-      getFeaturedMatchIds(),
+      getFeaturedMatches(),
     ]);
 
     // Override milestones with admin-pinned ones if any exist
@@ -18,27 +24,49 @@ export async function GET(request: Request) {
         ? pinnedMs.map((m) => ({ icon: m.icon, text: m.text, date: m.date, cat: m.cat }))
         : data.milestones;
 
-    // Override interesting matches with admin-featured ones if any exist
-    let topMatchElo = data.topMatchElo;
-    let topMatchDiff = data.topMatchDiff;
+    // Build match groups
+    let matchGroups: MatchGroup[];
 
-    if (featuredIds.length > 0) {
+    if (featuredMs.length > 0) {
       const allRecent = await fetchRecentMatches(90);
-      const featuredSet = new Set(featuredIds);
-      const featured = allRecent.filter((m) => featuredSet.has(m.matchId));
-      if (featured.length > 0) {
-        // Split featured evenly between the two slots (first half → ELO slot, rest → diff slot)
-        const half = Math.ceil(featured.length / 2);
-        topMatchElo = featured.slice(0, half);
-        topMatchDiff = featured.slice(half);
+      const matchMap = new Map(allRecent.map((m) => [m.matchId, m]));
+
+      // Group by category key (category + label)
+      const groupMap = new Map<string, MatchGroup>();
+      for (const fm of featuredMs) {
+        const match = matchMap.get(fm.matchId);
+        if (!match) continue;
+        const key = `${fm.category}::${fm.categoryLabel}`;
+        if (!groupMap.has(key)) {
+          groupMap.set(key, { label: fm.categoryLabel, emoji: fm.categoryEmoji, matches: [] });
+        }
+        groupMap.get(key)!.matches.push(match);
       }
+      matchGroups = [...groupMap.values()];
+    } else {
+      // Auto-generated groups
+      matchGroups = [
+        ...(data.topMatchElo.length > 0
+          ? [{ label: "Nejvyšší ELO", emoji: "⭐", matches: data.topMatchElo }]
+          : []),
+        ...(data.topMatchDiff.length > 0
+          ? [{ label: "Největší rozdíl ELO", emoji: "⚡", matches: data.topMatchDiff }]
+          : []),
+      ];
     }
 
-    return NextResponse.json({ ...data, milestones, topMatchElo, topMatchDiff });
+    return NextResponse.json({
+      ...data,
+      milestones,
+      matchGroups,
+      // keep legacy fields for backward compat
+      topMatchElo: data.topMatchElo,
+      topMatchDiff: data.topMatchDiff,
+    });
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { stats: {}, players: [], topMatchElo: [], topMatchDiff: [], milestones: [] },
+      { stats: {}, players: [], topMatchElo: [], topMatchDiff: [], milestones: [], matchGroups: [] },
       { status: 200 }
     );
   }

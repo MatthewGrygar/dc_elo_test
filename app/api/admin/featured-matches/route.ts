@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getFeaturedMatchIds, setFeaturedMatchIds } from "@/lib/pinned";
+import { getFeaturedMatches, setFeaturedMatches } from "@/lib/pinned";
 
 export async function GET() {
-  const ids = await getFeaturedMatchIds();
-  return NextResponse.json(ids);
+  const matches = await getFeaturedMatches();
+  return NextResponse.json(matches);
 }
 
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const ids: string[] = Array.isArray(body) ? body : body.ids ?? [];
-    await setFeaturedMatchIds(ids);
-    return NextResponse.json({ ok: true, count: ids.length });
+    const matches = Array.isArray(body) ? body : [];
+    await setFeaturedMatches(matches);
+    return NextResponse.json({ ok: true, count: matches.length });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

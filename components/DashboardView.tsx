@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useRatingMode } from "./RatingModeProvider";
 import { useAppNav } from "./AppContext";
 import { DashboardData, Player } from "@/lib/sheets";
+import type { MatchGroup } from "@/app/api/dashboard/route";
 import { mockEloDistribution } from "@/lib/mockData";
 import { avatarInitials } from "@/lib/utils";
 import { t } from "@/lib/i18n";
@@ -331,7 +332,11 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
   const distData  = buildDist(distPlayers);
   const primaryCol = isDark ? "hsl(152,72%,50%)" : "hsl(152,65%,38%)";
 
-  const matchCards = [...(data?.topMatchElo ?? []).slice(0, 2), ...(data?.topMatchDiff ?? []).slice(0, 2)];
+  const matchGroups: MatchGroup[] = (data as any)?.matchGroups ?? [
+    ...(data?.topMatchElo?.length ? [{ label: "Nejvyšší ELO", emoji: "⭐", matches: data.topMatchElo }] : []),
+    ...(data?.topMatchDiff?.length ? [{ label: "Největší rozdíl ELO", emoji: "⚡", matches: data.topMatchDiff }] : []),
+  ];
+  const matchCards = matchGroups.flatMap((g) => g.matches.slice(0, 2));
 
   if (loading) {
     return (
@@ -395,25 +400,17 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
               </div>
             ) : (
               <>
-                {/* Section: Největší ELO */}
-                {(data?.topMatchElo ?? []).length > 0 && (
-                  <>
+                {matchGroups.map((group, gi) => (
+                  <div key={gi}>
                     <div style={{ padding: "8px 14px 4px", display: "flex", alignItems: "center", gap: 6 }}>
-                      <Trophy size={10} color="hsl(var(--primary))" />
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_biggest_elo")}</span>
-                      <span style={{ marginLeft: "auto", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_avg_elo")}</span>
+                      <span style={{ fontSize: 11 }}>{group.emoji}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{group.label}</span>
                     </div>
-                    {(data?.topMatchElo ?? []).slice(0, 2).map((m, i) => (
+                    {group.matches.slice(0, 2).map((m, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderBottom: "1px solid hsl(var(--border) / 0.3)" }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player1}</span>
                         <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo1}</span>
-                        <div style={{
-                          display: "flex", gap: 3, flexShrink: 0,
-                          padding: "2px 7px", borderRadius: 6,
-                          background: "hsl(var(--muted) / 0.5)",
-                          fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)",
-                          color: "hsl(var(--primary))",
-                        }}>
+                        <div style={{ display: "flex", gap: 3, flexShrink: 0, padding: "2px 7px", borderRadius: 6, background: "hsl(var(--muted) / 0.5)", fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)" }}>
                           <span style={{ color: m.result1?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result1?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
                             {m.result1?.startsWith?.("Won") ? "W" : m.result1?.startsWith?.("Draw") ? "D" : "L"}
                           </span>
@@ -426,36 +423,8 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                         <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>{m.player2}</span>
                       </div>
                     ))}
-                  </>
-                )}
-
-                {/* Section: Největší rozdíl ELO */}
-                {(data?.topMatchDiff ?? []).length > 0 && (
-                  <>
-                    <div style={{ padding: "8px 14px 4px", display: "flex", alignItems: "center", gap: 6 }}>
-                      <TrendingUp size={10} color="hsl(24,88%,56%)" />
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_biggest_diff")}</span>
-                      <span style={{ marginLeft: "auto", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{t(lang, "dash_delta_elo")}</span>
-                    </div>
-                    {(data?.topMatchDiff ?? []).slice(0, 2).map((m, i) => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderBottom: i < 1 ? "1px solid hsl(var(--border) / 0.3)" : "none" }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.player1}</span>
-                        <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo1}</span>
-                        <div style={{ padding: "2px 7px", borderRadius: 6, background: "hsl(var(--muted)/0.5)", fontSize: 10, fontWeight: 800, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", flexShrink: 0 }}>
-                          <span style={{ color: m.result1?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result1?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
-                            {m.result1?.startsWith?.("Won") ? "W" : m.result1?.startsWith?.("Draw") ? "D" : "L"}
-                          </span>
-                          {" — "}
-                          <span style={{ color: m.result2?.startsWith?.("Won") ? "hsl(142,65%,50%)" : m.result2?.startsWith?.("Draw") ? "hsl(42,80%,52%)" : "hsl(0,65%,55%)", fontWeight: 800 }}>
-                            {m.result2?.startsWith?.("Won") ? "W" : m.result2?.startsWith?.("Draw") ? "D" : "L"}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{m.elo2}</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>{m.player2}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
+                  </div>
+                ))}
               </>
             )}
           </div>
