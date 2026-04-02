@@ -2,11 +2,10 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Newspaper, Star, Swords, LogOut, LayoutDashboard } from "lucide-react";
+import { Newspaper, Star, Swords, LogOut } from "lucide-react";
 
 const NAV = [
-  { href: "/admin", label: "Přehled", icon: LayoutDashboard, exact: true },
-  { href: "/admin/articles", label: "Články", icon: Newspaper, exact: false },
+  { href: "/admin", label: "Články", icon: Newspaper, exact: true },
   { href: "/admin/milestones", label: "Milníky", icon: Star, exact: false },
   { href: "/admin/matches", label: "Zápasy", icon: Swords, exact: false },
 ];

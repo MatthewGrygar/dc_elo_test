@@ -84,24 +84,26 @@ async function getKV() {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
+/** For admin — only KV articles, no hardcoded seed */
 export async function getAllArticles(): Promise<Article[]> {
-  if (!kvAvailable()) return [SEED_ARTICLE];
+  if (!kvAvailable()) return [];
   try {
     const kv = await getKV();
     const ids = await kv.lrange<string>(IDS_KEY, 0, -1);
-    if (!ids.length) return [SEED_ARTICLE];
+    if (!ids.length) return [];
     const items = await Promise.all(ids.map((id) => kv.get<Article>(articleKey(id))));
     return items.filter(Boolean) as Article[];
   } catch {
-    return [SEED_ARTICLE];
+    return [];
   }
 }
 
+/** For public — falls back to seed article when KV is empty */
 export async function getPublishedArticles(): Promise<Article[]> {
   const all = await getAllArticles();
-  return all
-    .filter((a) => a.published)
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const published = all.filter((a) => a.published).sort((a, b) => b.date.localeCompare(a.date));
+  if (published.length === 0) return [SEED_ARTICLE]; // fallback for fresh install
+  return published;
 }
 
 export async function getSliderArticles(): Promise<Article[]> {
