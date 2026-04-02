@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Edit2, Check, X, RotateCcw, Info, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { RefreshCw, Edit2, Check, X, RotateCcw, Info, ChevronDown, AlertTriangle, Eye, EyeOff } from "lucide-react";
 
 // ── Types (mirrored from dataFetchers) ───────────────────────────────────────
 interface RecordEntry {
@@ -131,6 +131,165 @@ const greenBg = "hsl(152 72% 45% / 0.1)";
 const greenBorder = "hsl(152 72% 45% / 0.28)";
 const amber = "hsl(42,80%,52%)";
 const amberBg = "hsl(42 80% 52% / 0.12)";
+const red = "hsl(0,72%,55%)";
+const redBg = "hsl(0 72% 55% / 0.1)";
+const redBorder = "hsl(0 72% 55% / 0.3)";
+
+// ── Password confirmation modal ───────────────────────────────────────────────
+function ConfirmModal({ label, onConfirmed, onCancel }: {
+  label: string;
+  onConfirmed: () => void;
+  onCancel: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 60);
+  }, []);
+
+  async function handleConfirm() {
+    if (!password) { setError("Zadej heslo."); return; }
+    setChecking(true); setError("");
+    try {
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        onConfirmed();
+      } else if (res.status === 429) {
+        setError("Příliš mnoho pokusů. Počkej chvíli.");
+      } else {
+        setError("Nesprávné heslo.");
+        setPassword("");
+        inputRef.current?.focus();
+      }
+    } catch {
+      setError("Chyba sítě.");
+    }
+    setChecking(false);
+  }
+
+  return (
+    /* Backdrop */
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "hsl(var(--background) / 0.75)",
+        backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "1rem",
+      }}
+    >
+      <div style={{
+        width: "100%", maxWidth: 440,
+        background: "hsl(var(--card))",
+        border: `1px solid ${redBorder}`,
+        borderRadius: 16, overflow: "hidden",
+        boxShadow: `0 0 60px -10px ${redBg}`,
+      }}>
+        {/* Red top bar */}
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${red}, transparent)` }} />
+
+        {/* Warning banner */}
+        <div style={{
+          padding: "16px 20px 14px",
+          background: redBg,
+          borderBottom: `1px solid ${redBorder}`,
+          display: "flex", alignItems: "flex-start", gap: 12,
+        }}>
+          <AlertTriangle size={22} style={{ color: red, flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: red, letterSpacing: "-0.01em", marginBottom: 4 }}>
+              POZOR!
+            </div>
+            <div style={{ fontSize: 12, color: "hsl(var(--foreground))", lineHeight: 1.55 }}>
+              Editujete provozní prostředí, pečlivě prosím tuto změnu promyslete.
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "18px 20px 20px" }}>
+          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", marginBottom: 14, lineHeight: 1.5 }}>
+            Chystáš se upravit záznam:<br />
+            <span style={{ fontWeight: 700, color: "hsl(var(--foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>{label}</span>
+          </div>
+
+          <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 6 }}>
+            Admin heslo
+          </label>
+          <div style={{ position: "relative", marginBottom: error ? 8 : 16 }}>
+            <input
+              ref={inputRef}
+              type={show ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleConfirm(); if (e.key === "Escape") onCancel(); }}
+              placeholder="Zadej admin heslo…"
+              style={{
+                width: "100%", padding: "9px 36px 9px 12px", borderRadius: 8, fontSize: 13,
+                background: "hsl(var(--muted)/0.4)", border: `1px solid ${error ? redBorder : "hsl(var(--border))"}`,
+                color: "hsl(var(--foreground))", fontFamily: "var(--font-mono)", outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              style={{
+                position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", cursor: "pointer",
+                color: "hsl(var(--muted-foreground))", padding: 2,
+              }}
+            >
+              {show ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
+          </div>
+
+          {error && (
+            <div style={{ fontSize: 11, color: red, marginBottom: 14, fontFamily: "var(--font-mono)" }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={handleConfirm}
+              disabled={checking || !password}
+              style={{
+                flex: 1, padding: "9px", borderRadius: 8,
+                background: checking ? redBg : red,
+                color: checking ? red : "#fff",
+                border: `1px solid ${redBorder}`,
+                fontSize: 13, fontWeight: 700, cursor: checking ? "not-allowed" : "pointer",
+                fontFamily: "var(--font-body)",
+              }}
+            >
+              {checking ? "Ověřuji…" : "Potvrdit úpravu"}
+            </button>
+            <button
+              onClick={onCancel}
+              style={{
+                padding: "9px 18px", borderRadius: 8, border: "1px solid hsl(var(--border))",
+                background: "transparent", color: "hsl(var(--muted-foreground))",
+                fontSize: 13, cursor: "pointer", fontFamily: "var(--font-body)",
+              }}
+            >
+              Zrušit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Inline edit form for one record ──────────────────────────────────────────
 function RecordEditForm({ recKey, entry, existingOverride, onSave, onDelete, onCancel }: {
@@ -236,6 +395,7 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
 }) {
   const [editing, setEditing] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const [confirmingEdit, setConfirmingEdit] = useState(false);
   const key = `${catId}/${rec.label}`;
   const hasOverride = !!override;
   const entry = rec.entry;
@@ -299,13 +459,20 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
               <Info size={11} />
             </button>
           )}
-          <button onClick={() => setEditing((s) => !s)} title={editing ? "Zavřít" : "Upravit"} style={{
-            width: 24, height: 24, borderRadius: 6, border: `1px solid ${editing ? greenBorder : "hsl(var(--border))"}`,
-            cursor: "pointer",
-            background: editing ? greenBg : "hsl(var(--muted)/0.3)",
-            color: editing ? green : "hsl(var(--muted-foreground))",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <button
+            onClick={() => {
+              if (editing) { setEditing(false); }
+              else { setConfirmingEdit(true); }
+            }}
+            title={editing ? "Zavřít" : "Upravit"}
+            style={{
+              width: 24, height: 24, borderRadius: 6,
+              border: `1px solid ${editing ? greenBorder : "hsl(var(--border))"}`,
+              cursor: "pointer",
+              background: editing ? greenBg : "hsl(var(--muted)/0.3)",
+              color: editing ? green : "hsl(var(--muted-foreground))",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
             {editing ? <X size={11} /> : <Edit2 size={11} />}
           </button>
         </div>
@@ -330,6 +497,15 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
             onCancel={() => setEditing(false)}
           />
         </div>
+      )}
+
+      {/* Password confirmation modal */}
+      {confirmingEdit && (
+        <ConfirmModal
+          label={rec.label}
+          onConfirmed={() => { setConfirmingEdit(false); setEditing(true); }}
+          onCancel={() => setConfirmingEdit(false)}
+        />
       )}
     </div>
   );
