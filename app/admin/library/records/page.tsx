@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { RefreshCw, Edit2, Check, X, RotateCcw, Info, ChevronDown, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { RefreshCw, Edit2, Check, X, RotateCcw, Info, ChevronDown, AlertTriangle, Eye, EyeOff, HelpCircle, Pin, RefreshCcw, Tag } from "lucide-react";
 
 // ── Types (mirrored from dataFetchers) ───────────────────────────────────────
 interface RecordEntry {
@@ -16,12 +16,15 @@ interface RecordCategory { id: string; title: string; icon: string; records: Rec
 interface RecordsData { categories: RecordCategory[]; }
 
 interface RecordOverride {
-  key: string;      // "<categoryId>/<label>"
+  key: string;          // "<categoryId>/<label>"
   value: string;
   player?: string;
   detail?: string;
   detail2?: string;
   note?: string;
+  formula?: string;     // custom formula text override
+  pinned?: boolean;     // true = hold until manual change; false = auto-recalculate
+  customLabel?: string; // custom display name override
   updatedAt: string;
 }
 
@@ -291,96 +294,251 @@ function ConfirmModal({ label, onConfirmed, onCancel }: {
   );
 }
 
+// ── Formula syntax help modal ─────────────────────────────────────────────────
+function FormulaSyntaxHelp({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1100,
+        background: "hsl(var(--background) / 0.6)",
+        backdropFilter: "blur(4px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "1rem",
+      }}
+    >
+      <div style={{
+        width: "100%", maxWidth: 520,
+        background: "hsl(var(--card))",
+        border: "1px solid hsl(var(--border))",
+        borderRadius: 14, overflow: "hidden",
+        boxShadow: "0 20px 60px -10px hsl(0 0% 0% / 0.4)",
+      }}>
+        <div style={{ padding: "12px 16px", borderBottom: "1px solid hsl(var(--border))", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "hsl(var(--foreground))" }}>📗 Syntaxe vzorců — Excel / Google Sheets</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "hsl(var(--muted-foreground))", padding: 2 }}><X size={14} /></button>
+        </div>
+        <div style={{ padding: "14px 16px", overflow: "auto", maxHeight: "70vh" }}>
+          <pre style={{ margin: 0, fontSize: 11, fontFamily: "var(--font-mono)", color: "hsl(var(--foreground))", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{`Funkce:
+  MAX(rozsah)              nejvyšší hodnota
+  MIN(rozsah)              nejnižší hodnota
+  SUM(rozsah)              součet hodnot
+  AVERAGE(rozsah)          průměr
+  COUNT(rozsah)            počet čísel
+  COUNTA(rozsah)           počet neprázdných buněk
+  COUNTIF(r, podmínka)     počet splňujících podmínku
+  SUMIF(r, podmínka, s)    součet kde podmínka platí
+  IF(podmínka, a, b)       podmíněná hodnota
+  IFS(p1,h1, p2,h2, …)    více podmínek
+  STDEV(rozsah)            směrodatná odchylka
+  VAR(rozsah)              rozptyl
+  VLOOKUP(h, r, sl, 0)    svislé vyhledávání
+  INDEX(r, řádek, sl)      hodnota na pozici
+  MATCH(h, r, 0)           pozice hledané hodnoty
+  LEN(text)                délka textu
+  TRIM(text)               oříznutí mezer
+  TEXT(číslo, formát)      formátování čísla
+
+Operátory:
+  +  -  *  /  ^  ()       aritmetika
+  =  <>  >  <  >=  <=     porovnání
+  &                        zřetězení textu ("Ahoj"&" "&"světe")
+
+Sloupce (Player cards CSV):
+  A = hráč       B = matchId    C = typ turnaje
+  D = detail     E = datum      F = soupeř (jméno + ELO)
+  G = výsledek   H = Δ ELO      I = ELO po zápase
+
+Sloupce (Elo standings):
+  A = jméno      B = aktuální ELO    H = peak ELO
+
+Příklady lineárního zápisu:
+  MAX(H:H)
+  SUM(H2:H1000) / COUNT(H2:H1000)
+  COUNTIF(G:G, "Won") / COUNT(G:G) * 100
+  MAX(I:I) - MIN(I:I)
+  IF(G2="Won", 1/(1+10^((oppElo-myElo)/400)), 0)`}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Inline edit form for one record ──────────────────────────────────────────
-function RecordEditForm({ recKey, entry, existingOverride, onSave, onDelete, onCancel }: {
+function RecordEditForm({ recKey, defaultLabel, entry, existingOverride, onSave, onDelete, onCancel }: {
   recKey: string;
+  defaultLabel: string;
   entry: RecordEntry | null;
   existingOverride: RecordOverride | null;
   onSave: (ov: Partial<RecordOverride>) => Promise<void>;
   onDelete: () => Promise<void>;
   onCancel: () => void;
 }) {
+  const [customLabel, setCustomLabel] = useState(existingOverride?.customLabel ?? "");
   const [value, setValue] = useState(existingOverride?.value ?? entry?.value ?? "");
   const [player, setPlayer] = useState(existingOverride?.player ?? entry?.player ?? "");
   const [detail, setDetail] = useState(existingOverride?.detail ?? entry?.detail ?? "");
   const [detail2, setDetail2] = useState(existingOverride?.detail2 ?? entry?.detail2 ?? "");
   const [note, setNote] = useState(existingOverride?.note ?? "");
+  const [formula, setFormula] = useState(existingOverride?.formula ?? "");
+  const [pinned, setPinned] = useState<boolean>(existingOverride?.pinned ?? true);
   const [saving, setSaving] = useState(false);
+  const [showSyntax, setShowSyntax] = useState(false);
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "6px 10px", borderRadius: 7, fontSize: 12,
     background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border))",
     color: "hsl(var(--foreground))", fontFamily: "var(--font-mono)", outline: "none",
+    boxSizing: "border-box",
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: 9, color: "hsl(var(--muted-foreground))", display: "block",
+    marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.08em",
   };
 
   async function handleSave() {
     if (!value.trim()) return;
     setSaving(true);
-    await onSave({ value: value.trim(), player: player.trim() || undefined, detail: detail.trim() || undefined, detail2: detail2.trim() || undefined, note: note.trim() || undefined });
+    await onSave({
+      value: value.trim(),
+      player: player.trim() || undefined,
+      detail: detail.trim() || undefined,
+      detail2: detail2.trim() || undefined,
+      note: note.trim() || undefined,
+      formula: formula.trim() || undefined,
+      pinned,
+      customLabel: customLabel.trim() || undefined,
+    });
     setSaving(false);
   }
 
   return (
-    <div style={{
-      marginTop: 6, padding: "12px 14px", borderRadius: 9,
-      background: "hsl(var(--card)/0.8)", border: `1px solid ${greenBorder}`,
-    }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: green, marginBottom: 8 }}>
-        Upravit hodnotu záznamu
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 6 }}>
-        <div>
-          <label style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Hodnota *</label>
-          <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="např. 2 034" style={inputStyle} />
+    <>
+      {showSyntax && <FormulaSyntaxHelp onClose={() => setShowSyntax(false)} />}
+      <div style={{
+        marginTop: 6, padding: "12px 14px", borderRadius: 9,
+        background: "hsl(var(--card)/0.8)", border: `1px solid ${greenBorder}`,
+      }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: green, marginBottom: 10 }}>
+          Upravit záznam
         </div>
-        <div>
-          <label style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Hráč</label>
-          <input value={player} onChange={(e) => setPlayer(e.target.value)} placeholder="jméno hráče" style={inputStyle} />
+
+        {/* Custom label */}
+        <div style={{ marginBottom: 8 }}>
+          <label style={labelStyle}>
+            <Tag size={8} style={{ display: "inline", marginRight: 3 }} />
+            Přejmenovat atribut (vlastní název)
+          </label>
+          <input value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} placeholder={`${defaultLabel} (ponech prázdné = původní název)`} style={inputStyle} />
         </div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 6 }}>
-        <div>
-          <label style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Detail (datum / kontext)</label>
-          <input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="např. 15.3.2025" style={inputStyle} />
+
+        {/* Value + player */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 6 }}>
+          <div>
+            <label style={labelStyle}>Hodnota *</label>
+            <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="např. 2 034" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Hráč</label>
+            <input value={player} onChange={(e) => setPlayer(e.target.value)} placeholder="jméno hráče" style={inputStyle} />
+          </div>
         </div>
-        <div>
-          <label style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Detail 2 (vs. soupeř…)</label>
-          <input value={detail2} onChange={(e) => setDetail2(e.target.value)} placeholder="např. vs. Ondra · Turnaj" style={inputStyle} />
+
+        {/* Detail fields */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 8 }}>
+          <div>
+            <label style={labelStyle}>Detail (datum / kontext)</label>
+            <input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="např. 15.3.2025" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Detail 2 (vs. soupeř…)</label>
+            <input value={detail2} onChange={(e) => setDetail2(e.target.value)} placeholder="např. vs. Ondra · Turnaj" style={inputStyle} />
+          </div>
         </div>
-      </div>
-      <div style={{ marginBottom: 8 }}>
-        <label style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.08em" }}>Poznámka (proč upravuješ — interně)</label>
-        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="např. Oprava chyby v datech..." style={inputStyle} />
-      </div>
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <button onClick={handleSave} disabled={saving || !value.trim()} style={{
-          display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 7,
-          background: saving ? greenBg : green, color: saving ? green : "#000",
-          border: `1px solid ${greenBorder}`, fontSize: 11, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer",
-          fontFamily: "var(--font-body)",
-        }}>
-          <Check size={11} /> {saving ? "Ukládám…" : "Uložit override"}
-        </button>
-        {existingOverride && (
-          <button onClick={async () => { setSaving(true); await onDelete(); setSaving(false); }} disabled={saving} style={{
+
+        {/* Formula override */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Vzorec výpočtu (přepíše popis)</label>
+            <button
+              type="button"
+              onClick={() => setShowSyntax(true)}
+              title="Nápověda k syntaxi vzorců"
+              style={{
+                display: "flex", alignItems: "center", gap: 3, padding: "1px 6px", borderRadius: 4,
+                background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))",
+                cursor: "pointer", fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-body)",
+              }}
+            >
+              <HelpCircle size={9} /> Syntaxe
+            </button>
+          </div>
+          <input
+            value={formula}
+            onChange={(e) => setFormula(e.target.value)}
+            placeholder="např. MAX(H:H) nebo COUNTIF(G:G, &quot;Won&quot;) / COUNT(G:G) * 100"
+            style={{ ...inputStyle, fontFamily: "var(--font-mono)" }}
+          />
+        </div>
+
+        {/* Note */}
+        <div style={{ marginBottom: 10 }}>
+          <label style={labelStyle}>Poznámka (proč upravuješ — interně)</label>
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="např. Oprava chyby v datech..." style={inputStyle} />
+        </div>
+
+        {/* Pinned vs auto-recalculate */}
+        <div style={{ marginBottom: 10, padding: "8px 10px", borderRadius: 7, background: "hsl(var(--muted)/0.25)", border: "1px solid hsl(var(--border))" }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "hsl(var(--muted-foreground))", marginBottom: 6 }}>
+            Chování při dalším nahrání dat
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer", marginBottom: 5 }}>
+            <input type="radio" name={`pinned-${recKey}`} checked={!pinned} onChange={() => setPinned(false)} style={{ accentColor: green }} />
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "hsl(var(--foreground))" }}>
+              <RefreshCcw size={10} style={{ color: green }} />
+              Při dalším nahrání dat se znovu přepočítá (override se vymaže)
+            </span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
+            <input type="radio" name={`pinned-${recKey}`} checked={pinned} onChange={() => setPinned(true)} style={{ accentColor: amber }} />
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "hsl(var(--foreground))" }}>
+              <Pin size={10} style={{ color: amber }} />
+              Držitel rekordu zůstane stejný do další ruční změny
+            </span>
+          </label>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button onClick={handleSave} disabled={saving || !value.trim()} style={{
             display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 7,
-            background: "hsl(var(--destructive)/0.1)", color: "hsl(var(--destructive))",
-            border: "1px solid hsl(var(--destructive)/0.3)", fontSize: 11, fontWeight: 600, cursor: "pointer",
+            background: saving ? greenBg : green, color: saving ? green : "#000",
+            border: `1px solid ${greenBorder}`, fontSize: 11, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer",
             fontFamily: "var(--font-body)",
           }}>
-            <RotateCcw size={10} /> Zrušit override
+            <Check size={11} /> {saving ? "Ukládám…" : "Uložit override"}
           </button>
-        )}
-        <button onClick={onCancel} style={{
-          display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 7,
-          background: "transparent", color: "hsl(var(--muted-foreground))",
-          border: "1px solid hsl(var(--border))", fontSize: 11, cursor: "pointer",
-          fontFamily: "var(--font-body)",
-        }}>
-          <X size={10} /> Zrušit
-        </button>
+          {existingOverride && (
+            <button onClick={async () => { setSaving(true); await onDelete(); setSaving(false); }} disabled={saving} style={{
+              display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 7,
+              background: "hsl(var(--destructive)/0.1)", color: "hsl(var(--destructive))",
+              border: "1px solid hsl(var(--destructive)/0.3)", fontSize: 11, fontWeight: 600, cursor: "pointer",
+              fontFamily: "var(--font-body)",
+            }}>
+              <RotateCcw size={10} /> Zrušit override
+            </button>
+          )}
+          <button onClick={onCancel} style={{
+            display: "flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 7,
+            background: "transparent", color: "hsl(var(--muted-foreground))",
+            border: "1px solid hsl(var(--border))", fontSize: 11, cursor: "pointer",
+            fontFamily: "var(--font-body)",
+          }}>
+            <X size={10} /> Zrušit
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -409,9 +567,11 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
     detail2: override?.detail2 ?? entry.detail2,
   } : null;
 
+  const displayLabel = override?.customLabel || rec.label;
+
   if (!displayEntry) return (
     <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid hsl(var(--border)/0.15)" }}>
-      <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground)/0.5)", flex: 1 }}>{rec.label}</span>
+      <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground)/0.5)", flex: 1 }}>{displayLabel}</span>
       <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground)/0.35)", fontFamily: "var(--font-mono)" }}>—</span>
     </div>
   );
@@ -425,12 +585,17 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
         {/* Label + details */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))" }}>{rec.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "hsl(var(--foreground))" }}>{displayLabel}</span>
+            {override?.customLabel && (
+              <span style={{ fontSize: 8, padding: "1px 5px", borderRadius: 4, background: "hsl(var(--muted)/0.5)", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))", fontFamily: "var(--font-mono)" }} title={`Původní: ${rec.label}`}>↩ {rec.label}</span>
+            )}
             {displayEntry.isAllTime && (
               <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: `${amber}22`, color: amber, border: `1px solid ${amber}40`, fontFamily: "var(--font-mono)" }}>ALL TIME</span>
             )}
             {hasOverride && (
-              <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: amberBg, color: amber, border: `1px solid ${amber}40`, fontFamily: "var(--font-mono)" }}>OVERRIDE</span>
+              <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: amberBg, color: amber, border: `1px solid ${amber}40`, fontFamily: "var(--font-mono)" }}>
+                OVERRIDE{override?.pinned ? " 📌" : " ♻"}
+              </span>
             )}
           </div>
           {displayEntry.player && <div style={{ fontSize: 11, color: green, fontFamily: "var(--font-mono)" }}>{displayEntry.player}</div>}
@@ -450,10 +615,11 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
 
         {/* Actions */}
         <div style={{ display: "flex", gap: 4, flexShrink: 0, alignSelf: "center" }}>
-          {detail && (
+          {(detail || override?.formula) && (
             <button onClick={() => setShowDetail((s) => !s)} title="Jak se počítá" style={{
-              width: 24, height: 24, borderRadius: 6, border: "1px solid hsl(var(--border))", cursor: "pointer",
-              background: showDetail ? greenBg : "hsl(var(--muted)/0.3)", color: showDetail ? green : "hsl(var(--muted-foreground))",
+              width: 24, height: 24, borderRadius: 6, border: `1px solid ${override?.formula ? greenBorder : "hsl(var(--border))"}`, cursor: "pointer",
+              background: showDetail ? greenBg : override?.formula ? `${greenBg}` : "hsl(var(--muted)/0.3)",
+              color: showDetail || override?.formula ? green : "hsl(var(--muted-foreground))",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <Info size={11} />
@@ -479,9 +645,18 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
       </div>
 
       {/* Detail explanation */}
-      {showDetail && detail && (
-        <div style={{ margin: "0 14px 8px", padding: "8px 12px", borderRadius: 8, background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border))", fontSize: 11, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", lineHeight: 1.6 }}>
-          {detail}
+      {showDetail && (detail || override?.formula) && (
+        <div style={{ margin: "0 14px 8px", padding: "8px 12px", borderRadius: 8, background: "hsl(var(--muted)/0.3)", border: `1px solid ${override?.formula ? greenBorder : "hsl(var(--border))"}`, lineHeight: 1.6 }}>
+          {override?.formula && (
+            <div style={{ fontSize: 10, fontWeight: 700, color: green, fontFamily: "var(--font-mono)", marginBottom: 4 }}>
+              📐 Vlastní vzorec: {override.formula}
+            </div>
+          )}
+          {detail && (
+            <div style={{ fontSize: 11, color: override?.formula ? "hsl(var(--muted-foreground)/0.6)" : "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", textDecoration: override?.formula ? "line-through" : "none" }}>
+              {detail}
+            </div>
+          )}
         </div>
       )}
 
@@ -490,6 +665,7 @@ function RecordRow({ catId, rec, override, detail, onSaveOverride, onDeleteOverr
         <div style={{ padding: "0 14px 12px" }}>
           <RecordEditForm
             recKey={key}
+            defaultLabel={rec.label}
             entry={entry}
             existingOverride={override}
             onSave={async (ov) => { await onSaveOverride(key, ov); setEditing(false); }}
@@ -619,6 +795,9 @@ export default function RecordsLibraryPage() {
       detail: partial.detail,
       detail2: partial.detail2,
       note: partial.note,
+      formula: partial.formula,
+      pinned: partial.pinned,
+      customLabel: partial.customLabel,
       updatedAt: new Date().toISOString(),
     };
     const res = await fetch("/api/admin/record-overrides", {

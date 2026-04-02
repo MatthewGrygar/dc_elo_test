@@ -184,6 +184,7 @@ export default function PlayerOverviewLibraryPage() {
       subtitle="Metriky na osobní kartě hráče — aktuální stav, výkonnost a indexy."
       icon="👤"
       metrics={metrics}
+      pageId="player-overview"
     />
   );
 }

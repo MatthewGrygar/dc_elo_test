@@ -132,6 +132,9 @@ export interface RecordOverride {
   detail?: string;
   detail2?: string;
   note?: string;            // admin note explaining why this was overridden
+  formula?: string;         // custom formula text override (shown in library)
+  pinned?: boolean;         // true = hold until manual change; false = auto-recalculate on next load
+  customLabel?: string;     // custom display name override
   updatedAt: string;
 }
 
@@ -164,4 +167,43 @@ export async function upsertRecordOverride(override: RecordOverride): Promise<vo
 export async function deleteRecordOverride(key: string): Promise<void> {
   const all = await getRecordOverrides();
   await setRecordOverrides(all.filter((o) => o.key !== key));
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// METRIC OVERRIDES (library pages: formula / customLabel per metric)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Key = "<pageId>/<metricName>" */
+export interface MetricOverride {
+  key: string;
+  customLabel?: string;     // renamed display name
+  formula?: string;         // custom formula text (replaces default)
+  updatedAt: string;
+}
+
+const METRIC_OVERRIDES_KEY = "library:metric-overrides";
+
+export async function getMetricOverrides(): Promise<MetricOverride[]> {
+  if (!kvAvailable()) return [];
+  try {
+    const kv = await getKV();
+    return (await kv.get<MetricOverride[]>(METRIC_OVERRIDES_KEY)) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function upsertMetricOverride(override: MetricOverride): Promise<void> {
+  const all = await getMetricOverrides();
+  const idx = all.findIndex((o) => o.key === override.key);
+  if (idx >= 0) all[idx] = override;
+  else all.push(override);
+  const kv = await getKV();
+  await kv.set(METRIC_OVERRIDES_KEY, all);
+}
+
+export async function deleteMetricOverride(key: string): Promise<void> {
+  const all = await getMetricOverrides();
+  const kv = await getKV();
+  await kv.set(METRIC_OVERRIDES_KEY, all.filter((o) => o.key !== key));
 }
