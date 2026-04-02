@@ -119,3 +119,49 @@ export async function setFeaturedMatches(matches: FeaturedMatch[]): Promise<void
   const kv = await getKV();
   await kv.set(FEATURED_MATCHES_KEY, matches);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RECORD OVERRIDES
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Key = "<categoryId>/<recordLabel>" */
+export interface RecordOverride {
+  key: string;
+  value: string;
+  player?: string;
+  detail?: string;
+  detail2?: string;
+  note?: string;            // admin note explaining why this was overridden
+  updatedAt: string;
+}
+
+const RECORD_OVERRIDES_KEY = "records:overrides";
+
+export async function getRecordOverrides(): Promise<RecordOverride[]> {
+  if (!kvAvailable()) return [];
+  try {
+    const kv = await getKV();
+    return (await kv.get<RecordOverride[]>(RECORD_OVERRIDES_KEY)) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function setRecordOverrides(overrides: RecordOverride[]): Promise<void> {
+  if (!kvAvailable()) throw new Error("KV not configured");
+  const kv = await getKV();
+  await kv.set(RECORD_OVERRIDES_KEY, overrides);
+}
+
+export async function upsertRecordOverride(override: RecordOverride): Promise<void> {
+  const all = await getRecordOverrides();
+  const idx = all.findIndex((o) => o.key === override.key);
+  if (idx >= 0) all[idx] = override;
+  else all.push(override);
+  await setRecordOverrides(all);
+}
+
+export async function deleteRecordOverride(key: string): Promise<void> {
+  const all = await getRecordOverrides();
+  await setRecordOverrides(all.filter((o) => o.key !== key));
+}
