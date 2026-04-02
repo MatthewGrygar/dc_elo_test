@@ -445,3 +445,70 @@ export async function fetchDashboardStats(mode: "ELO" | "DCPR"): Promise<Extende
     avgEloChange: eloChangeCount > 0 ? Math.round((totalEloChange / eloChangeCount) * 10) / 10 : 0,
   };
 }
+
+// ─── Public: all recent match pairs (for admin match selection) ───────────────
+
+export async function fetchRecentMatches(days = 60): Promise<InterestingMatch[]> {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const [cardsElo, cardsDcpr] = await Promise.all([
+    fetchSheetByName("Player cards (CSV)"),
+    fetchSheetByName("Player cards (CSV) - Tournament"),
+  ]);
+
+  interface CardRow {
+    player: string; matchId: string; date: string;
+    result: string; eloChange: number; elo: number;
+  }
+
+  function parseCards(rows: string[][]): CardRow[] {
+    const out: CardRow[] = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const player = r[0]?.trim();
+      if (!player) continue;
+      const d = parseDate(r[4]);
+      if (!d || d < cutoff) continue;
+      out.push({
+        player,
+        matchId: r[1]?.trim(),
+        date: r[4]?.trim(),
+        result: r[6]?.trim(),
+        eloChange: pf(r[7]),
+        elo: pf(r[8]),
+      });
+    }
+    return out;
+  }
+
+  const allCards = [...parseCards(cardsElo), ...parseCards(cardsDcpr)];
+
+  const byMatch = new Map<string, CardRow[]>();
+  for (const c of allCards) {
+    if (!byMatch.has(c.matchId)) byMatch.set(c.matchId, []);
+    byMatch.get(c.matchId)!.push(c);
+  }
+
+  const pairs: InterestingMatch[] = [];
+  for (const [matchId, rows] of byMatch) {
+    if (rows.length < 2) continue;
+    const a = rows[0], b = rows[1];
+    const elo1 = a.elo - a.eloChange;
+    const elo2 = b.elo - b.eloChange;
+    pairs.push({
+      matchId,
+      player1: a.player, elo1: Math.round(elo1), result1: a.result,
+      player2: b.player, elo2: Math.round(elo2), result2: b.result,
+      avgElo: (elo1 + elo2) / 2,
+      eloDiff: Math.abs(elo1 - elo2),
+      date: a.date,
+    });
+  }
+
+  // Sort by date descending
+  return pairs.sort((a, b) => {
+    const da = parseDate(a.date), db = parseDate(b.date);
+    if (!da || !db) return 0;
+    return db.getTime() - da.getTime();
+  });
+}
