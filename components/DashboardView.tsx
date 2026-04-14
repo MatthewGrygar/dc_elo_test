@@ -542,15 +542,13 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
                       }}>{avatarInitials(p.name)}</div>
                     </div>
                   )}
-                  <span style={{ flex: 1, fontWeight: i === 0 ? 700 : 600, fontSize: i === 0 ? 13 : 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5 }}>
-                    {(p as any).country && (
-                      <span title={(p as any).country} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", fontSize: 11, lineHeight: 1, flexShrink: 0, border: "1px solid hsl(var(--border)/0.4)" }}>
-                        {(p as any).country.toUpperCase().replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 0x1F1A5))}
-                      </span>
-                    )}
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                  </span>
+                  <span style={{ flex: 1, fontWeight: i === 0 ? 700 : 600, fontSize: i === 0 ? 13 : 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
                   {(p as any).vtClass && <VtBadge vt={(p as any).vtClass} />}
+                  {(p as any).country && (
+                    <span title={(p as any).country} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", fontSize: 11, lineHeight: 1, flexShrink: 0, border: "1px solid hsl(var(--border)/0.4)" }}>
+                      {(p as any).country.toUpperCase().replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 0x1F1A5))}
+                    </span>
+                  )}
                   <span style={{ fontSize: i === 0 ? 14 : 11, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--primary))", flexShrink: 0 }}>
                     {p.rating.toLocaleString("cs-CZ")}
                   </span>

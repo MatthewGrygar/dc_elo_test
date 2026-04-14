@@ -122,8 +122,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
         {isMobile ? (
           /* Mobile layout: name full-width, then rank + class + Detail on one row */
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8, display: "flex", alignItems: "center", gap: 7 }}>
-              {(player as any).country && <FlagIcon code={(player as any).country} />}
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>
               {player.name}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -138,6 +137,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
                 }}>{VT_META[vtClass].label}</span>
               )}
               {superTags && superTags.length > 0 && <SuperTagBadges tags={superTags} />}
+              {(player as any).country && <FlagIcon code={(player as any).country} />}
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button
                   onClick={() => onOpen(player)}
@@ -183,8 +183,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
 
             {/* Name + rank */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 3, display: "flex", alignItems: "center", gap: 7 }}>
-                {(player as any).country && <FlagIcon code={(player as any).country} />}
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 3 }}>
                 {player.name}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -199,6 +198,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
                   }}>{VT_META[vtClass].label}</span>
                 )}
                 {superTags && superTags.length > 0 && <SuperTagBadges tags={superTags} />}
+                {(player as any).country && <FlagIcon code={(player as any).country} />}
               </div>
             </div>
 
@@ -437,7 +437,6 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                         <div className="lb-avatar" style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: isSelected ? "hsl(var(--primary) / 0.25)" : "hsl(var(--primary) / 0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)" }}>
                           {avatarInitials(p.name)}
                         </div>
-                        {p.country && <FlagIcon code={p.country} />}
                         <span className="lb-name" style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                         {vtClass && VT_META[vtClass] && (
                           <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: VT_META[vtClass].bg, color: VT_META[vtClass].color, border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)" }}>
@@ -445,6 +444,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                           </span>
                         )}
                         {pSuperTags.length > 0 && <SuperTagBadges tags={pSuperTags} />}
+                        {p.country && <FlagIcon code={p.country} />}
                       </div>
                     </td>
                     <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--primary))", fontSize: 13 }}>
