@@ -90,6 +90,17 @@ function Skeleton({ h = 60 }: { h?: number }) {
   return <div style={{ height: h, borderRadius: 14, background: "hsl(var(--muted) / 0.5)", animation: "pd-pulse 1.5s ease-in-out infinite" }} />;
 }
 
+// Custom rotated label for announcement ReferenceLine
+function AnnLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; height?: number }; value?: string }) {
+  const x = (viewBox?.x ?? 0) + 4;
+  const y = (viewBox?.y ?? 0) + (viewBox?.height ?? 0) - 6;
+  return (
+    <text x={x} y={y} transform={`rotate(-90, ${x}, ${y})`} fontSize={8} fontFamily="var(--font-mono)" fill="hsl(var(--primary))" textAnchor="start">
+      {value}
+    </text>
+  );
+}
+
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[] }) {
   const { selectedPlayer, lang } = useAppNav();
@@ -148,38 +159,29 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
   const trendMin = trendElos.length ? Math.min(...trendElos) - 100 : "auto";
   const trendMax = trendElos.length ? Math.max(...trendElos) + 100 : "auto";
 
-  // Announcement lines — filter to dates within player's first/last game
-  const parseCzDate2 = (s: string): Date | null => {
-    const parts = s.split(".");
-    if (parts.length === 3) return new Date(+parts[2], +parts[1] - 1, +parts[0]);
-    return null;
-  };
-  const trendDates = activeTrend.map((p: any) => parseCzDate2(p.date)?.getTime() ?? 0).filter(Boolean);
-  const playerFirstTs = trendDates.length ? Math.min(...trendDates) : 0;
-  const playerLastTs  = trendDates.length ? Math.max(...trendDates) : 0;
+  // Announcement lines — filter to player's full career range (not filtered by period)
+  const allCareerDates = eloTrend.map((p: any) => parseCzDate(p.date)?.getTime() ?? 0).filter(Boolean);
+  const playerFirstTs = allCareerDates.length ? Math.min(...allCareerDates) : 0;
+  const playerLastTs  = allCareerDates.length ? Math.max(...allCareerDates) : 0;
   const visibleAnnouncements = showAnnouncements && playerFirstTs > 0
     ? announcementDates.filter(d => {
-        const ts = parseCzDate2(d)?.getTime() ?? 0;
+        const ts = parseCzDate(d)?.getTime() ?? 0;
         return ts >= playerFirstTs && ts <= playerLastTs;
       })
     : [];
 
-  // Map announcement dates to x-axis values matching the chart's dataKey "date"
-  // In "date" mode the dataKey is a date string; in "matchid" mode we need to find
-  // the nearest data point by date and use its index label.
+  // Map each announcement date to the nearest x-axis value in the active chart data
   const announcementXValues: string[] = visibleAnnouncements.map(annDate => {
-    if (trendMode === "date") return annDate;
-    // matchid mode — find the data point whose date is closest and >= the announcement date
-    const annTs = parseCzDate2(annDate)?.getTime() ?? 0;
+    const annTs = parseCzDate(annDate)?.getTime() ?? 0;
     let best: any = null;
     let bestDiff = Infinity;
     for (const p of activeTrend as any[]) {
-      const ts = parseCzDate2(p.date)?.getTime() ?? 0;
+      const ts = parseCzDate(p.date)?.getTime() ?? 0;
       const diff = Math.abs(ts - annTs);
       if (diff < bestDiff) { bestDiff = diff; best = p; }
     }
-    return best?.date ?? annDate;
-  });
+    return best?.date ?? "";
+  }).filter(Boolean);
 
   const streakColor = c.currentStreak.type === "win" ? green : c.currentStreak.type === "lose" ? red : "hsl(var(--muted-foreground))";
   const streakLabel = c.currentStreak.type === "win" ? "🔥 Win streak" : c.currentStreak.type === "lose" ? "💀 Lose streak" : "—";
@@ -387,7 +389,9 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
               <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={42} domain={[trendMin, trendMax]} />
               <ReferenceLine y={s.peakElo} stroke={amber} strokeDasharray="4 2" label={{ value: "Peak", fontSize: 9, fill: amber, position: "insideTopRight" }} />
               {announcementXValues.map((xVal, i) => (
-                <ReferenceLine key={i} x={xVal} stroke="hsl(var(--primary))" strokeWidth={1.5} strokeDasharray="4 3" label={{ value: visibleAnnouncements[i], fontSize: 8, fill: "hsl(var(--primary))", position: "insideTopLeft", angle: -90, offset: 4 }} />
+                <ReferenceLine key={i} x={xVal} stroke="hsl(var(--primary))" strokeWidth={1.5} strokeDasharray="4 3"
+                  label={(props: any) => <AnnLabel {...props} value={visibleAnnouncements[i]} />}
+                />
               ))}
               <Tooltip content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;

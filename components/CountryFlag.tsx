@@ -29,15 +29,16 @@ export function CountryFlag({ code, size = 18, showCode = false }: CountryFlagPr
           flexShrink: 0,
           border: "1px solid hsl(var(--border) / 0.5)",
           lineHeight: 1,
+          background: "hsl(var(--muted) / 0.3)",
         }}
       >
         <img
           src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
           alt={code}
           style={{
-            width: size,
-            height: size,
-            objectFit: "cover",
+            width: "85%",
+            height: "85%",
+            objectFit: "contain",
           }}
         />
       </span>
