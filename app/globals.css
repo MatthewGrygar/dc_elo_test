@@ -344,8 +344,9 @@
 
   /* Leaderboard table: compact cells on mobile */
   .lb-table td, .lb-table th { padding: 8px 8px !important; }
-  .lb-table .lb-avatar { width: 24px !important; height: 24px !important; font-size: 8px !important; }
-  .lb-table .lb-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-table .lb-avatar { display: none !important; }
+  .lb-table .lb-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-rank-badge { width: 26px !important; height: 26px !important; min-width: 26px !important; }
 
   /* Hero slider minimum height on mobile */
   .hero-slider { min-height: 220px; }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppNav } from "./AppContext";
 import { useRatingMode } from "./RatingModeProvider";
 import { t, Lang } from "@/lib/i18n";
@@ -14,8 +14,10 @@ import {
 } from "recharts";
 import {
   TrendingUp, TrendingDown, Swords, Star, Award, Shield, Target,
-  Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame,
+  Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame, ChevronDown,
 } from "lucide-react";
+
+type SuperTag = { id: string; label: string; color?: string; icon?: string };
 
 const VT_META = {
   VT1: { label: "Class A", color: "hsl(152,72%,45%)", bg: "hsl(152 72% 45% / .12)", border: "hsl(152 72% 45% / .3)" },
@@ -89,7 +91,7 @@ function Skeleton({ h = 60 }: { h?: number }) {
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; communityRecords?: RecordsData | null }) {
+function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[] }) {
   const { selectedPlayer, lang } = useAppNav();
   const { mode } = useRatingMode();
   const { summary: s, computed: c, eloTrend, rollingMomentum, deltaDistribution, weekdayPerf } = data;
@@ -173,8 +175,17 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
                     const m = vtc ? VT_META[vtc] : null;
                     return m ? <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: m.bg, color: m.color, border: `1px solid ${m.border}`, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{m.label}</span> : null;
                   })()}
+                  {superTags && superTags.map(tag => {
+                    const c = tag.color ?? "hsl(152,72%,45%)";
+                    return (
+                      <span key={tag.id} style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6, background: `${c}33`, color: c, border: `1px solid ${c}77`, fontFamily: "var(--font-mono)", display: "inline-flex", alignItems: "center", gap: 3, boxShadow: `0 0 6px ${c}40` }}>
+                        {tag.icon && <span style={{ fontSize: 12 }}>{tag.icon}</span>}
+                        {tag.label}
+                      </span>
+                    );
+                  })}
                   {(selectedPlayer as any)?.country && (
-                    <CountryFlag code={(selectedPlayer as any).country} />
+                    <CountryFlag code={(selectedPlayer as any).country} showCode />
                   )}
                   <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
                 </div>
@@ -725,27 +736,63 @@ function OpponentsTab({ data }: { data: PlayerDetailData }) {
 
 // ─── Tournaments Tab ──────────────────────────────────────────────────────────
 function TournamentsTab({ data }: { data: PlayerDetailData }) {
-  const { tournamentPerf } = data;
   const { lang } = useAppNav();
   const green = "hsl(142,65%,50%)";
   const red = "hsl(0,65%,55%)";
   const amber = "hsl(42,80%,55%)";
+  const [expanded, setExpanded] = useState<string | null>(null);
 
-  const bestT = tournamentPerf.reduce((b, t) => t.totalDelta > (b?.totalDelta ?? -Infinity) ? t : b, tournamentPerf[0]);
-  const worstT = tournamentPerf.reduce((b, t) => t.totalDelta < (b?.totalDelta ?? Infinity) ? t : b, tournamentPerf[0]);
-  const mostGamesT = tournamentPerf.reduce((b, t) => t.games > (b?.games ?? 0) ? t : b, tournamentPerf[0]);
+  const parseCzTs = (s: string): number => {
+    const [d, m, y] = s.split(".");
+    return new Date(+y, +m - 1, +d).getTime();
+  };
+
+  // Build tournament list from matchHistory, sorted newest first
+  const tournaments = useMemo(() => {
+    const map = new Map<string, {
+      games: { opponent: string; opponentElo: number; result: "Won" | "Lost" | "Draw"; delta: number; date: string }[];
+      wins: number; losses: number; draws: number; totalDelta: number; latestDate: number;
+    }>();
+    for (const m of data.matchHistory ?? []) {
+      if (!m.tournament) continue;
+      if (!map.has(m.tournament)) map.set(m.tournament, { games: [], wins: 0, losses: 0, draws: 0, totalDelta: 0, latestDate: 0 });
+      const v = map.get(m.tournament)!;
+      const ts = parseCzTs(m.date);
+      if (ts > v.latestDate) v.latestDate = ts;
+      v.totalDelta += m.delta;
+      if (m.result === "Won") v.wins++;
+      else if (m.result === "Lost") v.losses++;
+      else v.draws++;
+      v.games.push({ opponent: m.opponent, opponentElo: m.opponentElo, result: m.result, delta: m.delta, date: m.date });
+    }
+    return [...map.entries()]
+      .map(([name, v]) => ({
+        name,
+        games: [...v.games].sort((a, b) => parseCzTs(b.date) - parseCzTs(a.date)),
+        wins: v.wins, losses: v.losses, draws: v.draws,
+        totalGames: v.wins + v.losses + v.draws,
+        totalDelta: Math.round(v.totalDelta),
+        avgDelta: (v.wins + v.losses + v.draws) > 0 ? Math.round(v.totalDelta / (v.wins + v.losses + v.draws)) : 0,
+        latestDate: v.latestDate,
+      }))
+      .sort((a, b) => b.latestDate - a.latestDate);
+  }, [data.matchHistory]);
+
+  const bestT    = tournaments.length ? tournaments.reduce((b, t) => t.totalDelta > b.totalDelta ? t : b) : null;
+  const worstT   = tournaments.length ? tournaments.reduce((b, t) => t.totalDelta < b.totalDelta ? t : b) : null;
+  const mostGamesT = tournaments.length ? tournaments.reduce((b, t) => t.totalGames > b.totalGames ? t : b) : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%", overflowY: "auto" }} className="scrollbar-thin">
 
       {/* ── HERO STATS ── */}
-      {tournamentPerf.length > 0 && (
+      {tournaments.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, flexShrink: 0 }}>
           {[
-            { label: t(lang, "pd_tour_count"), value: String(tournamentPerf.length), color: "hsl(var(--primary))" },
-            { label: t(lang, "pd_best_tour"), value: bestT?.name ?? "—", sub: bestT ? `+${bestT.totalDelta} ELO` : "", color: green },
+            { label: t(lang, "pd_tour_count"), value: String(tournaments.length), color: "hsl(var(--primary))" },
+            { label: t(lang, "pd_best_tour"), value: bestT?.name ?? "—", sub: bestT ? `${bestT.totalDelta >= 0 ? "+" : ""}${bestT.totalDelta} ELO` : "", color: green },
             { label: t(lang, "pd_worst_tour"), value: worstT?.name ?? "—", sub: worstT ? `${worstT.totalDelta} ELO` : "", color: red },
-            { label: t(lang, "pd_most_games_tour"), value: mostGamesT?.name ?? "—", sub: mostGamesT ? `${mostGamesT.games} ${t(lang, "pd_zapasu_label")}` : "", color: amber },
+            { label: t(lang, "pd_most_games_tour"), value: mostGamesT?.name ?? "—", sub: mostGamesT ? `${mostGamesT.totalGames} ${t(lang, "pd_zapasu_label")}` : "", color: amber },
           ].map(s => (
             <GC key={s.label}>
               <div style={{ padding: "12px 14px" }}>
@@ -758,98 +805,81 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
         </div>
       )}
 
-      {/* ── MAIN GRID ── */}
-      <div className="mobile-stack" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, flex: 1, minHeight: 320 }}>
-
-        {/* Left: enriched tournament cards */}
-        <GC style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: "14px 16px 8px", flexShrink: 0, fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_perf_tour")}</div>
-          <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 12px" }} className="scrollbar-thin">
-            {tournamentPerf.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 40, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>{t(lang, "pd_no_tour_data")}</div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {tournamentPerf.map((t, i) => {
-                  const winPct = t.games > 0 ? t.wins / t.games * 100 : 0;
-                  const lossPct = t.games > 0 ? t.losses / t.games * 100 : 0;
-                  const drawPct = t.games > 0 ? (t.games - t.wins - t.losses) / t.games * 100 : 0;
-                  const accentColor = t.totalDelta >= 10 ? green : t.totalDelta <= -10 ? red : amber;
-                  return (
-                    <div key={i} style={{ padding: "10px 12px", borderRadius: 11, background: "hsl(var(--muted)/0.18)", border: `1px solid ${accentColor}28`, borderLeft: `3px solid ${accentColor}` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
-                          <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>
-                            {t.games} her · {t.wins}W / {t.losses}L{t.games - t.wins - t.losses > 0 ? ` / ${t.games - t.wins - t.losses}D` : ""}
-                          </div>
-                        </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "var(--font-mono)", color: accentColor, lineHeight: 1 }}>
-                            {t.totalDelta >= 0 ? "+" : ""}{t.totalDelta}
-                          </div>
-                          <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
-                            avg {t.avgDelta >= 0 ? "+" : ""}{t.avgDelta}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ marginTop: 7, height: 3, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden", display: "flex", gap: 1 }}>
-                        <div style={{ flex: winPct, background: green, minWidth: winPct > 0 ? 2 : 0 }} />
-                        <div style={{ flex: drawPct, background: "hsl(var(--muted-foreground)/0.35)", minWidth: drawPct > 0 ? 2 : 0 }} />
-                        <div style={{ flex: lossPct, background: red, minWidth: lossPct > 0 ? 2 : 0 }} />
+      {/* ── TOURNAMENT LIST ── */}
+      {tournaments.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 40, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", fontSize: 12 }}>{t(lang, "pd_no_tour_data")}</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {tournaments.map((tour) => {
+            const isOpen = expanded === tour.name;
+            const accentColor = tour.totalDelta >= 10 ? green : tour.totalDelta <= -10 ? red : amber;
+            const winPct  = tour.totalGames > 0 ? tour.wins  / tour.totalGames * 100 : 0;
+            const lossPct = tour.totalGames > 0 ? tour.losses / tour.totalGames * 100 : 0;
+            const drawPct = tour.totalGames > 0 ? tour.draws  / tour.totalGames * 100 : 0;
+            return (
+              <div key={tour.name}>
+                {/* Panel header — clickable */}
+                <div
+                  onClick={() => setExpanded(isOpen ? null : tour.name)}
+                  style={{ padding: "10px 12px", borderRadius: isOpen ? "11px 11px 0 0" : 11, background: "hsl(var(--muted)/0.18)", border: `1px solid ${accentColor}28`, borderLeft: `3px solid ${accentColor}`, cursor: "pointer", userSelect: "none" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "var(--font-display)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tour.name}</div>
+                      <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>
+                        {tour.totalGames} her · {tour.wins}W / {tour.losses}L{tour.draws > 0 ? ` / ${tour.draws}D` : ""}
                       </div>
                     </div>
-                  );
-                })}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, fontFamily: "var(--font-mono)", color: accentColor, lineHeight: 1 }}>
+                          {tour.totalDelta >= 0 ? "+" : ""}{tour.totalDelta}
+                        </div>
+                        <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>
+                          avg {tour.avgDelta >= 0 ? "+" : ""}{tour.avgDelta}
+                        </div>
+                      </div>
+                      <ChevronDown size={14} style={{ color: "hsl(var(--muted-foreground))", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: 7, height: 3, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden", display: "flex", gap: 1 }}>
+                    <div style={{ flex: winPct,  background: green, minWidth: winPct  > 0 ? 2 : 0 }} />
+                    <div style={{ flex: drawPct, background: "hsl(var(--muted-foreground)/0.35)", minWidth: drawPct > 0 ? 2 : 0 }} />
+                    <div style={{ flex: lossPct, background: red,   minWidth: lossPct > 0 ? 2 : 0 }} />
+                  </div>
+                </div>
+
+                {/* Expandable game list */}
+                {isOpen && (
+                  <div style={{ border: `1px solid ${accentColor}28`, borderLeft: `3px solid ${accentColor}`, borderTop: "none", borderRadius: "0 0 11px 11px", overflow: "hidden" }}>
+                    {/* Column headers */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 72px 52px 56px", padding: "5px 12px", borderBottom: "1px solid hsl(var(--border)/0.3)", fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase" as const, background: "hsl(var(--muted)/0.12)" }}>
+                      <span>Soupeř</span>
+                      <span style={{ textAlign: "right" }}>ELO</span>
+                      <span style={{ textAlign: "center" }}>Výsl.</span>
+                      <span style={{ textAlign: "right" }}>Změna</span>
+                    </div>
+                    {tour.games.map((g, i) => {
+                      const rc = g.result === "Won" ? green : g.result === "Lost" ? red : amber;
+                      const rl = g.result === "Won" ? "V" : g.result === "Lost" ? "P" : "R";
+                      return (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 72px 52px 56px", padding: "6px 12px", borderBottom: i < tour.games.length - 1 ? "1px solid hsl(var(--border)/0.12)" : "none", alignItems: "center", background: i % 2 === 0 ? "transparent" : "hsl(var(--muted)/0.06)" }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.opponent}</span>
+                          <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", textAlign: "right" }}>{g.opponentElo || "—"}</span>
+                          <span style={{ display: "flex", justifyContent: "center" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: 6, background: `${rc}22`, border: `1px solid ${rc}55`, fontSize: 10, fontWeight: 700, fontFamily: "var(--font-mono)", color: rc }}>{rl}</span>
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", color: rc, textAlign: "right" }}>{g.delta >= 0 ? "+" : ""}{g.delta}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </GC>
-
-        {/* Right: avg delta chart */}
-        <GC style={{ display: "flex", flexDirection: "column" }} className="tour-chart-panel">
-          <div style={{ padding: "14px 16px 4px", flexShrink: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_avg_delta_tour")}</div>
-            <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", marginTop: 2 }}>{t(lang, "pd_avg_delta_sub")}</div>
-          </div>
-          <div style={{ flex: 1, padding: "4px 8px 12px 4px", minHeight: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={tournamentPerf.slice(0, 14)} margin={{ top: 8, right: 12, bottom: 48, left: 4 }}>
-                <defs>
-                  <linearGradient id="tGreen" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={green} stopOpacity={0.9} />
-                    <stop offset="100%" stopColor={green} stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="tRed" x1="0" y1="1" x2="0" y2="0">
-                    <stop offset="0%" stopColor={red} stopOpacity={0.9} />
-                    <stop offset="100%" stopColor={red} stopOpacity={0.5} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.25)" />
-                <XAxis dataKey="name" tick={{ fontSize: 8, fontFamily: "var(--font-mono)", fill: "hsl(var(--muted-foreground))" }} angle={-40} textAnchor="end" height={52} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={30} tickLine={false} axisLine={false} />
-                <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1.5} />
-                <Tooltip content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const d = payload[0]?.payload;
-                  return (
-                    <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, boxShadow: "0 4px 16px hsl(var(--foreground)/0.12)" }}>
-                      <div style={{ fontWeight: 700, marginBottom: 3, color: "hsl(var(--foreground))" }}>{d.name}</div>
-                      <div style={{ color: d.avgDelta >= 0 ? green : red }}>Avg Δ: {d.avgDelta >= 0 ? "+" : ""}{d.avgDelta}</div>
-                      <div style={{ color: d.totalDelta >= 0 ? green : red }}>Celkem: {d.totalDelta >= 0 ? "+" : ""}{d.totalDelta}</div>
-                      <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 1 }}>{d.games} her · {d.wins}W/{d.losses}L</div>
-                    </div>
-                  );
-                }} />
-                <Bar dataKey="avgDelta" name="Avg Δ ELO" radius={[4, 4, 0, 0]} maxBarSize={32}>
-                  {tournamentPerf.slice(0, 14).map((d, i) => (
-                    <Cell key={i} fill={d.avgDelta >= 0 ? `url(#tGreen)` : `url(#tRed)`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </GC>
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1026,6 +1056,7 @@ export default function PlayerDetailView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [communityRecords, setCommunityRecords] = useState<RecordsData | null>(null);
+  const [superTagsMap, setSuperTagsMap] = useState<Record<string, SuperTag[]>>({});
 
   useEffect(() => {
     if (!selectedPlayer) return;
@@ -1043,6 +1074,10 @@ export default function PlayerDetailView() {
       .then(d => setCommunityRecords(d))
       .catch(() => {});
   }, [selectedPlayer?.name, mode]);
+
+  useEffect(() => {
+    fetch("/api/player-tags").then(r => r.json()).then(setSuperTagsMap).catch(() => {});
+  }, []);
 
   if (!selectedPlayer) return null;
 
@@ -1062,7 +1097,7 @@ export default function PlayerDetailView() {
 
   return (
     <div style={{ height: "100%", overflow: "hidden" }}>
-      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} />}
+      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} superTags={superTagsMap[selectedPlayer?.name ?? ""] ?? []} />}
       {playerSubView === "opponents"   && <OpponentsTab   data={data} />}
       {playerSubView === "tournaments" && <TournamentsTab data={data} />}
       {playerSubView === "history"     && <HistoryTab     data={data} />}

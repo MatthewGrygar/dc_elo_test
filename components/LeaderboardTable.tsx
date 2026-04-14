@@ -53,11 +53,12 @@ function SuperTagBadges({ tags }: { tags: SuperTag[] }) {
         const color = tag.color ?? "hsl(152,72%,45%)";
         return (
           <span key={tag.id} style={{
-            fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
-            background: `${color}22`, color, border: `1px solid ${color}55`,
+            fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 6,
+            background: `${color}33`, color, border: `1px solid ${color}77`,
             fontFamily: "var(--font-mono)", display: "inline-flex", alignItems: "center", gap: 3,
+            boxShadow: `0 0 6px ${color}40`,
           }}>
-            {tag.icon && <span style={{ fontSize: 10 }}>{tag.icon}</span>}
+            {tag.icon && <span style={{ fontSize: 12 }}>{tag.icon}</span>}
             {tag.label}
           </span>
         );
@@ -408,11 +409,11 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                   >
                     <td style={td}>
                       {origRank <= 3 ? (
-                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 12, fontWeight: 800, fontFamily: "var(--font-mono)", color: rankColors[origRank - 1].color, background: rankColors[origRank - 1].bg, border: `1px solid ${rankColors[origRank - 1].border}` }}>
+                        <span className="lb-rank-badge" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 12, fontWeight: 800, fontFamily: "var(--font-mono)", color: rankColors[origRank - 1].color, background: rankColors[origRank - 1].bg, border: `1px solid ${rankColors[origRank - 1].border}` }}>
                           {origRank}
                         </span>
                       ) : (
-                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 10, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted) / 0.5)" }}>
+                        <span className="lb-rank-badge" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: 7, fontSize: 10, fontWeight: 700, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted) / 0.5)" }}>
                           {origRank}
                         </span>
                       )}

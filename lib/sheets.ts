@@ -131,7 +131,7 @@ async function getCountryMap(): Promise<Map<string, string>> {
   for (let i = 1; i < rows.length; i++) {
     const name = rows[i][0]?.trim();
     const code = rows[i][1]?.trim().toUpperCase();
-    if (name && code) map.set(name, code);
+    if (name && code && code.length === 2) map.set(name, code);
   }
   countryCache = map;
   return map;

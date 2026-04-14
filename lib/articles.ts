@@ -101,9 +101,7 @@ export async function getAllArticles(): Promise<Article[]> {
 /** For public — falls back to seed article when KV is empty */
 export async function getPublishedArticles(): Promise<Article[]> {
   const all = await getAllArticles();
-  const published = all.filter((a) => a.published).sort((a, b) => b.date.localeCompare(a.date));
-  if (published.length === 0) return [SEED_ARTICLE]; // fallback for fresh install
-  return published;
+  return all.filter((a) => a.published).sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export async function getSliderArticles(): Promise<Article[]> {
