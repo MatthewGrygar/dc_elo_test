@@ -12,27 +12,12 @@ import {
 } from "lucide-react";
 import type { PrefetchCache } from "@/app/page";
 import { useWinSize } from "@/hooks/useWinSize";
+import { CountryFlag } from "./CountryFlag";
 
 type SortKey = "id" | "rating" | "games" | "win" | "loss" | "draw" | "peak" | "winrate";
 type SuperTag = { id: string; label: string; color?: string; icon?: string };
 type SuperTagsMap = Record<string, SuperTag[]>;
 
-function countryFlag(code: string): string {
-  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 0x1F1A5));
-}
-
-function FlagIcon({ code }: { code: string }) {
-  return (
-    <span title={code} style={{
-      display: "inline-flex", alignItems: "center", justifyContent: "center",
-      width: 18, height: 18, borderRadius: "50%", overflow: "hidden",
-      fontSize: 13, lineHeight: 1, flexShrink: 0,
-      border: "1px solid hsl(var(--border)/0.5)",
-    }}>
-      {countryFlag(code)}
-    </span>
-  );
-}
 
 const VT_META = {
   VT1: { label: "Class A", color: "hsl(152,72%,45%)", bg: "hsl(152 72% 45% / .12)", border: "hsl(152 72% 45% / .3)" },
@@ -137,7 +122,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
                 }}>{VT_META[vtClass].label}</span>
               )}
               {superTags && superTags.length > 0 && <SuperTagBadges tags={superTags} />}
-              {(player as any).country && <FlagIcon code={(player as any).country} />}
+              {(player as any).country && <CountryFlag code={(player as any).country} />}
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button
                   onClick={() => onOpen(player)}
@@ -198,7 +183,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
                   }}>{VT_META[vtClass].label}</span>
                 )}
                 {superTags && superTags.length > 0 && <SuperTagBadges tags={superTags} />}
-                {(player as any).country && <FlagIcon code={(player as any).country} />}
+                {(player as any).country && <CountryFlag code={(player as any).country} />}
               </div>
             </div>
 
@@ -444,7 +429,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                           </span>
                         )}
                         {pSuperTags.length > 0 && <SuperTagBadges tags={pSuperTags} />}
-                        {p.country && <FlagIcon code={p.country} />}
+                        {p.country && <CountryFlag code={p.country} />}
                       </div>
                     </td>
                     <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--primary))", fontSize: 13 }}>

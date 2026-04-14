@@ -5,6 +5,7 @@ import { useAppNav } from "./AppContext";
 import { useRatingMode } from "./RatingModeProvider";
 import { t, Lang } from "@/lib/i18n";
 import { avatarInitials } from "@/lib/utils";
+import { CountryFlag } from "./CountryFlag";
 import { PlayerDetailData, RecordsData } from "@/lib/dataFetchers";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -173,9 +174,7 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
                     return m ? <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: m.bg, color: m.color, border: `1px solid ${m.border}`, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{m.label}</span> : null;
                   })()}
                   {(selectedPlayer as any)?.country && (
-                    <span title={(selectedPlayer as any).country} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", fontSize: 13, lineHeight: 1, flexShrink: 0, border: "1px solid hsl(var(--border)/0.5)" }}>
-                      {(selectedPlayer as any).country.toUpperCase().replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 0x1F1A5))}
-                    </span>
+                    <CountryFlag code={(selectedPlayer as any).country} />
                   )}
                   <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
                 </div>
