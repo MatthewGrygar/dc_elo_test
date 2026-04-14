@@ -104,6 +104,12 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
 
   const [period, setPeriod] = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
   const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
+  const [announcementDates, setAnnouncementDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/announcements").then(r => r.json()).then(d => setAnnouncementDates(d.dates ?? [])).catch(() => {});
+  }, []);
   const cutoffDays: Record<string, number> = { "30D": 30, "90D": 90, "180D": 180, "1Y": 365, "ALL": 99999 };
   const cutoff = new Date(Date.now() - cutoffDays[period] * 86400_000);
 
@@ -141,6 +147,39 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
   const trendElos = activeTrend.map((p: any) => p.elo).filter((v: any) => typeof v === "number");
   const trendMin = trendElos.length ? Math.min(...trendElos) - 100 : "auto";
   const trendMax = trendElos.length ? Math.max(...trendElos) + 100 : "auto";
+
+  // Announcement lines — filter to dates within player's first/last game
+  const parseCzDate2 = (s: string): Date | null => {
+    const parts = s.split(".");
+    if (parts.length === 3) return new Date(+parts[2], +parts[1] - 1, +parts[0]);
+    return null;
+  };
+  const trendDates = activeTrend.map((p: any) => parseCzDate2(p.date)?.getTime() ?? 0).filter(Boolean);
+  const playerFirstTs = trendDates.length ? Math.min(...trendDates) : 0;
+  const playerLastTs  = trendDates.length ? Math.max(...trendDates) : 0;
+  const visibleAnnouncements = showAnnouncements && playerFirstTs > 0
+    ? announcementDates.filter(d => {
+        const ts = parseCzDate2(d)?.getTime() ?? 0;
+        return ts >= playerFirstTs && ts <= playerLastTs;
+      })
+    : [];
+
+  // Map announcement dates to x-axis values matching the chart's dataKey "date"
+  // In "date" mode the dataKey is a date string; in "matchid" mode we need to find
+  // the nearest data point by date and use its index label.
+  const announcementXValues: string[] = visibleAnnouncements.map(annDate => {
+    if (trendMode === "date") return annDate;
+    // matchid mode — find the data point whose date is closest and >= the announcement date
+    const annTs = parseCzDate2(annDate)?.getTime() ?? 0;
+    let best: any = null;
+    let bestDiff = Infinity;
+    for (const p of activeTrend as any[]) {
+      const ts = parseCzDate2(p.date)?.getTime() ?? 0;
+      const diff = Math.abs(ts - annTs);
+      if (diff < bestDiff) { bestDiff = diff; best = p; }
+    }
+    return best?.date ?? annDate;
+  });
 
   const streakColor = c.currentStreak.type === "win" ? green : c.currentStreak.type === "lose" ? red : "hsl(var(--muted-foreground))";
   const streakLabel = c.currentStreak.type === "win" ? "🔥 Win streak" : c.currentStreak.type === "lose" ? "💀 Lose streak" : "—";
@@ -303,7 +342,18 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
       {/* ── ELO CHART ── */}
       <GC style={{ flexShrink: 0 }}>
         <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_time")} — {mode}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_time")} — {mode}</div>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, fontFamily: "var(--font-mono)", color: showAnnouncements ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", userSelect: "none" }}>
+              <input
+                type="checkbox"
+                checked={showAnnouncements}
+                onChange={e => setShowAnnouncements(e.target.checked)}
+                style={{ accentColor: "hsl(var(--primary))", cursor: "pointer", width: 12, height: 12 }}
+              />
+              Announcements
+            </label>
+          </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
               {([["matchid", t(lang, "pd_match_id")], ["date", t(lang, "pd_hist_date")]] as ["matchid" | "date", string][]).map(([v, label]) => (
@@ -336,6 +386,9 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
               <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.ceil(activeTrend.length / 6) - 1)} />
               <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={42} domain={[trendMin, trendMax]} />
               <ReferenceLine y={s.peakElo} stroke={amber} strokeDasharray="4 2" label={{ value: "Peak", fontSize: 9, fill: amber, position: "insideTopRight" }} />
+              {announcementXValues.map((xVal, i) => (
+                <ReferenceLine key={i} x={xVal} stroke="hsl(var(--primary))" strokeWidth={1.5} strokeDasharray="4 3" label={{ value: visibleAnnouncements[i], fontSize: 8, fill: "hsl(var(--primary))", position: "insideTopLeft", angle: -90, offset: 4 }} />
+              ))}
               <Tooltip content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
                 const d = payload[0]?.payload;
