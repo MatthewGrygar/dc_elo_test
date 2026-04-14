@@ -26,6 +26,7 @@ const ParticlesBackground = dynamic(
 export type PrefetchCache = {
   ELO?:  { dashboard: any; players: any[]; stats: any; analytics: any; records: any };
   DCPR?: { dashboard: any; players: any[]; stats: any; analytics: any; records: any };
+  announcements?: string[];
 };
 
 // ── Loading labels ────────────────────────────────────────────────────────────
@@ -124,12 +125,13 @@ export default function Home() {
 
     async function prefetch() {
       try {
-        const [eloDash, eloPlayers, eloStats, eloAnalytics, eloRecords] = await Promise.all([
+        const [eloDash, eloPlayers, eloStats, eloAnalytics, eloRecords, annData] = await Promise.all([
           fetch("/api/dashboard?mode=ELO").then(r => r.json()),
           fetch("/api/players?mode=ELO").then(r => r.json()),
           fetch("/api/general-stats?mode=ELO").then(r => r.json()),
           fetch("/api/analytics-data?mode=ELO").then(r => r.json()),
           fetch("/api/records?mode=ELO").then(r => r.json()),
+          fetch("/api/announcements").then(r => r.json()).catch(() => ({ dates: [] })),
         ]);
         setProgress(52);
         const [dcprDash, dcprPlayers, dcprStats, dcprAnalytics, dcprRecords] = await Promise.all([
@@ -143,6 +145,7 @@ export default function Home() {
         setCache({
           ELO:  { dashboard: eloDash,  players: eloPlayers,  stats: eloStats,  analytics: eloAnalytics,  records: eloRecords  },
           DCPR: { dashboard: dcprDash, players: dcprPlayers, stats: dcprStats, analytics: dcprAnalytics, records: dcprRecords },
+          announcements: annData.dates ?? [],
         });
       } catch { /* continue anyway */ }
 
@@ -237,7 +240,7 @@ function ViewContent({ prefetchCache }: { prefetchCache: PrefetchCache }) {
     case "analytics":    return <AnalyticsView    prefetchCache={prefetchCache} />;
     case "records":      return <RecordsView      prefetchCache={prefetchCache} />;
     case "leaderboard":  return <LeaderboardTable prefetchCache={prefetchCache} />;
-    case "player":       return <PlayerDetailView />;
+    case "player":       return <PlayerDetailView announcementDates={prefetchCache.announcements ?? []} />;
     case "compare":      return <CompareView      prefetchCache={prefetchCache} />;
     case "articles":     return <ArticlesView />;
     case "organization": return <OrganizationView />;

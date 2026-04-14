@@ -433,7 +433,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                         {p.country && <CountryFlag code={p.country} />}
                       </div>
                     </td>
-                    <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--primary))", fontSize: 13 }}>
+                    <td className="lb-rating" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--primary))", fontSize: 13 }}>
                       {p.rating.toLocaleString("cs-CZ")}
                     </td>
                     <td className="hidden md:table-cell" style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{p.games}</td>

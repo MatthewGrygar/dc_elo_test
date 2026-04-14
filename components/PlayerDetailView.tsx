@@ -102,7 +102,7 @@ function AnnLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; heig
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[] }) {
+function OverviewTab({ data, communityRecords, superTags, announcementDates = [] }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[]; announcementDates?: string[] }) {
   const { selectedPlayer, lang } = useAppNav();
   const { mode } = useRatingMode();
   const { summary: s, computed: c, eloTrend, rollingMomentum, deltaDistribution, weekdayPerf } = data;
@@ -116,11 +116,6 @@ function OverviewTab({ data, communityRecords, superTags }: { data: PlayerDetail
   const [period, setPeriod] = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
   const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
   const [showAnnouncements, setShowAnnouncements] = useState(false);
-  const [announcementDates, setAnnouncementDates] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch("/api/announcements").then(r => r.json()).then(d => setAnnouncementDates(d.dates ?? [])).catch(() => {});
-  }, []);
   const cutoffDays: Record<string, number> = { "30D": 30, "90D": 90, "180D": 180, "1Y": 365, "ALL": 99999 };
   const cutoff = new Date(Date.now() - cutoffDays[period] * 86400_000);
 
@@ -1106,7 +1101,7 @@ function HistoryTab({ data }: { data: PlayerDetailData }) {
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
-export default function PlayerDetailView() {
+export default function PlayerDetailView({ announcementDates = [] }: { announcementDates?: string[] }) {
   const { selectedPlayer, playerSubView, lang } = useAppNav();
   const { mode } = useRatingMode();
   const [data, setData] = useState<PlayerDetailData | null>(null);
@@ -1154,7 +1149,7 @@ export default function PlayerDetailView() {
 
   return (
     <div style={{ height: "100%", overflow: "hidden" }}>
-      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} superTags={superTagsMap[selectedPlayer?.name ?? ""] ?? []} />}
+      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} superTags={superTagsMap[selectedPlayer?.name ?? ""] ?? []} announcementDates={announcementDates} />}
       {playerSubView === "opponents"   && <OpponentsTab   data={data} />}
       {playerSubView === "tournaments" && <TournamentsTab data={data} />}
       {playerSubView === "history"     && <HistoryTab     data={data} />}

@@ -343,10 +343,11 @@
   .dist-chart { height: 140px !important; }
 
   /* Leaderboard table: compact cells on mobile */
-  .lb-table td, .lb-table th { padding: 8px 8px !important; }
+  .lb-table td, .lb-table th { padding: 6px 6px !important; }
   .lb-table .lb-avatar { display: none !important; }
-  .lb-table .lb-name { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lb-rank-badge { width: 26px !important; height: 26px !important; min-width: 26px !important; }
+  .lb-table .lb-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px !important; }
+  .lb-rank-badge { width: 24px !important; height: 24px !important; min-width: 24px !important; font-size: 10px !important; }
+  .lb-table .lb-rating { font-size: 12px !important; min-width: 48px; white-space: nowrap !important; }
 
   /* Hero slider minimum height on mobile */
   .hero-slider { min-height: 220px; }

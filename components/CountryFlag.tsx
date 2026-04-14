@@ -36,9 +36,9 @@ export function CountryFlag({ code, size = 18, showCode = false }: CountryFlagPr
           src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
           alt={code}
           style={{
-            width: "85%",
-            height: "85%",
-            objectFit: "contain",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
           }}
         />
       </span>

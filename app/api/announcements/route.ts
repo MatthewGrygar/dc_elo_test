@@ -5,7 +5,7 @@ const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 async function fetchBanDates(): Promise<string[]> {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Ban")}`;
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 } });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return [];
     const text = await res.text();
     const lines = text.split("\n").slice(1); // skip header
