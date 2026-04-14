@@ -773,7 +773,7 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
   // Tournament perf
   const tMap=new Map<string,{sum:number;wins:number;losses:number;draws:number}>();
   for(let i=0;i<pCards.length;i++){
-    const tid=`${pCards[i][3]?.trim()} ${pCards[i][4]?.trim()}`.trim();if(!tid)continue;
+    const tType=pCards[i][2]?.trim();const tid=tType==="FNM"?`${pCards[i][3]?.trim()} ${pCards[i][4]?.trim()}`.trim():pCards[i][3]?.trim()??"";if(!tid)continue;
     const v=tMap.get(tid)??{sum:0,wins:0,losses:0,draws:0};
     v.sum+=deltas[i];
     if(results[i].startsWith("Won"))v.wins++;else if(results[i].startsWith("Lost"))v.losses++;else v.draws++;
@@ -821,7 +821,7 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
     return{
       matchId:r[1]?.trim()??"",
       date:r[4]?.trim()??"",
-      tournament:`${r[3]?.trim()??""}`,
+      tournament:r[2]?.trim()==="FNM"?`${r[3]?.trim()??""} ${r[4]?.trim()??""}`.trim():r[3]?.trim()??"",
       tournamentType:r[2]?.trim()??"",
       opponent:oppName(r[5]??""),
       opponentElo:oppEloFn(r[5]??""),

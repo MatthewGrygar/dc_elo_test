@@ -821,7 +821,7 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
                 {/* Panel header — clickable */}
                 <div
                   onClick={() => setExpanded(isOpen ? null : tour.name)}
-                  style={{ padding: "10px 12px", borderRadius: isOpen ? "11px 11px 0 0" : 11, background: "hsl(var(--muted)/0.18)", border: `1px solid ${accentColor}28`, borderLeft: `3px solid ${accentColor}`, cursor: "pointer", userSelect: "none" }}
+                  style={{ padding: "10px 12px", borderRadius: isOpen ? "11px 11px 0 0" : 11, background: "hsl(var(--muted)/0.28)", border: `1px solid ${accentColor}44`, borderLeft: `3px solid ${accentColor}`, cursor: "pointer", userSelect: "none" }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
@@ -851,7 +851,7 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
 
                 {/* Expandable game list */}
                 {isOpen && (
-                  <div style={{ border: `1px solid ${accentColor}28`, borderLeft: `3px solid ${accentColor}`, borderTop: "none", borderRadius: "0 0 11px 11px", overflow: "hidden" }}>
+                  <div style={{ border: `1px solid ${accentColor}44`, borderLeft: `3px solid ${accentColor}`, borderTop: "none", borderRadius: "0 0 11px 11px", overflow: "hidden" }}>
                     {/* Column headers */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 72px 52px 56px", padding: "5px 12px", borderBottom: "1px solid hsl(var(--border)/0.3)", fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--muted-foreground))", letterSpacing: "0.08em", textTransform: "uppercase" as const, background: "hsl(var(--muted)/0.12)" }}>
                       <span>Soupeř</span>
@@ -863,7 +863,7 @@ function TournamentsTab({ data }: { data: PlayerDetailData }) {
                       const rc = g.result === "Won" ? green : g.result === "Lost" ? red : amber;
                       const rl = g.result === "Won" ? "V" : g.result === "Lost" ? "P" : "R";
                       return (
-                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 72px 52px 56px", padding: "6px 12px", borderBottom: i < tour.games.length - 1 ? "1px solid hsl(var(--border)/0.12)" : "none", alignItems: "center", background: i % 2 === 0 ? "transparent" : "hsl(var(--muted)/0.06)" }}>
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 72px 52px 56px", padding: "6px 12px", borderBottom: i < tour.games.length - 1 ? "1px solid hsl(var(--border)/0.45)" : "none", alignItems: "center", background: i % 2 === 0 ? "hsl(var(--muted)/0.1)" : "transparent" }}>
                           <span style={{ fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.opponent}</span>
                           <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", textAlign: "right" }}>{g.opponentElo || "—"}</span>
                           <span style={{ display: "flex", justifyContent: "center" }}>
