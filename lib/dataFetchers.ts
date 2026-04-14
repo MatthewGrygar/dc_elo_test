@@ -467,10 +467,11 @@ export async function fetchAnalyticsData(mode:"ELO"|"DCPR"): Promise<AnalyticsDa
     gauss:Math.round(gaussNorm/(eloSd*Math.sqrt(2*Math.PI))*Math.exp(-((x+25-eloMean)**2)/(2*eloSd**2))*10)/10,
   }));
 
-  const top10=sRows.slice().sort((a,b)=>pf(b[1])-pf(a[1])).slice(0,10).map((r,i)=>({
-    name:r[0],elo:Math.round(pf(r[1])),peak:Math.round(pf(r[7])),
-    winrate:Math.round(wrPct(r[6])),games:pi(r[2]),rank:i+1,
-  }));
+  const top10=sRows.slice().sort((a,b)=>pf(b[1])-pf(a[1])).slice(0,10).map((r,i)=>{
+    const w=pi(r[3]),l=pi(r[4]);
+    return{name:r[0],elo:Math.round(pf(r[1])),peak:Math.round(pf(r[7])),
+      winrate:(w+l)>0?Math.round(w/(w+l)*100):0,games:pi(r[2]),rank:i+1};
+  });
 
   const matchByMonth=new Map<string,Set<string>>();
   const eloByMonth=new Map<string,number[]>();
@@ -497,7 +498,7 @@ export async function fetchAnalyticsData(mode:"ELO"|"DCPR"): Promise<AnalyticsDa
   const medianEloTrend=[...eloByMonth.entries()].sort(([a],[b])=>a.localeCompare(b))
     .map(([k,elos])=>({period:k,label:periodLabel(k),medianElo:Math.round(median(elos))}));
 
-  const wrValues=sRows.map(r=>wrPct(r[6])).filter(w=>w>=0&&w<=100);
+  const wrValues=sRows.map(r=>{const w=pi(r[3]),l=pi(r[4]);return(w+l)>0?w/(w+l)*100:0;}).filter(w=>w>=0&&w<=100);
   const wrMean=wrValues.reduce((a,b)=>a+b,0)/(wrValues.length||1);
   const wrSd=stdDev(wrValues)||1;
   const wrBuckets=new Map<number,number>();
@@ -622,7 +623,7 @@ export async function fetchAnalyticsData(mode:"ELO"|"DCPR"): Promise<AnalyticsDa
     .sort(([a],[b])=>a-b)
     .map(([b,v])=>{
       const games=v.w+v.d+v.l;
-      const winrate=Math.round((v.w+v.d*0.5)/games*100*10)/10;
+      const winrate=(v.w+v.l)>0?Math.round(v.w/(v.w+v.l)*100*10)/10:0;
       const avgEloDiff=Math.round(v.diffs.reduce((a,c)=>a+c,0)/v.diffs.length);
       return{bucket:b,label:`${b}–${b+49}`,games,wins:v.w,draws:v.d,losses:v.l,winrate,avgEloDiff,theorWR:sigmoid(-avgEloDiff)};
     });
@@ -643,7 +644,7 @@ export async function fetchAnalyticsData(mode:"ELO"|"DCPR"): Promise<AnalyticsDa
     .sort(([a],[b])=>a-b)
     .map(([b,v])=>{
       const games=v.w+v.d+v.l;
-      const winrate=Math.round((v.w+v.d*0.5)/games*100*10)/10;
+      const winrate=(v.w+v.l)>0?Math.round(v.w/(v.w+v.l)*100*10)/10:0;
       return{bucket:b,label:b>=0?`+${b}`:`${b}`,games,winrate,theorWR:sigmoid(b+25)};
     });
 
@@ -747,7 +748,7 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
   const vsW=pCards.filter(r=>{const myE=pf(r[8])-pf(r[7]),oe=oppEloFn(r[5]??"");return oe>0&&oe<myE-100;});
   const vsS=pCards.filter(r=>{const myE=pf(r[8])-pf(r[7]),oe=oppEloFn(r[5]??"");return oe>0&&Math.abs(oe-myE)<=100;});
   const vsStr=pCards.filter(r=>{const myE=pf(r[8])-pf(r[7]),oe=oppEloFn(r[5]??"");return oe>0&&oe>myE+100;});
-  const wrf=(arr:string[][])=>arr.length>0?Math.round(arr.filter(r=>r[6]?.startsWith("Won")).length/arr.length*100):0;
+  const wrf=(arr:string[][])=>{const w=arr.filter(r=>r[6]?.startsWith("Won")).length,l=arr.filter(r=>r[6]?.startsWith("Lost")).length;return(w+l)>0?Math.round(w/(w+l)*100):0;};
   const bigUpsets=pCards.filter(r=>{const myE=pf(r[8])-pf(r[7]),oe=oppEloFn(r[5]??"");return r[6]?.startsWith("Won")&&oe>myE+150;});
 
   // Biggest upset / hardest loss ELO
@@ -799,17 +800,17 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
   const dhB=new Map<number,number>();for(const d of deltas){const b=Math.floor(d/5)*5;dhB.set(b,(dhB.get(b)??0)+1);}
   const deltaDistribution=[...dhB.keys()].sort((a,b)=>a-b).map(x=>({bucket:`${x>=0?"+":""}${x}`,count:dhB.get(x)??0,positive:x>=0}));
 
-  const wdMap=new Map<number,{w:number;t:number}>();
-  for(let i=0;i<pCards.length;i++){const d=dates[i];if(!d)continue;const v=wdMap.get(d.getDay())??{w:0,t:0};v.t++;if(results[i].startsWith("Won"))v.w++;wdMap.set(d.getDay(),v);}
+  const wdMap=new Map<number,{w:number;l:number;t:number}>();
+  for(let i=0;i<pCards.length;i++){const d=dates[i];if(!d)continue;const v=wdMap.get(d.getDay())??{w:0,l:0,t:0};v.t++;if(results[i].startsWith("Won"))v.w++;else if(results[i].startsWith("Lost"))v.l++;wdMap.set(d.getDay(),v);}
   const dayNames=["Neděle","Pondělí","Úterý","Středa","Čtvrtek","Pátek","Sobota"];
   const shortDays=["Ne","Po","Út","St","Čt","Pá","So"];
-  const weekdayPerf=[0,1,2,3,4,5,6].map(dow=>{const v=wdMap.get(dow)??{w:0,t:0};return{day:dayNames[dow],shortDay:shortDays[dow],games:v.t,winrate:v.t>0?Math.round(v.w/v.t*100):0};});
+  const weekdayPerf=[0,1,2,3,4,5,6].map(dow=>{const v=wdMap.get(dow)??{w:0,l:0,t:0};return{day:dayNames[dow],shortDay:shortDays[dow],games:v.t,winrate:(v.w+v.l)>0?Math.round(v.w/(v.w+v.l)*100):0};});
 
-  const wrVBuckets=new Map<number,{w:number;t:number}>();
-  for(let i=0;i<pCards.length;i++){const oe=oppEloFn(pCards[i][5]??"");if(!oe)continue;const b=Math.floor(oe/50)*50;const v=wrVBuckets.get(b)??{w:0,t:0};v.t++;if(results[i].startsWith("Won"))v.w++;wrVBuckets.set(b,v);}
-  const winrateVsOpp=[...wrVBuckets.keys()].sort((a,b)=>a-b).map(b=>({bucket:`${b}`,wr:wrVBuckets.get(b)!.t>0?Math.round(wrVBuckets.get(b)!.w/wrVBuckets.get(b)!.t*100):0,games:wrVBuckets.get(b)!.t}));
+  const wrVBuckets=new Map<number,{w:number;l:number;t:number}>();
+  for(let i=0;i<pCards.length;i++){const oe=oppEloFn(pCards[i][5]??"");if(!oe)continue;const b=Math.floor(oe/50)*50;const v=wrVBuckets.get(b)??{w:0,l:0,t:0};v.t++;if(results[i].startsWith("Won"))v.w++;else if(results[i].startsWith("Lost"))v.l++;wrVBuckets.set(b,v);}
+  const winrateVsOpp=[...wrVBuckets.keys()].sort((a,b)=>a-b).map(b=>{const bv=wrVBuckets.get(b)!;return{bucket:`${b}`,wr:(bv.w+bv.l)>0?Math.round(bv.w/(bv.w+bv.l)*100):0,games:bv.t};});
 
-  const opponents=sortedOpps.slice(0,30).map(([name,v])=>({name,games:v.games,wins:v.wins,losses:v.losses,draws:v.draws,winrate:Math.round(v.wins/v.games*100),avgDelta:Math.round(v.deltaSum/v.games),lastDate:v.lastDate}));
+  const opponents=sortedOpps.slice(0,30).map(([name,v])=>({name,games:v.games,wins:v.wins,losses:v.losses,draws:v.draws,winrate:(v.wins+v.losses)>0?Math.round(v.wins/(v.wins+v.losses)*100):0,avgDelta:Math.round(v.deltaSum/v.games),lastDate:v.lastDate}));
   const tournamentPerf=[...tMap.entries()].sort(([,a],[,b])=>Math.abs(b.sum)-Math.abs(a.sum)).slice(0,20).map(([name,v])=>({name:name.length>30?name.slice(0,30)+"…":name,games:v.wins+v.losses+v.draws,wins:v.wins,losses:v.losses,totalDelta:Math.round(v.sum),avgDelta:v.wins+v.losses+v.draws>0?Math.round(v.sum/(v.wins+v.losses+v.draws)):0}));
 
   const matchHistory=[...pCards].reverse().map(r=>{
@@ -945,7 +946,7 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
   const daysSincePeak=peakDateP?Math.floor((now.getTime()-peakDateP.getTime())/86400_000):0;
 
   return {
-    summary:{name:playerName,currentElo:Math.round(currentElo),peakElo:Math.round(peakElo),minElo:Math.round(minElo),wins,losses,draws,winrate:totalGames>0?wins/totalGames:0,lastMatch,totalGames,avgOppElo:Math.round(avgOppEloAll),longestWinStreak:maxWin,longestLoseStreak:maxLose,daysSincePeak,bayesianWR},
+    summary:{name:playerName,currentElo:Math.round(currentElo),peakElo:Math.round(peakElo),minElo:Math.round(minElo),wins,losses,draws,winrate:(wins+losses)>0?wins/(wins+losses):0,lastMatch,totalGames,avgOppElo:Math.round(avgOppEloAll),longestWinStreak:maxWin,longestLoseStreak:maxLose,daysSincePeak,bayesianWR},
     computed:{
       eloRange:Math.round(peakElo-minElo),peakRetention:peakElo>0?Math.round(currentElo/peakElo*100):0,
       games7d,games30d,eloChange7d,eloChange30d,avgDelta,avgWinDelta,avgLossDelta,ev,
@@ -958,9 +959,9 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
       winVsWeaker:wrf(vsW),winVsSimilar:wrf(vsS),winVsStronger:wrf(vsStr),
       biggestUpset:winElos.length?Math.max(...winElos):0,
       hardestLoss:lossElos.length?Math.max(...lossElos):0,
-      mostPlayedOpponent:sortedOpps[0]?{name:sortedOpps[0][0],games:sortedOpps[0][1].games,winrate:Math.round(sortedOpps[0][1].wins/sortedOpps[0][1].games*100)}:{name:"—",games:0,winrate:0},
-      bestOpponent:top5Opps[0]?{name:top5Opps[0][0],winrate:Math.round(top5Opps[0][1].wins/top5Opps[0][1].games*100)}:{name:"—",winrate:0},
-      worstOpponent:bot5Opps[0]?{name:bot5Opps[0][0],winrate:Math.round(bot5Opps[0][1].wins/bot5Opps[0][1].games*100)}:{name:"—",winrate:0},
+      mostPlayedOpponent:sortedOpps[0]?{name:sortedOpps[0][0],games:sortedOpps[0][1].games,winrate:(sortedOpps[0][1].wins+sortedOpps[0][1].losses)>0?Math.round(sortedOpps[0][1].wins/(sortedOpps[0][1].wins+sortedOpps[0][1].losses)*100):0}:{name:"—",games:0,winrate:0},
+      bestOpponent:top5Opps[0]?{name:top5Opps[0][0],winrate:(top5Opps[0][1].wins+top5Opps[0][1].losses)>0?Math.round(top5Opps[0][1].wins/(top5Opps[0][1].wins+top5Opps[0][1].losses)*100):0}:{name:"—",winrate:0},
+      worstOpponent:bot5Opps[0]?{name:bot5Opps[0][0],winrate:(bot5Opps[0][1].wins+bot5Opps[0][1].losses)>0?Math.round(bot5Opps[0][1].wins/(bot5Opps[0][1].wins+bot5Opps[0][1].losses)*100):0}:{name:"—",winrate:0},
       eloChangeThisWeek,eloChangeLastWeek,avgGamesPerActiveDay,bestDayOfWeek,avgGapBetweenGames,longestPause,
       eloEfficiencyRatio,ladderClimbingRate,grindEfficiency,momentumAcceleration,eloCeilingEstimate,
       performanceRating,expectedWins,expectedWinDiff,trueSkillSigma,
@@ -1002,7 +1003,7 @@ export async function fetchRecords(mode:"ELO"|"DCPR"): Promise<RecordsData> {
     const wins=results.filter(r=>r.startsWith("Won")).length;
     const losses=results.filter(r=>r.startsWith("Lost")).length;
     const totalGames=rows.length;
-    const winrate=totalGames>0?wins/totalGames*100:0;
+    const winrate=(wins+losses)>0?wins/(wins+losses)*100:0;
     const sumDelta=deltas.reduce((a,b)=>a+b,0);
     const avgDelta=totalGames>0?sumDelta/totalGames:0;
     const currentElo=elos[elos.length-1]??0;

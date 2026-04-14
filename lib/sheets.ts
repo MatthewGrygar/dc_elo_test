@@ -21,6 +21,7 @@ export interface Player {
   peak: number;
   winrate: number;         // 0-1
   vtClass?: VTClass;       // from Tournament_Elo col I
+  country?: string;        // 2-letter ISO code from "zeme" sheet
 }
 
 export type VTClass = "VT1" | "VT2" | "VT3" | "VT4";
@@ -119,6 +120,23 @@ function parseOpponentRating(s: string): number {
   return m ? parseInt(m[1]) : 0;
 }
 
+// ─── Country lookup from "zeme" sheet (A=name, B=country code) ───────────────
+
+let countryCache: Map<string, string> | null = null;
+
+async function getCountryMap(): Promise<Map<string, string>> {
+  if (countryCache) return countryCache;
+  const rows = await fetchSheetByName("zeme");
+  const map = new Map<string, string>();
+  for (let i = 1; i < rows.length; i++) {
+    const name = rows[i][0]?.trim();
+    const code = rows[i][1]?.trim().toUpperCase();
+    if (name && code) map.set(name, code);
+  }
+  countryCache = map;
+  return map;
+}
+
 // ─── VT class lookup from Tournament_Elo col I ───────────────────────────────
 
 let vtClassCache: Map<string, VTClass> | null = null;
@@ -140,9 +158,10 @@ async function getVtClassMap(): Promise<Map<string, VTClass>> {
 
 export async function fetchStandingsPlayers(mode: "ELO" | "DCPR"): Promise<Player[]> {
   const sheetName = mode === "ELO" ? "Elo standings" : "Tournament_Elo";
-  const [rows, vtMap] = await Promise.all([
+  const [rows, vtMap, countryMap] = await Promise.all([
     fetchSheetByName(sheetName),
     getVtClassMap(),
+    getCountryMap(),
   ]);
 
   const players: Player[] = [];
@@ -156,14 +175,14 @@ export async function fetchStandingsPlayers(mode: "ELO" | "DCPR"): Promise<Playe
     const win    = pi(row[3]);
     const loss   = pi(row[4]);
     const draw   = pi(row[5]);
-    const wrRaw  = pf(row[6]);
     const peak   = pf(row[7]);
-    const winrate = wrRaw > 1 ? wrRaw / 100 : wrRaw;
+    const winrate = (win + loss) > 0 ? win / (win + loss) : 0;
     const vtClass = mode === "DCPR"
       ? (row[8]?.trim() as VTClass | undefined)
       : vtMap.get(name);
+    const country = countryMap.get(name);
 
-    players.push({ id: i, name, rating, games, win, loss, draw, peak, winrate, vtClass });
+    players.push({ id: i, name, rating, games, win, loss, draw, peak, winrate, vtClass, country });
   }
 
   return players
@@ -225,24 +244,25 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR"): Promise<Dashboar
   }
 
   // ── Top 5 players for hero panel
-  const vtMap = await getVtClassMap();
+  const [vtMap, countryMap] = await Promise.all([getVtClassMap(), getCountryMap()]);
   const top5: Player[] = [];
   for (let i = 1; i <= 5 && i < standings.length; i++) {
     const row = standings[i];
     const name = row[0]?.trim();
     if (!name) continue;
-    const wrRaw = pf(row[6]);
+    const w5 = pi(row[3]), l5 = pi(row[4]);
     top5.push({
       id: i,
       name,
       rating: pf(row[1]),
       games:  pi(row[2]),
-      win:    pi(row[3]),
-      loss:   pi(row[4]),
+      win:    w5,
+      loss:   l5,
       draw:   pi(row[5]),
-      winrate: wrRaw > 1 ? wrRaw / 100 : wrRaw,
+      winrate: (w5 + l5) > 0 ? w5 / (w5 + l5) : 0,
       peak:   pf(row[7]),
       vtClass: vtMap.get(name),
+      country: countryMap.get(name),
     });
   }
 

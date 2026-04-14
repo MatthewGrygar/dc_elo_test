@@ -162,7 +162,14 @@ function OverviewTab({ data, communityRecords }: { data: PlayerDetailData; commu
                 {avatarInitials(s.name)}
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                <div style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)", letterSpacing: "-0.03em", lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                  {(selectedPlayer as any)?.country && (
+                    <span title={(selectedPlayer as any).country} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 18, height: 18, borderRadius: "50%", fontSize: 13, lineHeight: 1, flexShrink: 0, border: "1px solid hsl(var(--border)/0.5)" }}>
+                      {(selectedPlayer as any).country.toUpperCase().replace(/./g, (c: string) => String.fromCodePoint(c.charCodeAt(0) + 0x1F1A5))}
+                    </span>
+                  )}
+                  {s.name}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 9, padding: "1px 7px", borderRadius: 99, background: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary) / 0.28)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: "0.06em" }}>{mode}</span>
                   {(() => {

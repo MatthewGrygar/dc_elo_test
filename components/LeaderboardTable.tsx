@@ -14,6 +14,25 @@ import type { PrefetchCache } from "@/app/page";
 import { useWinSize } from "@/hooks/useWinSize";
 
 type SortKey = "id" | "rating" | "games" | "win" | "loss" | "draw" | "peak" | "winrate";
+type SuperTag = { id: string; label: string; color?: string; icon?: string };
+type SuperTagsMap = Record<string, SuperTag[]>;
+
+function countryFlag(code: string): string {
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(c.charCodeAt(0) + 0x1F1A5));
+}
+
+function FlagIcon({ code }: { code: string }) {
+  return (
+    <span title={code} style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      width: 18, height: 18, borderRadius: "50%", overflow: "hidden",
+      fontSize: 13, lineHeight: 1, flexShrink: 0,
+      border: "1px solid hsl(var(--border)/0.5)",
+    }}>
+      {countryFlag(code)}
+    </span>
+  );
+}
 
 const VT_META = {
   VT1: { label: "Class A", color: "hsl(152,72%,45%)", bg: "hsl(152 72% 45% / .12)", border: "hsl(152 72% 45% / .3)" },
@@ -42,8 +61,28 @@ function GlassPanel({ children, style, accent, className }: {
 }
 
 // ── Mini player card shown below table when player row is clicked ──────────────
-function PlayerMiniCard({ player, onClose, onOpen, mode, lang }: {
-  player: Player; onClose: () => void; onOpen: (p: Player) => void; mode: string; lang: "cs" | "en" | "fr";
+function SuperTagBadges({ tags }: { tags: SuperTag[] }) {
+  return (
+    <>
+      {tags.map(tag => {
+        const color = tag.color ?? "hsl(152,72%,45%)";
+        return (
+          <span key={tag.id} style={{
+            fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4,
+            background: `${color}22`, color, border: `1px solid ${color}55`,
+            fontFamily: "var(--font-mono)", display: "inline-flex", alignItems: "center", gap: 3,
+          }}>
+            {tag.icon && <span style={{ fontSize: 10 }}>{tag.icon}</span>}
+            {tag.label}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
+  player: Player; onClose: () => void; onOpen: (p: Player) => void; mode: string; lang: "cs" | "en" | "fr"; superTags?: SuperTag[];
 }) {
   const wr = player.winrate <= 1 ? player.winrate * 100 : player.winrate;
   const green = "hsl(152,72%,50%)";
@@ -83,7 +122,8 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang }: {
         {isMobile ? (
           /* Mobile layout: name full-width, then rank + class + Detail on one row */
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8, display: "flex", alignItems: "center", gap: 7 }}>
+              {(player as any).country && <FlagIcon code={(player as any).country} />}
               {player.name}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -97,6 +137,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang }: {
                   border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)",
                 }}>{VT_META[vtClass].label}</span>
               )}
+              {superTags && superTags.length > 0 && <SuperTagBadges tags={superTags} />}
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button
                   onClick={() => onOpen(player)}
@@ -142,7 +183,8 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang }: {
 
             {/* Name + rank */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 3 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 3, display: "flex", alignItems: "center", gap: 7 }}>
+                {(player as any).country && <FlagIcon code={(player as any).country} />}
                 {player.name}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -156,6 +198,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang }: {
                     border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)",
                   }}>{VT_META[vtClass].label}</span>
                 )}
+                {superTags && superTags.length > 0 && <SuperTagBadges tags={superTags} />}
               </div>
             </div>
 
@@ -245,6 +288,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
   const [sortKey, setSortKey] = useState<SortKey>("rating");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedCard, setSelectedCard] = useState<Player | null>(null);
+  const [superTagsMap, setSuperTagsMap] = useState<SuperTagsMap>({});
 
   useEffect(() => {
     const c = prefetchCache?.[mode]?.players;
@@ -255,6 +299,10 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
       .then(d => { setPlayers(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [mode, prefetchCache]);
+
+  useEffect(() => {
+    fetch("/api/player-tags").then(r => r.json()).then(setSuperTagsMap).catch(() => {});
+  }, []);
 
   const handleSort = (k: SortKey) => {
     if (k === sortKey) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -351,6 +399,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                 const wrColor = wr >= 55 ? "hsl(var(--primary))" : wr >= 45 ? "hsl(42,92%,52%)" : "hsl(0,70%,58%)";
                 const medals = ["🥇", "🥈", "🥉"];
                 const vtClass = (p as any).vtClass as keyof typeof VT_META | undefined;
+                const pSuperTags = superTagsMap[p.name] ?? [];
                 const isSelected = selectedCard?.id === p.id;
                 const rankColors = [
                   { color: "hsl(42,92%,52%)", bg: "hsl(42 92% 52% / .12)", border: "hsl(42 92% 52% / .3)" },
@@ -388,12 +437,14 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
                         <div className="lb-avatar" style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: isSelected ? "hsl(var(--primary) / 0.25)" : "hsl(var(--primary) / 0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "hsl(var(--primary))", fontFamily: "var(--font-display)" }}>
                           {avatarInitials(p.name)}
                         </div>
+                        {p.country && <FlagIcon code={p.country} />}
                         <span className="lb-name" style={{ fontWeight: 600, fontSize: 13 }}>{p.name}</span>
                         {vtClass && VT_META[vtClass] && (
                           <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: VT_META[vtClass].bg, color: VT_META[vtClass].color, border: `1px solid ${VT_META[vtClass].border}`, fontFamily: "var(--font-mono)" }}>
                             {VT_META[vtClass].label}
                           </span>
                         )}
+                        {pSuperTags.length > 0 && <SuperTagBadges tags={pSuperTags} />}
                       </div>
                     </td>
                     <td style={{ ...td, textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "hsl(var(--primary))", fontSize: 13 }}>
@@ -423,6 +474,7 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
           player={selectedCard}
           mode={mode}
           lang={lang}
+          superTags={superTagsMap[selectedCard.name]}
           onClose={() => setSelectedCard(null)}
           onOpen={(p) => { openPlayer(p); setSelectedCard(null); }}
         />

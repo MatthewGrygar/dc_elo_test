@@ -170,6 +170,82 @@ export async function deleteRecordOverride(key: string): Promise<void> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PLAYER TAGS
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface PlayerTag {
+  id: string;
+  label: string;
+  color?: string;    // e.g. "hsl(152,72%,45%)" or "#abc123"
+  icon?: string;     // emoji or short text
+  isSuper: boolean;  // true = show next to player name in leaderboard
+  createdAt: string;
+}
+
+const playerTagsKey = (name: string) => `player-tags:${name}`;
+const ALL_TAGGED_PLAYERS_KEY = "player-tags:index";
+
+export async function getPlayerTags(playerName: string): Promise<PlayerTag[]> {
+  if (!kvAvailable()) return [];
+  try {
+    const kv = await getKV();
+    return (await kv.get<PlayerTag[]>(playerTagsKey(playerName))) ?? [];
+  } catch { return []; }
+}
+
+export async function getAllTaggedPlayers(): Promise<string[]> {
+  if (!kvAvailable()) return [];
+  try {
+    const kv = await getKV();
+    return (await kv.lrange<string>(ALL_TAGGED_PLAYERS_KEY, 0, -1));
+  } catch { return []; }
+}
+
+export async function upsertPlayerTag(playerName: string, tag: PlayerTag): Promise<void> {
+  if (!kvAvailable()) throw new Error("KV not configured");
+  const kv = await getKV();
+  const tags = await getPlayerTags(playerName);
+  const idx = tags.findIndex(t => t.id === tag.id);
+  if (idx >= 0) tags[idx] = tag;
+  else {
+    tags.push(tag);
+    // Track player in index if first tag
+    const index = await getAllTaggedPlayers();
+    if (!index.includes(playerName)) await kv.lpush(ALL_TAGGED_PLAYERS_KEY, playerName);
+  }
+  await kv.set(playerTagsKey(playerName), tags);
+}
+
+export async function deletePlayerTag(playerName: string, tagId: string): Promise<void> {
+  if (!kvAvailable()) throw new Error("KV not configured");
+  const kv = await getKV();
+  const tags = await getPlayerTags(playerName);
+  const updated = tags.filter(t => t.id !== tagId);
+  if (updated.length === 0) {
+    await kv.del(playerTagsKey(playerName));
+    await kv.lrem(ALL_TAGGED_PLAYERS_KEY, 0, playerName);
+  } else {
+    await kv.set(playerTagsKey(playerName), updated);
+  }
+}
+
+/** Returns map of playerName → super tags (for leaderboard display) */
+export async function getSuperTagsMap(): Promise<Map<string, PlayerTag[]>> {
+  if (!kvAvailable()) return new Map();
+  try {
+    const players = await getAllTaggedPlayers();
+    const entries = await Promise.all(
+      players.map(async (name) => {
+        const tags = await getPlayerTags(name);
+        const superTags = tags.filter(t => t.isSuper);
+        return [name, superTags] as [string, PlayerTag[]];
+      })
+    );
+    return new Map(entries.filter(([, tags]) => tags.length > 0));
+  } catch { return new Map(); }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // METRIC OVERRIDES (library pages: formula / customLabel per metric)
 // ══════════════════════════════════════════════════════════════════════════════
 
