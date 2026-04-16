@@ -836,7 +836,7 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
   // ── ELO trend by date (last game ELO per day) ──
   const dateEloMap=new Map<string,number>();
   for(const r of pCards){const d=r[4]?.trim();if(d)dateEloMap.set(d,Math.round(pf(r[8])));}
-  const eloTrendByDate=[...dateEloMap.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([date,elo])=>({date,elo}));
+  const eloTrendByDate=[...dateEloMap.entries()].sort(([a],[b])=>{const da=parseDate(a)?.getTime()??0,db=parseDate(b)?.getTime()??0;return da-db;}).map(([date,elo])=>({date,elo}));
 
   // ── NEW computed metrics ──
 

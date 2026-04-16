@@ -137,22 +137,40 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
       return da.getTime() - db.getTime();
     });
 
-  const filteredTrendByDate = (data.eloTrendByDate ?? [])
-    .filter(p => {
-      if (period === "ALL") return true;
-      const d = parseCzDate(p.date);
-      return d ? d >= cutoff : true;
-    })
-    .sort((a, b) => {
-      const da = parseCzDate(a.date), db = parseCzDate(b.date);
-      if (!da || !db) return 0;
-      return da.getTime() - db.getTime();
-    });
+  // Build continuous day-by-day trend for date mode
+  const continuousDateTrend = useMemo(() => {
+    const gameMap = new Map<string, number>();
+    for (const p of (data.eloTrendByDate ?? [])) gameMap.set(p.date, p.elo);
+    const allTs = [...gameMap.keys()].map(d => parseCzDate(d)?.getTime() ?? 0).filter(Boolean);
+    if (!allTs.length) return [];
+    const cutoffTs = period === "ALL" ? 0 : Date.now() - cutoffDays[period] * 86400_000;
+    const startTs = Math.max(Math.min(...allTs), cutoffTs);
+    const endTs = Math.max(...allTs);
+    const result: { date: string; elo: number | null }[] = [];
+    let cur = new Date(startTs); cur.setHours(0, 0, 0, 0);
+    const end = new Date(endTs); end.setHours(0, 0, 0, 0);
+    while (cur <= end) {
+      const ds = `${String(cur.getDate()).padStart(2,"0")}.${String(cur.getMonth()+1).padStart(2,"0")}.${cur.getFullYear()}`;
+      result.push({ date: ds, elo: gameMap.get(ds) ?? null });
+      cur = new Date(cur.getTime() + 86400_000);
+    }
+    return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.eloTrendByDate, period]);
 
-  const activeTrend = trendMode === "matchid" ? filteredTrend : filteredTrendByDate;
+  const activeTrend = trendMode === "matchid" ? filteredTrend : continuousDateTrend;
   const trendElos = activeTrend.map((p: any) => p.elo).filter((v: any) => typeof v === "number");
   const trendMin = trendElos.length ? Math.min(...trendElos) - 100 : "auto";
   const trendMax = trendElos.length ? Math.max(...trendElos) + 100 : "auto";
+
+  // Evenly spaced X-axis ticks for date mode
+  const N_TICKS = 6;
+  const dateTicks = useMemo(() => {
+    if (trendMode !== "date" || continuousDateTrend.length < 2) return undefined;
+    const total = continuousDateTrend.length;
+    const indices = Array.from({ length: N_TICKS }, (_, i) => Math.round(i * (total - 1) / (N_TICKS - 1)));
+    return [...new Set(indices)].map(i => continuousDateTrend[i].date);
+  }, [continuousDateTrend, trendMode]);
 
   // Announcement lines — filter to player's full career range (not filtered by period)
   const allCareerDates = eloTrend.map((p: any) => parseCzDate(p.date)?.getTime() ?? 0).filter(Boolean);
@@ -341,15 +359,17 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
         <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-display)" }}>{t(lang, "pd_elo_time")} — {mode}</div>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, fontFamily: "var(--font-mono)", color: showAnnouncements ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", userSelect: "none" }}>
-              <input
-                type="checkbox"
-                checked={showAnnouncements}
-                onChange={e => setShowAnnouncements(e.target.checked)}
-                style={{ accentColor: "hsl(var(--primary))", cursor: "pointer", width: 12, height: 12 }}
-              />
-              Announcements
-            </label>
+            {trendMode === "date" && (
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, fontFamily: "var(--font-mono)", color: showAnnouncements ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", userSelect: "none" }}>
+                <input
+                  type="checkbox"
+                  checked={showAnnouncements}
+                  onChange={e => setShowAnnouncements(e.target.checked)}
+                  style={{ accentColor: "hsl(var(--primary))", cursor: "pointer", width: 12, height: 12 }}
+                />
+                Announcements
+              </label>
+            )}
           </div>
           <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
@@ -380,7 +400,7 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
-              <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} interval={Math.max(0, Math.ceil(activeTrend.length / 6) - 1)} />
+              <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} ticks={trendMode === "date" ? dateTicks : undefined} interval={trendMode === "date" ? 0 : Math.max(0, Math.ceil(activeTrend.length / 6) - 1)} />
               <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={42} domain={[trendMin, trendMax]} />
               <ReferenceLine y={s.peakElo} stroke={amber} strokeDasharray="4 2" label={{ value: "Peak", fontSize: 9, fill: amber, position: "insideTopRight" }} />
               {announcementXValues.map((xVal, i) => (
@@ -404,7 +424,7 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
                   </div>
                 );
               }} />
-              <Area type="monotone" dataKey="elo" name="ELO" stroke="hsl(var(--primary))" fill="url(#pdElo)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="elo" name="ELO" stroke="hsl(var(--primary))" fill="url(#pdElo)" strokeWidth={2} dot={false} activeDot={{ r: 4 }} connectNulls={true} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
