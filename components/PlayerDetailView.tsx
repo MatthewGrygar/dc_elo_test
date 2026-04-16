@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, TrendingDown, Swords, Star, Award, Shield, Target,
-  Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame, ChevronDown,
+  Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame, ChevronDown, ExternalLink,
 } from "lucide-react";
 
 type SuperTag = { id: string; label: string; color?: string; icon?: string };
@@ -101,8 +101,10 @@ function AnnLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; heig
   );
 }
 
+type PlayerProfile = { recordTag?: string; recordTagMode?: "ELO" | "DCPR" | "both"; moxfieldUrl?: string };
+
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ data, communityRecords, superTags, announcementDates = [] }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[]; announcementDates?: string[] }) {
+function OverviewTab({ data, communityRecords, superTags, announcementDates = [], playerProfile }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[]; announcementDates?: string[]; playerProfile?: PlayerProfile | null }) {
   const { selectedPlayer, lang } = useAppNav();
   const { mode } = useRatingMode();
   const { summary: s, computed: c, eloTrend, rollingMomentum, deltaDistribution, weekdayPerf } = data;
@@ -241,6 +243,11 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
                   {(selectedPlayer as any)?.country && (
                     <CountryFlag code={(selectedPlayer as any).country} showCode />
                   )}
+                  {playerProfile?.moxfieldUrl && (
+                    <a href={playerProfile.moxfieldUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: "hsl(210 80% 55% / 0.12)", color: "hsl(210,80%,55%)", border: "1px solid hsl(210 80% 55% / 0.28)", textDecoration: "none", letterSpacing: "0.04em" }}>
+                      <ExternalLink size={8} /> Moxfield
+                    </a>
+                  )}
                   <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>#{selectedPlayer?.id} · {s.lastMatch}</span>
                 </div>
               </div>
@@ -327,12 +334,20 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
             .filter(r => r.entry?.player === s.name)
             .map(r => ({ label: r.label, value: r.entry!.value, isAllTime: r.entry!.isAllTime, catIcon: cat.icon }))
         ) ?? [];
-        if (playerRecs.length === 0) return null;
+        const showManualTag = playerProfile?.recordTag && (
+          !playerProfile.recordTagMode || playerProfile.recordTagMode === "both" || playerProfile.recordTagMode === mode
+        );
+        if (playerRecs.length === 0 && !showManualTag) return null;
         return (
           <GC style={{ flexShrink: 0 }}>
             <div style={{ padding: "14px 18px 16px" }}>
               <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 12 }}>{t(lang, "pd_record_tags")}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center" }}>
+                {showManualTag && (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 6, background: "hsl(42 80% 55% / 0.18)", color: "hsl(42,80%,55%)", fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 600, border: "1px solid hsl(42 80% 55% / 0.35)", letterSpacing: "0.01em" }}>
+                    ✦ {playerProfile!.recordTag}
+                  </span>
+                )}
                 {playerRecs.map((r, i) => {
                   const bg = CAT_CHIP_COLORS[r.catIcon] ?? "hsl(var(--primary))";
                   return (
@@ -1129,6 +1144,7 @@ export default function PlayerDetailView({ announcementDates = [] }: { announcem
   const [error, setError] = useState(false);
   const [communityRecords, setCommunityRecords] = useState<RecordsData | null>(null);
   const [superTagsMap, setSuperTagsMap] = useState<Record<string, SuperTag[]>>({});
+  const [playerProfile, setPlayerProfile] = useState<PlayerProfile | null>(null);
 
   useEffect(() => {
     if (!selectedPlayer) return;
@@ -1151,6 +1167,14 @@ export default function PlayerDetailView({ announcementDates = [] }: { announcem
     fetch("/api/player-tags").then(r => r.json()).then(setSuperTagsMap).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!selectedPlayer) return;
+    fetch(`/api/player-profile?player=${encodeURIComponent(selectedPlayer.name)}`)
+      .then(r => r.json())
+      .then(d => setPlayerProfile(d ?? null))
+      .catch(() => setPlayerProfile(null));
+  }, [selectedPlayer?.name]);
+
   if (!selectedPlayer) return null;
 
   if (loading) return (
@@ -1169,7 +1193,7 @@ export default function PlayerDetailView({ announcementDates = [] }: { announcem
 
   return (
     <div style={{ height: "100%", overflow: "hidden" }}>
-      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} superTags={superTagsMap[selectedPlayer?.name ?? ""] ?? []} announcementDates={announcementDates} />}
+      {playerSubView === "overview"    && <OverviewTab    data={data} communityRecords={communityRecords} superTags={superTagsMap[selectedPlayer?.name ?? ""] ?? []} announcementDates={announcementDates} playerProfile={playerProfile} />}
       {playerSubView === "opponents"   && <OpponentsTab   data={data} />}
       {playerSubView === "tournaments" && <TournamentsTab data={data} />}
       {playerSubView === "history"     && <HistoryTab     data={data} />}

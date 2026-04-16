@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Save, RefreshCw, Search, X, ChevronDown, Sparkles, Zap, Star, Trophy } from "lucide-react";
+import { Save, RefreshCw, Search, X, ChevronDown, Sparkles, Zap, Star, Trophy, ChevronUp } from "lucide-react";
 
 interface Match {
   matchId: string;
@@ -280,10 +280,11 @@ function RecommendedSection({ pool, featured, onAdd }: {
 }
 
 // ── Preview panel ─────────────────────────────────────────────────────────────
-function PreviewPanel({ featured, pool, onRemove, onSave, saving, saved }: {
+function PreviewPanel({ featured, pool, onRemove, onReorder, onSave, saving, saved }: {
   featured: FeaturedMatch[];
   pool: Match[];
   onRemove: (matchId: string) => void;
+  onReorder: (matchId: string, dir: "up" | "down") => void;
   onSave: () => void;
   saving: boolean;
   saved: boolean;
@@ -291,14 +292,14 @@ function PreviewPanel({ featured, pool, onRemove, onSave, saving, saved }: {
   const matchMap = useMemo(() => new Map(pool.map((m) => [m.matchId, m])), [pool]);
 
   const groups = useMemo(() => {
-    const map = new Map<string, { label: string; emoji: string; matches: { fm: FeaturedMatch; m: Match }[] }>();
-    for (const fm of featured) {
+    const map = new Map<string, { label: string; emoji: string; matches: { fm: FeaturedMatch; m: Match; idx: number }[] }>();
+    featured.forEach((fm, idx) => {
       const m = matchMap.get(fm.matchId);
-      if (!m) continue;
+      if (!m) return;
       const key = `${fm.category}::${fm.categoryLabel}`;
       if (!map.has(key)) map.set(key, { label: fm.categoryLabel, emoji: fm.categoryEmoji, matches: [] });
-      map.get(key)!.matches.push({ fm, m });
-    }
+      map.get(key)!.matches.push({ fm, m, idx });
+    });
     return [...map.values()];
   }, [featured, matchMap]);
 
@@ -354,9 +355,19 @@ function PreviewPanel({ featured, pool, onRemove, onSave, saving, saved }: {
               }}>
                 <span>{group.emoji}</span> {group.label}
               </div>
-              {group.matches.map(({ fm, m }) => (
-                <div key={fm.matchId} style={{ marginBottom: 5 }}>
-                  <MatchCard m={m} onRemove={() => onRemove(fm.matchId)} />
+              {group.matches.map(({ fm, m, idx }) => (
+                <div key={fm.matchId} style={{ marginBottom: 5, display: "flex", gap: 4, alignItems: "stretch" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <button onClick={() => onReorder(fm.matchId, "up")} disabled={idx === 0} title="Přesunout nahoru" style={{ width: 18, height: 18, borderRadius: 4, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.4)", color: idx === 0 ? "hsl(var(--muted-foreground)/0.3)" : "hsl(var(--muted-foreground))", cursor: idx === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0 }}>
+                      <ChevronUp size={10} />
+                    </button>
+                    <button onClick={() => onReorder(fm.matchId, "down")} disabled={idx === featured.length - 1} title="Přesunout dolů" style={{ width: 18, height: 18, borderRadius: 4, border: "1px solid hsl(var(--border))", background: "hsl(var(--muted)/0.4)", color: idx === featured.length - 1 ? "hsl(var(--muted-foreground)/0.3)" : "hsl(var(--muted-foreground))", cursor: idx === featured.length - 1 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, flexShrink: 0 }}>
+                      <ChevronDown size={10} />
+                    </button>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <MatchCard m={m} onRemove={() => onRemove(fm.matchId)} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -409,6 +420,19 @@ export default function MatchesPage() {
 
   function removeMatch(matchId: string) {
     setFeatured((prev) => prev.filter((x) => x.matchId !== matchId));
+    setSaved(false);
+  }
+
+  function reorderMatch(matchId: string, dir: "up" | "down") {
+    setFeatured((prev) => {
+      const idx = prev.findIndex((f) => f.matchId === matchId);
+      if (idx < 0) return prev;
+      const swapWith = dir === "up" ? idx - 1 : idx + 1;
+      if (swapWith < 0 || swapWith >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+      return next;
+    });
     setSaved(false);
   }
 
@@ -552,6 +576,7 @@ export default function MatchesPage() {
         featured={featured}
         pool={pool}
         onRemove={removeMatch}
+        onReorder={reorderMatch}
         onSave={save}
         saving={saving}
         saved={saved}

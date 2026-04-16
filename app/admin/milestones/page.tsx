@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-import { Plus, Trash2, Eye, EyeOff, RefreshCw, ArrowRight, X } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, RefreshCw, ArrowRight, X, ChevronUp, ChevronDown, Save } from "lucide-react";
 
 interface Milestone {
   id: string; icon: string; text: string; date: string; cat: string;
@@ -30,9 +30,11 @@ const MILESTONE_COLORS: Record<string,string> = {
   "Série":"hsl(0,72%,56%)","Upset":"hsl(24,88%,56%)","DCPR":"hsl(265,65%,60%)",
 };
 
-function PreviewMilestoneRow({ m, onRemove }: {
+function PreviewMilestoneRow({ m, onRemove, onMoveUp, onMoveDown }: {
   m: { icon: string; text: string; date: string; cat: string };
   onRemove?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }) {
   const col = MILESTONE_COLORS[m.cat] ?? "hsl(var(--primary))";
   return (
@@ -44,21 +46,32 @@ function PreviewMilestoneRow({ m, onRemove }: {
       <div style={{ width: 24, height: 24, borderRadius: 6, flexShrink: 0, background: `${col}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
         {m.icon}
       </div>
-      <div style={{ flex: 1, minWidth: 0, paddingRight: onRemove ? 18 : 0 }}>
+      <div style={{ flex: 1, minWidth: 0, paddingRight: (onRemove || onMoveUp !== undefined || onMoveDown !== undefined) ? 46 : 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.35, color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.text}</div>
         <div style={{ display: "flex", gap: 5, marginTop: 2, alignItems: "center" }}>
           <span style={{ fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: 4, background: `${col}22`, color: col, fontFamily: "var(--font-mono)" }}>{m.cat}</span>
           <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)" }}>{m.date}</span>
         </div>
       </div>
-      {onRemove && (
-        <button onClick={onRemove} style={{
-          position: "absolute", top: 8, right: 8,
-          width: 16, height: 16, borderRadius: 3, border: "none", cursor: "pointer",
-          background: "hsl(var(--destructive)/0.15)", color: "hsl(var(--destructive))",
-          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, padding: 0,
-        }}>✕</button>
-      )}
+      <div style={{ position: "absolute", top: "50%", right: 8, transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: 3 }}>
+        {(onMoveUp !== undefined || onMoveDown !== undefined) && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <button onClick={onMoveUp} disabled={!onMoveUp} title="Přesunout nahoru" style={{ width: 14, height: 14, borderRadius: 3, border: "1px solid hsl(var(--border))", background: onMoveUp ? "hsl(var(--muted)/0.5)" : "transparent", color: onMoveUp ? "hsl(var(--muted-foreground))" : "transparent", cursor: onMoveUp ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+              <ChevronUp size={9} />
+            </button>
+            <button onClick={onMoveDown} disabled={!onMoveDown} title="Přesunout dolů" style={{ width: 14, height: 14, borderRadius: 3, border: "1px solid hsl(var(--border))", background: onMoveDown ? "hsl(var(--muted)/0.5)" : "transparent", color: onMoveDown ? "hsl(var(--muted-foreground))" : "transparent", cursor: onMoveDown ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+              <ChevronDown size={9} />
+            </button>
+          </div>
+        )}
+        {onRemove && (
+          <button onClick={onRemove} style={{
+            width: 16, height: 16, borderRadius: 3, border: "none", cursor: "pointer",
+            background: "hsl(var(--destructive)/0.15)", color: "hsl(var(--destructive))",
+            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, padding: 0,
+          }}>✕</button>
+        )}
+      </div>
     </div>
   );
 }
@@ -70,6 +83,9 @@ export default function MilestonesPage() {
   const [autoLoading, setAutoLoading] = useState(true);
   const [saving, setSaving]         = useState<string | null>(null);
   const [adopting, setAdopting]     = useState<string | null>(null);
+
+  const [orderChanged, setOrderChanged] = useState(false);
+  const [savingOrder, setSavingOrder]   = useState(false);
 
   const [icon, setIcon]       = useState("📌");
   const [text, setText]       = useState("");
@@ -129,6 +145,33 @@ export default function MilestonesPage() {
     setAdopting(null);
   }
 
+  function moveMilestone(m: Milestone, dir: "up" | "down") {
+    setMilestones(prev => {
+      const actives = prev.filter(x => x.visible);
+      const idx = actives.findIndex(x => x.id === m.id);
+      if (idx < 0) return prev;
+      const swapIdx = dir === "up" ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= actives.length) return prev;
+      const newActives = [...actives];
+      [newActives[idx], newActives[swapIdx]] = [newActives[swapIdx], newActives[idx]];
+      const inactives = prev.filter(x => !x.visible);
+      return [...newActives, ...inactives];
+    });
+    setOrderChanged(true);
+  }
+
+  async function saveOrder() {
+    setSavingOrder(true);
+    const ids = milestones.map(m => m.id);
+    await fetch("/api/admin/milestones", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order: ids }),
+    });
+    setSavingOrder(false);
+    setOrderChanged(false);
+  }
+
   async function handleAdd(e: FormEvent) {
     e.preventDefault();
     if (!text.trim()) { setError("Text milníku je povinný."); return; }
@@ -164,15 +207,22 @@ export default function MilestonesPage() {
         background: "hsl(var(--card)/0.6)", border: `1px solid ${greenBorder}`,
         borderRadius: 14, overflow: "hidden", marginBottom: "1.25rem",
       }}>
-        <div style={{ padding: "1rem 1.1rem 0.75rem", borderBottom: "1px solid hsl(var(--border))" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: green, marginBottom: 2 }}>
-            ✓ Aktuálně na hlavní stránce
+        <div style={{ padding: "1rem 1.1rem 0.75rem", borderBottom: "1px solid hsl(var(--border))", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: green, marginBottom: 2 }}>
+              ✓ Aktuálně na hlavní stránce
+            </div>
+            <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
+              {activeMilestones.length > 0
+                ? `${activeMilestones.length} vlastní${activeMilestones.length > 1 ? "ch" : ""} milník${activeMilestones.length > 1 ? "ů" : ""} — kliknutím ✕ odebereš z hlavní stránky`
+                : "Automaticky generované (žádné vlastní aktivní) — zobrazeno jako náhled"}
+            </div>
           </div>
-          <div style={{ fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
-            {activeMilestones.length > 0
-              ? `${activeMilestones.length} vlastní${activeMilestones.length > 1 ? "ch" : ""} milník${activeMilestones.length > 1 ? "ů" : ""} — kliknutím ✕ odebereš z hlavní stránky`
-              : "Automaticky generované (žádné vlastní aktivní) — zobrazeno jako náhled"}
-          </div>
+          {orderChanged && (
+            <button onClick={saveOrder} disabled={savingOrder} style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, border: `1px solid ${greenBorder}`, background: greenBg, color: green, cursor: savingOrder ? "not-allowed" : "pointer", fontSize: 11, fontWeight: 700, flexShrink: 0, fontFamily: "var(--font-body)" }}>
+              <Save size={11} /> {savingOrder ? "Ukládám…" : "Uložit pořadí"}
+            </button>
+          )}
         </div>
         <div style={{ overflowY: "auto", maxHeight: 220 }}>
           {previewMs.length === 0 ? (
@@ -185,6 +235,8 @@ export default function MilestonesPage() {
                   key={i}
                   m={m}
                   onRemove={custom ? () => toggleVisible(custom) : undefined}
+                  onMoveUp={custom && i > 0 ? () => moveMilestone(custom, "up") : undefined}
+                  onMoveDown={custom && i < activeMilestones.length - 1 ? () => moveMilestone(custom, "down") : undefined}
                 />
               );
             })

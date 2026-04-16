@@ -14,6 +14,7 @@ import RecordsView from "@/components/RecordsView";
 import CompareView from "@/components/CompareView";
 import ArticlesView from "@/components/ArticlesView";
 import OrganizationView from "@/components/OrganizationView";
+import TournamentsView from "@/components/TournamentsView";
 import SupportModal from "@/components/SupportModal";
 import FeedbackModal from "@/components/FeedbackModal";
 import { Zap } from "lucide-react";
@@ -176,7 +177,7 @@ export default function Home() {
 // ── App Shell ─────────────────────────────────────────────────────────────────
 const VIEW_ORDER = [
   "dashboard", "leaderboard", "statistics", "analytics",
-  "records", "compare", "articles", "organization", "player",
+  "records", "compare", "tournaments", "articles", "organization", "player",
 ];
 
 function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
@@ -242,6 +243,7 @@ function ViewContent({ prefetchCache }: { prefetchCache: PrefetchCache }) {
     case "leaderboard":  return <LeaderboardTable prefetchCache={prefetchCache} />;
     case "player":       return <PlayerDetailView announcementDates={prefetchCache.announcements ?? []} />;
     case "compare":      return <CompareView      prefetchCache={prefetchCache} />;
+    case "tournaments":  return <TournamentsView />;
     case "articles":     return <ArticlesView />;
     case "organization": return <OrganizationView />;
     default:             return null;

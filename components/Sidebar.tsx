@@ -9,16 +9,17 @@ import { t, Lang } from "@/lib/i18n";
 import {
   LayoutDashboard, Trophy, TrendingUp, Activity, Medal,
   GitCompare, Newspaper, Building2, Moon, Sun,
-  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart, Handshake, MessageSquarePlus,
+  ChevronLeft, ChevronRight, X, Eye, Swords, Star, Clock, Zap, Heart, Handshake, MessageSquarePlus, CalendarDays,
 } from "lucide-react";
 
 const MAIN_NAV: { id: BaseView; icon: React.ElementType; tKey: string }[] = [
-  { id: "dashboard",   icon: LayoutDashboard, tKey: "dashboard"  },
-  { id: "leaderboard", icon: Trophy,          tKey: "leaderboard"},
-  { id: "statistics",  icon: Activity,        tKey: "statistics" },
-  { id: "analytics",   icon: TrendingUp,      tKey: "analytics"  },
-  { id: "records",     icon: Medal,           tKey: "records"    },
-  { id: "compare",     icon: GitCompare,      tKey: "compare"    },
+  { id: "dashboard",   icon: LayoutDashboard, tKey: "dashboard"   },
+  { id: "leaderboard", icon: Trophy,          tKey: "leaderboard" },
+  { id: "statistics",  icon: Activity,        tKey: "statistics"  },
+  { id: "analytics",   icon: TrendingUp,      tKey: "analytics"   },
+  { id: "records",     icon: Medal,           tKey: "records"     },
+  { id: "compare",     icon: GitCompare,      tKey: "compare"     },
+  { id: "tournaments", icon: CalendarDays,    tKey: "tournaments" },
 ];
 
 const CONTENT_NAV: { id: BaseView; icon: React.ElementType; tKey: string }[] = [

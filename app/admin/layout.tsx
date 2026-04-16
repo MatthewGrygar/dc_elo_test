@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Newspaper, Star, Swords, LogOut, Tag } from "lucide-react";
+import { Newspaper, Star, Swords, LogOut, Users } from "lucide-react";
 
 const green = "hsl(152,72%,45%)";
 const greenBg = "hsl(152 72% 45% / 0.12)";
@@ -66,7 +66,7 @@ function AdminNav() {
         <NavLink href="/admin" label="Články" icon={Newspaper} exact />
         <NavLink href="/admin/milestones" label="Milníky" icon={Star} />
         <NavLink href="/admin/matches" label="Zápasy" icon={Swords} />
-        <NavLink href="/admin/tags" label="Tagy" icon={Tag} />
+        <NavLink href="/admin/players" label="Hráči" icon={Users} />
       </nav>
 
       {/* Logout */}

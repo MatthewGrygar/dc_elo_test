@@ -6,7 +6,7 @@ import { Lang } from "@/lib/i18n";
 
 export type BaseView =
   | "dashboard" | "statistics" | "analytics" | "leaderboard"
-  | "records"   | "compare"   | "articles"  | "organization";
+  | "records"   | "compare"   | "articles"  | "organization" | "tournaments";
 
 export type PlayerSubView = "overview" | "opponents" | "tournaments" | "history";
 export type OrgTab = "about" | "spoluprace";

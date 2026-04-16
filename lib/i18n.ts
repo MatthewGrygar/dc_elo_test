@@ -5,12 +5,12 @@ export const translations = {
     // Nav
     dashboard: "Přehled", leaderboard: "Žebříček", statistics: "Statistiky",
     analytics: "Analytika", records: "Rekordy", compare: "Porovnání",
-    articles: "Články", organization: "Organizace", player: "Hráč",
+    articles: "Články", organization: "Organizace", player: "Hráč", tournaments: "Turnaje",
     // Subtitles
     sub_dashboard: "Přehled & klíčové metriky", sub_leaderboard: "Žebříček hráčů",
     sub_statistics: "Detailní statistiky hráčů", sub_analytics: "Grafy & trendy vývoje",
     sub_records: "Rekordy & milníky komunity", sub_compare: "Porovnání hráčů face-to-face",
-    sub_articles: "Novinky & turnajové zprávy", sub_organization: "O komisi, tým & kontakt",
+    sub_articles: "Novinky & turnajové zprávy", sub_organization: "O komisi, tým & kontakt", sub_tournaments: "Přehled turnajů & výsledků",
     sub_player: "Detailní profil hráče",
     // Loading
     loading_elo: "Načítání ELO dat…", loading_dcpr: "Načítání DCPR dat…",
@@ -264,11 +264,12 @@ export const translations = {
   en: {
     dashboard: "Dashboard", leaderboard: "Leaderboard", statistics: "Statistics",
     analytics: "Analytics", records: "Records", compare: "Compare",
-    articles: "Articles", organization: "Organization", player: "Player",
+    articles: "Articles", organization: "Organization", player: "Player", tournaments: "Tournaments",
     sub_dashboard: "Overview & key metrics", sub_leaderboard: "Player rankings",
     sub_statistics: "Detailed player stats", sub_analytics: "Charts & rating trends",
     sub_records: "Community records & milestones", sub_compare: "Head-to-head player comparison",
     sub_articles: "News & tournament reports", sub_organization: "About the committee, team & contact",
+    sub_tournaments: "Tournament browser & results",
     sub_player: "Detailed player profile",
     loading_elo: "Loading ELO data…", loading_dcpr: "Loading DCPR data…",
     loading_stats: "Preparing statistics…", loading_final: "Finalizing…",
@@ -496,11 +497,12 @@ export const translations = {
   fr: {
     dashboard: "Tableau de bord", leaderboard: "Classement", statistics: "Statistiques",
     analytics: "Analytique", records: "Records", compare: "Comparer",
-    articles: "Articles", organization: "Organisation", player: "Joueur",
+    articles: "Articles", organization: "Organisation", player: "Joueur", tournaments: "Tournois",
     sub_dashboard: "Vue d'ensemble & métriques", sub_leaderboard: "Classement des joueurs",
     sub_statistics: "Statistiques détaillées", sub_analytics: "Graphiques & tendances",
     sub_records: "Records & jalons de la communauté", sub_compare: "Comparaison face-à-face",
     sub_articles: "Actualités & rapports de tournois", sub_organization: "À propos, équipe & contact",
+    sub_tournaments: "Navigateur de tournois & résultats",
     sub_player: "Profil détaillé du joueur",
     loading_elo: "Chargement des données ELO…", loading_dcpr: "Chargement des données DCPR…",
     loading_stats: "Préparation des statistiques…", loading_final: "Finalisation…",

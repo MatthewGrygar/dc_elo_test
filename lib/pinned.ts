@@ -33,6 +33,7 @@ async function getKV() {
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
 const MS_IDS_KEY = "milestones:ids";
+const MS_ORDER_KEY = "milestones:order";
 const msKey = (id: string) => `milestone:${id}`;
 const FEATURED_MATCHES_KEY = "featured:matchIds";
 
@@ -47,9 +48,17 @@ export async function getAllMilestones(): Promise<PinnedMilestone[]> {
     const ids = await kv.lrange<string>(MS_IDS_KEY, 0, -1);
     if (!ids.length) return [];
     const items = await Promise.all(ids.map((id) => kv.get<PinnedMilestone>(msKey(id))));
-    return (items.filter(Boolean) as PinnedMilestone[]).sort(
-      (a, b) => b.createdAt.localeCompare(a.createdAt)
-    );
+    const valid = items.filter(Boolean) as PinnedMilestone[];
+    // Check for custom display order
+    const customOrder = await kv.get<string[]>(MS_ORDER_KEY);
+    if (customOrder && customOrder.length > 0) {
+      const byId = new Map(valid.map(m => [m.id, m]));
+      const ordered = customOrder.map(id => byId.get(id)).filter(Boolean) as PinnedMilestone[];
+      const orderedSet = new Set(customOrder);
+      const extra = valid.filter(m => !orderedSet.has(m.id)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return [...extra, ...ordered];
+    }
+    return valid.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   } catch {
     return [];
   }
@@ -112,6 +121,12 @@ export async function getFeaturedMatches(): Promise<FeaturedMatch[]> {
 /** Backward-compat: just the IDs */
 export async function getFeaturedMatchIds(): Promise<string[]> {
   return (await getFeaturedMatches()).map((m) => m.matchId);
+}
+
+export async function reorderMilestones(ids: string[]): Promise<void> {
+  if (!kvAvailable()) throw new Error("KV not configured");
+  const kv = await getKV();
+  await kv.set(MS_ORDER_KEY, ids);
 }
 
 export async function setFeaturedMatches(matches: FeaturedMatch[]): Promise<void> {
@@ -227,6 +242,36 @@ export async function deletePlayerTag(playerName: string, tagId: string): Promis
   } else {
     await kv.set(playerTagsKey(playerName), updated);
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PLAYER PROFILE (moxfield, record tag, etc.)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface PlayerProfile {
+  playerName: string;
+  recordTag?: string;
+  recordTagMode?: "ELO" | "DCPR" | "both";
+  moxfieldUrl?: string;
+  updatedAt: string;
+}
+
+const playerProfileKey = (name: string) => `player-profile:${name}`;
+
+export async function getPlayerProfile(playerName: string): Promise<PlayerProfile | null> {
+  if (!kvAvailable()) return null;
+  try {
+    const kv = await getKV();
+    return await kv.get<PlayerProfile>(playerProfileKey(playerName));
+  } catch { return null; }
+}
+
+export async function upsertPlayerProfile(profile: Omit<PlayerProfile, "updatedAt">): Promise<PlayerProfile> {
+  if (!kvAvailable()) throw new Error("KV not configured");
+  const kv = await getKV();
+  const full: PlayerProfile = { ...profile, updatedAt: new Date().toISOString() };
+  await kv.set(playerProfileKey(profile.playerName), full);
+  return full;
 }
 
 /** Returns map of playerName → super tags (for leaderboard display) */
