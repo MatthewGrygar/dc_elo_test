@@ -74,12 +74,6 @@ function computeStandings(games: TournamentGame[]): PlayerStanding[] {
 function GameRow({ g }: { g: TournamentGame }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", minWidth: 0 }}>
-      {/* Match ID */}
-      <span style={{
-        fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground)/0.5)",
-        flexShrink: 0, width: 36, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-      }}>{g.matchId}</span>
-
       {/* Player 1 — right-aligned, truncated */}
       <span style={{
         flex: 1, minWidth: 0, textAlign: "right",
@@ -210,6 +204,7 @@ function StandingsTable({ standings }: { standings: PlayerStanding[] }) {
 
 // ── Expanded detail ───────────────────────────────────────────────────────────
 function TournamentDetail({ t, isMobile }: { t: Tournament; isMobile: boolean }) {
+  const sortedGames = useMemo(() => [...t.games].sort((a, b) => a.matchId.localeCompare(b.matchId, undefined, { numeric: true })), [t]);
   const standings  = useMemo(() => computeStandings(t.games), [t]);
   const avgElo     = useMemo(() => {
     const elos = t.games.flatMap(g => [g.elo1Before, g.elo2Before]).filter(e => e > 0);
@@ -224,7 +219,7 @@ function TournamentDetail({ t, isMobile }: { t: Tournament; isMobile: boolean })
       <div style={{ borderTop: "1px solid hsl(var(--border)/0.4)", background: "hsl(var(--muted)/0.08)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
         <StatPanels gameCount={t.gameCount} playerCount={standings.length} avgElo={avgElo} />
         {standings.length > 1 && <GainCards biggestGain={biggestGain} biggestLoss={biggestLoss} />}
-        <GamesList games={t.games} />
+        <GamesList games={sortedGames} />
       </div>
     );
   }
@@ -235,7 +230,7 @@ function TournamentDetail({ t, isMobile }: { t: Tournament; isMobile: boolean })
       {/* Left: games */}
       <div style={{ flex: 3, minWidth: 0, borderRight: "1px solid hsl(var(--border)/0.35)", paddingBottom: 8 }}>
         <div style={{ height: 6 }} />
-        <GamesList games={t.games} />
+        <GamesList games={sortedGames} />
       </div>
 
       {/* Right: stats + gain cards + standings */}
