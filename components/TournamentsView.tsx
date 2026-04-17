@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRatingMode } from "./RatingModeProvider";
-import { Search, RefreshCw, X, Trophy, Users, Zap, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, RefreshCw, X, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 
 interface TournamentGame {
   matchId: string; date: string;
@@ -53,11 +53,9 @@ function ResultPip({ r }: { r: "Won" | "Lost" | "Draw" }) {
 
 function computeStandings(games: TournamentGame[]): PlayerStanding[] {
   const map = new Map<string, PlayerStanding>();
-
   function ensure(name: string, eloStart: number) {
     if (!map.has(name)) map.set(name, { name, wins: 0, losses: 0, draws: 0, games: 0, netDelta: 0, eloStart, eloEnd: eloStart });
   }
-
   for (const g of games) {
     ensure(g.player1, g.elo1Before);
     ensure(g.player2, g.elo2Before);
@@ -69,21 +67,20 @@ function computeStandings(games: TournamentGame[]): PlayerStanding[] {
     else if (g.result1 === "Lost") { p1.losses++; p2.wins++;   }
     else                           { p1.draws++;  p2.draws++;  }
   }
-
-  return [...map.values()].sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    return b.netDelta - a.netDelta;
-  });
+  return [...map.values()].sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : b.netDelta - a.netDelta);
 }
 
-// ── Single game row (one line) ────────────────────────────────────────────────
+// ── Single game row — one line ────────────────────────────────────────────────
 function GameRow({ g }: { g: TournamentGame }) {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 6,
-      padding: "5px 12px", minWidth: 0,
-    }}>
-      {/* Player 1 name — right-aligned, truncated */}
+    <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", minWidth: 0 }}>
+      {/* Match ID */}
+      <span style={{
+        fontSize: 8, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground)/0.5)",
+        flexShrink: 0, width: 36, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}>{g.matchId}</span>
+
+      {/* Player 1 — right-aligned, truncated */}
       <span style={{
         flex: 1, minWidth: 0, textAlign: "right",
         fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -93,12 +90,12 @@ function GameRow({ g }: { g: TournamentGame }) {
       <ResultPip r={g.result1} />
       <DeltaBadge d={g.delta1} />
 
-      <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground)/0.5)", flexShrink: 0, fontFamily: "var(--font-mono)" }}>·</span>
+      <span style={{ fontSize: 9, color: "hsl(var(--muted-foreground)/0.4)", flexShrink: 0, fontFamily: "var(--font-mono)" }}>·</span>
 
       <DeltaBadge d={g.delta2} />
       <ResultPip r={g.result2} />
 
-      {/* Player 2 name — left-aligned, truncated */}
+      {/* Player 2 — left-aligned, truncated */}
       <span style={{
         flex: 1, minWidth: 0, textAlign: "left",
         fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -108,118 +105,151 @@ function GameRow({ g }: { g: TournamentGame }) {
   );
 }
 
-// ── Expanded detail (two-column: games | standings) ───────────────────────────
-function TournamentDetail({ t, mode }: { t: Tournament; mode: string }) {
-  const standings = useMemo(() => computeStandings(t.games), [t]);
+// ── Stat panels row ───────────────────────────────────────────────────────────
+function StatPanels({ gameCount, playerCount, avgElo }: { gameCount: number; playerCount: number; avgElo: number }) {
+  const items = [
+    { label: "Her",     value: String(gameCount),   color: "hsl(var(--primary))" },
+    { label: "Hráčů",  value: String(playerCount),  color: amber },
+    { label: "Avg ELO", value: String(avgElo),       color: green },
+  ];
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      {items.map(s => (
+        <div key={s.label} style={{
+          flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          gap: 4, padding: "10px 8px", borderRadius: 10,
+          background: `${s.color}10`, border: `1px solid ${s.color}28`,
+        }}>
+          <span style={{
+            fontSize: 8, fontFamily: "var(--font-mono)", letterSpacing: "0.12em",
+            textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))",
+          }}>{s.label}</span>
+          <span style={{
+            fontSize: 22, fontWeight: 900, fontFamily: "var(--font-mono)",
+            color: s.color, lineHeight: 1, letterSpacing: "-0.03em",
+          }}>{s.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  const avgElo = useMemo(() => {
+// ── Best / worst gain cards ───────────────────────────────────────────────────
+function GainCards({ biggestGain, biggestLoss }: { biggestGain: PlayerStanding; biggestLoss: PlayerStanding }) {
+  if (biggestGain.name === biggestLoss.name) return null;
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      <div style={{ flex: 1, padding: "7px 10px", borderRadius: 9, background: `${green}10`, border: `1px solid ${green}28` }}>
+        <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: green, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 3, display: "flex", alignItems: "center", gap: 3 }}>
+          <TrendingUp size={8} />Nejlepší zisk
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "hsl(var(--foreground))" }}>{biggestGain.name}</div>
+        <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: green }}>{biggestGain.netDelta > 0 ? `+${biggestGain.netDelta}` : biggestGain.netDelta}</div>
+      </div>
+      <div style={{ flex: 1, padding: "7px 10px", borderRadius: 9, background: `${red}10`, border: `1px solid ${red}28` }}>
+        <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: red, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 3, display: "flex", alignItems: "center", gap: 3 }}>
+          <TrendingDown size={8} />Největší ztráta
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "hsl(var(--foreground))" }}>{biggestLoss.name}</div>
+        <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700, color: red }}>{biggestLoss.netDelta > 0 ? `+${biggestLoss.netDelta}` : biggestLoss.netDelta}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Games section (list + label) ──────────────────────────────────────────────
+function GamesList({ games }: { games: TournamentGame[] }) {
+  return (
+    <div>
+      <div style={{ padding: "0 12px 4px", fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>
+        Zápasy
+      </div>
+      {games.map((g, i) => (
+        <div key={g.matchId}>
+          {i > 0 && <div style={{ height: 1, background: "hsl(var(--border)/0.22)", margin: "0 12px" }} />}
+          <GameRow g={g} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Standings table ───────────────────────────────────────────────────────────
+function StandingsTable({ standings }: { standings: PlayerStanding[] }) {
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 5 }}>Pořadí</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {standings.map((p, i) => (
+          <div key={p.name} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "5px 8px", borderRadius: 7,
+            background: i === 0 ? `${amber}10` : "hsl(var(--muted)/0.18)",
+            border: `1px solid ${i === 0 ? `${amber}28` : "hsl(var(--border)/0.35)"}`,
+          }}>
+            <div style={{
+              width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 9, fontWeight: 800, fontFamily: "var(--font-mono)",
+              background: i === 0 ? amber : "hsl(var(--muted)/0.4)",
+              color: i === 0 ? "#000" : "hsl(var(--muted-foreground))",
+            }}>{i + 1}</div>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {p.name}
+            </div>
+            <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, color: green, flexShrink: 0 }}>{p.wins}W</span>
+            <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>·</span>
+            <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, color: red, flexShrink: 0 }}>{p.losses}L</span>
+            <DeltaBadge d={p.netDelta} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Expanded detail ───────────────────────────────────────────────────────────
+function TournamentDetail({ t, isMobile }: { t: Tournament; isMobile: boolean }) {
+  const standings  = useMemo(() => computeStandings(t.games), [t]);
+  const avgElo     = useMemo(() => {
     const elos = t.games.flatMap(g => [g.elo1Before, g.elo2Before]).filter(e => e > 0);
     return elos.length ? Math.round(elos.reduce((a, b) => a + b, 0) / elos.length) : 0;
   }, [t]);
-
   const biggestGain = standings.reduce((best, p) => (!best || p.netDelta > best.netDelta) ? p : best, standings[0]);
   const biggestLoss = standings.reduce((best, p) => (!best || p.netDelta < best.netDelta) ? p : best, standings[0]);
 
+  // ── Mobile: stacked layout ────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{ borderTop: "1px solid hsl(var(--border)/0.4)", background: "hsl(var(--muted)/0.08)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <StatPanels gameCount={t.gameCount} playerCount={standings.length} avgElo={avgElo} />
+        {standings.length > 1 && <GainCards biggestGain={biggestGain} biggestLoss={biggestLoss} />}
+        <GamesList games={t.games} />
+      </div>
+    );
+  }
+
+  // ── Desktop: two-column layout ────────────────────────────────────────────
   return (
-    <div style={{
-      display: "flex", gap: 0,
-      borderTop: "1px solid hsl(var(--border)/0.4)",
-      background: "hsl(var(--muted)/0.08)",
-    }}>
-      {/* ── Left: games list ── */}
-      <div style={{ flex: 3, minWidth: 0, borderRight: "1px solid hsl(var(--border)/0.35)" }}>
-        <div style={{ padding: "6px 12px 4px", fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))" }}>
-          Zápasy
-        </div>
-        {t.games.map((g, i) => (
-          <div key={g.matchId}>
-            {i > 0 && <div style={{ height: 1, background: "hsl(var(--border)/0.22)", margin: "0 12px" }} />}
-            <GameRow g={g} />
-          </div>
-        ))}
-        <div style={{ height: 8 }} />
+    <div style={{ display: "flex", gap: 0, borderTop: "1px solid hsl(var(--border)/0.4)", background: "hsl(var(--muted)/0.08)" }}>
+      {/* Left: games */}
+      <div style={{ flex: 3, minWidth: 0, borderRight: "1px solid hsl(var(--border)/0.35)", paddingBottom: 8 }}>
+        <div style={{ height: 6 }} />
+        <GamesList games={t.games} />
       </div>
 
-      {/* ── Right: standings + stats ── */}
-      <div style={{ flex: 2, minWidth: 0, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
-        {/* Stat chips */}
-        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-          {[
-            { label: "Her", value: String(t.gameCount), color: "hsl(var(--primary))" },
-            { label: "Hráčů", value: String(standings.length), color: amber },
-            { label: "Avg ELO", value: String(avgElo), color: green },
-          ].map(s => (
-            <div key={s.label} style={{
-              display: "flex", alignItems: "center", gap: 4,
-              padding: "3px 8px", borderRadius: 6,
-              background: `${s.color}14`, border: `1px solid ${s.color}30`,
-            }}>
-              <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" as const, letterSpacing: "0.07em" }}>{s.label}</span>
-              <span style={{ fontSize: 11, fontWeight: 800, fontFamily: "var(--font-mono)", color: s.color }}>{s.value}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Best / worst */}
-        {standings.length > 1 && biggestGain?.name !== biggestLoss?.name && (
-          <div style={{ display: "flex", gap: 5 }}>
-            <div style={{ flex: 1, padding: "6px 8px", borderRadius: 8, background: `${green}10`, border: `1px solid ${green}28` }}>
-              <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: green, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 2, display: "flex", alignItems: "center", gap: 3 }}>
-                <TrendingUp size={8} />Nejlepší
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "hsl(var(--foreground))" }}>{biggestGain?.name}</div>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700, color: green }}>{biggestGain && biggestGain.netDelta > 0 ? `+${biggestGain.netDelta}` : biggestGain?.netDelta}</div>
-            </div>
-            <div style={{ flex: 1, padding: "6px 8px", borderRadius: 8, background: `${red}10`, border: `1px solid ${red}28` }}>
-              <div style={{ fontSize: 8, fontFamily: "var(--font-mono)", color: red, letterSpacing: "0.07em", textTransform: "uppercase" as const, marginBottom: 2, display: "flex", alignItems: "center", gap: 3 }}>
-                <TrendingDown size={8} />Největší ztráta
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "hsl(var(--foreground))" }}>{biggestLoss?.name}</div>
-              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700, color: red }}>{biggestLoss && biggestLoss.netDelta > 0 ? `+${biggestLoss.netDelta}` : biggestLoss?.netDelta}</div>
-            </div>
-          </div>
-        )}
-
-        {/* Standings */}
-        <div>
-          <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "hsl(var(--muted-foreground))", marginBottom: 5 }}>Pořadí</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {standings.map((p, i) => (
-              <div key={p.name} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "5px 8px", borderRadius: 7,
-                background: i === 0 ? `${amber}10` : "hsl(var(--muted)/0.18)",
-                border: `1px solid ${i === 0 ? `${amber}28` : "hsl(var(--border)/0.35)"}`,
-              }}>
-                {/* Rank badge */}
-                <div style={{
-                  width: 18, height: 18, borderRadius: 5, flexShrink: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 9, fontWeight: 800, fontFamily: "var(--font-mono)",
-                  background: i === 0 ? amber : "hsl(var(--muted)/0.4)",
-                  color: i === 0 ? "#000" : "hsl(var(--muted-foreground))",
-                }}>{i + 1}</div>
-                {/* Name */}
-                <div style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {p.name}
-                </div>
-                {/* W/L record */}
-                <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, color: green, flexShrink: 0 }}>{p.wins}W</span>
-                <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>·</span>
-                <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", fontWeight: 700, color: red, flexShrink: 0 }}>{p.losses}L</span>
-                {/* Net delta */}
-                <DeltaBadge d={p.netDelta} />
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Right: stats + gain cards + standings */}
+      <div style={{ flex: 2, minWidth: 0, padding: "12px 12px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <StatPanels gameCount={t.gameCount} playerCount={standings.length} avgElo={avgElo} />
+        {standings.length > 1 && <GainCards biggestGain={biggestGain} biggestLoss={biggestLoss} />}
+        <StandingsTable standings={standings} />
       </div>
     </div>
   );
 }
 
 // ── Accordion row ─────────────────────────────────────────────────────────────
-function TournamentRow({ t, isOpen, onToggle, mode }: { t: Tournament; isOpen: boolean; onToggle: () => void; mode: string }) {
+function TournamentRow({ t, isOpen, onToggle, isMobile }: { t: Tournament; isOpen: boolean; onToggle: () => void; isMobile: boolean }) {
   return (
     <div style={{
       borderRadius: 10, overflow: "hidden",
@@ -227,7 +257,6 @@ function TournamentRow({ t, isOpen, onToggle, mode }: { t: Tournament; isOpen: b
       background: isOpen ? "hsl(var(--primary)/0.04)" : "hsl(var(--card)/0.6)",
       transition: "border-color .12s, background .12s",
     }}>
-      {/* Header */}
       <button
         onClick={onToggle}
         style={{
@@ -236,15 +265,9 @@ function TournamentRow({ t, isOpen, onToggle, mode }: { t: Tournament; isOpen: b
           display: "flex", alignItems: "center", gap: 10,
         }}
       >
-        {/* Active bar */}
         <div style={{ width: 3, height: 28, borderRadius: 2, flexShrink: 0, background: isOpen ? "hsl(var(--primary))" : "transparent", transition: "background .12s" }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: 12, fontWeight: 700,
-            color: isOpen ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            transition: "color .12s",
-          }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: isOpen ? "hsl(var(--primary))" : "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color .12s" }}>
             {t.name}
           </div>
           <div style={{ fontSize: 9, color: "hsl(var(--muted-foreground))", fontFamily: "var(--font-mono)", marginTop: 2 }}>
@@ -254,17 +277,13 @@ function TournamentRow({ t, isOpen, onToggle, mode }: { t: Tournament; isOpen: b
             )}
           </div>
         </div>
-        <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-          {t.gameCount}×
-        </span>
+        <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>{t.gameCount}×</span>
         {isOpen
-          ? <ChevronUp size={13} style={{ color: "hsl(var(--primary))", flexShrink: 0 }} />
+          ? <ChevronUp   size={13} style={{ color: "hsl(var(--primary))",          flexShrink: 0 }} />
           : <ChevronDown size={13} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
         }
       </button>
-
-      {/* Expanded content */}
-      {isOpen && <TournamentDetail t={t} mode={mode} />}
+      {isOpen && <TournamentDetail t={t} isMobile={isMobile} />}
     </div>
   );
 }
@@ -273,9 +292,17 @@ function TournamentRow({ t, isOpen, onToggle, mode }: { t: Tournament; isOpen: b
 export default function TournamentsView() {
   const { mode } = useRatingMode();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [openName, setOpenName] = useState<string | null>(null);
+  const [loading,     setLoading]     = useState(true);
+  const [search,      setSearch]      = useState("");
+  const [openName,    setOpenName]    = useState<string | null>(null);
+  const [isMobile,    setIsMobile]    = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -341,7 +368,7 @@ export default function TournamentsView() {
                 t={t}
                 isOpen={openName === t.name}
                 onToggle={() => setOpenName(prev => prev === t.name ? null : t.name)}
-                mode={mode}
+                isMobile={isMobile}
               />
             ))}
           </div>
