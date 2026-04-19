@@ -215,12 +215,7 @@ function VtRankedScatter({ data, lang }: { data: GeneralStats["vtScatter"]; lang
               strokeOpacity={isH ? 1 : 0.5}
               style={{ cursor: "pointer", transition: "r 0.1s" }}
               onMouseEnter={e => {
-                const svgEl = svgRef.current;
-                if (!svgEl) return;
-                const rect = svgEl.getBoundingClientRect();
-                const scaleX = rect.width / VW;
-                const scaleY = rect.height / VH;
-                setTooltip({ name: d.name, elo: d.elo, vt: d.vt, rank: i + 1, x: cx * scaleX + rect.left, y: cy * scaleY + rect.top });
+                setTooltip({ name: d.name, elo: d.elo, vt: d.vt, rank: i + 1, x: e.clientX, y: e.clientY });
               }}
               onMouseLeave={() => setTooltip(null)}
             />
@@ -235,7 +230,7 @@ function VtRankedScatter({ data, lang }: { data: GeneralStats["vtScatter"]; lang
       {/* Tooltip */}
       {tooltip && (
         <div style={{
-          position: "fixed", left: tooltip.x > (typeof window !== "undefined" ? window.innerWidth * 0.65 : 900) ? tooltip.x - 170 : tooltip.x + 14, top: tooltip.y - 20, zIndex: 9999,
+          position: "fixed", left: tooltip.x + 14, top: tooltip.y - 24, zIndex: 9999,
           background: "hsl(var(--card))", border: "1px solid hsl(var(--border))",
           borderRadius: 8, padding: "6px 11px", fontFamily: "var(--font-mono)", fontSize: 11,
           pointerEvents: "none", whiteSpace: "nowrap",

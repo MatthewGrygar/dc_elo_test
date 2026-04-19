@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRatingMode } from "./RatingModeProvider";
 import { useAppNav } from "./AppContext";
 import { Player } from "@/lib/sheets";
@@ -146,13 +146,24 @@ function PlayerSelector({ players, selected, onSelect, accentColor, placeholder,
 
 // ── Merged ELO trend chart ────────────────────────────────────────────────────
 function EloOverlayChart({ dataA, dataB, nameA, nameB, lang }: { dataA: PlayerDetailData["eloTrend"]; dataB: PlayerDetailData["eloTrend"]; nameA: string; nameB: string; lang: "cs"|"en"|"fr" }) {
-  // Align by index (match number) - each player gets their own x axis
-  const maxLen = Math.max(dataA.length, dataB.length);
-  const chartData = Array.from({ length: maxLen }, (_, i) => ({
-    idx: i + 1,
-    [nameA]: dataA[i]?.elo ?? null,
-    [nameB]: dataB[i]?.elo ?? null,
-  }));
+  // Align by date — collect all unique dates, carry forward last known ELO for each player
+  const chartData = useMemo(() => {
+    const allDates = Array.from(new Set([...dataA.map(d => d.date), ...dataB.map(d => d.date)]))
+      .sort((a, b) => {
+        const pa = a.split("."), pb = b.split(".");
+        const da = pa.length === 3 ? new Date(+pa[2], +pa[1] - 1, +pa[0]).getTime() : 0;
+        const db = pb.length === 3 ? new Date(+pb[2], +pb[1] - 1, +pb[0]).getTime() : 0;
+        return da - db;
+      });
+    const mapA = new Map(dataA.map(d => [d.date, d.elo]));
+    const mapB = new Map(dataB.map(d => [d.date, d.elo]));
+    let lastA: number | null = null, lastB: number | null = null;
+    return allDates.map(date => {
+      if (mapA.has(date)) lastA = mapA.get(date)!;
+      if (mapB.has(date)) lastB = mapB.get(date)!;
+      return { date, [nameA]: lastA, [nameB]: lastB };
+    });
+  }, [dataA, dataB, nameA, nameB]);
 
   const allElos = [...dataA.map(d => d.elo), ...dataB.map(d => d.elo)].filter(Boolean);
   const yMin = allElos.length ? Math.min(...allElos) - 80 : "auto";
@@ -172,13 +183,13 @@ function EloOverlayChart({ dataA, dataB, nameA, nameB, lang }: { dataA: PlayerDe
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.25)" />
-        <XAxis dataKey="idx" tick={{ fontSize: 9, fontFamily: "var(--font-mono)", fill: mt }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+        <XAxis dataKey="date" tick={{ fontSize: 9, fontFamily: "var(--font-mono)", fill: mt }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
         <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }} width={42} domain={[yMin, yMax]} tickLine={false} axisLine={false} />
         <Tooltip content={({ active, payload, label }) => {
           if (!active || !payload?.length) return null;
           return (
             <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, boxShadow: "0 4px 16px hsl(var(--foreground)/0.12)" }}>
-              <div style={{ color: mt, marginBottom: 3, fontSize: 9 }}>{t(lang, "pd_match_id")} #{label}</div>
+              <div style={{ color: mt, marginBottom: 3, fontSize: 9 }}>{label}</div>
               {payload.map((p, i) => p.value != null && (
                 <div key={i} style={{ color: p.stroke as string, fontWeight: 600 }}>{p.name}: {(p.value as number).toLocaleString("cs-CZ")}</div>
               ))}
