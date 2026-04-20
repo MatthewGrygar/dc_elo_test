@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchDashboardData, fetchRecentMatches, type InterestingMatch } from "@/lib/sheets";
 import { getVisibleMilestones, getFeaturedMatches } from "@/lib/pinned";
+import { getNameFilter } from "@/lib/regionFilter";
 
 export interface MatchGroup {
   label: string;
@@ -11,9 +12,11 @@ export interface MatchGroup {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("mode") === "DCPR" ? "DCPR" : "ELO";
+  const region = searchParams.get("region") ?? "ALL";
   try {
+    const nameFilter = await getNameFilter(region);
     const [data, pinnedMs, featuredMs] = await Promise.all([
-      fetchDashboardData(mode),
+      fetchDashboardData(mode, nameFilter),
       getVisibleMilestones(),
       getFeaturedMatches(),
     ]);

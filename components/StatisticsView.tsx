@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion } from "./RegionProvider";
 import { useAppNav } from "./AppContext";
 import { useWinSize } from "@/hooks/useWinSize";
 import { GeneralStats } from "@/lib/dataFetchers";
@@ -261,18 +262,19 @@ function VtRankedScatter({ data, lang }: { data: GeneralStats["vtScatter"]; lang
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function StatisticsView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { region } = useRegion();
   const { lang } = useAppNav();
   const [data, setData] = useState<GeneralStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const cached = prefetchCache?.[mode];
-    if (cached?.stats) { setData(cached.stats); setLoading(false); return; }
+    if (cached?.stats && prefetchCache?.region === region) { setData(cached.stats); setLoading(false); return; }
     setLoading(true); setData(null);
-    fetch(`/api/general-stats?mode=${mode}`)
+    fetch(`/api/general-stats?mode=${mode}&region=${region}`)
       .then(r => r.json()).then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [mode, prefetchCache]);
+  }, [mode, region, prefetchCache]);
 
   const fmt = (n?: number | null) => n != null ? n.toLocaleString("cs-CZ") : "—";
   const green = "hsl(142, 65%, 45%)";

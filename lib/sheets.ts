@@ -154,9 +154,31 @@ async function getVtClassMap(): Promise<Map<string, VTClass>> {
   return map;
 }
 
+// ─── Public: FR player names (from FILTR sheet) ──────────────────────────────
+
+export async function fetchFRPlayerNames(): Promise<Set<string>> {
+  const [filtrRows, eloCards, dcprCards] = await Promise.all([
+    fetchSheetByName("FILTR"),
+    fetchSheetByName("Player cards (CSV)"),
+    fetchSheetByName("Player cards (CSV) - Tournament"),
+  ]);
+  const frTournaments = new Set(
+    filtrRows.slice(1).map(r => r[0]?.trim()).filter(Boolean)
+  );
+  const frPlayers = new Set<string>();
+  for (const cards of [eloCards, dcprCards]) {
+    for (const row of cards.slice(1)) {
+      const name = row[0]?.trim();
+      const detail = row[3]?.trim(); // col D = tournament_detail
+      if (name && detail && frTournaments.has(detail)) frPlayers.add(name);
+    }
+  }
+  return frPlayers;
+}
+
 // ─── Public: standings players ───────────────────────────────────────────────
 
-export async function fetchStandingsPlayers(mode: "ELO" | "DCPR"): Promise<Player[]> {
+export async function fetchStandingsPlayers(mode: "ELO" | "DCPR", nameFilter?: (n: string) => boolean): Promise<Player[]> {
   const sheetName = mode === "ELO" ? "Elo standings" : "Tournament_Elo";
   const [rows, vtMap, countryMap] = await Promise.all([
     fetchSheetByName(sheetName),
@@ -182,6 +204,7 @@ export async function fetchStandingsPlayers(mode: "ELO" | "DCPR"): Promise<Playe
       : vtMap.get(name);
     const country = countryMap.get(name);
 
+    if (nameFilter && !nameFilter(name)) continue;
     players.push({ id: i, name, rating, games, win, loss, draw, peak, winrate, vtClass, country });
   }
 
@@ -192,7 +215,7 @@ export async function fetchStandingsPlayers(mode: "ELO" | "DCPR"): Promise<Playe
 
 // ─── Public: dashboard data (stats + top5 + interesting matches) ─────────────
 
-export async function fetchDashboardData(mode: "ELO" | "DCPR"): Promise<DashboardData> {
+export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: string) => boolean): Promise<DashboardData> {
   const standingsSheet   = mode === "ELO" ? "Elo standings" : "Tournament_Elo";
   const cardsSheetElo    = "Player cards (CSV)";
   const cardsSheetDcpr   = "Player cards (CSV) - Tournament";
@@ -204,30 +227,24 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR"): Promise<Dashboar
     fetchSheetByName("Data"),
   ]);
 
+  const filteredStandings = standings.slice(1).filter(r => {
+    const n = r[0]?.trim();
+    return n && (!nameFilter || nameFilter(n));
+  });
+
   // ── KPI 1: Total games = sum(col C) / 2
   let gamesSum = 0;
-  for (let i = 1; i < standings.length; i++) {
-    if (standings[i][0]?.trim()) gamesSum += pi(standings[i][2]);
-  }
+  for (const row of filteredStandings) gamesSum += pi(row[2]);
   const totalGames = Math.round(gamesSum / 2);
 
   // ── KPI 2: Unique players
-  const playerSet = new Set<string>();
-  for (let i = 1; i < standings.length; i++) {
-    const n = standings[i][0]?.trim();
-    if (n) playerSet.add(n);
-  }
-  const uniquePlayers = playerSet.size;
+  const uniquePlayers = filteredStandings.length;
 
   // ── KPI 3: Median ELO
-  const ratings: number[] = [];
-  for (let i = 1; i < standings.length; i++) {
-    if (standings[i][0]?.trim()) {
-      const r = pf(standings[i][1]);
-      if (r > 0) ratings.push(r);
-    }
-  }
-  ratings.sort((a, b) => a - b);
+  const ratings: number[] = filteredStandings
+    .map(r => pf(r[1]))
+    .filter(v => v > 0)
+    .sort((a, b) => a - b);
   const mid = Math.floor(ratings.length / 2);
   const medianElo = ratings.length === 0 ? 1200
     : ratings.length % 2 === 0 ? (ratings[mid - 1] + ratings[mid]) / 2
@@ -243,16 +260,17 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR"): Promise<Dashboar
     }
   }
 
-  // ── Top 5 players for hero panel
+  // ── Top 5 players for hero panel (sorted by rating desc, region-filtered)
   const [vtMap, countryMap] = await Promise.all([getVtClassMap(), getCountryMap()]);
+  const sortedFiltered = [...filteredStandings].sort((a, b) => pf(b[1]) - pf(a[1]));
   const top5: Player[] = [];
-  for (let i = 1; i <= 5 && i < standings.length; i++) {
-    const row = standings[i];
+  for (let i = 0; i < Math.min(5, sortedFiltered.length); i++) {
+    const row = sortedFiltered[i];
     const name = row[0]?.trim();
     if (!name) continue;
     const w5 = pi(row[3]), l5 = pi(row[4]);
     top5.push({
-      id: i,
+      id: i + 1,
       name,
       rating: pf(row[1]),
       games:  pi(row[2]),

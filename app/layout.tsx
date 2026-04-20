@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { RatingModeProvider } from "@/components/RatingModeProvider";
+import { RegionProvider } from "@/components/RegionProvider";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -29,7 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="dc-elo-theme">
           <RatingModeProvider>
-            {children}
+            <RegionProvider>
+              {children}
+            </RegionProvider>
           </RatingModeProvider>
         </ThemeProvider>
       </body>

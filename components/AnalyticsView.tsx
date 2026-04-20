@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion } from "./RegionProvider";
 import { useAppNav } from "./AppContext";
 import { AnalyticsData } from "@/lib/dataFetchers";
 import type { PrefetchCache } from "@/app/page";
@@ -526,18 +527,19 @@ function WRBubble({ data, lang }: { data: WROppData; lang: Lang }) {
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export default function AnalyticsView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { region } = useRegion();
   const { lang } = useAppNav();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const cached = prefetchCache?.[mode];
-    if (cached?.analytics) { setData(cached.analytics); setLoading(false); return; }
+    if (cached?.analytics && prefetchCache?.region === region) { setData(cached.analytics); setLoading(false); return; }
     setLoading(true); setData(null);
-    fetch(`/api/analytics-data?mode=${mode}`)
+    fetch(`/api/analytics-data?mode=${mode}&region=${region}`)
       .then(r => r.json()).then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [mode, prefetchCache]);
+  }, [mode, region, prefetchCache]);
 
   return (
     <div style={{ height: "100%", overflowY: "auto", overflowX: "hidden", paddingRight: 4 }} className="scrollbar-thin">

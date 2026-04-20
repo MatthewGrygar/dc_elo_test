@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion } from "./RegionProvider";
 import { useAppNav } from "./AppContext";
 import { DashboardData, Player } from "@/lib/sheets";
 import { CountryFlag } from "./CountryFlag";
@@ -306,6 +307,7 @@ function MilestoneRow({ m, last }: { m: { icon: string; text: string; date: stri
 // ── Main component ────────────────────────────────────────────────────────────
 export default function DashboardView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { region } = useRegion();
   const { openPlayer, navigateTo, lang } = useAppNav();
   const { resolvedTheme } = useTheme();
   const { wBp } = useWinSize();
@@ -317,12 +319,12 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
 
   useEffect(() => {
     const c = prefetchCache?.[mode]?.dashboard;
-    if (c) { setData(c); setLoading(false); return; }
+    if (c && prefetchCache?.region === region) { setData(c); setLoading(false); return; }
     setLoading(true);
-    fetch(`/api/dashboard?mode=${mode}`).then(r => r.json())
+    fetch(`/api/dashboard?mode=${mode}&region=${region}`).then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [mode, prefetchCache]);
+  }, [mode, region, prefetchCache]);
 
   const isCompact = wBp === "xs" || wBp === "sm";
   const isMid     = wBp === "md";

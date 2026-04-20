@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion } from "./RegionProvider";
 import { useAppNav } from "./AppContext";
 import { Player } from "@/lib/sheets";
 import { avatarInitials } from "@/lib/utils";
@@ -268,6 +269,7 @@ function PlayerMiniCard({ player, onClose, onOpen, mode, lang, superTags }: {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { region } = useRegion();
   const { openPlayer, navigateTo, lang } = useAppNav();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -278,13 +280,13 @@ export default function LeaderboardTable({ prefetchCache }: { prefetchCache?: Pr
 
   useEffect(() => {
     const c = prefetchCache?.[mode]?.players;
-    if (c) { setPlayers(c); setLoading(false); return; }
+    if (c && prefetchCache?.region === region) { setPlayers(c); setLoading(false); return; }
     setLoading(true);
-    fetch(`/api/players?mode=${mode}`)
+    fetch(`/api/players?mode=${mode}&region=${region}`)
       .then(r => r.json())
       .then(d => { setPlayers(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [mode, prefetchCache]);
+  }, [mode, region, prefetchCache]);
 
   useEffect(() => {
     fetch("/api/player-tags").then(r => r.json()).then(setSuperTagsMap).catch(() => {});

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion } from "./RegionProvider";
 import { useAppNav } from "./AppContext";
 import { RecordsData, RecordEntry, RecordCategory } from "@/lib/dataFetchers";
 import type { PrefetchCache } from "@/app/page";
@@ -102,6 +103,7 @@ function Sk({ h = 120 }: { h?: number }) {
 
 export default function RecordsView({ prefetchCache }: { prefetchCache?: PrefetchCache }) {
   const { mode } = useRatingMode();
+  const { region } = useRegion();
   const { lang } = useAppNav();
   const [data, setData] = useState<RecordsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,13 +111,13 @@ export default function RecordsView({ prefetchCache }: { prefetchCache?: Prefetc
 
   useEffect(() => {
     const cached = prefetchCache?.[mode];
-    if (cached?.records) { setData(cached.records); setLoading(false); setError(false); return; }
+    if (cached?.records && prefetchCache?.region === region) { setData(cached.records); setLoading(false); setError(false); return; }
     setLoading(true); setError(false); setData(null);
-    fetch(`/api/records?mode=${mode}`)
+    fetch(`/api/records?mode=${mode}&region=${region}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
-  }, [mode, prefetchCache]);
+  }, [mode, region, prefetchCache]);
 
   const amber  = "hsl(42,80%,52%)";
   const green  = "hsl(142,65%,45%)";

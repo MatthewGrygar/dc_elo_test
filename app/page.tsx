@@ -17,6 +17,7 @@ import OrganizationView from "@/components/OrganizationView";
 import TournamentsView from "@/components/TournamentsView";
 import SupportModal from "@/components/SupportModal";
 import FeedbackModal from "@/components/FeedbackModal";
+import SetupModal from "@/components/SetupModal";
 import { Zap } from "lucide-react";
 
 const ParticlesBackground = dynamic(
@@ -28,6 +29,7 @@ export type PrefetchCache = {
   ELO?:  { dashboard: any; players: any[]; stats: any; analytics: any; records: any };
   DCPR?: { dashboard: any; players: any[]; stats: any; analytics: any; records: any };
   announcements?: string[];
+  region?: string;
 };
 
 // ── Loading labels ────────────────────────────────────────────────────────────
@@ -121,32 +123,37 @@ export default function Home() {
   const [showApp, setShowApp]   = useState(false);
 
   useEffect(() => {
+    let storedRegion = "ALL";
+    try { storedRegion = localStorage.getItem("dc-elo-region") ?? "ALL"; } catch {}
+    const r = `&region=${storedRegion}`;
+
     let p = 0;
     const tick = setInterval(() => { p = Math.min(p + 1.5, 92); setProgress(p); }, 50);
 
     async function prefetch() {
       try {
         const [eloDash, eloPlayers, eloStats, eloAnalytics, eloRecords, annData] = await Promise.all([
-          fetch("/api/dashboard?mode=ELO").then(r => r.json()),
-          fetch("/api/players?mode=ELO").then(r => r.json()),
-          fetch("/api/general-stats?mode=ELO").then(r => r.json()),
-          fetch("/api/analytics-data?mode=ELO").then(r => r.json()),
-          fetch("/api/records?mode=ELO").then(r => r.json()),
+          fetch(`/api/dashboard?mode=ELO${r}`).then(r => r.json()),
+          fetch(`/api/players?mode=ELO${r}`).then(r => r.json()),
+          fetch(`/api/general-stats?mode=ELO${r}`).then(r => r.json()),
+          fetch(`/api/analytics-data?mode=ELO${r}`).then(r => r.json()),
+          fetch(`/api/records?mode=ELO${r}`).then(r => r.json()),
           fetch("/api/announcements").then(r => r.json()).catch(() => ({ dates: [] })),
         ]);
         setProgress(52);
         const [dcprDash, dcprPlayers, dcprStats, dcprAnalytics, dcprRecords] = await Promise.all([
-          fetch("/api/dashboard?mode=DCPR").then(r => r.json()),
-          fetch("/api/players?mode=DCPR").then(r => r.json()),
-          fetch("/api/general-stats?mode=DCPR").then(r => r.json()),
-          fetch("/api/analytics-data?mode=DCPR").then(r => r.json()),
-          fetch("/api/records?mode=DCPR").then(r => r.json()),
+          fetch(`/api/dashboard?mode=DCPR${r}`).then(r => r.json()),
+          fetch(`/api/players?mode=DCPR${r}`).then(r => r.json()),
+          fetch(`/api/general-stats?mode=DCPR${r}`).then(r => r.json()),
+          fetch(`/api/analytics-data?mode=DCPR${r}`).then(r => r.json()),
+          fetch(`/api/records?mode=DCPR${r}`).then(r => r.json()),
         ]);
         setProgress(90);
         setCache({
           ELO:  { dashboard: eloDash,  players: eloPlayers,  stats: eloStats,  analytics: eloAnalytics,  records: eloRecords  },
           DCPR: { dashboard: dcprDash, players: dcprPlayers, stats: dcprStats, analytics: dcprAnalytics, records: dcprRecords },
           announcements: annData.dates ?? [],
+          region: storedRegion,
         });
       } catch { /* continue anyway */ }
 
@@ -182,6 +189,13 @@ const VIEW_ORDER = [
 
 function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
   const { view, supportOpen, setSupportOpen, feedbackOpen, setFeedbackOpen } = useAppNav();
+  const [showSetup, setShowSetup] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("dc-elo-setup")) setShowSetup(true);
+    } catch {}
+  }, []);
   const [animKey, setAnimKey]   = useState(0);
   const [slideDir, setSlideDir] = useState<"R"|"L">("R");
   const prevView = useRef(view);
@@ -199,6 +213,7 @@ function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
     <div className="fixed inset-0 flex overflow-hidden" style={{ background: "hsl(var(--background))" }}>
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      {showSetup && <SetupModal onDone={() => { setShowSetup(false); window.location.reload(); }} />}
       {/* particles */}
       <ParticlesBackground />
 

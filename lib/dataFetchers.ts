@@ -268,14 +268,14 @@ export interface PlayerDetailData {
 }
 
 // ── GENERAL STATS ──────────────────────────────────────────────────────────────
-export async function fetchGeneralStats(mode:"ELO"|"DCPR"): Promise<GeneralStats> {
+export async function fetchGeneralStats(mode:"ELO"|"DCPR", nameFilter?: (n: string) => boolean): Promise<GeneralStats> {
   const sSheet=mode==="ELO"?"Elo standings":"Tournament_Elo";
   const cSheet=mode==="ELO"?"Player cards (CSV)":"Player cards (CSV) - Tournament";
   const sumSheet=mode==="ELO"?"Player summary":"Player summary - Tournament";
   const [standings,cards,summary]=await Promise.all([sheet(sSheet),sheet(cSheet),sheet(sumSheet)]);
-  const sRows=standings.slice(1).filter(r=>r[0]?.trim());
-  const cRows=cards.slice(1).filter(r=>r[0]?.trim());
-  const sumRows=summary.slice(1).filter(r=>r[0]?.trim());
+  const sRows=standings.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
+  const cRows=cards.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
+  const sumRows=summary.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
 
   const now=new Date();
   const ago30=new Date(now.getTime()-30*86400_000);
@@ -449,12 +449,12 @@ export async function fetchGeneralStats(mode:"ELO"|"DCPR"): Promise<GeneralStats
 }
 
 // ── ANALYTICS DATA ─────────────────────────────────────────────────────────────
-export async function fetchAnalyticsData(mode:"ELO"|"DCPR"): Promise<AnalyticsData> {
+export async function fetchAnalyticsData(mode:"ELO"|"DCPR", nameFilter?: (n: string) => boolean): Promise<AnalyticsData> {
   const sSheet=mode==="ELO"?"Elo standings":"Tournament_Elo";
   const cSheet=mode==="ELO"?"Player cards (CSV)":"Player cards (CSV) - Tournament";
   const [standings,cards]=await Promise.all([sheet(sSheet),sheet(cSheet)]);
-  const sRows=standings.slice(1).filter(r=>r[0]?.trim());
-  const cRows=cards.slice(1).filter(r=>r[0]?.trim());
+  const sRows=standings.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
+  const cRows=cards.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
 
   const eloValues=sRows.map(r=>pf(r[1])).filter(e=>e>0);
   const eloMean=eloValues.reduce((a,b)=>a+b,0)/(eloValues.length||1);
@@ -977,12 +977,12 @@ export async function fetchPlayerDetail(mode:"ELO"|"DCPR",playerName:string): Pr
     eloTrend,eloTrendByDate,rollingMomentum,deltaDistribution,weekdayPerf,winrateVsOpp,opponents,tournamentPerf,streaks:streakList,matchHistory,
   };
 }
-export async function fetchRecords(mode:"ELO"|"DCPR"): Promise<RecordsData> {
+export async function fetchRecords(mode:"ELO"|"DCPR", nameFilter?: (n: string) => boolean): Promise<RecordsData> {
   const sSheet=mode==="ELO"?"Elo standings":"Tournament_Elo";
   const cSheet=mode==="ELO"?"Player cards (CSV)":"Player cards (CSV) - Tournament";
   const[standings,cards]=await Promise.all([sheet(sSheet),sheet(cSheet)]);
-  const sRows=standings.slice(1).filter(r=>r[0]?.trim());
-  const cRows=cards.slice(1).filter(r=>r[0]?.trim());
+  const sRows=standings.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
+  const cRows=cards.slice(1).filter(r=>{const n=r[0]?.trim();return n&&(!nameFilter||nameFilter(n));});
   const fmt=(n:number)=>Math.round(n).toLocaleString("cs-CZ");
   const fmtS=(n:number)=>(n>=0?"+":"")+fmt(n);
   const minG=mode==="ELO"?50:20;

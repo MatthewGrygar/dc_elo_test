@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion, type Region } from "./RegionProvider";
 import { useAppNav, BaseView, PlayerSubView } from "./AppContext";
 import { avatarInitials } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -43,6 +44,7 @@ const LANGS: { code: Lang; flag: string; label: string }[] = [
 export default function Sidebar() {
   const { resolvedTheme, setTheme } = useTheme();
   const { mode, setMode } = useRatingMode();
+  const { region, setRegion } = useRegion();
   const { view, playerSubView, orgTab, selectedPlayer, lang, sidebarOpen, supportOpen, feedbackOpen,
           navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen, setFeedbackOpen } = useAppNav();
   const [collapsed, setCollapsed] = useState(false);
@@ -131,15 +133,36 @@ export default function Sidebar() {
 
       {/* Mode toggle */}
       {!collapsed ? (
-        <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid hsl(var(--border))", marginBottom: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid hsl(var(--border))", marginBottom: 6, flexShrink: 0 }}>
           {(["ELO", "DCPR"] as const).map(m => (
             <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.06em", background: mode === m ? "hsl(var(--primary))" : "transparent", color: mode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer", transition: "all 0.18s" }}>{m}</button>
           ))}
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 4 }}>
           {(["ELO", "DCPR"] as const).map(m => (
             <button key={m} onClick={() => setMode(m)} title={m} style={{ padding: "4px 0", borderRadius: 7, fontSize: 8, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.06em", background: mode === m ? "hsl(var(--primary))" : "hsl(var(--muted) / 0.5)", color: mode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer" }}>{m}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Region toggle */}
+      {!collapsed ? (
+        <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid hsl(var(--border))", marginBottom: 8, flexShrink: 0 }}>
+          {([["FR","🇫🇷"],["CZ","🇨🇿"],["ALL","🌍"]] as [Region,string][]).map(([r, flag]) => (
+            <button key={r} onClick={() => setRegion(r)} title={r}
+              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.04em", background: region === r ? "hsl(var(--primary))" : "transparent", color: region === r ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer", transition: "all 0.18s", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+              <span style={{ fontSize: 11 }}>{flag}</span><span>{r}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+          {([["FR","🇫🇷"],["CZ","🇨🇿"],["ALL","🌍"]] as [Region,string][]).map(([r, flag]) => (
+            <button key={r} onClick={() => setRegion(r)} title={r}
+              style={{ padding: "3px 0", borderRadius: 7, fontSize: 12, lineHeight: 1, border: `1px solid ${region === r ? "hsl(var(--primary) / 0.5)" : "transparent"}`, background: region === r ? "hsl(var(--primary) / 0.15)" : "hsl(var(--muted) / 0.5)", cursor: "pointer" }}>
+              {flag}
+            </button>
           ))}
         </div>
       )}
