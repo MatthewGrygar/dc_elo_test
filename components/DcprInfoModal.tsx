@@ -4,12 +4,13 @@ import { Zap, X, AlertTriangle, Building2 } from "lucide-react";
 
 type Lang = "cs" | "en" | "fr";
 
-const TEXT: Record<Lang, { title: string; full: string; desc: string; contact: string; noData?: string; btn: string }> = {
+const TEXT: Record<Lang, { title: string; full: string; desc: string; contact: string; noData: string; btn: string }> = {
   cs: {
     title:   "DCPR",
     full:    "Duel Commander Premier Rating",
     desc:    "Rating počítaný výhradně z velkých ligových turnajů. Je to kompetitivní bodový systém odrážející skutečnou dovednost hráče v těch největších a nejprestižnějších turnajích Duel Commanderu.",
     contact: "Máte zájem o začlenění vašeho turnaje nebo ligy do DCPR? Kontaktujte nás prosím v kartě Organizace.",
+    noData:  "Ve vašem regionu zatím nemáme data z žádného ligového turnaje.",
     btn:     "Rozumím",
   },
   en: {
@@ -17,6 +18,7 @@ const TEXT: Record<Lang, { title: string; full: string; desc: string; contact: s
     full:    "Duel Commander Premier Rating",
     desc:    "A rating calculated exclusively from major league tournaments. It's a competitive scoring system reflecting a player's true skill in the biggest and most prestigious Duel Commander events.",
     contact: "Interested in joining your tournament or league to DCPR? Please contact us in the Organization tab.",
+    noData:  "We don't have data from any league tournament in your region yet.",
     btn:     "Got it",
   },
   fr: {
@@ -31,10 +33,11 @@ const TEXT: Record<Lang, { title: string; full: string; desc: string; contact: s
 
 interface Props {
   lang: Lang;
+  region: string;
   onClose: () => void;
 }
 
-export default function DcprInfoModal({ lang, onClose }: Props) {
+export default function DcprInfoModal({ lang, region, onClose }: Props) {
   const t     = TEXT[lang];
   const green = "hsl(152,72%,45%)";
   const amber = "hsl(42,80%,55%)";
@@ -118,8 +121,8 @@ export default function DcprInfoModal({ lang, onClose }: Props) {
             </div>
           </div>
 
-          {/* FR-only warning */}
-          {lang === "fr" && t.noData && (
+          {/* FR region warning — no DCPR data */}
+          {region === "FR" && (
             <div style={{
               display: "flex", alignItems: "flex-start", gap: 10,
               padding: "12px 14px", borderRadius: 12,

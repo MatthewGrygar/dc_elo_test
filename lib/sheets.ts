@@ -331,7 +331,8 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
     return out;
   }
 
-  const allCards = [...parseCards(cardsElo), ...parseCards(cardsDcpr)];
+  const allCards = [...parseCards(cardsElo), ...parseCards(cardsDcpr)]
+    .filter(c => !nameFilter || nameFilter(c.player));
 
   // Group by matchId — find pairs
   const byMatch = new Map<string, CardRow[]>();
@@ -389,6 +390,7 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
   for (const r of [...cardsElo, ...cardsDcpr]) {
     const d = parseDate(r[4]); if (!d || d < ago7) continue;
     const n = r[0]?.trim(); if (!n) continue;
+    if (nameFilter && !nameFilter(n)) continue;
     const ch = pf(r[7]);
     const prev = gain7.get(n) ?? { sum: 0, date: r[4]?.trim() };
     gain7.set(n, { sum: prev.sum + ch, date: r[4]?.trim() ?? prev.date });
@@ -406,6 +408,7 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
   let upsWinner = "", upsLoser = "", upsDiff = 0, upsDate = "";
   for (const r of [...cardsElo, ...cardsDcpr]) {
     const d = parseDate(r[4]); if (!d || d < ago30) continue;
+    const n4 = r[0]?.trim(); if (!n4 || (nameFilter && !nameFilter(n4))) continue;
     const res = r[6]?.trim() ?? "";
     if (!res.startsWith("Won")) continue;
     const delta = pf(r[7]), elo = pf(r[8]), myE = elo - delta;
@@ -418,7 +421,7 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
   // 5. Active win streak leader (both sheets combined)
   const streaks = new Map<string, number>();
   const allCardsSorted = [...cardsElo, ...cardsDcpr]
-    .filter(r => r[0]?.trim() && r[4]?.trim())
+    .filter(r => r[0]?.trim() && r[4]?.trim() && (!nameFilter || nameFilter(r[0].trim())))
     .sort((a, b) => (parseDate(a[4])?.getTime() ?? 0) - (parseDate(b[4])?.getTime() ?? 0));
   for (const r of allCardsSorted) {
     const n = r[0]?.trim(); if (!n) continue;

@@ -341,7 +341,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {showDcprInfo && <DcprInfoModal lang={lang as "cs"|"en"|"fr"} onClose={() => setShowDcprInfo(false)} />}
+      {showDcprInfo && <DcprInfoModal lang={lang as "cs"|"en"|"fr"} region={region} onClose={() => setShowDcprInfo(false)} />}
       {sidebarOpen && <div className="sidebar-overlay md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside
         style={{ width: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", minWidth: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", transition: "width .28s cubic-bezier(.4,0,.2,1), min-width .28s cubic-bezier(.4,0,.2,1), transform .3s ease", borderRight: "1px solid hsl(var(--border) / 0.65)", display: "flex", flexDirection: "column", zIndex: 40, flexShrink: 0, overflow: "hidden" }}
