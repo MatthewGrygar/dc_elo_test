@@ -162,8 +162,8 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
 
   const activeTrend = trendMode === "matchid" ? filteredTrend : continuousDateTrend;
   const trendElos = activeTrend.map((p: any) => p.elo).filter((v: any) => typeof v === "number");
-  const trendMin = trendElos.length ? Math.min(...trendElos) - 100 : "auto";
-  const trendMax = trendElos.length ? Math.max(...trendElos) + 100 : "auto";
+  const trendMin = trendElos.length ? Math.min(...trendElos) - 30 : "auto";
+  const trendMax = trendElos.length ? Math.max(...trendElos) + 30 : "auto";
 
   // Evenly spaced X-axis ticks for date mode
   const N_TICKS = 6;
@@ -405,7 +405,7 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
             </div>
           </div>
         </div>
-        <div style={{ height: 220, padding: "8px 4px 8px 8px" }}>
+        <div style={{ height: 320, padding: "8px 4px 8px 8px" }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={activeTrend} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
               <defs>
