@@ -40,7 +40,7 @@ const TEXT = {
     mode_d:   "Modifiable à tout moment dans le panneau latéral.",
     lang_h:   "Langue de l'interface",
     btn:      "Enregistrer et continuer",
-    fr_label: "France", cz_label: "République tchèque", all_label: "Toutes les régions",
+    fr_label: "France", cz_label: "Tchéquie", all_label: "Toutes régions",
     elo_d:    "Système Elo classique",  dcpr_d: "Rating tournoi",
   },
 } as const;
@@ -90,6 +90,7 @@ export default function SetupModal({ onDone }: { onDone: () => void }) {
         cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 11,
         fontWeight: active ? 700 : 400, transition: "all 0.15s", textAlign: "center" as const,
         boxShadow: active ? `0 0 14px hsl(152,72%,45%/0.25)` : "none",
+        minHeight: 72,
       }}>
         {children}
       </button>
