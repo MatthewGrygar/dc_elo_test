@@ -18,6 +18,7 @@ import TournamentsView from "@/components/TournamentsView";
 import SupportModal from "@/components/SupportModal";
 import FeedbackModal from "@/components/FeedbackModal";
 import SetupModal from "@/components/SetupModal";
+import ThankYouModal from "@/components/ThankYouModal";
 import { Zap } from "lucide-react";
 
 const ParticlesBackground = dynamic(
@@ -189,7 +190,8 @@ const VIEW_ORDER = [
 
 function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
   const { view, supportOpen, setSupportOpen, feedbackOpen, setFeedbackOpen } = useAppNav();
-  const [showSetup, setShowSetup] = useState(false);
+  const [showSetup,  setShowSetup]  = useState(false);
+  const [showThanks, setShowThanks] = useState(false);
 
   useEffect(() => {
     try {
@@ -213,7 +215,8 @@ function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
     <div className="fixed inset-0 flex overflow-hidden" style={{ background: "hsl(var(--background))" }}>
       <SupportModal open={supportOpen} onClose={() => setSupportOpen(false)} />
       <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
-      {showSetup && <SetupModal onDone={() => { setShowSetup(false); window.location.reload(); }} />}
+      {showSetup  && <SetupModal    onDone={() => { setShowSetup(false);  setShowThanks(true); }} />}
+      {showThanks && <ThankYouModal onDone={() => { setShowThanks(false); window.location.reload(); }} />}
       {/* particles */}
       <ParticlesBackground />
 
