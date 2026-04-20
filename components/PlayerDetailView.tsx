@@ -224,68 +224,81 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.75)",
+      style={{ position: "fixed", inset: 0, zIndex: 1000,
+               background: "rgba(0,0,0,0.6)",
+               backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
                display: "flex", alignItems: "center", justifyContent: "center",
-               padding: isMobile ? 0 : 20 }}
+               padding: isMobile ? 0 : 24 }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        width:     isMobile ? "100vw" : "min(92vw, 1300px)",
-        height:    isMobile ? "100vh" : "min(88vh, 900px)",
+        width:     isMobile ? "100vw" : "min(90vw, 1280px)",
+        height:    isMobile ? "100vh" : "min(86vh, 860px)",
         transform: isMobile ? "rotate(-90deg)" : "none",
-        background: "hsl(var(--card))",
-        border: "1px solid hsl(var(--border)/0.6)",
-        borderRadius: isMobile ? 0 : 18,
+        background: "hsl(var(--card)/0.97)",
+        backdropFilter: "blur(40px) saturate(180%)",
+        WebkitBackdropFilter: "blur(40px) saturate(180%)",
+        border: "1px solid hsl(var(--border)/0.45)",
+        borderRadius: isMobile ? 0 : 22,
         display: "flex", flexDirection: "column",
         overflow: "hidden",
-        boxShadow: "0 28px 90px rgba(0,0,0,0.45)",
+        boxShadow: "0 0 0 1px hsl(152,72%,45%/0.18), 0 40px 120px rgba(0,0,0,0.6), inset 0 1px 0 hsl(152,72%,45%/0.25)",
       }}>
+        {/* ── Accent line ── */}
+        <div style={{ height: 2, flexShrink: 0, background: "linear-gradient(90deg, transparent 0%, hsl(152,72%,45%) 30%, hsl(42,80%,55%) 70%, transparent 100%)" }} />
+
         {/* ── Header ── */}
-        <div style={{ padding: "12px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", borderBottom: "1px solid hsl(var(--border)/0.3)", flexShrink: 0 }}>
-          <div style={{ fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 14 }}>
-            ELO Vývoj — {mode}
+        <div style={{ padding: "14px 20px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, borderBottom: "1px solid hsl(var(--border)/0.2)", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 3, height: 30, borderRadius: 99, background: "linear-gradient(180deg, hsl(152,72%,45%), hsl(42,80%,55%))", flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 1 }}>ELO Vývoj</div>
+              <div style={{ fontWeight: 800, fontFamily: "var(--font-display)", fontSize: 17, letterSpacing: "-0.02em", lineHeight: 1 }}>{mode}</div>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", background: "hsl(var(--muted)/0.4)", borderRadius: 10, padding: 3, gap: 2, border: "1px solid hsl(var(--border)/0.25)" }}>
               {([["matchid","Zápasy"],["date","Datum"]] as const).map(([v, label]) => (
                 <button key={v} onClick={() => setTrendMode(v)}
-                  style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer",
-                           background: trendMode === v ? "hsl(var(--card))" : "transparent",
-                           color: trendMode === v ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
-                           fontWeight: trendMode === v ? 600 : 400 }}>{label}</button>
+                  style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "4px 13px", borderRadius: 7, border: "none", cursor: "pointer",
+                           background: trendMode === v ? "hsl(152,72%,45%)" : "transparent",
+                           color: trendMode === v ? "#fff" : "hsl(var(--muted-foreground))",
+                           fontWeight: trendMode === v ? 700 : 400,
+                           boxShadow: trendMode === v ? "0 2px 8px hsl(152,72%,45%/0.4)" : "none" }}>{label}</button>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
+            <div style={{ display: "flex", gap: 3 }}>
               {(["30D","90D","180D","1Y","ALL"] as const).map(p => (
                 <button key={p} onClick={() => setPeriod(p)}
-                  style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: 6, border: "1px solid",
-                           borderColor: period === p ? "hsl(var(--primary))" : "hsl(var(--border)/0.5)",
-                           background:  period === p ? "hsl(var(--primary)/0.15)" : "transparent",
-                           color:       period === p ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-                           cursor: "pointer" }}>{p}</button>
+                  style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "4px 9px", borderRadius: 7, border: "1px solid",
+                           borderColor: period === p ? "hsl(152,72%,45%/0.7)" : "hsl(var(--border)/0.35)",
+                           background:  period === p ? "hsl(152,72%,45%/0.15)" : "transparent",
+                           color:       period === p ? "hsl(152,72%,45%)" : "hsl(var(--muted-foreground))",
+                           cursor: "pointer", fontWeight: period === p ? 700 : 400 }}>{p}</button>
               ))}
             </div>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, fontFamily: "var(--font-mono)", color: showAnnouncements ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", userSelect: "none", flexShrink: 0 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", fontSize: 10, fontFamily: "var(--font-mono)", color: showAnnouncements ? "hsl(152,72%,45%)" : "hsl(var(--muted-foreground))", userSelect: "none", flexShrink: 0, padding: "4px 9px", borderRadius: 7, border: "1px solid", borderColor: showAnnouncements ? "hsl(152,72%,45%/0.5)" : "hsl(var(--border)/0.35)", background: showAnnouncements ? "hsl(152,72%,45%/0.1)" : "transparent" }}>
               <input type="checkbox" checked={showAnnouncements} onChange={e => setShowAnnouncements(e.target.checked)}
-                style={{ accentColor: "hsl(var(--primary))", cursor: "pointer", width: 12, height: 12 }} />
+                style={{ accentColor: "hsl(152,72%,45%)", cursor: "pointer", width: 11, height: 11 }} />
               Ann
             </label>
             <button onClick={onClose}
-              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28,
-                       borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.3)",
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32,
+                       borderRadius: 10, border: "1px solid hsl(var(--border)/0.35)", background: "hsl(var(--muted)/0.25)",
                        cursor: "pointer", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
-              <X size={14} />
+              <X size={15} />
             </button>
           </div>
         </div>
 
         {/* ── Chart ── */}
-        <div style={{ flex: 1, padding: "10px 8px 4px", minHeight: 0 }}>
+        <div style={{ flex: 1, padding: "14px 12px 6px", minHeight: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={activeTrend} margin={{ top: 12, right: 20, bottom: 4, left: 0 }}>
+            <AreaChart data={activeTrend} margin={{ top: 14, right: 24, bottom: 4, left: 0 }}>
               <defs>
                 <linearGradient id="modalEloGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor={green} stopOpacity={0.22} />
+                  <stop offset="0%"   stopColor={green} stopOpacity={0.32} />
+                  <stop offset="55%"  stopColor={green} stopOpacity={0.08} />
                   <stop offset="100%" stopColor={green} stopOpacity={0}    />
                 </linearGradient>
               </defs>
@@ -339,14 +352,14 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
         </div>
 
         {/* ── Info footer ── */}
-        <div style={{ padding: "6px 16px 10px", display: "flex", gap: 16, flexShrink: 0, borderTop: "1px solid hsl(var(--border)/0.2)" }}>
+        <div style={{ padding: "8px 20px 14px", display: "flex", gap: 10, flexShrink: 0, borderTop: "1px solid hsl(var(--border)/0.15)", alignItems: "center" }}>
           {brushIdx && (
-            <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>
-              Zobrazeno {brushIdx.end - brushIdx.start + 1} záznamů · Y osa přepočítána
+            <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(152,72%,45%)", background: "hsl(152,72%,45%/0.1)", padding: "2px 9px", borderRadius: 6, border: "1px solid hsl(152,72%,45%/0.25)" }}>
+              {brushIdx.end - brushIdx.start + 1} záznamů · Y přepočítána
             </span>
           )}
-          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground)/0.5)", marginLeft: "auto" }}>
-            Táhni spodní slider pro výběr rozsahu · ESC pro zavření
+          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground)/0.4)", marginLeft: "auto" }}>
+            Táhni slider pro zoom · ESC pro zavření
           </span>
         </div>
       </div>
@@ -370,6 +383,13 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
   const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
   const [showAnnouncements, setShowAnnouncements] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const cutoff = new Date(Date.now() - CUTOFF_DAYS[period] * 86400_000);
 
   const filteredTrend = eloTrend
@@ -649,11 +669,13 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
                 <button key={p} onClick={() => setPeriod(p)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: 6, border: "1px solid", borderColor: period === p ? "hsl(var(--primary))" : "hsl(var(--border)/0.5)", background: period === p ? "hsl(var(--primary)/0.15)" : "transparent", color: period === p ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", cursor: "pointer" }}>{p}</button>
               ))}
             </div>
-            <button
-              onClick={() => setShowDetailModal(true)}
-              style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 7, border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, background: "hsl(142,65%,42%)", color: "#fff", boxShadow: "0 2px 10px hsl(142,65%,42%/0.45)", letterSpacing: "0.02em", flexShrink: 0 }}>
-              <ExternalLink size={11} /> Detail
-            </button>
+            {isDesktop && (
+              <button
+                onClick={() => setShowDetailModal(true)}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 7, border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, background: "hsl(142,65%,42%)", color: "#fff", boxShadow: "0 2px 10px hsl(142,65%,42%/0.45)", letterSpacing: "0.02em", flexShrink: 0 }}>
+                <ExternalLink size={11} /> Detail
+              </button>
+            )}
           </div>
         </div>
         <div style={{ height: 220, padding: "8px 4px 8px 8px" }}>
