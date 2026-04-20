@@ -49,6 +49,7 @@ export default function Sidebar() {
           navigateTo, closePlayer, setPlayerSubView, setOrgTab, setLang, setSidebarOpen, setSupportOpen, setFeedbackOpen } = useAppNav();
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const isDark = resolvedTheme === "dark";
 
   useEffect(() => setMounted(true), []);
@@ -151,8 +152,8 @@ export default function Sidebar() {
         <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid hsl(var(--border))", marginBottom: 8, flexShrink: 0 }}>
           {([["FR","🇫🇷"],["CZ","🇨🇿"],["ALL","🌍"]] as [Region,string][]).map(([r, flag]) => (
             <button key={r} onClick={() => setRegion(r)} title={r}
-              style={{ flex: 1, padding: "5px 0", fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.04em", background: region === r ? "hsl(var(--primary))" : "transparent", color: region === r ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer", transition: "all 0.18s", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-              <span style={{ fontSize: 11 }}>{flag}</span><span>{r}</span>
+              style={{ flex: 1, padding: "6px 0", background: region === r ? "hsl(var(--primary))" : "transparent", color: region === r ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer", transition: "all 0.18s", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 14, lineHeight: 1 }}>{flag}</span>
             </button>
           ))}
         </div>
@@ -259,12 +260,32 @@ export default function Sidebar() {
 
       {/* Language switcher */}
       {!collapsed ? (
-        <div style={{ display: "flex", gap: 4, marginBottom: 4, flexShrink: 0 }}>
-          {LANGS.map(l => (
-            <button key={l.code} onClick={() => setLang(l.code)} title={l.label} style={{ flex: 1, padding: "4px 0", borderRadius: 8, border: `1px solid ${lang === l.code ? "hsl(var(--primary) / 0.32)" : "hsl(var(--border))"}`, background: lang === l.code ? "hsl(var(--primary) / 0.12)" : "transparent", color: lang === l.code ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", cursor: "pointer", transition: "all 0.18s", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-              <span style={{ fontSize: 12 }}>{l.flag}</span><span>{l.label}</span>
-            </button>
-          ))}
+        <div style={{ marginBottom: 4, flexShrink: 0 }}>
+          <button
+            onClick={() => setLangOpen(o => !o)}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "5px 10px", borderRadius: langOpen ? "8px 8px 0 0" : 8,
+              border: `1px solid ${langOpen ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`,
+              background: langOpen ? "hsl(var(--primary)/0.08)" : "hsl(var(--muted)/0.3)",
+              color: langOpen ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+              cursor: "pointer", transition: "all 0.15s",
+            }}
+          >
+            <span style={{ fontSize: 9, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>JAZYK</span>
+            <span style={{ fontSize: 12, lineHeight: 1 }}>{LANGS.find(l => l.code === lang)?.flag}</span>
+          </button>
+          {langOpen && (
+            <div style={{ display: "flex", border: "1px solid hsl(var(--primary)/0.3)", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" }}>
+              {LANGS.map(l => (
+                <button key={l.code} onClick={() => { setLang(l.code); setLangOpen(false); }} title={l.label}
+                  style={{ flex: 1, padding: "5px 0", background: lang === l.code ? "hsl(var(--primary)/0.12)" : "hsl(var(--muted)/0.2)", color: lang === l.code ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", border: "none", borderRight: l.code !== "fr" ? "1px solid hsl(var(--border)/0.5)" : "none", cursor: "pointer", transition: "all 0.15s", display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                  <span style={{ fontSize: 13, lineHeight: 1 }}>{l.flag}</span>
+                  <span style={{ fontSize: 8, fontFamily: "var(--font-mono)", fontWeight: 700 }}>{l.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 4 }}>

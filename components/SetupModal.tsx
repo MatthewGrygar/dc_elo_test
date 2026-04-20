@@ -80,9 +80,9 @@ export default function SetupModal({ onDone }: { onDone: () => void }) {
     onDone();
   }
 
-  function OptionBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  function OptionBtn({ active, onClick, title, children }: { active: boolean; onClick: () => void; title?: string; children: React.ReactNode }) {
     return (
-      <button onClick={onClick} style={{
+      <button onClick={onClick} title={title} style={{
         flex: 1, padding: "10px 8px", borderRadius: 10, border: "2px solid",
         borderColor: active ? green : "hsl(var(--border)/0.4)",
         background: active ? `hsl(152,72%,45%/0.12)` : "hsl(var(--muted)/0.3)",
@@ -90,7 +90,7 @@ export default function SetupModal({ onDone }: { onDone: () => void }) {
         cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 11,
         fontWeight: active ? 700 : 400, transition: "all 0.15s", textAlign: "center" as const,
         boxShadow: active ? `0 0 14px hsl(152,72%,45%/0.25)` : "none",
-        minHeight: 72,
+        minHeight: 46,
       }}>
         {children}
       </button>
@@ -152,9 +152,8 @@ export default function SetupModal({ onDone }: { onDone: () => void }) {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               {REGIONS.map(r => (
-                <OptionBtn key={r.value} active={region === r.value} onClick={() => setRegion(r.value)}>
-                  <div style={{ fontSize: 18, marginBottom: 4 }}>{r.flag}</div>
-                  <div>{r.label}</div>
+                <OptionBtn key={r.value} active={region === r.value} onClick={() => setRegion(r.value)} title={r.label}>
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>{r.flag}</span>
                 </OptionBtn>
               ))}
             </div>

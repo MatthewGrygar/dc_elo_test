@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getNameFilter } from "@/lib/regionFilter";
 
 const SHEET_ID = "1y98bzsIRpVv0_cGNfbITapucO5A6izeEz5lTM92ZbIA";
 
@@ -53,9 +54,13 @@ function toResult(s: string): GameResult {
 
 export async function GET(req: NextRequest) {
   const mode = req.nextUrl.searchParams.get("mode") ?? "ELO";
+  const region = req.nextUrl.searchParams.get("region") ?? "ALL";
   const sheetName = mode === "DCPR" ? "Player cards (CSV) - Tournament" : "Player cards (CSV)";
 
-  const rows = await fetchSheet(sheetName);
+  const [rows, nameFilter] = await Promise.all([
+    fetchSheet(sheetName),
+    getNameFilter(region),
+  ]);
   const data = rows.slice(1).filter(r => r[0]?.trim());
 
   // Group rows by matchId
@@ -80,6 +85,7 @@ export async function GET(req: NextRequest) {
   for (const [matchId, mrows] of matchMap) {
     if (mrows.length < 2) continue;
     const [r1, r2] = mrows;
+    if (nameFilter && (!nameFilter(r1[0]?.trim() ?? "") || !nameFilter(r2[0]?.trim() ?? ""))) continue;
 
     const tType = r1[2]?.trim() ?? "";
     const tournName = tType === "FNM"

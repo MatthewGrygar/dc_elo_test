@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRatingMode } from "./RatingModeProvider";
+import { useRegion } from "./RegionProvider";
 import { Search, RefreshCw, X, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 
 interface TournamentGame {
@@ -286,6 +287,7 @@ function TournamentRow({ t, isOpen, onToggle, isMobile }: { t: Tournament; isOpe
 // ── Main view ─────────────────────────────────────────────────────────────────
 export default function TournamentsView() {
   const { mode } = useRatingMode();
+  const { region } = useRegion();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [search,      setSearch]      = useState("");
@@ -303,12 +305,12 @@ export default function TournamentsView() {
     setLoading(true);
     setTournaments([]);
     setOpenName(null);
-    fetch(`/api/tournaments?mode=${mode}`)
+    fetch(`/api/tournaments?mode=${mode}&region=${region}`)
       .then(r => r.json())
       .then(d => setTournaments(Array.isArray(d) ? d : []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [mode]);
+  }, [mode, region]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return tournaments;
