@@ -379,6 +379,12 @@ function PreviewPanel({ featured, pool, onRemove, onReorder, onSave, saving, sav
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
+const REGIONS = [
+  { value: "ALL", label: "🌍 Všechny (ALL)" },
+  { value: "FR",  label: "🇫🇷 Francie (FR)"  },
+  { value: "CZ",  label: "🇨🇿 Česko (CZ)"    },
+] as const;
+
 export default function MatchesPage() {
   const [pool, setPool]           = useState<Match[]>([]);
   const [featured, setFeatured]   = useState<FeaturedMatch[]>([]);
@@ -387,14 +393,15 @@ export default function MatchesPage() {
   const [saved, setSaved]         = useState(false);
   const [days, setDays]           = useState(60);
   const [search, setSearch]       = useState("");
+  const [region, setRegion]       = useState<"ALL"|"FR"|"CZ">("ALL");
 
-  useEffect(() => { loadAll(); }, [days]);
+  useEffect(() => { loadAll(); }, [days, region]);
 
   async function loadAll() {
     setLoading(true);
     const [poolRes, featuredRes] = await Promise.all([
       fetch(`/api/admin/matches-pool?days=${days}`),
-      fetch("/api/admin/featured-matches"),
+      fetch(`/api/admin/featured-matches?region=${region}`),
     ]);
     if (poolRes.ok)     setPool(await poolRes.json());
     if (featuredRes.ok) setFeatured(await featuredRes.json());
@@ -438,7 +445,7 @@ export default function MatchesPage() {
 
   async function save() {
     setSaving(true);
-    const res = await fetch("/api/admin/featured-matches", {
+    const res = await fetch(`/api/admin/featured-matches?region=${region}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(featured),
@@ -466,9 +473,20 @@ export default function MatchesPage() {
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 2 }}>
             Zajímavé zápasy
           </h1>
-          <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+          <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", marginBottom: "0.75rem" }}>
             Zaškrtněte zápasy a přiřaďte kategorii. Bez výběru se zobrazí automaticky vybrané.
           </p>
+          <div style={{ display: "flex", gap: 6 }}>
+            {REGIONS.map(r => (
+              <button key={r.value} onClick={() => { setRegion(r.value); setSaved(false); }} style={{
+                padding: "5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                border: "1px solid", fontFamily: "var(--font-mono)",
+                borderColor: region === r.value ? greenBorder : "hsl(var(--border))",
+                background: region === r.value ? greenBg : "transparent",
+                color: region === r.value ? green : "hsl(var(--muted-foreground))",
+              }}>{r.label}</button>
+            ))}
+          </div>
         </div>
 
         {/* Recommendations */}

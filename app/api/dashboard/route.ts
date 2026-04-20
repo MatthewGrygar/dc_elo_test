@@ -17,8 +17,8 @@ export async function GET(request: Request) {
     const nameFilter = await getNameFilter(region);
     const [data, pinnedMs, featuredMs] = await Promise.all([
       fetchDashboardData(mode, nameFilter),
-      getVisibleMilestones(),
-      getFeaturedMatches(),
+      getVisibleMilestones(region),
+      getFeaturedMatches(region),
     ]);
 
     // Override milestones with admin-pinned ones if any exist

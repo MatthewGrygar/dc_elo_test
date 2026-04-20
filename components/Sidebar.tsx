@@ -7,6 +7,7 @@ import { useAppNav, BaseView, PlayerSubView } from "./AppContext";
 import { avatarInitials } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { t, Lang } from "@/lib/i18n";
+import DcprInfoModal from "./DcprInfoModal";
 import {
   LayoutDashboard, Trophy, TrendingUp, Activity, Medal,
   GitCompare, Newspaper, Building2, Moon, Sun,
@@ -50,6 +51,19 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [showDcprInfo, setShowDcprInfo] = useState(false);
+
+  function handleModeClick(m: "ELO" | "DCPR") {
+    setMode(m);
+    if (m === "DCPR") {
+      try {
+        if (!localStorage.getItem("dc-elo-dcpr-seen")) {
+          setShowDcprInfo(true);
+          localStorage.setItem("dc-elo-dcpr-seen", "1");
+        }
+      } catch {}
+    }
+  }
   const isDark = resolvedTheme === "dark";
 
   useEffect(() => setMounted(true), []);
@@ -136,13 +150,13 @@ export default function Sidebar() {
       {!collapsed ? (
         <div style={{ display: "flex", borderRadius: 10, overflow: "hidden", border: "1px solid hsl(var(--border))", marginBottom: 6, flexShrink: 0 }}>
           {(["ELO", "DCPR"] as const).map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: "6px 0", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.06em", background: mode === m ? "hsl(var(--primary))" : "transparent", color: mode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer", transition: "all 0.18s" }}>{m}</button>
+            <button key={m} onClick={() => handleModeClick(m)} style={{ flex: 1, padding: "6px 0", fontSize: 11, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.06em", background: mode === m ? "hsl(var(--primary))" : "transparent", color: mode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer", transition: "all 0.18s" }}>{m}</button>
           ))}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 4 }}>
           {(["ELO", "DCPR"] as const).map(m => (
-            <button key={m} onClick={() => setMode(m)} title={m} style={{ padding: "4px 0", borderRadius: 7, fontSize: 8, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.06em", background: mode === m ? "hsl(var(--primary))" : "hsl(var(--muted) / 0.5)", color: mode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer" }}>{m}</button>
+            <button key={m} onClick={() => handleModeClick(m)} title={m} style={{ padding: "4px 0", borderRadius: 7, fontSize: 8, fontWeight: 700, fontFamily: "var(--font-mono)", letterSpacing: "0.06em", background: mode === m ? "hsl(var(--primary))" : "hsl(var(--muted) / 0.5)", color: mode === m ? "hsl(var(--primary-foreground))" : "hsl(var(--muted-foreground))", border: "none", cursor: "pointer" }}>{m}</button>
           ))}
         </div>
       )}
@@ -327,6 +341,7 @@ export default function Sidebar() {
 
   return (
     <>
+      {showDcprInfo && <DcprInfoModal lang={lang as "cs"|"en"|"fr"} onClose={() => setShowDcprInfo(false)} />}
       {sidebarOpen && <div className="sidebar-overlay md:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside
         style={{ width: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", minWidth: collapsed ? "var(--sidebar-w-collapsed)" : "var(--sidebar-w)", transition: "width .28s cubic-bezier(.4,0,.2,1), min-width .28s cubic-bezier(.4,0,.2,1), transform .3s ease", borderRight: "1px solid hsl(var(--border) / 0.65)", display: "flex", flexDirection: "column", zIndex: 40, flexShrink: 0, overflow: "hidden" }}

@@ -259,6 +259,21 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
       if (v) { uniqueTournaments++; lastDataEntry = v; }
     }
   }
+  // Region-aware: find last tournament name from filtered player cards
+  if (nameFilter) {
+    const cardsForMode = mode === "DCPR" ? cardsDcpr : cardsElo;
+    let filtLastDate = new Date(0);
+    let filtLastName = "—";
+    for (let i = 1; i < cardsForMode.length; i++) {
+      const r = cardsForMode[i];
+      if (!r[0]?.trim() || !nameFilter(r[0].trim())) continue;
+      const d = parseDate(r[4]);
+      if (!d || d <= filtLastDate) continue;
+      const tName = r[3]?.trim();
+      if (tName) { filtLastDate = d; filtLastName = tName; }
+    }
+    if (filtLastName !== "—") lastDataEntry = filtLastName;
+  }
 
   // ── Top 5 players for hero panel (sorted by rating desc, region-filtered)
   const [vtMap, countryMap] = await Promise.all([getVtClassMap(), getCountryMap()]);

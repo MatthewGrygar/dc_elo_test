@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       date: body.date ?? new Date().toISOString().slice(0, 10),
       cat: body.cat ?? "",
       visible: Boolean(body.visible),
+      region: body.region ?? "ALL",
     });
     return NextResponse.json(ms, { status: 201 });
   } catch (err) {

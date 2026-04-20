@@ -19,6 +19,7 @@ export interface PinnedMilestone {
   cat: string;
   visible: boolean;
   createdAt: string;
+  region?: string; // "ALL" | "FR" | "CZ" | undefined → treated as "ALL"
 }
 
 // ── KV availability ───────────────────────────────────────────────────────────
@@ -35,7 +36,8 @@ async function getKV() {
 const MS_IDS_KEY = "milestones:ids";
 const MS_ORDER_KEY = "milestones:order";
 const msKey = (id: string) => `milestone:${id}`;
-const FEATURED_MATCHES_KEY = "featured:matchIds";
+const FEATURED_MATCHES_KEY = "featured:matchIds"; // legacy global key
+const featuredMatchesRegionKey = (r: string) => `featured:matchIds:${r}`;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // MILESTONES
@@ -64,9 +66,12 @@ export async function getAllMilestones(): Promise<PinnedMilestone[]> {
   }
 }
 
-export async function getVisibleMilestones(): Promise<PinnedMilestone[]> {
+export async function getVisibleMilestones(region = "ALL"): Promise<PinnedMilestone[]> {
   const all = await getAllMilestones();
-  return all.filter((m) => m.visible);
+  const visible = all.filter((m) => m.visible);
+  if (region === "ALL") return visible.filter((m) => !m.region || m.region === "ALL");
+  const regionMs = visible.filter((m) => m.region === region);
+  return regionMs; // empty → caller falls back to auto-generated
 }
 
 export async function createMilestone(
@@ -108,14 +113,16 @@ export async function deleteMilestone(id: string): Promise<boolean> {
 // FEATURED MATCHES
 // ══════════════════════════════════════════════════════════════════════════════
 
-export async function getFeaturedMatches(): Promise<FeaturedMatch[]> {
+export async function getFeaturedMatches(region = "ALL"): Promise<FeaturedMatch[]> {
   if (!kvAvailable()) return [];
   try {
     const kv = await getKV();
-    return (await kv.get<FeaturedMatch[]>(FEATURED_MATCHES_KEY)) ?? [];
-  } catch {
-    return [];
-  }
+    const val = await kv.get<FeaturedMatch[]>(featuredMatchesRegionKey(region));
+    if (val !== null) return val;
+    // backward compat: for ALL fall back to old global key
+    if (region === "ALL") return (await kv.get<FeaturedMatch[]>(FEATURED_MATCHES_KEY)) ?? [];
+    return []; // no region-specific matches → caller uses auto-generated
+  } catch { return []; }
 }
 
 /** Backward-compat: just the IDs */
@@ -129,10 +136,10 @@ export async function reorderMilestones(ids: string[]): Promise<void> {
   await kv.set(MS_ORDER_KEY, ids);
 }
 
-export async function setFeaturedMatches(matches: FeaturedMatch[]): Promise<void> {
+export async function setFeaturedMatches(region = "ALL", matches: FeaturedMatch[]): Promise<void> {
   if (!kvAvailable()) throw new Error("KV not configured");
   const kv = await getKV();
-  await kv.set(FEATURED_MATCHES_KEY, matches);
+  await kv.set(featuredMatchesRegionKey(region), matches);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

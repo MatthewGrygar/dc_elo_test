@@ -11,6 +11,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       date: body.date,
       cat: body.cat,
       visible: Boolean(body.visible),
+      region: body.region,
     });
     if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(updated);

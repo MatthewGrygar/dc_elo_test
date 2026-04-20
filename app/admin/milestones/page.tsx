@@ -87,13 +87,15 @@ export default function MilestonesPage() {
   const [orderChanged, setOrderChanged] = useState(false);
   const [savingOrder, setSavingOrder]   = useState(false);
 
-  const [icon, setIcon]       = useState("📌");
-  const [text, setText]       = useState("");
-  const [date, setDate]       = useState(new Date().toISOString().slice(0, 10));
-  const [cat, setCat]         = useState("Jiné");
-  const [visible, setVisible] = useState(true);
-  const [adding, setAdding]   = useState(false);
-  const [error, setError]     = useState("");
+  const [icon, setIcon]             = useState("📌");
+  const [text, setText]             = useState("");
+  const [date, setDate]             = useState(new Date().toISOString().slice(0, 10));
+  const [cat, setCat]               = useState("Jiné");
+  const [milestoneRegion, setMilestoneRegion] = useState("ALL");
+  const [filterRegion, setFilterRegion]       = useState("ALL");
+  const [visible, setVisible]       = useState(true);
+  const [adding, setAdding]         = useState(false);
+  const [error, setError]           = useState("");
 
   useEffect(() => { loadCustom(); loadAuto(); }, []);
 
@@ -178,7 +180,7 @@ export default function MilestonesPage() {
     setAdding(true); setError("");
     const res = await fetch("/api/admin/milestones", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ icon, text, date, cat, visible }),
+      body: JSON.stringify({ icon, text, date, cat, visible, region: milestoneRegion }),
     });
     if (res.ok) {
       const ms = await res.json();
@@ -190,16 +192,21 @@ export default function MilestonesPage() {
     setAdding(false);
   }
 
-  const activeMilestones = milestones.filter((m) => m.visible);
+  const activeMilestones = milestones.filter((m) => m.visible && (filterRegion === "ALL" ? (!m.region || m.region === "ALL") : m.region === filterRegion));
   const previewMs: AutoMilestone[] = activeMilestones.length > 0 ? activeMilestones : autoMs;
 
   return (
     <div style={{ maxWidth: 1100 }}>
       <div style={{ marginBottom: "1.5rem" }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 2 }}>Milníky</h1>
-        <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+        <p style={{ fontSize: 13, color: "hsl(var(--muted-foreground))", marginBottom: "0.75rem" }}>
           Aktivní vlastní milníky se zobrazují na hlavní stránce. Bez aktivních vlastních se zobrazí automatické.
         </p>
+        <div style={{ display: "flex", gap: 6 }}>
+          {([["ALL","🌍 Všechny"],["FR","🇫🇷 Francie"],["CZ","🇨🇿 Česko"]] as [string,string][]).map(([v,l]) => (
+            <button key={v} onClick={() => setFilterRegion(v)} style={{ padding: "5px 12px", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid", fontFamily: "var(--font-mono)", borderColor: filterRegion === v ? greenBorder : "hsl(var(--border))", background: filterRegion === v ? greenBg : "transparent", color: filterRegion === v ? green : "hsl(var(--muted-foreground))" }}>{l}</button>
+          ))}
+        </div>
       </div>
 
       {/* ── TOP: Currently on main page ── */}
@@ -263,7 +270,7 @@ export default function MilestonesPage() {
             ))}
             <input value={ICONS.includes(icon) ? "" : icon} onChange={(e) => setIcon(e.target.value || "📌")} placeholder="vlastní" style={{ ...inputStyle, width: 72, padding: "6px 8px" }} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 110px", gap: "0.6rem", alignItems: "end" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 110px 100px", gap: "0.6rem", alignItems: "end" }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 600, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Text</label>
               <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Popis události…" style={inputStyle} />
@@ -276,6 +283,14 @@ export default function MilestonesPage() {
               <label style={{ fontSize: 10, fontWeight: 600, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Kategorie</label>
               <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
                 {CATS.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 10, fontWeight: 600, color: "hsl(var(--muted-foreground))", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>Region</label>
+              <select value={milestoneRegion} onChange={(e) => setMilestoneRegion(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                <option value="ALL">🌍 ALL</option>
+                <option value="FR">🇫🇷 FR</option>
+                <option value="CZ">🇨🇿 CZ</option>
               </select>
             </div>
           </div>
