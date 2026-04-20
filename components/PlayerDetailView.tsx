@@ -10,11 +10,11 @@ import { PlayerDetailData, RecordsData } from "@/lib/dataFetchers";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ReferenceLine, Cell,
+  ReferenceLine, Cell, Brush,
 } from "recharts";
 import {
   TrendingUp, TrendingDown, Swords, Star, Award, Shield, Target,
-  Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame, ChevronDown, ExternalLink,
+  Zap, Activity, Calendar, Clock, Trophy, BarChart2, Users, Flame, ChevronDown, ExternalLink, X,
 } from "lucide-react";
 
 type SuperTag = { id: string; label: string; color?: string; icon?: string };
@@ -103,6 +103,228 @@ function AnnLabel({ viewBox, value }: { viewBox?: { x?: number; y?: number; heig
 
 type PlayerProfile = { recordTag?: string; recordTagMode?: "ELO" | "DCPR" | "both"; moxfieldUrl?: string };
 
+// ─── Shared utilities ─────────────────────────────────────────────────────────
+const CUTOFF_DAYS: Record<string, number> = { "30D": 30, "90D": 90, "180D": 180, "1Y": 365, "ALL": 99999 };
+
+function parseCzDate(s: string): Date | null {
+  const parts = s.split(".");
+  if (parts.length === 3) return new Date(+parts[2], +parts[1] - 1, +parts[0]);
+  return null;
+}
+
+/** Dynamická Y doména — tight fit s adaptivními marginy a outlier filtrací */
+function smartDomain(elos: number[]): [number, number] {
+  if (!elos.length) return [0, 100];
+  const sorted = [...elos].sort((a, b) => a - b);
+  const n = sorted.length;
+  // P5/P95 pro odfiltroání outlierů (jen pokud dost dat)
+  const lo = n >= 20 ? sorted[Math.floor(n * 0.05)] : sorted[0];
+  const hi = n >= 20 ? sorted[Math.floor(n * 0.95)] : sorted[n - 1];
+  const range = hi - lo;
+  // Adaptivní margin: malé výkyvy → těsněji, velké → více místa
+  const pct    = range < 30 ? 0.03 : range < 100 ? 0.05 : 0.06;
+  const margin = Math.max(range * pct, range < 30 ? 5 : 10);
+  // Zaokrouhlit na "nice numbers"
+  const step = range < 30 ? 5 : range < 150 ? 10 : 25;
+  return [
+    Math.floor((lo - margin) / step) * step,
+    Math.ceil ((hi + margin) / step) * step,
+  ];
+}
+
+// ─── ELO Detail Modal ─────────────────────────────────────────────────────────
+function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }: {
+  data: PlayerDetailData; mode: string; lang: Lang; s: any;
+  announcementDates?: string[]; onClose: () => void;
+}) {
+  const [period,    setPeriod]    = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
+  const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
+  const [brushIdx,  setBrushIdx]  = useState<{ start: number; end: number } | null>(null);
+  const [isMobile,  setIsMobile]  = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+  }, [onClose]);
+
+  // Reset brush při změně filtru
+  useEffect(() => { setBrushIdx(null); }, [period, trendMode]);
+
+  const green = "hsl(152,72%,45%)";
+  const amber = "hsl(42,80%,55%)";
+  const fmt   = (n: number) => n?.toLocaleString?.("cs-CZ") ?? "—";
+
+  const cutoff = new Date(Date.now() - CUTOFF_DAYS[period] * 86400_000);
+  const filteredTrend = (data.eloTrend ?? [])
+    .filter(p => { if (period === "ALL") return true; const d = parseCzDate(p.date); return d ? d >= cutoff : true; })
+    .sort((a, b) => { const da = parseCzDate(a.date), db = parseCzDate(b.date); return (!da||!db) ? 0 : da.getTime()-db.getTime(); });
+
+  const continuousDateTrend = useMemo(() => {
+    const gm = new Map<string, number>();
+    for (const p of (data.eloTrendByDate ?? [])) gm.set(p.date, p.elo);
+    const allTs = [...gm.keys()].map(d => parseCzDate(d)?.getTime() ?? 0).filter(Boolean);
+    if (!allTs.length) return [];
+    const cutoffTs = period === "ALL" ? 0 : Date.now() - CUTOFF_DAYS[period] * 86400_000;
+    const startTs  = Math.max(Math.min(...allTs), cutoffTs);
+    const endTs    = Math.max(...allTs);
+    const result: { date: string; elo: number | null }[] = [];
+    let cur = new Date(startTs); cur.setHours(0,0,0,0);
+    const end = new Date(endTs); end.setHours(0,0,0,0);
+    while (cur <= end) {
+      const ds = `${String(cur.getDate()).padStart(2,"0")}.${String(cur.getMonth()+1).padStart(2,"0")}.${cur.getFullYear()}`;
+      result.push({ date: ds, elo: gm.get(ds) ?? null });
+      cur = new Date(cur.getTime() + 86400_000);
+    }
+    return result;
+  }, [data.eloTrendByDate, period]);
+
+  const activeTrend = trendMode === "matchid" ? filteredTrend : continuousDateTrend;
+
+  const dateTicks = useMemo(() => {
+    if (trendMode !== "date" || continuousDateTrend.length < 2) return undefined;
+    const total = continuousDateTrend.length;
+    const idx = Array.from({ length: 8 }, (_, i) => Math.round(i * (total-1) / 7));
+    return [...new Set(idx)].map(i => continuousDateTrend[i].date);
+  }, [continuousDateTrend, trendMode]);
+
+  // Y doména z viditelných dat (brush-aware)
+  const visibleElos = useMemo(() => {
+    const slice = brushIdx ? activeTrend.slice(brushIdx.start, brushIdx.end + 1) : activeTrend;
+    return slice.map((p: any) => p.elo).filter((v: any) => typeof v === "number") as number[];
+  }, [activeTrend, brushIdx]);
+  const [yMin, yMax] = smartDomain(visibleElos);
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.75)",
+               display: "flex", alignItems: "center", justifyContent: "center",
+               padding: isMobile ? 0 : 20 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        width:     isMobile ? "100vh" : "min(92vw, 1300px)",
+        height:    isMobile ? "100vw" : "min(88vh, 900px)",
+        transform: isMobile ? "rotate(-90deg)" : "none",
+        background: "hsl(var(--card))",
+        border: "1px solid hsl(var(--border)/0.6)",
+        borderRadius: isMobile ? 0 : 18,
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+        boxShadow: "0 28px 90px rgba(0,0,0,0.45)",
+      }}>
+        {/* ── Header ── */}
+        <div style={{ padding: "12px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", borderBottom: "1px solid hsl(var(--border)/0.3)", flexShrink: 0 }}>
+          <div style={{ fontWeight: 700, fontFamily: "var(--font-display)", fontSize: 14 }}>
+            ELO Vývoj — {mode}
+          </div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", background: "hsl(var(--muted)/0.5)", borderRadius: 8, padding: 2, gap: 2 }}>
+              {([["matchid","Zápasy"],["date","Datum"]] as const).map(([v, label]) => (
+                <button key={v} onClick={() => setTrendMode(v)}
+                  style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 10px", borderRadius: 6, border: "none", cursor: "pointer",
+                           background: trendMode === v ? "hsl(var(--card))" : "transparent",
+                           color: trendMode === v ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                           fontWeight: trendMode === v ? 600 : 400 }}>{label}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              {(["30D","90D","180D","1Y","ALL"] as const).map(p => (
+                <button key={p} onClick={() => setPeriod(p)}
+                  style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: 6, border: "1px solid",
+                           borderColor: period === p ? "hsl(var(--primary))" : "hsl(var(--border)/0.5)",
+                           background:  period === p ? "hsl(var(--primary)/0.15)" : "transparent",
+                           color:       period === p ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+                           cursor: "pointer" }}>{p}</button>
+              ))}
+            </div>
+            <button onClick={onClose}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28,
+                       borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.3)",
+                       cursor: "pointer", color: "hsl(var(--muted-foreground))", flexShrink: 0 }}>
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Chart ── */}
+        <div style={{ flex: 1, padding: "10px 8px 4px", minHeight: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={activeTrend} margin={{ top: 12, right: 20, bottom: 4, left: 0 }}>
+              <defs>
+                <linearGradient id="modalEloGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor={green} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={green} stopOpacity={0}    />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.18)" vertical={false} />
+              <XAxis dataKey="date"
+                tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }}
+                ticks={trendMode === "date" ? dateTicks : undefined}
+                interval={trendMode === "date" ? 0 : Math.max(0, Math.ceil(activeTrend.length / 8) - 1)}
+                tickLine={false} axisLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 9, fontFamily: "var(--font-mono)" }}
+                width={46} tickCount={5} tickLine={false} axisLine={false}
+                domain={[yMin, yMax]}
+              />
+              <ReferenceLine y={s.peakElo} stroke={amber} strokeDasharray="4 2"
+                label={{ value: `Peak ${fmt(s.peakElo)}`, fontSize: 9, fill: amber, position: "insideTopRight" }} />
+              <Tooltip content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0]?.payload;
+                return (
+                  <div style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+                    <div style={{ color: "hsl(var(--muted-foreground))", marginBottom: 3 }}>{d.date}</div>
+                    <div style={{ color: green, fontWeight: 700, fontSize: 14 }}>ELO {d.elo?.toLocaleString("cs-CZ")}</div>
+                    {trendMode === "matchid" && d.delta !== undefined && (
+                      <div style={{ color: d.delta >= 0 ? green : "hsl(0,65%,55%)", marginTop: 2 }}>Δ {d.delta >= 0 ? "+" : ""}{d.delta}</div>
+                    )}
+                    {trendMode === "matchid" && d.result && (
+                      <div style={{ color: "hsl(var(--foreground))", marginTop: 2 }}>{d.result} vs {d.opponent}</div>
+                    )}
+                  </div>
+                );
+              }} />
+              <Brush dataKey="date" height={22}
+                stroke="hsl(var(--border)/0.4)" fill="hsl(var(--muted)/0.15)" travellerWidth={8}
+                onChange={(range: any) => {
+                  if (range && typeof range.startIndex === "number" && typeof range.endIndex === "number")
+                    setBrushIdx({ start: range.startIndex, end: range.endIndex });
+                }}
+              />
+              <Area type="monotone" dataKey="elo" stroke={green} strokeWidth={2.5}
+                fill="url(#modalEloGrad)" dot={false}
+                activeDot={{ r: 5, fill: green, stroke: "hsl(var(--card))", strokeWidth: 2 }}
+                connectNulls />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* ── Info footer ── */}
+        <div style={{ padding: "6px 16px 10px", display: "flex", gap: 16, flexShrink: 0, borderTop: "1px solid hsl(var(--border)/0.2)" }}>
+          {brushIdx && (
+            <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground))" }}>
+              Zobrazeno {brushIdx.end - brushIdx.start + 1} záznamů · Y osa přepočítána
+            </span>
+          )}
+          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "hsl(var(--muted-foreground)/0.5)", marginLeft: "auto" }}>
+            Táhni spodní slider pro výběr rozsahu · ESC pro zavření
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab({ data, communityRecords, superTags, announcementDates = [], playerProfile }: { data: PlayerDetailData; communityRecords?: RecordsData | null; superTags?: SuperTag[]; announcementDates?: string[]; playerProfile?: PlayerProfile | null }) {
   const { selectedPlayer, lang } = useAppNav();
@@ -118,14 +340,8 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
   const [period, setPeriod] = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
   const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
   const [showAnnouncements, setShowAnnouncements] = useState(false);
-  const cutoffDays: Record<string, number> = { "30D": 30, "90D": 90, "180D": 180, "1Y": 365, "ALL": 99999 };
-  const cutoff = new Date(Date.now() - cutoffDays[period] * 86400_000);
-
-  const parseCzDate = (s: string): Date | null => {
-    const parts = s.split(".");
-    if (parts.length === 3) return new Date(+parts[2], +parts[1]-1, +parts[0]);
-    return null;
-  };
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const cutoff = new Date(Date.now() - CUTOFF_DAYS[period] * 86400_000);
 
   const filteredTrend = eloTrend
     .filter(p => {
@@ -145,7 +361,7 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
     for (const p of (data.eloTrendByDate ?? [])) gameMap.set(p.date, p.elo);
     const allTs = [...gameMap.keys()].map(d => parseCzDate(d)?.getTime() ?? 0).filter(Boolean);
     if (!allTs.length) return [];
-    const cutoffTs = period === "ALL" ? 0 : Date.now() - cutoffDays[period] * 86400_000;
+    const cutoffTs = period === "ALL" ? 0 : Date.now() - CUTOFF_DAYS[period] * 86400_000;
     const startTs = Math.max(Math.min(...allTs), cutoffTs);
     const endTs = Math.max(...allTs);
     const result: { date: string; elo: number | null }[] = [];
@@ -162,8 +378,8 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
 
   const activeTrend = trendMode === "matchid" ? filteredTrend : continuousDateTrend;
   const trendElos = activeTrend.map((p: any) => p.elo).filter((v: any) => typeof v === "number");
-  const trendMin = trendElos.length ? Math.min(...trendElos) - 30 : "auto";
-  const trendMax = trendElos.length ? Math.max(...trendElos) + 30 : "auto";
+  const trendMin = trendElos.length ? Math.min(...trendElos) - 100 : "auto";
+  const trendMax = trendElos.length ? Math.max(...trendElos) + 100 : "auto";
 
   // Evenly spaced X-axis ticks for date mode
   const N_TICKS = 6;
@@ -208,6 +424,7 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
   const dPct = Math.round(s.draws / total * 100);
 
   return (
+    <>
     <div style={{ display: "flex", flexDirection: "column", gap: 10, height: "100%", overflowY: "auto" }} className="scrollbar-thin">
 
       {/* ── HERO ROW: 3 panels ── */}
@@ -403,9 +620,14 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
                 <button key={p} onClick={() => setPeriod(p)} style={{ fontSize: 10, fontFamily: "var(--font-mono)", padding: "3px 8px", borderRadius: 6, border: "1px solid", borderColor: period === p ? "hsl(var(--primary))" : "hsl(var(--border)/0.5)", background: period === p ? "hsl(var(--primary)/0.15)" : "transparent", color: period === p ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", cursor: "pointer" }}>{p}</button>
               ))}
             </div>
+            <button
+              onClick={() => setShowDetailModal(true)}
+              style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 7, border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, background: "hsl(142,65%,42%)", color: "#fff", boxShadow: "0 2px 10px hsl(142,65%,42%/0.45)", letterSpacing: "0.02em", flexShrink: 0 }}>
+              <ExternalLink size={11} /> Detail
+            </button>
           </div>
         </div>
-        <div style={{ height: 320, padding: "8px 4px 8px 8px" }}>
+        <div style={{ height: 220, padding: "8px 4px 8px 8px" }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={activeTrend} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
               <defs>
@@ -678,6 +900,18 @@ function OverviewTab({ data, communityRecords, superTags, announcementDates = []
         </GC>
       </div>
     </div>
+
+    {showDetailModal && (
+      <EloDetailModal
+        data={data}
+        mode={mode}
+        lang={lang}
+        s={s}
+        announcementDates={announcementDates}
+        onClose={() => setShowDetailModal(false)}
+      />
+    )}
+    </>
   );
 }
 function OpponentsTab({ data }: { data: PlayerDetailData }) {
