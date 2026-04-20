@@ -137,10 +137,11 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
   data: PlayerDetailData; mode: string; lang: Lang; s: any;
   announcementDates?: string[]; onClose: () => void;
 }) {
-  const [period,    setPeriod]    = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
-  const [trendMode, setTrendMode] = useState<"matchid"|"date">("matchid");
-  const [brushIdx,  setBrushIdx]  = useState<{ start: number; end: number } | null>(null);
-  const [isMobile,  setIsMobile]  = useState(false);
+  const [period,            setPeriod]            = useState<"30D"|"90D"|"180D"|"1Y"|"ALL">("ALL");
+  const [trendMode,         setTrendMode]         = useState<"matchid"|"date">("matchid");
+  const [brushIdx,          setBrushIdx]          = useState<{ start: number; end: number } | null>(null);
+  const [isMobile,          setIsMobile]          = useState(false);
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -202,6 +203,25 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
   }, [activeTrend, brushIdx]);
   const [yMin, yMax] = smartDomain(visibleElos);
 
+  const modalVisibleAnn = useMemo(() => {
+    if (!showAnnouncements || !announcementDates.length || !activeTrend.length) return [];
+    const firstTs = parseCzDate((activeTrend[0] as any).date)?.getTime() ?? 0;
+    const lastTs  = parseCzDate((activeTrend[activeTrend.length - 1] as any).date)?.getTime() ?? 0;
+    return announcementDates.filter(d => { const ts = parseCzDate(d)?.getTime() ?? 0; return ts >= firstTs && ts <= lastTs; });
+  }, [showAnnouncements, announcementDates, activeTrend]);
+
+  const modalAnnXValues = useMemo(() => {
+    return modalVisibleAnn.map(annDate => {
+      const annTs = parseCzDate(annDate)?.getTime() ?? 0;
+      let best: any = null; let bestDiff = Infinity;
+      for (const p of activeTrend as any[]) {
+        const diff = Math.abs((parseCzDate(p.date)?.getTime() ?? 0) - annTs);
+        if (diff < bestDiff) { bestDiff = diff; best = p; }
+      }
+      return best?.date ?? "";
+    }).filter(Boolean);
+  }, [modalVisibleAnn, activeTrend]);
+
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.75)",
@@ -210,8 +230,8 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        width:     isMobile ? "100vh" : "min(92vw, 1300px)",
-        height:    isMobile ? "100vw" : "min(88vh, 900px)",
+        width:     isMobile ? "100vw" : "min(92vw, 1300px)",
+        height:    isMobile ? "100vh" : "min(88vh, 900px)",
         transform: isMobile ? "rotate(-90deg)" : "none",
         background: "hsl(var(--card))",
         border: "1px solid hsl(var(--border)/0.6)",
@@ -245,6 +265,11 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
                            cursor: "pointer" }}>{p}</button>
               ))}
             </div>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 10, fontFamily: "var(--font-mono)", color: showAnnouncements ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))", userSelect: "none", flexShrink: 0 }}>
+              <input type="checkbox" checked={showAnnouncements} onChange={e => setShowAnnouncements(e.target.checked)}
+                style={{ accentColor: "hsl(var(--primary))", cursor: "pointer", width: 12, height: 12 }} />
+              Ann
+            </label>
             <button onClick={onClose}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 28, height: 28,
                        borderRadius: 8, border: "1px solid hsl(var(--border)/0.5)", background: "hsl(var(--muted)/0.3)",
@@ -301,6 +326,10 @@ function EloDetailModal({ data, mode, lang, s, announcementDates = [], onClose }
                     setBrushIdx({ start: range.startIndex, end: range.endIndex });
                 }}
               />
+              {modalAnnXValues.map((xVal, i) => (
+                <ReferenceLine key={i} x={xVal} stroke="hsl(var(--primary))" strokeWidth={1.5} strokeDasharray="4 3"
+                  label={(props: any) => <AnnLabel {...props} value={modalVisibleAnn[i]} />} />
+              ))}
               <Area type="monotone" dataKey="elo" stroke={green} strokeWidth={2.5}
                 fill="url(#modalEloGrad)" dot={false}
                 activeDot={{ r: 5, fill: green, stroke: "hsl(var(--card))", strokeWidth: 2 }}
