@@ -5,7 +5,7 @@ import { Plus, Trash2, Eye, EyeOff, RefreshCw, ArrowRight, X, ChevronUp, Chevron
 
 interface Milestone {
   id: string; icon: string; text: string; date: string; cat: string;
-  visible: boolean; createdAt: string;
+  visible: boolean; createdAt: string; region?: string;
 }
 interface AutoMilestone { icon: string; text: string; date: string; cat: string; }
 
