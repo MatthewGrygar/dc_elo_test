@@ -48,6 +48,46 @@ const DCPR_LOAD = {
   fr: "Chargement DCPR…",
 };
 
+// ── Shared keyframes (injected once) ─────────────────────────────────────────
+const SPINNER_STYLES = `
+  @keyframes sp-spin  { to { transform: rotate(360deg); } }
+  @keyframes sp-spin2 { to { transform: rotate(-360deg); } }
+  @keyframes sp-pulse { 0%,100% { opacity:.75; transform:scale(1); } 50% { opacity:1; transform:scale(1.09); } }
+  @keyframes sp-fade  { from { opacity:0; } to { opacity:1; } }
+  @keyframes ls-glow  { 0%,100% { opacity:.6; } 50% { opacity:1; } }
+`;
+
+// ── Shared spinner rings ──────────────────────────────────────────────────────
+function SpinnerRings({ c1, c2, size = 96 }: { c1: string; c2: string; size?: number }) {
+  const inner = Math.round(size * 0.19);
+  const icon  = Math.round(size * 0.23);
+  return (
+    <div style={{ position: "relative", width: size, height: size }}>
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: "50%",
+        border: "2px solid transparent",
+        borderTopColor: c1, borderRightColor: `${c1}55`,
+        animation: "sp-spin 0.9s linear infinite",
+      }} />
+      <div style={{
+        position: "absolute", inset: inner, borderRadius: "50%",
+        border: "1.5px solid transparent",
+        borderTopColor: c2, borderLeftColor: `${c2}45`,
+        animation: "sp-spin2 1.4s linear infinite",
+      }} />
+      <div style={{
+        position: "absolute", inset: icon, borderRadius: "50%",
+        background: `linear-gradient(135deg, ${c1}20, ${c2}14)`,
+        border: `1px solid ${c1}38`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "sp-pulse 2s ease-in-out infinite",
+      }}>
+        <Zap size={Math.round(size * 0.23)} style={{ color: c1 }} />
+      </div>
+    </div>
+  );
+}
+
 // ── Loading screen ────────────────────────────────────────────────────────────
 function LoadingScreen({ progress, exiting }: { progress: number; exiting: boolean }) {
   const [lang, setLang] = useState<"cs" | "en" | "fr">("cs");
@@ -60,129 +100,88 @@ function LoadingScreen({ progress, exiting }: { progress: number; exiting: boole
 
   const phase  = progress < 40 ? 0 : progress < 75 ? 1 : 2;
   const labels = LOAD_LABELS[lang];
+  const green  = "hsl(152,72%,48%)";
+  const green2 = "hsl(152,55%,32%)";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{
-        background: "hsl(var(--background))",
-        opacity: exiting ? 0 : 1,
-        transition: exiting ? "opacity 0.65s cubic-bezier(0.4,0,0.2,1)" : "none",
-        pointerEvents: exiting ? "none" : "all",
-      }}
-    >
-      {/* ambient glow */}
-      <div style={{
-        position: "absolute", width: 500, height: 500, borderRadius: "50%",
-        background: "radial-gradient(circle, hsl(var(--primary)/0.10) 0%, transparent 65%)",
-        top: "50%", left: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none",
-        animation: "ls-glow 2.5s ease-in-out infinite",
-      }} />
-
-      <div className="relative z-10 flex flex-col items-center" style={{ gap: 28 }}>
-        {/* logo */}
+    <>
+      <style>{SPINNER_STYLES}</style>
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+        style={{
+          background: "hsl(var(--background))",
+          opacity: exiting ? 0 : 1,
+          transition: exiting ? "opacity 0.65s cubic-bezier(0.4,0,0.2,1)" : "none",
+          pointerEvents: exiting ? "none" : "all",
+        }}
+      >
+        {/* ambient glow */}
         <div style={{
-          width: 76, height: 76, borderRadius: 22,
-          background: "hsl(var(--primary))",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          animation: "logo-pulse 1.8s ease-in-out infinite",
-          boxShadow: "0 0 40px hsl(var(--primary)/0.45)",
-        }}>
-          <Zap size={34} color="white" />
-        </div>
+          position: "absolute", width: 480, height: 480, borderRadius: "50%",
+          background: `radial-gradient(circle, ${green}14 0%, transparent 65%)`,
+          top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+          pointerEvents: "none", animation: "ls-glow 2.5s ease-in-out infinite",
+        }} />
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-          {/* progress bar */}
-          <div style={{
-            width: 200, height: 3, borderRadius: 99,
-            background: "hsl(var(--muted))", overflow: "hidden",
-          }}>
+        <div className="relative z-10 flex flex-col items-center" style={{ gap: 24 }}>
+          <SpinnerRings c1={green} c2={green2} size={96} />
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            {/* progress bar */}
+            <div style={{ width: 180, height: 2, borderRadius: 99, background: "hsl(var(--muted))", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", borderRadius: 99,
+                background: green,
+                boxShadow: `0 0 10px ${green}80`,
+                transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
+                width: `${progress}%`,
+              }} />
+            </div>
             <div style={{
-              height: "100%", borderRadius: 99,
-              background: "hsl(var(--primary))",
-              boxShadow: "0 0 14px hsl(var(--primary)/0.65)",
-              transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
-              width: `${progress}%`,
-            }} />
-          </div>
-          <div style={{
-            textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 9,
-            color: "hsl(var(--muted-foreground))", letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            animation: "ls-label 0.3s ease both",
-          }}>
-            {labels[phase]}
+              textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 9,
+              color: "hsl(var(--muted-foreground))", letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            }}>
+              {labels[phase]}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
 // ── DCPR mode loader overlay ──────────────────────────────────────────────────
 function DcprModeLoader({ lang }: { lang: "cs" | "en" | "fr" }) {
-  const purple = "hsl(262,70%,62%)";
-  const amber  = "hsl(42,80%,55%)";
+  const green  = "hsl(152,72%,48%)";
+  const green2 = "hsl(152,55%,32%)";
 
   return (
     <>
-      <style>{`
-        @keyframes dcpr-spin  { to { transform: rotate(360deg); } }
-        @keyframes dcpr-fade  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes dcpr-pulse { 0%,100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
-        @keyframes dcpr-ring2 { to { transform: rotate(-360deg); } }
-      `}</style>
+      <style>{SPINNER_STYLES}</style>
       <div style={{
         position: "fixed", inset: 0, zIndex: 1500,
         background: "rgba(0,0,0,0.78)",
         backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        animation: "dcpr-fade 0.22s ease forwards",
+        animation: "sp-fade 0.22s ease forwards",
       }}>
         {/* ambient glow blob */}
         <div style={{
           position: "absolute", width: 420, height: 420, borderRadius: "50%",
-          background: `radial-gradient(circle, ${purple}18 0%, transparent 68%)`,
+          background: `radial-gradient(circle, ${green}16 0%, transparent 68%)`,
           pointerEvents: "none",
         }} />
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, position: "relative" }}>
-          {/* spinning rings + icon */}
-          <div style={{ position: "relative", width: 96, height: 96 }}>
-            {/* outer ring */}
-            <div style={{
-              position: "absolute", inset: 0, borderRadius: "50%",
-              border: `2px solid transparent`,
-              borderTopColor: purple,
-              borderRightColor: `${purple}50`,
-              animation: "dcpr-spin 0.9s linear infinite",
-            }} />
-            {/* inner ring counter-rotating */}
-            <div style={{
-              position: "absolute", inset: 10, borderRadius: "50%",
-              border: `1.5px solid transparent`,
-              borderTopColor: amber,
-              borderLeftColor: `${amber}40`,
-              animation: "dcpr-ring2 1.4s linear infinite",
-            }} />
-            {/* icon center */}
-            <div style={{
-              position: "absolute", inset: 18, borderRadius: "50%",
-              background: `linear-gradient(135deg, ${purple}22, ${amber}12)`,
-              border: `1px solid ${purple}35`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              animation: "dcpr-pulse 2s ease-in-out infinite",
-            }}>
-              <Zap size={22} style={{ color: purple }} />
-            </div>
-          </div>
+          <SpinnerRings c1={green} c2={green2} size={96} />
 
           {/* DCPR title */}
           <div style={{
             fontSize: 36, fontWeight: 900,
             fontFamily: "var(--font-display)",
             letterSpacing: "-0.04em", lineHeight: 1,
-            background: `linear-gradient(135deg, ${purple}, ${amber})`,
+            background: `linear-gradient(135deg, ${green}, hsl(152,72%,65%))`,
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           }}>
             DCPR
