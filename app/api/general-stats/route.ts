@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const mode = (req.nextUrl.searchParams.get("mode") ?? "ELO") as "ELO" | "DCPR";
   const region = req.nextUrl.searchParams.get("region") ?? "ALL";
   try {
-    const nameFilter = await getNameFilter(region);
+    const nameFilter = await getNameFilter(region, mode);
     const data = await fetchGeneralStats(mode, nameFilter);
     return NextResponse.json(data);
   } catch (e) {

@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   if (cached) return NextResponse.json(cached);
 
   try {
-    const nameFilter = await getNameFilter(region);
+    const nameFilter = await getNameFilter(region, mode);
 
     const [dashData, players, stats, analytics, recordsRaw, pinnedMs, featuredMs, overrides] =
       await Promise.all([

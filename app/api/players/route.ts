@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const region = searchParams.get("region") ?? "ALL";
 
   try {
-    const nameFilter = await getNameFilter(region);
+    const nameFilter = await getNameFilter(region, mode);
     const players = await fetchStandingsPlayers(mode, nameFilter);
     return NextResponse.json(players);
   } catch (error) {

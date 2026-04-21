@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const mode = searchParams.get("mode") === "DCPR" ? "DCPR" : "ELO";
   const region = searchParams.get("region") ?? "ALL";
   try {
-    const nameFilter = await getNameFilter(region);
+    const nameFilter = await getNameFilter(region, mode);
     const [data, pinnedMs, featuredMs] = await Promise.all([
       fetchDashboardData(mode, nameFilter),
       getVisibleMilestones(region),
