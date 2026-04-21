@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchDashboardData, fetchRecentMatches, fetchStandingsPlayers } from "@/lib/sheets";
-import { fetchGeneralStats, fetchAnalyticsData, fetchRecords } from "@/lib/dataFetchers";
-import { getVisibleMilestones, getFeaturedMatches, getRecordOverrides } from "@/lib/pinned";
+import { getVisibleMilestones, getFeaturedMatches } from "@/lib/pinned";
 import { getNameFilter } from "@/lib/regionFilter";
 import { cacheGet, cacheSet, prefetchKey } from "@/lib/kvCache";
 import type { InterestingMatch } from "@/lib/sheets";
@@ -24,36 +23,13 @@ export async function GET(req: NextRequest) {
   try {
     const nameFilter = await getNameFilter(region, mode);
 
-    const [dashData, players, stats, analytics, recordsRaw, pinnedMs, featuredMs, overrides] =
+    const [dashData, players, pinnedMs, featuredMs] =
       await Promise.all([
         fetchDashboardData(mode, nameFilter),
         fetchStandingsPlayers(mode, nameFilter),
-        fetchGeneralStats(mode, nameFilter),
-        fetchAnalyticsData(mode, nameFilter),
-        fetchRecords(mode, nameFilter),
         getVisibleMilestones(region),
         getFeaturedMatches(region),
-        getRecordOverrides(),
       ]);
-
-    // Apply record overrides
-    const overrideMap = new Map(overrides.map(o => [o.key, o]));
-    if (overrideMap.size > 0) {
-      for (const cat of recordsRaw.categories) {
-        for (const rec of cat.records) {
-          const ov = overrideMap.get(`${cat.id}/${rec.label}`);
-          if (ov && rec.entry) {
-            rec.entry = {
-              ...rec.entry,
-              value: ov.value,
-              ...(ov.player  !== undefined ? { player:  ov.player  } : {}),
-              ...(ov.detail  !== undefined ? { detail:  ov.detail  } : {}),
-              ...(ov.detail2 !== undefined ? { detail2: ov.detail2 } : {}),
-            };
-          }
-        }
-      }
-    }
 
     // Build milestones
     const milestones = pinnedMs.length > 0
@@ -89,7 +65,7 @@ export async function GET(req: NextRequest) {
       topMatchDiff: dashData.topMatchDiff,
     };
 
-    const result = { dashboard, players, stats, analytics, records: recordsRaw };
+    const result = { dashboard, players };
 
     // Cache for 10 minutes
     await cacheSet(key, result, 600);
@@ -98,7 +74,7 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     console.error("[prefetch]", e);
     return NextResponse.json(
-      { dashboard: {}, players: [], stats: {}, analytics: {}, records: {} },
+      { dashboard: {}, players: [] },
       { status: 200 }
     );
   }

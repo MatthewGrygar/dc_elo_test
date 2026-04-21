@@ -29,8 +29,8 @@ const ParticlesBackground = dynamic(
 );
 
 export type PrefetchCache = {
-  ELO?:  { dashboard: any; players: any[]; stats: any; analytics: any; records: any };
-  DCPR?: { dashboard: any; players: any[]; stats: any; analytics: any; records: any };
+  ELO?:  { dashboard: any; players: any[]; stats?: any; analytics?: any; records?: any };
+  DCPR?: { dashboard: any; players: any[]; stats?: any; analytics?: any; records?: any };
   announcements?: string[];
   region?: string;
 };
