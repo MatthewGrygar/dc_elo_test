@@ -19,6 +19,8 @@ import SupportModal from "@/components/SupportModal";
 import FeedbackModal from "@/components/FeedbackModal";
 import SetupModal from "@/components/SetupModal";
 import ThankYouModal from "@/components/ThankYouModal";
+import { useRatingMode } from "@/components/RatingModeProvider";
+import { useRegion } from "@/components/RegionProvider";
 import { Zap } from "lucide-react";
 
 const ParticlesBackground = dynamic(
@@ -35,9 +37,15 @@ export type PrefetchCache = {
 
 // ── Loading labels ────────────────────────────────────────────────────────────
 const LOAD_LABELS = {
-  cs: ["Načítání ELO dat…", "Načítání DCPR dat…", "Připravuji statistiky…", "Finalizace…"],
-  en: ["Loading ELO data…", "Loading DCPR data…", "Preparing statistics…",  "Finalizing…"],
-  fr: ["Chargement ELO…",   "Chargement DCPR…",   "Préparation stats…",     "Finalisation…"],
+  cs: ["Načítání dat…", "Zpracovávám statistiky…", "Finalizace…"],
+  en: ["Loading data…",  "Processing statistics…",  "Finalizing…"],
+  fr: ["Chargement…",    "Calcul des stats…",        "Finalisation…"],
+};
+
+const DCPR_LOAD = {
+  cs: "Načítám DCPR data…",
+  en: "Loading DCPR data…",
+  fr: "Chargement DCPR…",
 };
 
 // ── Loading screen ────────────────────────────────────────────────────────────
@@ -50,7 +58,7 @@ function LoadingScreen({ progress, exiting }: { progress: number; exiting: boole
     } catch {}
   }, []);
 
-  const phase  = progress < 35 ? 0 : progress < 65 ? 1 : progress < 88 ? 2 : 3;
+  const phase  = progress < 40 ? 0 : progress < 75 ? 1 : 2;
   const labels = LOAD_LABELS[lang];
 
   return (
@@ -78,28 +86,23 @@ function LoadingScreen({ progress, exiting }: { progress: number; exiting: boole
           background: "hsl(var(--primary))",
           display: "flex", alignItems: "center", justifyContent: "center",
           animation: "logo-pulse 1.8s ease-in-out infinite",
+          boxShadow: "0 0 40px hsl(var(--primary)/0.45)",
         }}>
-          <Zap size={34} color="hsl(var(--primary-foreground))" strokeWidth={2.5} />
+          <Zap size={34} color="white" />
         </div>
 
-        {/* wordmark */}
-        <div style={{ textAlign: "center", lineHeight: 1, userSelect: "none" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 38, fontWeight: 900, letterSpacing: "-0.04em" }}>
-            DC <span style={{ color: "hsl(var(--primary))" }}>ELO</span>
-          </div>
-          <div style={{ fontSize: 9, letterSpacing: "0.18em", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", fontFamily: "var(--font-mono)", marginTop: 5 }}>
-            Rating System · DCPR · Duel Commander
-          </div>
-        </div>
-
-        {/* progress bar */}
-        <div style={{ width: 220, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ height: 3, background: "hsl(var(--border)/0.4)", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          {/* progress bar */}
+          <div style={{
+            width: 200, height: 3, borderRadius: 99,
+            background: "hsl(var(--muted))", overflow: "hidden",
+          }}>
             <div style={{
-              height: "100%", width: `${progress}%`, borderRadius: 99,
+              height: "100%", borderRadius: 99,
               background: "hsl(var(--primary))",
               boxShadow: "0 0 14px hsl(var(--primary)/0.65)",
               transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
+              width: `${progress}%`,
             }} />
           </div>
           <div style={{
@@ -116,6 +119,89 @@ function LoadingScreen({ progress, exiting }: { progress: number; exiting: boole
   );
 }
 
+// ── DCPR mode loader overlay ──────────────────────────────────────────────────
+function DcprModeLoader({ lang }: { lang: "cs" | "en" | "fr" }) {
+  const purple = "hsl(262,70%,62%)";
+  const amber  = "hsl(42,80%,55%)";
+
+  return (
+    <>
+      <style>{`
+        @keyframes dcpr-spin  { to { transform: rotate(360deg); } }
+        @keyframes dcpr-fade  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes dcpr-pulse { 0%,100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+        @keyframes dcpr-ring2 { to { transform: rotate(-360deg); } }
+      `}</style>
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 1500,
+        background: "rgba(0,0,0,0.78)",
+        backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "dcpr-fade 0.22s ease forwards",
+      }}>
+        {/* ambient glow blob */}
+        <div style={{
+          position: "absolute", width: 420, height: 420, borderRadius: "50%",
+          background: `radial-gradient(circle, ${purple}18 0%, transparent 68%)`,
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, position: "relative" }}>
+          {/* spinning rings + icon */}
+          <div style={{ position: "relative", width: 96, height: 96 }}>
+            {/* outer ring */}
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: "50%",
+              border: `2px solid transparent`,
+              borderTopColor: purple,
+              borderRightColor: `${purple}50`,
+              animation: "dcpr-spin 0.9s linear infinite",
+            }} />
+            {/* inner ring counter-rotating */}
+            <div style={{
+              position: "absolute", inset: 10, borderRadius: "50%",
+              border: `1.5px solid transparent`,
+              borderTopColor: amber,
+              borderLeftColor: `${amber}40`,
+              animation: "dcpr-ring2 1.4s linear infinite",
+            }} />
+            {/* icon center */}
+            <div style={{
+              position: "absolute", inset: 18, borderRadius: "50%",
+              background: `linear-gradient(135deg, ${purple}22, ${amber}12)`,
+              border: `1px solid ${purple}35`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              animation: "dcpr-pulse 2s ease-in-out infinite",
+            }}>
+              <Zap size={22} style={{ color: purple }} />
+            </div>
+          </div>
+
+          {/* DCPR title */}
+          <div style={{
+            fontSize: 36, fontWeight: 900,
+            fontFamily: "var(--font-display)",
+            letterSpacing: "-0.04em", lineHeight: 1,
+            background: `linear-gradient(135deg, ${purple}, ${amber})`,
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          }}>
+            DCPR
+          </div>
+
+          {/* subtitle */}
+          <div style={{
+            fontSize: 12, fontFamily: "var(--font-mono)",
+            color: "hsl(var(--muted-foreground))",
+            letterSpacing: "0.10em", textTransform: "uppercase",
+          }}>
+            {DCPR_LOAD[lang]}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── Entry ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [cache, setCache]       = useState<PrefetchCache>({});
@@ -125,44 +211,39 @@ export default function Home() {
 
   useEffect(() => {
     let storedRegion = "ALL";
-    try { storedRegion = localStorage.getItem("dc-elo-region") ?? "ALL"; } catch {}
+    let storedMode   = "ELO";
+    try {
+      storedRegion = localStorage.getItem("dc-elo-region") ?? "ALL";
+      storedMode   = localStorage.getItem("dc-elo-mode")   ?? "ELO";
+    } catch {}
     const r = `&region=${storedRegion}`;
 
     let p = 0;
-    const tick = setInterval(() => { p = Math.min(p + 1.5, 92); setProgress(p); }, 50);
+    const tick = setInterval(() => { p = Math.min(p + 2, 92); setProgress(p); }, 50);
 
     async function prefetch() {
       try {
-        const [eloDash, eloPlayers, eloStats, eloAnalytics, eloRecords, annData] = await Promise.all([
-          fetch(`/api/dashboard?mode=ELO${r}`).then(r => r.json()),
-          fetch(`/api/players?mode=ELO${r}`).then(r => r.json()),
-          fetch(`/api/general-stats?mode=ELO${r}`).then(r => r.json()),
-          fetch(`/api/analytics-data?mode=ELO${r}`).then(r => r.json()),
-          fetch(`/api/records?mode=ELO${r}`).then(r => r.json()),
-          fetch("/api/announcements").then(r => r.json()).catch(() => ({ dates: [] })),
-        ]);
-        setProgress(52);
-        const [dcprDash, dcprPlayers, dcprStats, dcprAnalytics, dcprRecords] = await Promise.all([
-          fetch(`/api/dashboard?mode=DCPR${r}`).then(r => r.json()),
-          fetch(`/api/players?mode=DCPR${r}`).then(r => r.json()),
-          fetch(`/api/general-stats?mode=DCPR${r}`).then(r => r.json()),
-          fetch(`/api/analytics-data?mode=DCPR${r}`).then(r => r.json()),
-          fetch(`/api/records?mode=DCPR${r}`).then(r => r.json()),
-        ]);
-        setProgress(90);
-        setCache({
-          ELO:  { dashboard: eloDash,  players: eloPlayers,  stats: eloStats,  analytics: eloAnalytics,  records: eloRecords  },
-          DCPR: { dashboard: dcprDash, players: dcprPlayers, stats: dcprStats, analytics: dcprAnalytics, records: dcprRecords },
-          announcements: annData.dates ?? [],
-          region: storedRegion,
-        });
+        const eloFetch = fetch(`/api/prefetch?mode=ELO${r}`).then(res => res.json());
+        const annFetch = fetch("/api/announcements").then(res => res.json()).catch(() => ({ dates: [] }));
+
+        if (storedMode === "DCPR") {
+          const [eloData, dcprData, annData] = await Promise.all([
+            eloFetch,
+            fetch(`/api/prefetch?mode=DCPR${r}`).then(res => res.json()),
+            annFetch,
+          ]);
+          setCache({ ELO: eloData, DCPR: dcprData, announcements: annData.dates ?? [], region: storedRegion });
+        } else {
+          const [eloData, annData] = await Promise.all([eloFetch, annFetch]);
+          setCache({ ELO: eloData, announcements: annData.dates ?? [], region: storedRegion });
+        }
       } catch { /* continue anyway */ }
 
       clearInterval(tick);
       setProgress(100);
-      await new Promise(r => setTimeout(r, 420));
+      await new Promise(res => setTimeout(res, 420));
       setShowApp(true);
-      await new Promise(r => setTimeout(r, 60));
+      await new Promise(res => setTimeout(res, 60));
       setExiting(true);
     }
 
@@ -175,7 +256,7 @@ export default function Home() {
       {!exiting && <LoadingScreen progress={progress} exiting={exiting} />}
       {showApp && (
         <AppProvider>
-          <AppShell prefetchCache={cache} />
+          <AppShell prefetchCache={cache} setCache={setCache} />
         </AppProvider>
       )}
     </>
@@ -188,16 +269,44 @@ const VIEW_ORDER = [
   "records", "compare", "tournaments", "articles", "organization", "player",
 ];
 
-function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
-  const { view, supportOpen, setSupportOpen, feedbackOpen, setFeedbackOpen } = useAppNav();
-  const [showSetup,  setShowSetup]  = useState(false);
-  const [showThanks, setShowThanks] = useState(false);
+function AppShell({
+  prefetchCache,
+  setCache,
+}: {
+  prefetchCache: PrefetchCache;
+  setCache: React.Dispatch<React.SetStateAction<PrefetchCache>>;
+}) {
+  const { view, supportOpen, setSupportOpen, feedbackOpen, setFeedbackOpen, lang } = useAppNav();
+  const { mode }   = useRatingMode();
+  const { region } = useRegion();
+
+  const [showSetup,   setShowSetup]   = useState(false);
+  const [showThanks,  setShowThanks]  = useState(false);
+  const [dcprLoading, setDcprLoading] = useState(false);
 
   useEffect(() => {
     try {
       if (!localStorage.getItem("dc-elo-setup")) setShowSetup(true);
     } catch {}
   }, []);
+
+  // Lazy-load DCPR when user first switches to DCPR mode
+  useEffect(() => {
+    if (mode !== "DCPR" || prefetchCache.DCPR) return;
+    let cancelled = false;
+    setDcprLoading(true);
+    fetch(`/api/prefetch?mode=DCPR&region=${region}`)
+      .then(res => res.json())
+      .then(dcprData => {
+        if (cancelled) return;
+        setCache(prev => ({ ...prev, DCPR: dcprData }));
+        setDcprLoading(false);
+      })
+      .catch(() => { if (!cancelled) setDcprLoading(false); });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, region]);
+
   const [animKey, setAnimKey]   = useState(0);
   const [slideDir, setSlideDir] = useState<"R"|"L">("R");
   const prevView = useRef(view);
@@ -217,6 +326,8 @@ function AppShell({ prefetchCache }: { prefetchCache: PrefetchCache }) {
       <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       {showSetup  && <SetupModal    onDone={() => { setShowSetup(false);  setShowThanks(true); }} />}
       {showThanks && <ThankYouModal onDone={() => { setShowThanks(false); window.location.reload(); }} />}
+      {dcprLoading && <DcprModeLoader lang={lang as "cs"|"en"|"fr"} />}
+
       {/* particles */}
       <ParticlesBackground />
 

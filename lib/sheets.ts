@@ -80,7 +80,7 @@ function parseCSV(text: string): string[][] {
 async function fetchSheetByName(name: string): Promise<string[][]> {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
   try {
-    const res = await fetch(url, { next: { revalidate: 300 } });
+    const res = await fetch(url, { next: { revalidate: 1800 } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return parseCSV(await res.text());
   } catch (e) {
@@ -246,7 +246,7 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
     .filter(v => v > 0)
     .sort((a, b) => a - b);
   const mid = Math.floor(ratings.length / 2);
-  const medianElo = ratings.length === 0 ? 1200
+  const medianElo = ratings.length === 0 ? 0
     : ratings.length % 2 === 0 ? (ratings[mid - 1] + ratings[mid]) / 2
     : ratings[mid];
 
@@ -259,20 +259,23 @@ export async function fetchDashboardData(mode: "ELO" | "DCPR", nameFilter?: (n: 
       if (v) { uniqueTournaments++; lastDataEntry = v; }
     }
   }
-  // Region-aware: find last tournament name from filtered player cards
+  // Region-aware: find last tournament + count unique tournaments from filtered player cards
   if (nameFilter) {
     const cardsForMode = mode === "DCPR" ? cardsDcpr : cardsElo;
     let filtLastDate = new Date(0);
     let filtLastName = "—";
+    const filtTournaments = new Set<string>();
     for (let i = 1; i < cardsForMode.length; i++) {
       const r = cardsForMode[i];
       if (!r[0]?.trim() || !nameFilter(r[0].trim())) continue;
-      const d = parseDate(r[4]);
-      if (!d || d <= filtLastDate) continue;
       const tName = r[3]?.trim();
-      if (tName) { filtLastDate = d; filtLastName = tName; }
+      if (!tName) continue;
+      filtTournaments.add(tName);
+      const d = parseDate(r[4]);
+      if (d && d > filtLastDate) { filtLastDate = d; filtLastName = tName; }
     }
-    if (filtLastName !== "—") lastDataEntry = filtLastName;
+    uniqueTournaments = filtTournaments.size;
+    lastDataEntry = filtLastName;
   }
 
   // ── Top 5 players for hero panel (sorted by rating desc, region-filtered)

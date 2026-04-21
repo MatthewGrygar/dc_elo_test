@@ -19,7 +19,7 @@ function parseCSV(text: string): string[][] {
 
 async function sheet(name: string): Promise<string[][]> {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-  try { const res = await fetch(url, { next: { revalidate: 300 } }); if (!res.ok) return []; return parseCSV(await res.text()); }
+  try { const res = await fetch(url, { next: { revalidate: 1800 } }); if (!res.ok) return []; return parseCSV(await res.text()); }
   catch { return []; }
 }
 
