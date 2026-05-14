@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { fetchDashboardData, fetchRecentMatches, type InterestingMatch } from "@/lib/sheets";
 import { getVisibleMilestones, getFeaturedMatches } from "@/lib/pinned";
 import { getNameFilter } from "@/lib/regionFilter";
+import { snapshotGet, snapshotKey } from "@/lib/kvCache";
+import type { DashboardData } from "@/lib/sheets";
 
 export interface MatchGroup {
   label: string;
@@ -9,63 +11,60 @@ export interface MatchGroup {
   matches: InterestingMatch[];
 }
 
+async function buildResponse(mode: string, region: string, data: DashboardData, recentMatchesFn: () => Promise<InterestingMatch[]>) {
+  const [pinnedMs, featuredMs] = await Promise.all([
+    getVisibleMilestones(region),
+    getFeaturedMatches(region),
+  ]);
+
+  const milestones = pinnedMs.length > 0
+    ? pinnedMs.map((m) => ({ icon: m.icon, text: m.text, date: m.date, cat: m.cat }))
+    : data.milestones;
+
+  let matchGroups: MatchGroup[];
+  if (featuredMs.length > 0) {
+    const allRecent = await recentMatchesFn();
+    const matchMap  = new Map(allRecent.map((m) => [m.matchId, m]));
+    const groupMap  = new Map<string, MatchGroup>();
+    for (const fm of featuredMs) {
+      const match = matchMap.get(fm.matchId);
+      if (!match) continue;
+      const key = `${fm.category}::${fm.categoryLabel}`;
+      if (!groupMap.has(key)) groupMap.set(key, { label: fm.categoryLabel, emoji: fm.categoryEmoji, matches: [] });
+      groupMap.get(key)!.matches.push(match);
+    }
+    matchGroups = [...groupMap.values()];
+  } else {
+    matchGroups = [
+      ...(data.topMatchElo.length  > 0 ? [{ label: "Nejvyšší ELO",       emoji: "⭐", matches: data.topMatchElo  }] : []),
+      ...(data.topMatchDiff.length > 0 ? [{ label: "Největší rozdíl ELO", emoji: "⚡", matches: data.topMatchDiff }] : []),
+    ];
+  }
+
+  return { ...data, milestones, matchGroups, topMatchElo: data.topMatchElo, topMatchDiff: data.topMatchDiff };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const mode = searchParams.get("mode") === "DCPR" ? "DCPR" : "ELO";
+  const mode   = searchParams.get("mode") === "DCPR" ? "DCPR" : "ELO";
   const region = searchParams.get("region") ?? "ALL";
+
   try {
-    const nameFilter = await getNameFilter(region, mode);
-    const [data, pinnedMs, featuredMs] = await Promise.all([
-      fetchDashboardData(mode, nameFilter),
-      getVisibleMilestones(region),
-      getFeaturedMatches(region),
-    ]);
+    // Try snapshot for the Sheets data (expensive part)
+    const snapData = await snapshotGet<DashboardData>(snapshotKey("dashboard-data", mode, region));
+    const snapRecent = await snapshotGet<InterestingMatch[]>("snapshot:v1:recent-matches");
 
-    // Override milestones with admin-pinned ones if any exist
-    const milestones =
-      pinnedMs.length > 0
-        ? pinnedMs.map((m) => ({ icon: m.icon, text: m.text, date: m.date, cat: m.cat }))
-        : data.milestones;
+    const data = snapData ?? await (async () => {
+      const nameFilter = await getNameFilter(region, mode);
+      return fetchDashboardData(mode, nameFilter);
+    })();
 
-    // Build match groups
-    let matchGroups: MatchGroup[];
+    const getRecent = snapRecent
+      ? () => Promise.resolve(snapRecent)
+      : () => fetchRecentMatches(90);
 
-    if (featuredMs.length > 0) {
-      const allRecent = await fetchRecentMatches(90);
-      const matchMap = new Map(allRecent.map((m) => [m.matchId, m]));
-
-      // Group by category key (category + label)
-      const groupMap = new Map<string, MatchGroup>();
-      for (const fm of featuredMs) {
-        const match = matchMap.get(fm.matchId);
-        if (!match) continue;
-        const key = `${fm.category}::${fm.categoryLabel}`;
-        if (!groupMap.has(key)) {
-          groupMap.set(key, { label: fm.categoryLabel, emoji: fm.categoryEmoji, matches: [] });
-        }
-        groupMap.get(key)!.matches.push(match);
-      }
-      matchGroups = [...groupMap.values()];
-    } else {
-      // Auto-generated groups
-      matchGroups = [
-        ...(data.topMatchElo.length > 0
-          ? [{ label: "Nejvyšší ELO", emoji: "⭐", matches: data.topMatchElo }]
-          : []),
-        ...(data.topMatchDiff.length > 0
-          ? [{ label: "Největší rozdíl ELO", emoji: "⚡", matches: data.topMatchDiff }]
-          : []),
-      ];
-    }
-
-    return NextResponse.json({
-      ...data,
-      milestones,
-      matchGroups,
-      // keep legacy fields for backward compat
-      topMatchElo: data.topMatchElo,
-      topMatchDiff: data.topMatchDiff,
-    });
+    const result = await buildResponse(mode, region, data, getRecent);
+    return NextResponse.json(result);
   } catch (e) {
     console.error(e);
     return NextResponse.json(

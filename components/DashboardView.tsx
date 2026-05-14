@@ -372,9 +372,9 @@ export default function DashboardView({ prefetchCache }: { prefetchCache?: Prefe
       >
         <KpiCard icon={Swords}   label={t(lang, "dash_total_games")} value={(stats?.totalGames ?? 0).toLocaleString("cs-CZ")} sub={mode}  accent />
         <KpiCard icon={Users}    label={t(lang, "dash_players")}     value={(stats?.uniquePlayers ?? 0).toString()}          sub={t(lang, "dash_registered")} />
-        <KpiCard icon={Activity} label={t(lang, "dash_median_elo")}  value={(stats?.medianElo ?? 0).toLocaleString("cs-CZ")} sub={t(lang, "dash_elo_center")} />
-        <KpiCard icon={Trophy}   label={t(lang, "dash_tournaments")} value={(stats?.uniqueTournaments ?? 0).toString()}      sub={t(lang, "dash_total")} />
-        <KpiCard icon={Clock}    label={t(lang, "dash_last_data")}   value={stats?.lastDataEntry ? stats.lastDataEntry.split(" ")[0] : "—"} sub={t(lang, "dash_newest_record")} />
+        <KpiCard icon={Activity} label={t(lang, "dash_median_elo")}  value={stats?.medianElo ? stats.medianElo.toLocaleString("cs-CZ") : "—"} sub={t(lang, "dash_elo_center")} />
+        <KpiCard icon={Trophy}   label={t(lang, "dash_tournaments")} value={stats?.uniqueTournaments ? stats.uniqueTournaments.toString() : "—"} sub={t(lang, "dash_total")} />
+        <KpiCard icon={Clock}    label={t(lang, "dash_last_data")}   value={stats?.lastDataEntry && stats.lastDataEntry !== "—" ? stats.lastDataEntry.split(" ")[0] : "—"} sub={t(lang, "dash_newest_record")} />
       </div>
 
       {/* ── Row 2: Hero + matches ── */}

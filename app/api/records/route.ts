@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchRecords } from "@/lib/dataFetchers";
 import { getRecordOverrides } from "@/lib/pinned";
 import { getNameFilter } from "@/lib/regionFilter";
+import { snapshotGet, snapshotKey } from "@/lib/kvCache";
 
 export async function GET(req: NextRequest) {
-  const mode = (req.nextUrl.searchParams.get("mode") ?? "ELO") as "ELO" | "DCPR";
+  const mode   = (req.nextUrl.searchParams.get("mode") ?? "ELO") as "ELO" | "DCPR";
   const region = req.nextUrl.searchParams.get("region") ?? "ALL";
+
   try {
-    const nameFilter = await getNameFilter(region, mode);
+    // Get base records: snapshot first, live fallback
+    const snapData = await snapshotGet<Awaited<ReturnType<typeof fetchRecords>>>(snapshotKey("records", mode, region));
     const [data, overrides] = await Promise.all([
-      fetchRecords(mode, nameFilter),
+      snapData
+        ? Promise.resolve(snapData)
+        : (async () => { const nf = await getNameFilter(region, mode); return fetchRecords(mode, nf); })(),
       getRecordOverrides(),
     ]);
 
@@ -18,13 +23,13 @@ export async function GET(req: NextRequest) {
       for (const cat of data.categories) {
         for (const rec of cat.records) {
           const key = `${cat.id}/${rec.label}`;
-          const ov = overrideMap.get(key);
+          const ov  = overrideMap.get(key);
           if (ov && rec.entry) {
             rec.entry = {
               ...rec.entry,
-              value: ov.value,
-              ...(ov.player !== undefined ? { player: ov.player } : {}),
-              ...(ov.detail !== undefined ? { detail: ov.detail } : {}),
+              value:  ov.value,
+              ...(ov.player  !== undefined ? { player:  ov.player  } : {}),
+              ...(ov.detail  !== undefined ? { detail:  ov.detail  } : {}),
               ...(ov.detail2 !== undefined ? { detail2: ov.detail2 } : {}),
             };
           }

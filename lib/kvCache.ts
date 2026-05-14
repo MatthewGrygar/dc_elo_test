@@ -23,3 +23,19 @@ export async function cacheSet(key: string, value: unknown, ttl = 600): Promise<
 
 export const prefetchKey = (mode: string, region: string) =>
   `cache:prefetch:${mode}:${region}`;
+
+// ── Snapshot keys (permanent, only updated by admin sync) ────────────────────
+export const SNAPSHOT_TTL = 86400 * 365; // 1 year = effectively permanent
+
+export const snapshotKey = (type: string, mode: string, region: string) =>
+  `snapshot:v1:${type}:${mode}:${region}`;
+
+export const snapshotKeyMeta = () => `snapshot:v1:meta`;
+
+export async function snapshotGet<T>(key: string): Promise<T | null> {
+  return cacheGet<T>(key);
+}
+
+export async function snapshotSet(key: string, value: unknown): Promise<void> {
+  return cacheSet(key, value, SNAPSHOT_TTL);
+}

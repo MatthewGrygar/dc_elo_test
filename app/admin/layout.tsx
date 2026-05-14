@@ -1,18 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Newspaper, Star, Swords, LogOut, Users } from "lucide-react";
+import { Newspaper, Star, Swords, LogOut, Users, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 
-const green = "hsl(152,72%,45%)";
-const greenBg = "hsl(152 72% 45% / 0.12)";
+const green       = "hsl(152,72%,45%)";
+const greenBg     = "hsl(152 72% 45% / 0.12)";
 const greenBorder = "hsl(152 72% 45% / 0.28)";
 
+interface SyncMeta {
+  status: "never" | "syncing" | "ok" | "error";
+  syncedAt: string | null;
+  count?: number;
+  error?: string;
+}
+
+function SyncButton() {
+  const [syncing, setSyncing] = useState(false);
+  const [meta,    setMeta]    = useState<SyncMeta | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/sync")
+      .then(r => r.json())
+      .then(setMeta)
+      .catch(() => null);
+  }, []);
+
+  async function handleSync() {
+    setSyncing(true);
+    setMeta(prev => prev ? { ...prev, status: "syncing" } : { status: "syncing", syncedAt: null });
+    try {
+      const res  = await fetch("/api/admin/sync", { method: "POST" });
+      const data = await res.json();
+      setMeta(data.ok ? { status: "ok", syncedAt: data.syncedAt, count: data.count } : { status: "error", syncedAt: null, error: data.error });
+    } catch (e) {
+      setMeta({ status: "error", syncedAt: null, error: String(e) });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  const fmtTime = (iso: string | null) => {
+    if (!iso) return null;
+    return new Date(iso).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+  };
+
+  const statusColor = meta?.status === "ok" ? green
+    : meta?.status === "error" ? "hsl(0,72%,55%)"
+    : "hsl(var(--muted-foreground))";
+
+  return (
+    <div style={{ padding: "0 0.6rem 0.6rem", borderBottom: "1px solid hsl(var(--border))", marginBottom: 4 }}>
+      <button
+        onClick={handleSync}
+        disabled={syncing}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+          width: "100%", padding: "9px 10px", borderRadius: 8,
+          fontSize: 12, fontWeight: 600, cursor: syncing ? "not-allowed" : "pointer",
+          color: syncing ? "hsl(var(--muted-foreground))" : green,
+          background: syncing ? "hsl(var(--muted)/0.08)" : greenBg,
+          border: `1px solid ${syncing ? "transparent" : greenBorder}`,
+          transition: "all .15s", opacity: syncing ? 0.7 : 1,
+        }}
+      >
+        <RefreshCw size={13} style={{ animation: syncing ? "spin 1s linear infinite" : "none" }} />
+        {syncing ? "Synchronizuji…" : "Sync dat"}
+      </button>
+
+      {/* Status row */}
+      <div style={{ marginTop: 6, fontSize: 10, color: statusColor, display: "flex", alignItems: "center", gap: 4, paddingLeft: 2 }}>
+        {meta?.status === "ok"     && <><CheckCircle2 size={10} />{fmtTime(meta.syncedAt)} · {meta.count} položek</>}
+        {meta?.status === "error"  && <><AlertCircle  size={10} />Chyba synchronizace</>}
+        {meta?.status === "syncing"&& <><RefreshCw    size={10} />Probíhá…</>}
+        {(!meta || meta.status === "never") && <span style={{ color: "hsl(var(--muted-foreground))" }}>Data nebyla synchronizována</span>}
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 function AdminNav() {
   const pathname = usePathname();
-  const router = useRouter();
+  const router   = useRouter();
 
   async function logout() {
     await fetch("/api/admin/auth", { method: "DELETE" });
@@ -63,11 +135,16 @@ function AdminNav() {
 
       {/* Nav links */}
       <nav style={{ flex: 1, padding: "0.75rem 0.6rem", display: "flex", flexDirection: "column", gap: 2 }}>
-        <NavLink href="/admin" label="Články" icon={Newspaper} exact />
+        <NavLink href="/admin"            label="Články"  icon={Newspaper} exact />
         <NavLink href="/admin/milestones" label="Milníky" icon={Star} />
-        <NavLink href="/admin/matches" label="Zápasy" icon={Swords} />
-        <NavLink href="/admin/players" label="Hráči" icon={Users} />
+        <NavLink href="/admin/matches"    label="Zápasy"  icon={Swords} />
+        <NavLink href="/admin/players"    label="Hráči"   icon={Users} />
       </nav>
+
+      {/* Sync button */}
+      <div style={{ padding: "0 0.6rem 0.6rem", marginTop: "auto" }}>
+        <SyncButton />
+      </div>
 
       {/* Logout */}
       <div style={{ padding: "0 0.6rem", borderTop: "1px solid hsl(var(--border))", paddingTop: "0.75rem" }}>
@@ -90,7 +167,7 @@ function AdminNav() {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLogin = pathname === "/admin/login";
+  const isLogin  = pathname === "/admin/login";
   if (isLogin) return <>{children}</>;
 
   return (
